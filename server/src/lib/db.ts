@@ -1,38 +1,34 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import logger from './logger.js';
 import config from './config.js';
 
+const createPrismaClient = () => {
+  const adapter = new PrismaPg({ connectionString: config.DATABASE_URL });
+
+  return new PrismaClient({
+    adapter,
+    log: [
+      ...(config.PRISMA_LOG_QUERIES ? [{ emit: 'event' as const, level: 'query' as const }] : []),
+      { emit: 'stdout' as const, level: 'error' as const },
+      { emit: 'stdout' as const, level: 'info' as const },
+      { emit: 'stdout' as const, level: 'warn' as const },
+    ],
+  });
+};
+
 class Database {
   private static instance: Database;
-  public client: PrismaClient<{
-    log: [
-      { emit: 'event', level: 'query' },
-      { emit: 'event', level: 'error' },
-      { emit: 'event', level: 'info' },
-      { emit: 'event', level: 'warn' },
-    ]
-  }>;
+  public client: ReturnType<typeof createPrismaClient>;
 
   private constructor() {
-    this.client = new PrismaClient({
-      log: [
-        ...(config.PRISMA_LOG_QUERIES ? [{ emit: 'event', level: 'query' } as const] : []),
-        { emit: 'event', level: 'error' },
-        { emit: 'event', level: 'info' },
-        { emit: 'event', level: 'warn' },
-      ],
-    });
+    this.client = createPrismaClient();
 
-    // Event listeners for database monitoring
     if (config.PRISMA_LOG_QUERIES) {
-      this.client.$on('query', (e: Prisma.QueryEvent) => {
+      this.client.$on('query', (e: any) => {
         logger.debug({ query: e.query, params: e.params, duration: e.duration }, 'Database query');
       });
     }
-
-    this.client.$on('error', (e: Prisma.LogEvent) => {
-      logger.error({ target: e.target }, 'Database error');
-    });
   }
 
   public static getInstance(): Database {

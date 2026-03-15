@@ -17,7 +17,7 @@ async function main() {
 
   // Create demo users
   console.log('👥 Creating demo users...');
-  
+
   const adminUser = await prisma.user.create({
     data: {
       email: 'admin@example.com',
@@ -85,7 +85,10 @@ async function main() {
       userId: regularUser1.id,
       statusCode: 200,
       responseTime: 89,
-      responseBody: { success: true, data: { user: { id: regularUser1.id, email: regularUser1.email } } },
+      responseBody: {
+        success: true,
+        data: { user: { id: regularUser1.id, email: regularUser1.email } },
+      },
       headers: { authorization: 'Bearer jwt-token-here' },
       query: {},
       params: {},
@@ -181,7 +184,7 @@ async function main() {
   console.log('\n📊 Summary:');
   console.log(`👥 Users created: 4 (1 admin, 3 regular users)`);
   console.log(`📝 Request logs created: ${sampleLogs.length}`);
-  
+
   console.log('\n🔑 Demo Login Credentials:');
   console.log('Admin User:');
   console.log('  Email: admin@example.com');
