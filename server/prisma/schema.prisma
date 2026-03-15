@@ -1,6 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// IntentRadar — Prisma Schema
 // Connection URL is configured in prisma.config.ts (Prisma v7+)
+// Table naming convention: ir_{entity} prefix via @@map (model names stay clean)
 
 generator client {
   provider = "prisma-client-js"
@@ -10,40 +10,440 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserPlan {
+  FREE
+  STARTER
+  PRO
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum Platform {
+  REDDIT
+  HACKERNEWS
+  TWITTER
+  LINKEDIN
+  DISCORD
+  PRODUCTHUNT
+}
+
+enum IntentLevel {
+  BUY_NOW
+  RESEARCHING
+  COMPARING
+  LOW_INTENT
+}
+
+enum LeadStatus {
+  NEW
+  QUALIFIED
+  SAVED
+  CONTACTED
+  CONVERTED
+  DISMISSED
+}
+
+enum AlertChannel {
+  EMAIL
+  SLACK
+  DASHBOARD
+}
+
+enum OtpType {
+  LOGIN // Passwordless email login
+  VERIFY_EMAIL // Confirm email address on signup
+  RESET_PASSWORD // Password reset flow
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+  TWITTER
+  DISCORD
+}
+
+// ─────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   username  String   @unique
-  password  String
-  role      String   @default("user")
+  password  String? // Nullable — OAuth-only users have no password
+  role      UserRole @default(user)
+  plan      UserPlan @default(FREE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("users")
+  products      Product[]
+  replies       Reply[]
+  alertSetting  AlertSetting?
+  oauthAccounts OAuthAccount[]
+  otpCodes      OtpCode[]
+  sessions      Session[]
+  usages        UsageRecord[]
+  metadata      Json? // Store extra profile info (avatar, bio, etc.)
+
+  @@index([plan])
+  @@map("ir_users")
 }
 
-model RequestLog {
+// ─────────────────────────────────────────────
+// SESSIONS
+// Stateful session management (alternative/complement to JWT).
+// ─────────────────────────────────────────────
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  expiresAt    DateTime
+  userAgent    String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ir_sessions")
+}
+
+// ─────────────────────────────────────────────
+// OTP CODES
+// Short-lived codes for passwordless login, email verification, password reset.
+// ─────────────────────────────────────────────
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String // Target email — stored even before user exists (signup flow)
+  code      String // Hashed with bcrypt before storing
+  type      OtpType
+  expiresAt DateTime
+  usedAt    DateTime? // Null = unused. Set on first use to invalidate.
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, type])
+  @@index([expiresAt])
+  @@map("ir_otp_codes")
+}
+
+// ─────────────────────────────────────────────
+// OAUTH ACCOUNTS
+// One row per connected OAuth provider per user.
+// ─────────────────────────────────────────────
+
+model OAuthAccount {
+  id                String        @id @default(cuid())
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String // The user's ID on the provider side
+  accessToken       String? // Store if you need to call provider APIs
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("ir_oauth_accounts")
+}
+
+// ─────────────────────────────────────────────
+// PRODUCTS
+// Each user tracks multiple products. All scraping/leads hang off a product.
+// ─────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  websiteUrl  String?
+  isActive    Boolean  @default(true)
+  aiConfig    Json? // Store USPs, Tone of Voice, and "Avoid" rules
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sources          ProductSource[]
+  keywords         Keyword[]
+  negativeKeywords NegativeKeyword[]
+  competitors      Competitor[]
+  leads            Lead[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("ir_products")
+}
+
+// ─────────────────────────────────────────────
+// PRODUCT SOURCES
+// Specific communities to scan (e.g. "reddit:reactjs", "hackernews").
+// ─────────────────────────────────────────────
+
+model ProductSource {
+  id         String   @id @default(cuid())
+  productId  String
+  platform   Platform
+  identifier String // e.g. "reactjs" for Reddit, or "global" for HN
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, platform, identifier])
+  @@map("ir_product_sources")
+}
+
+// ─────────────────────────────────────────────
+// KEYWORDS
+// Search terms used to find relevant posts per product.
+// ─────────────────────────────────────────────
+
+model Keyword {
+  id        String   @id @default(cuid())
+  productId String
+  keyword   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  matches LeadMatch[]
+
+  @@unique([productId, keyword])
+  @@index([productId, isActive])
+  @@map("ir_keywords")
+}
+
+// ─────────────────────────────────────────────
+// NEGATIVE KEYWORDS
+// Exclude posts containing these terms (e.g. "hiring", "job").
+// ─────────────────────────────────────────────
+
+model NegativeKeyword {
+  id        String   @id @default(cuid())
+  productId String
+  keyword   String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, keyword])
+  @@map("ir_negative_keywords")
+}
+
+// ─────────────────────────────────────────────
+// COMPETITORS
+// Competitor names tracked per product.
+// ─────────────────────────────────────────────
+
+model Competitor {
+  id        String   @id @default(cuid())
+  productId String
+  name      String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, name])
+  @@index([productId])
+  @@map("ir_competitors")
+}
+
+// ─────────────────────────────────────────────
+// LEADS
+// Core entity. Each lead is one detected buying-intent post.
+// ─────────────────────────────────────────────
+
+model Lead {
+  id             String      @id @default(cuid())
+  productId      String
+  platform       Platform
+  externalPostId String // Platform-native post/comment ID
+  title          String?
+  content        String
+  url            String
+  authorUsername String?
+  intentLevel    IntentLevel
+  intentScore    Int // 0–100
+  status         LeadStatus  @default(NEW)
+  postedAt       DateTime? // When the original post was published
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  metadata       Json? // Platform-specific extras
+  notes          String? // User's internal notes
+  feedback       Int? // User feedback: 1 (Good), -1 (Bad)
+
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  matches   LeadMatch[]
+  replies   Reply[]
+  alertLogs AlertLog[]
+
+  @@unique([platform, externalPostId, productId])
+  @@index([productId])
+  @@index([productId, status])
+  @@index([productId, intentLevel])
+  @@index([productId, intentScore(sort: Desc)])
+  @@index([productId, createdAt(sort: Desc)])
+  @@index([createdAt])
+  @@map("ir_leads")
+}
+
+// ─────────────────────────────────────────────
+// LEAD MATCHES (Join Table)
+// Links a Lead to one or more Keywords/Competitors.
+// ─────────────────────────────────────────────
+
+model LeadMatch {
+  id        String   @id @default(cuid())
+  leadId    String
+  keywordId String?
+  type      String // "KEYWORD" or "COMPETITOR"
+  createdAt DateTime @default(now())
+
+  lead    Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  keyword Keyword? @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([keywordId])
+  @@map("ir_lead_matches")
+}
+
+// ─────────────────────────────────────────────
+// REPLIES
+// AI-generated reply suggestions for each lead.
+// ─────────────────────────────────────────────
+
+model Reply {
   id            String   @id @default(cuid())
-  requestId     String   @unique
-  method        String
-  url           String
-  userAgent     String?
-  ip            String?
-  userId        String?
-  statusCode    Int?
-  responseTime  Int?
-  requestBody   Json?
-  responseBody  Json?
-  headers       Json?
-  query         Json?
-  params        Json?
-  error         String?
+  leadId        String
+  userId        String
+  generatedText String
+  tone          String   @default("helpful")
   createdAt     DateTime @default(now())
 
-  @@map("request_logs")
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([userId])
+  @@map("ir_replies")
+}
+
+// ─────────────────────────────────────────────
+// ALERT SETTINGS
+// ─────────────────────────────────────────────
+
+model AlertSetting {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  emailEnabled   Boolean  @default(true)
+  slackEnabled   Boolean  @default(false)
+  slackWebhook   String?
+  minIntentScore Int      @default(70)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertLogs AlertLog[]
+
+  @@map("ir_alert_settings")
+}
+
+// ─────────────────────────────────────────────
+// ALERT LOGS
+// ─────────────────────────────────────────────
+
+model AlertLog {
+  id             String       @id @default(cuid())
+  alertSettingId String
+  leadId         String
+  channel        AlertChannel
+  sentAt         DateTime     @default(now())
+
+  alertSetting AlertSetting @relation(fields: [alertSettingId], references: [id], onDelete: Cascade)
+  lead         Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([alertSettingId, leadId, channel])
+  @@index([alertSettingId])
+  @@index([leadId])
+  @@index([sentAt])
+  @@map("ir_alert_logs")
+}
+
+// ─────────────────────────────────────────────
+// SCRAPE CACHE
+// ─────────────────────────────────────────────
+
+model ScrapeCache {
+  id             String   @id @default(cuid())
+  platform       Platform
+  externalPostId String
+  processedAt    DateTime @default(now())
+
+  @@unique([platform, externalPostId])
+  @@index([processedAt])
+  @@map("ir_scrape_cache")
+}
+
+// ─────────────────────────────────────────────
+// REQUEST LOGS
+// ─────────────────────────────────────────────
+
+model RequestLog {
+  id           String   @id @default(cuid())
+  requestId    String   @unique
+  method       String
+  url          String
+  userAgent    String?
+  ip           String?
+  userId       String?
+  statusCode   Int?
+  responseTime Int?
+  requestBody  Json?
+  responseBody Json?
+  headers      Json?
+  query        Json?
+  params       Json?
+  error        String?
+  createdAt    DateTime @default(now())
+
   @@index([createdAt])
   @@index([method])
   @@index([statusCode])
   @@index([userId])
+  @@map("ir_request_logs")
+}
+
+// ─────────────────────────────────────────────
+// USAGE RECORDS
+// ─────────────────────────────────────────────
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // e.g. "LEAD_FOUND", "AI_REPLY_GENERATED"
+  count     Int      @default(1)
+  month     Int // 1-12
+  year      Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, month, year])
+  @@index([userId, month, year])
+  @@map("ir_usage_records")
 }
