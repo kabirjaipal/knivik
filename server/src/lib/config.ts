@@ -11,8 +11,8 @@ const configSchema = z.object({
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string(),
   BCRYPT_ROUNDS: z.coerce.number().default(12),
-  BASIC_AUTH_USERNAME: z.string(),
-  BASIC_AUTH_PASSWORD: z.string(),
+  BASIC_AUTH_USERNAME: z.string().optional(),
+  BASIC_AUTH_PASSWORD: z.string().optional(),
   CORS_ORIGIN: z.string().default('*'),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
@@ -32,6 +32,15 @@ const configSchema = z.object({
   LOG_DB_MAX_BODY_LENGTH: z.coerce.number().default(2000),
   // Prisma logging controls
   PRISMA_LOG_QUERIES: z.coerce.boolean().default(false),
+  // SMTP credentials (for Nodemailer)
+  SMTP_HOST: z.string().default('smtp.ethereal.email'),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  SMTP_FROM: z.string().default('noreply@intentradar.io'),
+  // Add:
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
   // Cache controls
   ENABLE_CACHE: z.coerce.boolean().default(true),
   CACHE_TTL_SECONDS: z.coerce.number().default(60),

@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import rateLimit, { type Store as RateLimitStore } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import Redis from 'ioredis';
@@ -97,6 +98,7 @@ app.use(createRateLimiter());
 app.use(compression());
 app.use(express.json({ limit: config.REQUEST_BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Custom middleware
 app.use(requestIdMiddleware);

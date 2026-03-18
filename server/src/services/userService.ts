@@ -47,7 +47,7 @@ export class UserService {
         email,
         username,
         password: hashedPassword,
-        role,
+        role: role as any,
       },
       select: {
         id: true,
@@ -80,7 +80,7 @@ export class UserService {
       where: { email },
     });
 
-    if (!user || !(await comparePassword(password, user.password))) {
+    if (!user || !user.password || !(await comparePassword(password, user.password))) {
       throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS', requestId);
     }
 
