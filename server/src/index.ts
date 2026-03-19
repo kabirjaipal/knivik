@@ -14,6 +14,8 @@ import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 import { runRedditScraper } from './services/redditScraper.js';
+import { createServer } from 'http';
+import { initSocket } from './lib/socket.js';
 
 declare global {
   namespace Express {
@@ -136,14 +138,19 @@ const setupGracefulShutdown = (server: import('http').Server) => {
 async function startServer() {
   try {
     await db.connect();
-  const server = app.listen(config.PORT, config.HOST, () => {
+    
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+
+    httpServer.listen(config.PORT, config.HOST, () => {
       logger.info(`🚀 Worker ${process.pid} listening at http://${config.HOST}:${config.PORT} (${config.NODE_ENV})`);
     });
-  // Tune HTTP server timeouts for proxies/load balancers
-  server.keepAliveTimeout = 65_000; // keep alive a bit over typical LB timeouts
-  server.headersTimeout = 67_000;   // slightly above keepAliveTimeout
-  server.requestTimeout = 0;        // disable per-request timeout; rely on LB timeouts
-    setupGracefulShutdown(server);
+    
+    // Tune HTTP server timeouts for proxies/load balancers
+    httpServer.keepAliveTimeout = 65_000;
+    httpServer.headersTimeout = 67_000;
+    
+    setupGracefulShutdown(httpServer);
 
     // Start Background Job for Reddit Scraping
     const startScraperLoop = async () => {
@@ -170,7 +177,7 @@ async function startServer() {
       process.exit(1);
     });
 
-    return server;
+    return httpServer;
   } catch (error) {
     logger.fatal({ error }, 'Failed to start server');
     process.exit(1);

@@ -3,14 +3,10 @@ import config from '../lib/config.js';
 import { IntentLevel } from '@prisma/client';
 import logger from '../lib/logger.js';
 
-// Initialize OpenAI client using OpenRouter settings
-const openai = new OpenAI({
-  apiKey: config.OPENROUTER_API_KEY,
-  baseURL: config.OPENROUTER_BASE_URL,
-  defaultHeaders: {
-    'HTTP-Referer': 'https://intentradar.io',
-    'X-Title': 'IntentRadar',
-  },
+// Initialize Groq client (Groq is OpenAI-compatible)
+const groq = new OpenAI({
+  apiKey: config.GROQ_API_KEY,
+  baseURL: config.GROQ_BASE_URL,
 });
 
 export interface IntentAnalysisResult {
@@ -20,6 +16,8 @@ export interface IntentAnalysisResult {
 
 /**
  * Uses LLM to determine the buying intent of a give post text.
+ * Simple task: Classification and Scoring.
+ * Model: llama-3.1-8b-instant
  */
 export const analyzeIntent = async (postText: string): Promise<IntentAnalysisResult> => {
   const prompt = `
@@ -45,8 +43,8 @@ Return your analysis strictly as a JSON object matching this schema:
 `;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'google/gemini-2.5-flash', // Using a fast, cheap model on OpenRouter default
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant', 
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -83,6 +81,8 @@ Return your analysis strictly as a JSON object matching this schema:
 
 /**
  * Generates a helpful, non-spammy reply to a prospect.
+ * Reasoning task: Contextual writing and personalization.
+ * Model: llama-3.3-70b-versatile
  */
 export const generateReply = async (
   postText: string,
@@ -105,8 +105,8 @@ ${postText}
 `;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'google/gemini-2.5-pro', // Pro for generation
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: 'You are an authentic, helpful founder replying to online threads.' },
         { role: 'user', content: prompt }

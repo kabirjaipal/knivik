@@ -3,16 +3,25 @@ import logger from '../lib/logger.js';
 import { analyzeIntent } from './aiService.js';
 import { Platform } from '@prisma/client';
 import { sendLeadAlert } from './alertService.js';
+import { emitToUser } from '../lib/socket.js';
 
 // Sleep utility to avoid rate limits
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const USER_AGENT = 'IntentRadar/1.0.0 (Node.js Bot; contact: me@intentradar.io)';
 
+let isRunning = false;
+
 /**
  * Main orchestrator to run Reddit scraper for all active products
  */
 export const runRedditScraper = async (userId?: string) => {
+  if (isRunning) {
+    logger.warn('Reddit Scraper is already running, skipping this trigger.');
+    return;
+  }
+
+  isRunning = true;
   logger.info(userId ? `Starting on-demand Reddit Scraper for User: ${userId}` : 'Starting background Reddit Scraper cycle...');
   
   try {
@@ -33,31 +42,46 @@ export const runRedditScraper = async (userId?: string) => {
       return;
     }
 
+    const MAX_LEADS_PER_PRODUCT = 5;
+
     for (const product of activeProducts) {
       if (product.sources.length === 0 || product.keywords.length === 0) {
         continue;
       }
 
       logger.info(`Scraping Reddit for product: ${product.name}`);
+      let foundInThisCycle = 0;
 
       for (const source of product.sources) {
+        if (foundInThisCycle >= MAX_LEADS_PER_PRODUCT) break;
+
         for (const keyword of product.keywords) {
-          await scrapeRedditKeyword(product, source, keyword);
-          // Wait between queries to respect Reddit rate limits (e.g. 1 request per 2 seconds)
-          await sleep(2000);
+          if (foundInThisCycle >= MAX_LEADS_PER_PRODUCT) break;
+
+          const savedCount = await scrapeRedditKeyword(product, source, keyword, MAX_LEADS_PER_PRODUCT - foundInThisCycle);
+          foundInThisCycle += savedCount;
+          
+          if (foundInThisCycle < MAX_LEADS_PER_PRODUCT) {
+             // Wait briefly between queries to respect Reddit rates while remaining fast
+             await sleep(500);
+          }
         }
       }
+      logger.info(`Finished product ${product.name}. Found ${foundInThisCycle} high-intent leads.`);
     }
     logger.info('Finished Reddit Scraper cycle successfully.');
   } catch (error) {
     logger.error({ error }, 'Fatal error during Reddit Scraper cycle:');
+  } finally {
+    isRunning = false;
   }
 };
 
 /**
  * Scrapes a single keyword on a specific source (subreddit or global)
  */
-async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
+async function scrapeRedditKeyword(product: any, source: any, keyword: any, limit: number) {
+  let savedCount = 0;
   const isGlobal = source.identifier.toLowerCase() === 'global';
   let url = `https://www.reddit.com/search.json?q=${encodeURIComponent(keyword.keyword)}&sort=new&limit=10`;
   
@@ -74,17 +98,19 @@ async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
 
     if (!response.ok) {
       logger.warn(`Reddit API returned ${response.status} for URL: ${url}`);
-      return;
+      return savedCount;
     }
 
     const data = (await response.json()) as any;
     const children = data?.data?.children;
 
     if (!children || !Array.isArray(children)) {
-      return;
+      return savedCount;
     }
 
     for (const child of children) {
+      if (savedCount >= limit) break;
+
       const postData = child.data;
       if (!postData || !postData.id) continue;
 
@@ -103,6 +129,7 @@ async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
       if (cached) continue;
 
       // Make sure we cache it now
+      // Note: We cache it REGARDLESS of score to ensure we don't re-analyze it
       await db.client.scrapeCache.create({
         data: {
           platform: Platform.REDDIT,
@@ -145,8 +172,17 @@ async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
             },
           });
           logger.info(`Saved new Lead for ${product.name} (Score: ${scoreResult.intentScore})`);
+          savedCount++;
           
-          // Trigger the alert system for the new lead
+          // Alert the user via socket and secondary channels (Email/Slack)
+          if (product.userId) {
+            // Include product name for the frontend UI
+            const leadWithProduct = {
+              ...newLead,
+              product: { name: product.name }
+            };
+            emitToUser(product.userId, 'new-lead', leadWithProduct);
+          }
           await sendLeadAlert(newLead.id);
         } catch (dbErr: any) {
           // If the unique constraint on (platform, externalPostId, productId) hits, ignore
@@ -159,4 +195,6 @@ async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
   } catch (error) {
     logger.error({ error }, `Error fetching Reddit data for ${keyword.keyword}`);
   }
+  
+  return savedCount;
 }

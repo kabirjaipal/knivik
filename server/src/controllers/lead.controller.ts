@@ -27,6 +27,12 @@ export const getLeads = async (req: Request, res: Response) => {
             name: true,
           },
         },
+        replies: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1, // Only need the most recent draft
+        },
       },
       orderBy: {
         createdAt: 'desc',
