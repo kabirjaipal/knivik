@@ -32,9 +32,18 @@ export function Navbar() {
         </div>
         
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <Link href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">Features</Link>
-          <Link href="#how-it-works" className="transition-colors hover:text-foreground/80 text-foreground/60">How it Works</Link>
-          <Link href="#pricing" className="transition-colors hover:text-foreground/80 text-foreground/60">Pricing</Link>
+          {user && !loading ? (
+            <>
+              <Link href="/dashboard" className="transition-colors hover:text-foreground text-foreground/60">Dashboard</Link>
+              <Link href="/dashboard/products" className="transition-colors hover:text-foreground text-foreground/60">Products & Config</Link>
+            </>
+          ) : (
+            <>
+              <Link href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">Features</Link>
+              <Link href="#how-it-works" className="transition-colors hover:text-foreground/80 text-foreground/60">How it Works</Link>
+              <Link href="#pricing" className="transition-colors hover:text-foreground/80 text-foreground/60">Pricing</Link>
+            </>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">
@@ -65,10 +74,10 @@ export function Navbar() {
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
-                  <Link href="/settings">
+                  <Link href="/dashboard/products">
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
+                      <span>Products & Config</span>
                     </DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>

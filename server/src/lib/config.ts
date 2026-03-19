@@ -4,6 +4,12 @@ import os from 'os';
 
 dotenv.config();
 
+const envBool = (defaultValue: boolean) =>
+  z.preprocess(
+    (val) => (val === undefined ? defaultValue : val === 'true' || val === '1' || val === true),
+    z.boolean()
+  );
+
 const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
@@ -17,21 +23,21 @@ const configSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
-  LOG_PRETTY: z.coerce.boolean().default(false),
+  LOG_PRETTY: envBool(false),
   // Scalability & infra toggles
-  ENABLE_CLUSTER: z.coerce.boolean().default(true),
+  ENABLE_CLUSTER: envBool(true),
   WORKER_COUNT: z.coerce.number().default(os.cpus().length),
-  TRUST_PROXY: z.coerce.boolean().default(true),
+  TRUST_PROXY: envBool(true),
   REQUEST_BODY_LIMIT: z.string().default('1mb'),
   // Rate limit store (memory or redis)
   RATE_LIMIT_STORE: z.enum(['memory', 'redis']).default('memory'),
   REDIS_URL: z.string().optional(),
   // DB request logging controls
-  LOG_REQUESTS_TO_DB: z.coerce.boolean().default(false),
+  LOG_REQUESTS_TO_DB: envBool(false),
   LOG_DB_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
   LOG_DB_MAX_BODY_LENGTH: z.coerce.number().default(2000),
   // Prisma logging controls
-  PRISMA_LOG_QUERIES: z.coerce.boolean().default(false),
+  PRISMA_LOG_QUERIES: envBool(false),
   // SMTP credentials (for Nodemailer)
   SMTP_HOST: z.string().default('smtp.ethereal.email'),
   SMTP_PORT: z.coerce.number().default(587),
@@ -41,8 +47,11 @@ const configSchema = z.object({
   // Add:
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // OpenAI / OpenRouter controls
+  OPENROUTER_API_KEY: z.string().min(1),
+  OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
   // Cache controls
-  ENABLE_CACHE: z.coerce.boolean().default(true),
+  ENABLE_CACHE: envBool(true),
   CACHE_TTL_SECONDS: z.coerce.number().default(60),
   CACHE_MAX_ITEMS: z.coerce.number().default(10000),
 });
@@ -56,4 +65,5 @@ if (!configResult.success) {
 }
 
 export const config = configResult.data;
+
 export default config;

@@ -13,6 +13,7 @@ import { requestIdMiddleware } from './middleware/requestId.js';
 import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
+import { runRedditScraper } from './services/redditScraper.js';
 
 declare global {
   namespace Express {
@@ -143,6 +144,20 @@ async function startServer() {
   server.headersTimeout = 67_000;   // slightly above keepAliveTimeout
   server.requestTimeout = 0;        // disable per-request timeout; rely on LB timeouts
     setupGracefulShutdown(server);
+
+    // Start Background Job for Reddit Scraping
+    const startScraperLoop = async () => {
+      try {
+        await runRedditScraper();
+      } catch (err) {
+        logger.error({ err }, 'Error in scraper loop');
+      } finally {
+        setTimeout(startScraperLoop, 10 * 60 * 1000); // Run every 10 minutes
+      }
+    };
+    
+    // Initial kick-off (wait 5 seconds for server to settle)
+    setTimeout(startScraperLoop, 5000);
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {

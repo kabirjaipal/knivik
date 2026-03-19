@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/auth-context"
 import { Radar, ArrowLeft, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { refresh } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   
@@ -37,9 +39,9 @@ export default function LoginPage() {
         throw new Error(data.error || "Failed to login")
       }
 
-      // Success - Redirect user to dashboard
+      // Success - Refresh AuthContext UI State, then Redirect user to dashboard
+      await refresh()
       router.push("/dashboard")
-      router.refresh()
     } catch (err: any) {
       setError(err.message)
     } finally {

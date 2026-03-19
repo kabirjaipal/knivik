@@ -28,7 +28,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/auth/me`, { credentials: 'include' })
-      if (!res.ok) throw new Error('Not logged in')
+      if (!res.ok) {
+        if (res.status === 401) {
+           // Purge invalid/dead cookies natively so Next.js middleware doesn't trap the user in a redirect loop
+           await fetch(`${apiUrl}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+        }
+        throw new Error('Not logged in')
+      }
       const data = await res.json()
       setUser(data.user)
     } catch (e) {
