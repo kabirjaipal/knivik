@@ -159,7 +159,7 @@ export default function LoginPage() {
                 variant="outline" 
                 type="button" 
                 className="w-full h-12 font-semibold border-border/80 hover:bg-muted/40 transition-colors"
-                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/google`}
+                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
               >
                 Continue with Google
               </Button>

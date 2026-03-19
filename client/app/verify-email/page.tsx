@@ -27,7 +27,7 @@ function VerifyEmailLogic() {
 
     const verify = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
         const response = await fetch(`${apiUrl}/auth/verify-email`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

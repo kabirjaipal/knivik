@@ -38,7 +38,7 @@ export default function ProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/products`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch products')
       const data = await res.json()
@@ -55,7 +55,7 @@ export default function ProductsPage() {
     setFormError(null)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       
       const payload = {
         name: formData.name,
@@ -96,7 +96,7 @@ export default function ProductsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product tracing context?")) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       await fetch(`${apiUrl}/products/${id}`, { method: 'DELETE', credentials: 'include' })
       setProducts(products.filter(p => p.id !== id))
     } catch (e) {

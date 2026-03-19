@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
+  const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
 
   const router = useRouter()
 
@@ -44,7 +47,7 @@ export default function DashboardPage() {
 
   const fetchLeads = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/leads`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch leads')
       const data = await res.json()
@@ -53,6 +56,21 @@ export default function DashboardPage() {
       setError(e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDraftReply = async (leadId: string) => {
+    setDraftingLeadId(leadId)
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/leads/${leadId}/reply`, { method: 'POST', credentials: 'include' })
+      if (!res.ok) throw new Error('Failed to generate draft')
+      const data = await res.json()
+      setDraftedReplies(prev => ({...prev, [leadId]: data.generatedText}))
+    } catch (e: any) {
+      console.error(e)
+    } finally {
+      setDraftingLeadId(null)
     }
   }
 
@@ -227,8 +245,8 @@ export default function DashboardPage() {
                   <div className="divide-y divide-border/40">
                     <AnimatePresence>
                       {leads.map((lead, idx) => (
+                        <div key={lead.id} className="group relative">
                         <motion.div 
-                          key={lead.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
@@ -277,11 +295,42 @@ export default function DashboardPage() {
                             >
                               Engage <ExternalLink className="w-4 h-4" />
                             </a>
-                            <button className="flex items-center justify-center gap-2 w-full md:w-40 py-2.5 px-4 bg-secondary text-secondary-foreground text-sm font-bold rounded-lg hover:bg-secondary/80 transition-all border border-border group/btn active:scale-95">
-                              Draft Reply <ChevronRight className="w-4 h-4 text-muted-foreground group-hover/btn:translate-x-1 transition-transform" />
+                            <button 
+                              onClick={() => handleDraftReply(lead.id)}
+                              disabled={draftingLeadId === lead.id}
+                              className="flex items-center justify-center gap-2 w-full md:w-40 py-2.5 px-4 bg-secondary text-secondary-foreground text-sm font-bold rounded-lg hover:bg-secondary/80 transition-all border border-border group/btn active:scale-95 disabled:opacity-50"
+                            >
+                              {draftingLeadId === lead.id ? (
+                                 <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                 <>Draft Reply <ChevronRight className="w-4 h-4 text-muted-foreground group-hover/btn:translate-x-1 transition-transform" /></>
+                              )}
                             </button>
                           </div>
                         </motion.div>
+                        
+                        {/* Auto-Expanding Draft Section */}
+                        <AnimatePresence>
+                          {draftedReplies[lead.id] && (
+                            <motion.div 
+                               initial={{ opacity: 0, height: 0 }}
+                               animate={{ opacity: 1, height: 'auto' }}
+                               exit={{ opacity: 0, height: 0 }}
+                               className="bg-card border-t border-border/40 p-4 md:px-6 relative overflow-hidden"
+                            >
+                              <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                              <h4 className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-primary mb-3">
+                                <Zap className="w-3 h-3" /> AI Generated Pitch
+                              </h4>
+                              <textarea 
+                                readOnly
+                                className="w-full h-32 text-sm text-foreground bg-muted/30 border border-border rounded-lg p-3 outline-none resize-none hide-scrollbar focus:border-primary/50 transition-colors"
+                                value={draftedReplies[lead.id]}
+                              />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                       </div>
                       ))}
                     </AnimatePresence>
                   </div>

@@ -44,7 +44,7 @@ function ResetPasswordForm() {
         throw new Error("Password must be at least 8 characters long.")
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
       const response = await fetch(`${apiUrl}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
