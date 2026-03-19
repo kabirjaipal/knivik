@@ -2,6 +2,7 @@ import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { analyzeIntent } from './aiService.js';
 import { Platform } from '@prisma/client';
+import { sendLeadAlert } from './alertService.js';
 
 // Sleep utility to avoid rate limits
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,12 +12,15 @@ const USER_AGENT = 'IntentRadar/1.0.0 (Node.js Bot; contact: me@intentradar.io)'
 /**
  * Main orchestrator to run Reddit scraper for all active products
  */
-export const runRedditScraper = async () => {
-  logger.info('Starting Reddit Scraper cycle...');
+export const runRedditScraper = async (userId?: string) => {
+  logger.info(userId ? `Starting on-demand Reddit Scraper for User: ${userId}` : 'Starting background Reddit Scraper cycle...');
   
   try {
     const activeProducts = await db.client.product.findMany({
-      where: { isActive: true },
+      where: { 
+        isActive: true,
+        ...(userId ? { userId } : {})
+      },
       include: {
         keywords: { where: { isActive: true } },
         sources: { where: { isActive: true, platform: 'REDDIT' } },
@@ -126,7 +130,7 @@ async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
       // Save if intent score >= 50
       if (scoreResult.intentScore >= 50) {
         try {
-          await db.client.lead.create({
+          const newLead = await db.client.lead.create({
             data: {
               productId: product.id,
               platform: Platform.REDDIT,
@@ -141,6 +145,9 @@ async function scrapeRedditKeyword(product: any, source: any, keyword: any) {
             },
           });
           logger.info(`Saved new Lead for ${product.name} (Score: ${scoreResult.intentScore})`);
+          
+          // Trigger the alert system for the new lead
+          await sendLeadAlert(newLead.id);
         } catch (dbErr: any) {
           // If the unique constraint on (platform, externalPostId, productId) hits, ignore
           if (dbErr.code !== 'P2002') {

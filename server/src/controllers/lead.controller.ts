@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { generateReply } from '../services/aiService.js';
+import { runRedditScraper } from '../services/redditScraper.js';
 
 export const getLeads = async (req: Request, res: Response) => {
   try {
@@ -84,4 +85,22 @@ export const generateLeadReply = async (req: Request, res: Response): Promise<vo
     logger.error({ error }, 'Failed to generate AI reply');
     res.status(500).json({ error: 'Failed to communicate with AI Engine' });
   }
+};
+
+export const triggerScan = async (req: Request, res: Response): Promise<void> => {
+   try {
+     // @ts-ignore
+     const userId = req.user?.id as string;
+     if (!userId) {
+       res.status(401).json({ error: 'Unauthorized' });
+       return;
+     }
+     
+     // Run synchronously to ensure frontend knows when it's done pulling new objects
+     await runRedditScraper(userId);
+     res.status(200).json({ success: true, message: 'Scan complete' });
+   } catch (error) {
+     logger.error({ error }, 'Failed to trigger scan');
+     res.status(500).json({ error: 'Failed to execute radar scan' });
+   }
 };

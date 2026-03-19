@@ -14,6 +14,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
 
   // Form State
   const [formData, setFormData] = useState({
@@ -75,18 +76,27 @@ export default function ProductsPage() {
          payload.sources.push({ platform: 'REDDIT', identifier: 'global' });
       }
 
-      const res = await fetch(`${apiUrl}/products`, {
-        method: 'POST',
+      const method = editingProductId ? 'PUT' : 'POST'
+      const urlEnding = editingProductId ? `/${editingProductId}` : ''
+
+      const res = await fetch(`${apiUrl}/products${urlEnding}`, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
       })
 
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to create product')
+      if (!res.ok) throw new Error(data.error || `Failed to ${editingProductId ? 'update' : 'create'} product`)
       
-      setProducts([data.product, ...products])
+      if (editingProductId) {
+         setProducts(products.map(p => p.id === editingProductId ? data.product : p))
+      } else {
+         setProducts([data.product, ...products])
+      }
+      
       setIsCreating(false)
+      setEditingProductId(null)
       setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "" })
     } catch (e: any) {
       setFormError(e.message)
@@ -102,6 +112,21 @@ export default function ProductsPage() {
     } catch (e) {
       console.error(e)
     }
+  }
+
+  const handleEdit = (product: any) => {
+    setFormData({
+      name: product.name,
+      description: product.description || "",
+      websiteUrl: product.websiteUrl || "",
+      keywords: product.keywords?.map((k: any) => k.keyword).join(', ') || "",
+      negativeKeywords: product.negativeKeywords?.map((k: any) => k.keyword).join(', ') || "",
+      competitors: product.competitors?.map((c: any) => c.name).join(', ') || "",
+      redditSources: product.sources?.map((s: any) => s.identifier).join(', ') || ""
+    })
+    setEditingProductId(product.id)
+    setIsCreating(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   if (authLoading || loading) {
@@ -156,10 +181,13 @@ export default function ProductsPage() {
                   <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary to-blue-500" />
                   <CardHeader className="flex flex-row justify-between items-start">
                     <div>
-                      <CardTitle className="text-2xl">New Tracking Configuration</CardTitle>
+                      <CardTitle className="text-2xl">{editingProductId ? "Edit Tracking Configuration" : "New Tracking Configuration"}</CardTitle>
                       <CardDescription>Engine variables for the AI classifiers</CardDescription>
                     </div>
-                    <button onClick={() => setIsCreating(false)} className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors">
+                    <button 
+                      onClick={() => { setIsCreating(false); setEditingProductId(null); setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "" }); }} 
+                      className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors"
+                    >
                       <X className="w-5 h-5" />
                     </button>
                   </CardHeader>
@@ -299,7 +327,7 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/40">
-                         <button className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted">
+                         <button onClick={() => handleEdit(product)} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted">
                            <Edit3 className="w-4 h-4" /> Edit
                          </button>
                          <button onClick={() => handleDelete(product.id)} className="flex items-center gap-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors px-3 py-2 rounded-lg">

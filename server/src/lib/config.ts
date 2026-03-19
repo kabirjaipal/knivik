@@ -20,6 +20,7 @@ const configSchema = z.object({
   BASIC_AUTH_USERNAME: z.string().optional(),
   BASIC_AUTH_PASSWORD: z.string().optional(),
   CORS_ORIGIN: z.string().default('*'),
+  FRONTEND_URL: z.string().default('http://localhost:3000'),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),

@@ -34,6 +34,7 @@ export default function DashboardPage() {
   
   const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
+  const [isScanning, setIsScanning] = useState(false)
 
   const router = useRouter()
 
@@ -71,6 +72,20 @@ export default function DashboardPage() {
       console.error(e)
     } finally {
       setDraftingLeadId(null)
+    }
+  }
+
+  const handleForceScan = async () => {
+    setIsScanning(true)
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/leads/scan`, { method: 'POST', credentials: 'include' })
+      if (!res.ok) throw new Error('Scan failed')
+      await fetchLeads() // Refetch immediately after the scan sweep completes
+    } catch (e: any) {
+      console.error(e)
+    } finally {
+      setIsScanning(false)
     }
   }
 
@@ -215,13 +230,26 @@ export default function DashboardPage() {
             className="mt-10"
           >
             <Card className="border-border/50 shadow-2xl bg-card/60 backdrop-blur-xl overflow-hidden rounded-2xl">
-              <CardHeader className="border-b border-border/40 bg-muted/20 pb-6">
-                <CardTitle className="text-2xl font-bold flex items-center">
-                  <Radar className="mr-3 text-primary h-6 w-6" /> Live Detection Stream
-                </CardTitle>
-                <CardDescription className="text-sm font-medium">
-                  Leads actively discovered by your AI engines across the web.
-                </CardDescription>
+              <CardHeader className="border-b border-border/40 bg-muted/20 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-2xl font-bold flex items-center">
+                    <Radar className="mr-3 text-primary h-6 w-6" /> Live Detection Stream
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium mt-1">
+                    Leads actively discovered by your AI engines across the web.
+                  </CardDescription>
+                </div>
+                <button 
+                  onClick={handleForceScan}
+                  disabled={isScanning}
+                  className="flex items-center justify-center gap-2 py-2.5 px-6 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground font-bold rounded-lg transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isScanning ? (
+                    <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Scanning Deep Web...</>
+                  ) : (
+                    <><Zap className="w-4 h-4" /> Force Scan Now</>
+                  )}
+                </button>
               </CardHeader>
               <CardContent className="p-0">
                 {loading ? (

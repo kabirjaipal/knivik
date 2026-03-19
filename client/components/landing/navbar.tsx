@@ -36,6 +36,7 @@ export function Navbar() {
             <>
               <Link href="/dashboard" className="transition-colors hover:text-foreground text-foreground/60">Dashboard</Link>
               <Link href="/dashboard/products" className="transition-colors hover:text-foreground text-foreground/60">Products & Config</Link>
+              <Link href="/dashboard/alerts" className="transition-colors hover:text-foreground text-foreground/60">Alert Routing</Link>
             </>
           ) : (
             <>
@@ -78,6 +79,12 @@ export function Navbar() {
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Products & Config</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/dashboard/alerts">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Alert Routing</span>
                     </DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>
