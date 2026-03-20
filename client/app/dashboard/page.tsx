@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { io, Socket } from "socket.io-client"
 import React, { memo } from "react"
+import { OnboardingModal } from "@/components/dashboard/OnboardingModal"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -288,12 +289,15 @@ export default function DashboardPage() {
   const [isScanning, setIsScanning] = useState(false)
   const router = useRouter()
   const [socket, setSocket] = useState<Socket | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [hasFetchedProducts, setHasFetchedProducts] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) { router.push("/login"); return }
     if (!user) return
 
     fetchLeads()
+    fetchProducts()
 
     const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || ''
     const newSocket = io(socketUrl, { withCredentials: true, transports: ['websocket', 'polling'] })
@@ -306,6 +310,20 @@ export default function DashboardPage() {
     setSocket(newSocket)
     return () => { newSocket.disconnect() }
   }, [user, authLoading, router])
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, { credentials: 'include' })
+      if (!res.ok) throw new Error('Failed to fetch products')
+      const data = await res.json()
+      if (data.products && data.products.length === 0) {
+        setShowOnboarding(true)
+      }
+      setHasFetchedProducts(true)
+    } catch (e) {
+      console.error('Error fetching products:', e)
+    }
+  }
 
   const fetchLeads = async () => {
     try {
@@ -515,6 +533,14 @@ export default function DashboardPage() {
           </Card>
         </main>
       </div>
+
+      <OnboardingModal 
+        isOpen={showOnboarding} 
+        onComplete={() => {
+          setShowOnboarding(false)
+          fetchLeads()
+        }} 
+      />
     </div>
   )
 }

@@ -162,4 +162,21 @@ export class UserService {
       cache.del(`user:${id}`),
     ]);
   }
+
+  static async updatePassword(userId: string, currentPassword: string, newPassword: string, requestId?: string): Promise<void> {
+    const user = await db.client.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.password || !(await comparePassword(currentPassword, user.password))) {
+      throw new AppError('Invalid current password', 401, 'INVALID_PASSWORD', requestId);
+    }
+
+    const hashedNewPassword = await hashPassword(newPassword);
+
+    await db.client.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
+  }
 }

@@ -5,6 +5,7 @@ import authRoutes from './auth.routes.js';
 import leadRoutes from './lead.routes.js';
 import productRoutes from './product.routes.js';
 import alertRoutes from './alert.routes.js';
+import analyticsRoutes from './analytics.routes.js';
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.use('/api/auth', authRoutes);
 router.use('/api/leads', leadRoutes);
 router.use('/api/products', productRoutes);
 router.use('/api/alerts', alertRoutes);
+router.use('/api/analytics', analyticsRoutes);
 router.use('/api', healthRoutes);
 
 export default router;

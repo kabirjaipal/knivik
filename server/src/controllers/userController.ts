@@ -100,3 +100,43 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
   
   res.status(204).send();
 });
+
+export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({
+      success: false,
+      error: {
+        status: 400,
+        code: 'BAD_REQUEST',
+        message: 'Current and new passwords are required',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: {
+        status: 401,
+        code: 'UNAUTHORIZED',
+        message: 'User session expired or invalid',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
+  await UserService.updatePassword(req.user.id, currentPassword, newPassword, req.requestId);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Password updated successfully',
+    requestId: req.requestId,
+  });
+});

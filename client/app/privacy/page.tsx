@@ -1,0 +1,73 @@
+"use client"
+
+import { Navbar } from "@/components/landing/navbar"
+import { Footer } from "@/components/landing/footer"
+import { PROJECT_NAME } from "@/lib/constants"
+
+export default function PrivacyPage() {
+  return (
+    <div className="flex min-h-screen flex-col bg-background selection:bg-primary/20">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 py-24 max-w-4xl">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="space-y-4 text-center">
+            <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">Privacy Policy</h1>
+            <p className="text-muted-foreground text-lg">Last Updated: March 21, 2026</p>
+          </div>
+
+          <div className="prose prose-slate dark:prose-invert max-w-none space-y-10 leading-relaxed text-muted-foreground">
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">1. Information We Collect</h2>
+              <p>
+                We collect information that you provide to us directly, such as when you create or modify your account, request customer support, or otherwise communicate with us. This information may include your name, email address, password, and product details.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">2. How We Use Your Information</h2>
+              <p>
+                We use the information we collect to provide, maintain, and improve our services, including to identify and score leads for you. We also use it to communicate with you about your account and the services we provide.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">3. Sharing of Information</h2>
+              <p>
+                We do not share your private information with third parties except as described in this policy, such as when required by law or to protect our rights.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">4. Data Security</h2>
+              <p>
+                We take reasonable measures to protect your personal information from loss, theft, misuse, and unauthorized access. However, no internet transmission is ever completely secure.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">5. Data Retention</h2>
+              <p>
+                We store the information we collect for as long as it is necessary for the purposes for which we originally collected it.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">6. Your Choice</h2>
+              <p>
+                You can access and update your account information at any time through your dashboard. You may also request that we delete your account and personal information.
+              </p>
+            </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">7. Contact Us</h2>
+              <p>
+                If you have any questions about this Privacy Policy, please contact us at support@{PROJECT_NAME.toLowerCase()}.io.
+              </p>
+            </section>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  )
+}

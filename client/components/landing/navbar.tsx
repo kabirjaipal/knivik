@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Radar, User, Settings, LogOut } from "lucide-react"
+import { Radar, User, Settings, LogOut, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/context/auth-context"
@@ -36,8 +36,9 @@ export function Navbar() {
           {user && !loading ? (
             <>
               <Link href="/dashboard" className="transition-colors hover:text-foreground text-foreground/60">Dashboard</Link>
-              <Link href="/dashboard/products" className="transition-colors hover:text-foreground text-foreground/60">Products & Config</Link>
-              <Link href="/dashboard/alerts" className="transition-colors hover:text-foreground text-foreground/60">Alert Routing</Link>
+              <Link href="/dashboard/analytics" className="transition-colors hover:text-foreground text-foreground/60">Analytics</Link>
+              <Link href="/dashboard/products" className="transition-colors hover:text-foreground text-foreground/60">Products</Link>
+              <Link href="/dashboard/alerts" className="transition-colors hover:text-foreground text-foreground/60">Alerts</Link>
             </>
           ) : (
             <>
@@ -76,16 +77,22 @@ export function Navbar() {
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/dashboard/analytics">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      <span>Analytics</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <Link href="/dashboard/products">
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Products & Config</span>
                     </DropdownMenuItem>
                   </Link>
-                  <Link href="/dashboard/alerts">
+                  <Link href="/dashboard/settings">
                     <DropdownMenuItem className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Alert Routing</span>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
                     </DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>
