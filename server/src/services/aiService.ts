@@ -21,24 +21,25 @@ export interface IntentAnalysisResult {
  */
 export const analyzeIntent = async (postText: string): Promise<IntentAnalysisResult> => {
   const prompt = `
-Analyze the buying intent of the following post.
+Analyze the buying intent of the following post with expert-level precision.
 Categories:
-- BUY_NOW: The person is actively asking to buy a tool, looking for an alternative right now, or asking for recommendations.
-- RESEARCHING: The person is exploring what tools exist, asking what others use, or gathering general information.
-- COMPARING: The person is explicitly comparing 2 or more tools.
-- LOW_INTENT: The person is just complaining, venting, or the post does not relate to buying a tool.
+- BUY_NOW: High intent. The user is actively seeking a product, requesting a demo, or asking for pricing/alternatives to buy immediately.
+- RESEARCHING: Medium intent. The user is asking "what is the best...", comparing features, or seeking advice on what's available.
+- COMPARING: The user has a shortlist of products and is asking for pros/cons to make a final choice.
+- LOW_INTENT: Passive mentions, complaining without wanting a solution, or general news/discussion without intent to purchase.
 
-Score is from 0 to 100 based on the likelihood that they will purchase a relevant product in the near future.
+Score: 0-100 (Where 90+ is a hot lead).
 
-Post:
+Post Content:
 """
 ${postText}
 """
 
-Return your analysis strictly as a JSON object matching this schema:
+Return your analysis strictly as a JSON object with this schema:
 {
+  "reasoning": "A brief explanation of why you chose this level and score",
   "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
-  "intentScore": number (0-100)
+  "intentScore": number
 }
 `;
 

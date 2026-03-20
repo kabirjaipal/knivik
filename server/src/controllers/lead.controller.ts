@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { generateReply } from '../services/aiService.js';
-import { runRedditScraper } from '../services/redditScraper.js';
+import { runAllEngines } from '../engines/index.js';
 
 export const getLeads = async (req: Request, res: Response) => {
   try {
@@ -103,7 +103,7 @@ export const triggerScan = async (req: Request, res: Response): Promise<void> =>
      }
      
      // Run synchronously to ensure frontend knows when it's done pulling new objects
-     await runRedditScraper(userId);
+     await runAllEngines(userId);
      res.status(200).json({ success: true, message: 'Scan complete' });
    } catch (error) {
      logger.error({ error }, 'Failed to trigger scan');

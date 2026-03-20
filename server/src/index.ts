@@ -13,7 +13,7 @@ import { requestIdMiddleware } from './middleware/requestId.js';
 import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
-import { runRedditScraper } from './services/redditScraper.js';
+import { runAllEngines } from './engines/index.js';
 import { createServer } from 'http';
 import { initSocket } from './lib/socket.js';
 
@@ -152,10 +152,10 @@ async function startServer() {
     
     setupGracefulShutdown(httpServer);
 
-    // Start Background Job for Reddit Scraping
+    // Start Background Job for All Scraper Engines
     const startScraperLoop = async () => {
       try {
-        await runRedditScraper();
+        await runAllEngines();
       } catch (err) {
         logger.error({ err }, 'Error in scraper loop');
       } finally {
