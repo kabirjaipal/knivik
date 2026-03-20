@@ -159,12 +159,12 @@ async function startServer() {
       } catch (err) {
         logger.error({ err }, 'Error in scraper loop');
       } finally {
-        setTimeout(startScraperLoop, 10 * 60 * 1000); // Run every 10 minutes
+        setTimeout(startScraperLoop, config.SCRAPER_INTERVAL_MS);
       }
     };
     
-    // Initial kick-off (wait 5 seconds for server to settle)
-    setTimeout(startScraperLoop, 5000);
+    // Initial kick-off starts after the first interval
+    setTimeout(startScraperLoop, config.SCRAPER_INTERVAL_MS);
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {

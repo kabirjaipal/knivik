@@ -56,7 +56,8 @@ const configSchema = z.object({
   // Cache controls
   ENABLE_CACHE: envBool(true),
   CACHE_TTL_SECONDS: z.coerce.number().default(60),
-  CACHE_MAX_ITEMS: z.coerce.number().default(10000),
+  // Scraper controls
+  SCRAPER_INTERVAL_MS: z.coerce.number().default(3600000), // Default 1 hour
 });
 
 const configResult = configSchema.safeParse(process.env);
