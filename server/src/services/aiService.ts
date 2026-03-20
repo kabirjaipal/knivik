@@ -121,3 +121,226 @@ ${postText}
     return 'Hi! Based on your post, our tool might be exactly what you need. Would love to chat more if you are interested.';
   }
 };
+
+// ─────────────────────────────────────────────
+// COMPETITOR VENTING DETECTOR
+// Fast classifier: did this person express frustration with a specific competitor?
+// Model: llama-3.1-8b-instant (fast, cheap)
+// ─────────────────────────────────────────────
+export interface CompetitorSignalResult {
+  detected: boolean;
+  competitor: string | null;
+  confidence: number; // 0-100
+}
+
+export const detectCompetitorSignal = async (
+  postText: string,
+  competitors: string[]
+): Promise<CompetitorSignalResult> => {
+  if (!competitors.length) return { detected: false, competitor: null, confidence: 0 };
+
+  const prompt = `
+You are analyzing an online post to check if the author is frustrated with, leaving, or comparing against a competitor tool.
+
+Competitors to check: ${competitors.join(', ')}
+
+Post:
+"""
+${postText}
+"""
+
+Does the author express frustration, dissatisfaction, or an intent to switch away from one of these competitors?
+
+Return ONLY a JSON object:
+{
+  "detected": true | false,
+  "competitor": "name of the competitor mentioned, or null",
+  "confidence": number (0-100, how confident you are that this is a frustration/switch signal)
+}
+`;
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error('No content');
+
+    const parsed = JSON.parse(content);
+    return {
+      detected: Boolean(parsed.detected),
+      competitor: parsed.competitor || null,
+      confidence: typeof parsed.confidence === 'number' ? Math.min(Math.max(parsed.confidence, 0), 100) : 0,
+    };
+  } catch (error) {
+    logger.error({ error }, 'Failed to detect competitor signal:');
+    return { detected: false, competitor: null, confidence: 0 };
+  }
+};
+
+// ─────────────────────────────────────────────
+// SEMANTIC BATCH SCANNER
+// Sends a batch of raw posts and finds implicit problem-fits.
+// No keywords required — pure AI reasoning.
+// Model: llama-3.1-8b-instant (context-window optimized)
+// ─────────────────────────────────────────────
+export interface SemanticScanPost {
+  id: string;
+  text: string;
+}
+
+export interface SemanticScanResult {
+  id: string;
+  isMatch: boolean;
+  intentScore: number;
+  reasoning: string;
+}
+
+export const semanticScan = async (
+  posts: SemanticScanPost[],
+  productDescription: string
+): Promise<SemanticScanResult[]> => {
+  if (!posts.length) return [];
+
+  const postsJson = posts.map(p => `ID: ${p.id}\nText: "${p.text.substring(0, 500)}"`).join('\n\n---\n\n');
+
+  const prompt = `
+You are an expert at detecting whether an online post implicitly describes a problem that a specific product can solve.
+
+Product Description:
+"${productDescription}"
+
+Below are ${posts.length} posts. For EACH post, determine:
+1. Does the author describe a problem or pain point that this product solves? (even if they don't mention the product by name or use specific keywords)
+2. How strong is their purchase intent for a product like this? (0-100)
+
+Posts:
+${postsJson}
+
+Return a JSON object with a single key "results", containing an array of exactly ${posts.length} objects:
+{
+  "results": [
+    {
+      "id": "the post ID exactly as given",
+      "isMatch": true | false,
+      "intentScore": number (0-100),
+      "reasoning": "one sentence explanation"
+    }
+  ]
+}
+`;
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+      temperature: 0.1,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error('No content');
+
+    const parsed = JSON.parse(content);
+    const results = Array.isArray(parsed.results) ? parsed.results : [];
+
+    return results.map((r: any) => ({
+      id: String(r.id),
+      isMatch: Boolean(r.isMatch),
+      intentScore: typeof r.intentScore === 'number' ? Math.min(Math.max(r.intentScore, 0), 100) : 0,
+      reasoning: r.reasoning || '',
+    }));
+  } catch (error) {
+    logger.error({ error }, 'Semantic scan failed:');
+    return [];
+  }
+};
+
+// ─────────────────────────────────────────────
+// PRODUCT STRATEGY GENERATOR
+// Takes a simple Name + Description and generates:
+// - Positive keywords for scanning
+// - Negative keywords for filtering noise
+// - Competitor names for poaching
+// ─────────────────────────────────────────────
+export interface ProductStrategyResult {
+  keywords: string[];
+  negativeKeywords: string[];
+  competitors: string[];
+  subreddits: string[];
+}
+
+export const generateProductStrategy = async (
+  name: string,
+  description: string
+): Promise<ProductStrategyResult> => {
+  const prompt = `
+You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS.
+Your goal is to build a high-conversion social listening strategy for a product on "IntentRadar".
+
+Product Profile:
+- Name: "${name}"
+- Core Value Prop: "${description}"
+
+Generate a 4-pillar strategy to capture high-intent leads on Reddit and HackerNews.
+
+PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 12-15)
+Focus on:
+- "Alternative Seekers": (e.g., "alternative to [competitor]", "[competitor] too expensive", "switch from [competitor]")
+- "Problem State": (e.g., "how to solve [problem]", "trouble with [task]", "tool for [use case]")
+- "Recommendation Requests": (e.g., "best tool for", "any recommendations for", "software like")
+- "Budget Hunting": (e.g., "affordable [product type]", "free version of [competitor]")
+
+PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 10-12)
+Focus on filtering out:
+- Career/Education related (e.g., "hiring", "job", "salary", "internship", "course", "resume")
+- Generic News/Casual (e.g., "article", "news", "meme", "funny")
+- Irrelevant contexts (e.g., "video" if the product is about "video editing software" not "movies")
+
+PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-6)
+Include:
+- Direct competitors (the big players)
+- Indirect competitors (alternative ways users solve the problem today)
+
+PILLAR 4: TARGET COMMUNITIES (Generate 6-8 Subreddits)
+Focus on:
+- Primary industry subs (e.g., "SaaS", "startups")
+- Niche user-group subs (e.g., "freelance", "contentcreation", "smallbusiness")
+- "Ask" subreddits where people seek advice.
+
+Return your strategy strictly as a JSON object:
+{
+  "keywords": ["intent phrase 1", "intent phrase 2", ...],
+  "negativeKeywords": ["negative term 1", "negative term 2", ...],
+  "competitors": ["competitor 1", "competitor 2", ...],
+  "subreddits": ["subreddit1", "subreddit2", ...]
+}
+`;
+
+  try {
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant', // Fast and effective for this
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+      temperature: 0.2,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error('No content');
+
+    const parsed = JSON.parse(content);
+    return {
+      keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+      negativeKeywords: Array.isArray(parsed.negativeKeywords) ? parsed.negativeKeywords : [],
+      competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [],
+      subreddits: Array.isArray(parsed.subreddits) ? parsed.subreddits : [],
+    };
+  } catch (error) {
+    logger.error({ error }, 'Failed to generate product strategy:');
+    return { keywords: [], negativeKeywords: [], competitors: [], subreddits: [] };
+  }
+};

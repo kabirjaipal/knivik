@@ -3,6 +3,7 @@ import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { z } from 'zod';
 import { Platform } from '@prisma/client';
+import { generateProductStrategy } from '../services/aiService.js';
 
 const productSchema = z.object({
   name: z.string().min(1).max(255),
@@ -187,5 +188,21 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
   } catch (error) {
     logger.error({ error }, 'Delete Product error');
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const analyzeProduct = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, description } = req.body;
+    if (!name || !description) {
+      res.status(400).json({ error: 'Name and description are required for AI analysis' });
+      return;
+    }
+
+    const strategy = await generateProductStrategy(name, description);
+    res.status(200).json({ success: true, strategy });
+  } catch (error) {
+    logger.error({ error }, 'Analyze Product error');
+    res.status(500).json({ error: 'AI analysis failed' });
   }
 };

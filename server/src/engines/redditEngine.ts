@@ -15,43 +15,36 @@ export class RedditEngine extends BaseScraperEngine {
   ): Promise<number> {
     let savedCount = 0;
     const isGlobal = source.identifier.toLowerCase() === 'global';
-    // Search both Posts and Comments (Much smarter)
+
+    // Search both Posts and Comments
     let url = `https://www.reddit.com/search.json?q=${encodeURIComponent(keyword.keyword)}&sort=new&limit=10&type=link,comment`;
-    
     if (!isGlobal) {
       url = `https://www.reddit.com/r/${source.identifier}/search.json?q=${encodeURIComponent(keyword.keyword)}&restrict_sr=1&sort=new&limit=10&type=link,comment`;
     }
 
     try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      });
-
+      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
       if (!response.ok) {
-        logger.warn(`Reddit API returned ${response.status} for URL: ${url}`);
+        logger.warn(`[REDDIT] API returned ${response.status} for ${url}`);
         return savedCount;
       }
 
       const data = (await response.json()) as any;
       const children = data?.data?.children;
-
-      if (!children || !Array.isArray(children)) {
-        return savedCount;
-      }
+      if (!children || !Array.isArray(children)) return savedCount;
 
       for (const child of children) {
         if (savedCount >= limit) break;
-
         const postData = child.data;
-        if (!postData || !postData.id) continue;
+        if (!postData?.id) continue;
 
-        // Is it a comment or a post? 
-        // Comments have 'body' instead of 'selftext' and often don't have a 'title'
         const title = postData.title || (postData.link_title ? `Comment on: ${postData.link_title}` : '');
         const content = postData.body || postData.selftext || '';
-        const link = postData.permalink ? `https://reddit.com${postData.permalink}` : `https://reddit.com${postData.context}`;
+        const link = postData.permalink
+          ? `https://reddit.com${postData.permalink}`
+          : postData.context
+          ? `https://reddit.com${postData.context}`
+          : url;
 
         const isNew = await this.processPotentialLead(
           product,
@@ -62,19 +55,43 @@ export class RedditEngine extends BaseScraperEngine {
           postData.author,
           new Date(postData.created_utc * 1000)
         );
-
-        if (isNew) {
-          savedCount++;
-        }
+        if (isNew) savedCount++;
       }
-      
-      // Small sleep between keywords to be nice
+
       await this.sleep(500);
-      
     } catch (error) {
-      logger.error({ error }, `Error fetching Reddit data for ${keyword.keyword}`);
+      logger.error({ error }, `[REDDIT] Error fetching for keyword: ${keyword.keyword}`);
     }
-    
+
     return savedCount;
+  }
+
+  /**
+   * Fetches the latest posts from a subreddit (or global Reddit) for semantic + competitor passes.
+   */
+  override async fetchRecentPosts(source: ProductSource, limit: number) {
+    const isGlobal = source.identifier.toLowerCase() === 'global';
+    const url = isGlobal
+      ? `https://www.reddit.com/new.json?limit=${limit}`
+      : `https://www.reddit.com/r/${source.identifier}/new.json?limit=${limit}`;
+
+    try {
+      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+      if (!response.ok) return [];
+
+      const data = (await response.json()) as any;
+      const children = data?.data?.children || [];
+
+      return children.map((child: any) => ({
+        id: child.data.id,
+        title: child.data.title || null,
+        content: child.data.selftext || '',
+        url: `https://reddit.com${child.data.permalink}`,
+        author: child.data.author,
+        postedAt: new Date(child.data.created_utc * 1000),
+      }));
+    } catch {
+      return [];
+    }
   }
 }

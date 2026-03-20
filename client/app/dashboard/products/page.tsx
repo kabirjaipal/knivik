@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { Navbar } from "@/components/landing/navbar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Plus, Trash2, Edit3, Save, X, Server, Tags, AlertTriangle, Blocks } from "lucide-react"
+import { Plus, Trash2, Edit3, Save, X, Server, Tags, AlertTriangle, Blocks, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
@@ -15,6 +15,7 @@ export default function ProductsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   // Form State
   const [formData, setFormData] = useState({
@@ -58,6 +59,14 @@ export default function ProductsPage() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       
+      const sources = formData.redditSources.split(',').map(s => s.trim()).filter(Boolean).map(s => ({
+        platform: 'REDDIT',
+        identifier: s
+      }))
+
+      // Always include HackerNews global as a base source
+      sources.push({ platform: 'HACKERNEWS', identifier: 'global' })
+
       const payload = {
         name: formData.name,
         description: formData.description,
@@ -65,15 +74,7 @@ export default function ProductsPage() {
         keywords: formData.keywords.split(',').map(s => s.trim()).filter(Boolean),
         negativeKeywords: formData.negativeKeywords.split(',').map(s => s.trim()).filter(Boolean),
         competitors: formData.competitors.split(',').map(s => s.trim()).filter(Boolean),
-        sources: formData.redditSources.split(',').map(s => s.trim()).filter(Boolean).map(s => ({
-          platform: 'REDDIT',
-          identifier: s
-        }))
-      }
-
-      if (payload.sources.length === 0) {
-         // Default to global reddit parsing if empty
-         payload.sources.push({ platform: 'REDDIT', identifier: 'global' });
+        sources
       }
 
       const method = editingProductId ? 'PUT' : 'POST'
@@ -127,6 +128,39 @@ export default function ProductsPage() {
     setEditingProductId(product.id)
     setIsCreating(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleAnalyze = async () => {
+    if (!formData.name || !formData.description) {
+      alert("Please provide at least a name and a short description first.")
+      return
+    }
+    
+    setIsAnalyzing(true)
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/products/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: formData.name, description: formData.description })
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      
+      setFormData({
+        ...formData,
+        keywords: data.strategy.keywords.join(', '),
+        negativeKeywords: data.strategy.negativeKeywords.join(', '),
+        competitors: data.strategy.competitors.join(', '),
+        redditSources: data.strategy.subreddits.join(', ')
+      })
+    } catch (e: any) {
+      alert("AI analysis failed: " + e.message)
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   if (authLoading || loading) {
@@ -199,37 +233,56 @@ export default function ProductsPage() {
                         </div>
                       )}
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-bold text-foreground mb-1.5 block">Product Name</label>
-                            <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Acme CRM" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-bold text-foreground mb-1.5 block">Target Keywords (comma separated)</label>
-                            <input required value={formData.keywords} onChange={e => setFormData({...formData, keywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="CRM, customer software, sales tool" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-bold text-foreground mb-1.5 block">Subreddits to Scan (comma separated, or 'global')</label>
-                            <input required value={formData.redditSources} onChange={e => setFormData({...formData, redditSources: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="startups, SaaS, sales" />
-                          </div>
-                        </div>
 
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-bold text-foreground mb-1.5 block">Short Description</label>
-                            <input required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="We help freelancers track sales..." />
-                          </div>
-                          <div>
-                            <label className="text-sm font-bold text-foreground mb-1.5 block">Negative Keywords (Ignore posts with these)</label>
-                            <input value={formData.negativeKeywords} onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="job, hiring, salary, internship" />
-                          </div>
-                          <div>
-                            <label className="text-sm font-bold text-foreground mb-1.5 block">Competitors (comma separated)</label>
-                            <input value={formData.competitors} onChange={e => setFormData({...formData, competitors: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="Hubspot, Salesforce" />
-                          </div>
-                        </div>
-                      </div>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-bold text-foreground mb-1.5 block">Product Name</label>
+            <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Acme CRM" />
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Keep it short and catchy.</p>
+          </div>
+          
+          <div>
+            <label className="text-sm font-bold text-foreground mb-1.5 block">Short Description</label>
+            <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full h-24 bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all resize-none" placeholder="We help freelancers track sales..." />
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium">Explain what it does, who it's for, and why they need it.</p>
+          </div>
+
+          <div className="relative group/magic pt-2">
+            <button type="button" onClick={handleAnalyze} disabled={isAnalyzing}
+              className="group/btn flex items-center justify-center gap-2 w-full py-3 px-4 bg-violet-600 text-white font-bold rounded-xl text-sm transition-all hover:bg-violet-500 hover:shadow-[0_4_20px_rgba(139,92,246,0.3)] active:scale-[0.98] disabled:opacity-50 relative overflow-hidden">
+              {isAnalyzing ? (
+                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Strategy...</>
+              ) : (
+                 <><Zap className="w-4 h-4 fill-current group-hover/btn:animate-pulse" /> Magic Analyze (AI Tool)</>
+              )}
+            </button>
+            <div className="flex items-center gap-1.5 mt-2 px-1">
+               <span className="text-[9px] font-black uppercase tracking-tighter bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded leading-none border border-violet-500/20">Recommended</span>
+               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight line-clamp-1">AI will find 10+ keywords & top competitors.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-bold text-foreground mb-1.5 block">Target Keywords (AI Generated or Manual)</label>
+            <input required value={formData.keywords} onChange={e => setFormData({...formData, keywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="CRM, customer software, sales tool" />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-foreground mb-1.5 block">Subreddits to Scan (comma separated, or 'global')</label>
+            <input required value={formData.redditSources} onChange={e => setFormData({...formData, redditSources: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="startups, SaaS, sales" />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-foreground mb-1.5 block">Negative Keywords</label>
+            <input value={formData.negativeKeywords} onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="job, hiring, salary, internship" />
+          </div>
+          <div>
+            <label className="text-sm font-bold text-foreground mb-1.5 block">Competitors</label>
+            <input value={formData.competitors} onChange={e => setFormData({...formData, competitors: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="Hubspot, Salesforce" />
+          </div>
+        </div>
+      </div>
 
                       <div className="flex justify-end pt-4 border-t border-border">
                          <button type="submit" className="flex items-center gap-2 bg-foreground text-background px-8 py-3 rounded-lg font-bold hover:bg-foreground/90 transition-all active:scale-95">
@@ -243,105 +296,221 @@ export default function ProductsPage() {
             )}
           </AnimatePresence>
 
-          <div className="grid gap-6">
+          {/* Product Grid */}
+          <div className="grid gap-8 md:grid-cols-2">
             {products.length === 0 && !isCreating ? (
-              <div className="flex flex-col items-center justify-center p-16 border border-dashed border-border rounded-2xl bg-muted/10">
+              <div className="md:col-span-2 flex flex-col items-center justify-center p-20 border border-dashed border-border rounded-3xl bg-muted/10">
                 <Blocks className="w-16 h-16 text-muted-foreground/30 mb-4" />
                 <h3 className="text-xl font-bold text-foreground mb-2">No Tracking Contexts Built</h3>
-                <p className="text-muted-foreground max-w-md text-center">Engine is offline. Establish a Product Configuration Context to begin actively parsing live leads from the internet.</p>
+                <p className="text-muted-foreground max-w-md text-center">Engine is offline. Establish a Product Configuration Context to begin actively parsing live leads.</p>
               </div>
             ) : (
               products.map((product, i) => (
-                <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-                  <Card className="shadow-lg bg-card/40 backdrop-blur-md border border-border group overflow-hidden relative">
-                    {/* Active pulse indicator */}
-                    <div className="absolute top-0 right-0 p-4">
-                      {product.isActive ? (
-                         <span className="flex items-center gap-2 text-xs font-bold text-green-500 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
-                           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Scanning Active
-                         </span>
-                      ) : (
-                         <span className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted px-3 py-1.5 rounded-full border border-border">
-                           Paused
-                         </span>
-                      )}
-                    </div>
-
-                    <CardHeader className="pb-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-2xl font-bold flex items-center gap-3">
-                            <Server className="w-5 h-5 text-primary" /> {product.name}
-                          </CardTitle>
-                          <CardDescription className="text-sm mt-1 mb-4 max-w-2xl">{product.description}</CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent>
-                      <div className="grid md:grid-cols-2 gap-8 p-4 bg-background/50 rounded-xl border border-border/50">
-                        {/* Keyword Column */}
-                        <div>
-                          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                             <Tags className="w-3.5 h-3.5" /> Target Expressions
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {product.keywords.map((k: any) => (
-                              <span key={k.id} className="bg-primary/10 text-primary px-3 py-1 rounded-md text-sm font-semibold border border-primary/20">
-                                {k.keyword}
-                              </span>
-                            ))}
-                            {product.keywords.length === 0 && <span className="text-sm text-muted-foreground italic">None configured</span>}
-                          </div>
-                        </div>
-
-                        {/* Negative Config */}
-                        <div>
-                          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                             <AlertTriangle className="w-3.5 h-3.5" /> Global Negative Modifiers
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {product.negativeKeywords.map((k: any) => (
-                              <span key={k.id} className="bg-destructive/10 text-destructive px-3 py-1 rounded-md text-sm font-semibold border border-destructive/20">
-                                ! {k.keyword}
-                              </span>
-                            ))}
-                            {product.negativeKeywords.length === 0 && <span className="text-sm text-muted-foreground italic">None configured</span>}
-                          </div>
-                        </div>
-                        
-                        {/* Communities */}
-                         <div>
-                          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                             <Blocks className="w-3.5 h-3.5" /> Scanning Communities
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {product.sources.map((s: any) => (
-                              <span key={s.id} className="bg-background border border-border text-foreground px-3 py-1 rounded-md text-sm font-bold shadow-sm">
-                                r/{s.identifier}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                      </div>
-
-                      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/40">
-                         <button onClick={() => handleEdit(product)} className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted">
-                           <Edit3 className="w-4 h-4" /> Edit
-                         </button>
-                         <button onClick={() => handleDelete(product.id)} className="flex items-center gap-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors px-3 py-2 rounded-lg">
-                           <Trash2 className="w-4 h-4" /> Terminate
-                         </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  index={i} 
+                  onEdit={() => handleEdit(product)} 
+                  onDelete={() => handleDelete(product.id)} 
+                />
               ))
             )}
           </div>
         </main>
       </div>
     </div>
+  )
+}
+
+function ProductCard({ product, index, onEdit, onDelete }: { product: any, index: number, onEdit: () => void, onDelete: () => void }) {
+  const [showFull, setShowFull] = useState(false)
+  
+  return (
+    <>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+        onClick={() => setShowFull(true)}
+        className="group relative flex flex-col bg-card/40 backdrop-blur-xl border border-border/60 rounded-[2rem] overflow-hidden hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer min-h-[320px]"
+      >
+        <div className={`absolute top-0 left-0 w-full h-1.5 ${product.isActive ? 'bg-linear-to-r from-green-500 to-emerald-400' : 'bg-muted'}`} />
+        
+        <CardHeader className="p-8 pb-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <h3 className="font-black text-2xl tracking-tight text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
+                <Server className="w-5 h-5" /> {product.name}
+              </h3>
+              <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">Tracking Context v1.0</p>
+            </div>
+            <span className={`text-[10px] font-black tracking-tighter px-3 py-1 rounded-full border ${product.isActive ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-muted text-muted-foreground'}`}>
+              {product.isActive ? 'SCANNING' : 'PAUSED'}
+            </span>
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-8 pb-6 flex-1">
+          <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed font-medium italic">
+            "{product.description}"
+          </p>
+          
+          <div className="mt-8 space-y-4">
+            <div>
+               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Primary Intent Signals</p>
+               <div className="flex flex-wrap gap-1.5">
+                 {product.keywords.slice(0, 4).map((k: any) => (
+                    <span key={k.id} className="text-[11px] font-bold bg-secondary/50 text-foreground/70 px-2.5 py-1 rounded-lg border border-border/50">
+                      {k.keyword}
+                    </span>
+                 ))}
+                 {product.keywords.length > 4 && <span className="text-[10px] font-bold text-primary self-center ml-1">+{product.keywords.length - 4} more</span>}
+               </div>
+            </div>
+
+            <div>
+               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Targeted Communities</p>
+               <div className="flex flex-wrap gap-1.5">
+                 {product.sources.slice(0, 3).map((s: any) => (
+                    <span key={s.id} className="text-[10px] font-bold text-muted-foreground bg-muted/30 px-2 py-0.5 rounded border border-border">
+                      {s.platform === 'REDDIT' ? `r/${s.identifier}` : `HN: ${s.identifier}`}
+                    </span>
+                 ))}
+               </div>
+            </div>
+          </div>
+        </CardContent>
+
+        <div className="px-8 py-5 border-t border-border/20 bg-muted/5 flex justify-between items-center group-hover:bg-muted/20 transition-all">
+           <div className="flex items-center gap-4">
+             <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="flex items-center gap-1.5 text-xs font-black text-primary hover:scale-105 transition-transform">
+               <Edit3 className="w-3.5 h-3.5" /> Configure
+             </button>
+             <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="flex items-center gap-1.5 text-xs font-black text-destructive/60 hover:text-destructive transition-colors">
+               <Trash2 className="w-3.5 h-3.5" /> Terminate
+             </button>
+           </div>
+           
+           <div className="flex items-center gap-1.5 text-muted-foreground/30">
+              <span className="text-[10px] font-bold">Details</span>
+              <Plus className="w-3 h-3 rotate-45" />
+           </div>
+        </div>
+      </motion.div>
+
+      {/* Full Detail Modal */}
+      <AnimatePresence>
+        {showFull && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowFull(false)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            />
+            
+            <motion.div 
+              initial={{ scale: 0.98, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.98, opacity: 0, y: 10 }}
+              className="relative w-full max-w-4xl max-h-[85vh] bg-card border border-border/80 shadow-2xl rounded-[1.5rem] overflow-hidden flex flex-col"
+            >
+              <div className="p-6 border-b border-border/40 flex justify-between items-center bg-muted/5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-xl">
+                    <Server className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black tracking-tight leading-none">{product.name}</h2>
+                    <p className="text-xs text-muted-foreground mt-1 font-medium">{product.description}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowFull(false)} className="bg-muted hover:bg-muted/80 p-2 rounded-lg transition-all active:scale-95 text-muted-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+                {/* Visual Stats row */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Expressions', val: product.keywords.length, icon: Tags, color: 'text-primary' },
+                    { label: 'Radar Sites', val: product.sources.length, icon: Blocks, color: 'text-emerald-400' },
+                    { label: 'Negatives', val: product.negativeKeywords.length, icon: AlertTriangle, color: 'text-red-400' },
+                    { label: 'Competitors', val: product.competitors.length, icon: Zap, color: 'text-orange-400' },
+                  ].map((stat, idx) => (
+                    <div key={idx} className="px-4 py-3 bg-secondary/20 rounded-xl border border-border/40 flex items-center gap-3">
+                      <stat.icon className={`w-3.5 h-3.5 ${stat.color} opacity-60`} />
+                      <div>
+                        <p className="text-sm font-black leading-none">{stat.val}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1">{stat.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-primary/70 mb-3">
+                         Intent Signals
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.keywords.map((k: any) => (
+                          <span key={k.id} className="bg-primary/5 text-primary px-2.5 py-1 rounded-lg text-xs font-bold border border-primary/10">
+                            {k.keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-red-400/70 mb-3">
+                         Negative Suppression
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.negativeKeywords.map((k: any) => (
+                          <span key={k.id} className="bg-red-500/5 text-red-400/80 px-2.5 py-1 rounded-lg text-xs font-bold border border-red-500/10">
+                            ! {k.keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-emerald-400/70 mb-3">
+                         Radar Sources
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.sources.map((s: any) => (
+                          <span key={s.id} className="bg-muted border border-border text-foreground/80 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
+                            {s.platform === 'REDDIT' ? `r/${s.identifier}` : `HN: global`}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-orange-400/70 mb-3">
+                         Poach Targets
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.competitors.length > 0 ? product.competitors.map((c: any) => (
+                          <span key={c.id} className="bg-orange-500/5 text-orange-400 px-2.5 py-1 rounded-lg text-xs font-bold border border-orange-500/10">
+                            {c.name}
+                          </span>
+                        )) : <p className="text-xs italic text-muted-foreground/40 ml-1 leading-none">None configured.</p>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 border-t border-border/40 bg-muted/10 flex justify-end">
+                 <button onClick={() => { setShowFull(false); onEdit(); }} className="flex items-center gap-2 bg-foreground text-background px-5 py-2 rounded-xl font-bold text-xs hover:opacity-90 transition-all active:scale-95 shadow-lg">
+                   <Edit3 className="w-3.5 h-3.5" /> Modify Context
+                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

@@ -110,3 +110,69 @@ export const triggerScan = async (req: Request, res: Response): Promise<void> =>
      res.status(500).json({ error: 'Failed to execute radar scan' });
    }
 };
+
+const VALID_STATUSES = ['NEW', 'QUALIFIED', 'SAVED', 'CONTACTED', 'CONVERTED', 'DISMISSED'];
+
+export const updateLeadStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id as string;
+    const leadId = req.params['id'] as string;
+    const { status } = req.body;
+
+    if (!userId || !leadId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    if (!status || !VALID_STATUSES.includes(status)) {
+      res.status(400).json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` });
+      return;
+    }
+
+    // Ownership check
+    const lead = await db.client.lead.findUnique({
+      where: { id: leadId },
+      include: { product: { select: { userId: true } } },
+    });
+    if (!lead || lead.product.userId !== userId) {
+      res.status(404).json({ error: 'Lead not found or unauthorized' });
+      return;
+    }
+
+    const updated = await db.client.lead.update({
+      where: { id: leadId },
+      data: { status },
+    });
+    res.status(200).json({ success: true, lead: updated });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update lead status');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateLeadNotes = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id as string;
+    const leadId = req.params['id'] as string;
+    const { notes } = req.body;
+
+    if (!userId || !leadId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    if (typeof notes !== 'string') { res.status(400).json({ error: 'notes must be a string' }); return; }
+
+    const lead = await db.client.lead.findUnique({
+      where: { id: leadId },
+      include: { product: { select: { userId: true } } },
+    });
+    if (!lead || lead.product.userId !== userId) {
+      res.status(404).json({ error: 'Lead not found or unauthorized' });
+      return;
+    }
+
+    const updated = await db.client.lead.update({
+      where: { id: leadId },
+      data: { notes },
+    });
+    res.status(200).json({ success: true, lead: updated });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update lead notes');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

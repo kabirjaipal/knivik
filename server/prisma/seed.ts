@@ -7,7 +7,7 @@ const prisma = db.client;
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Clear existing users 
+  // Clear existing users
   // Cascading deletes will handle related records if any existed
   await prisma.user.deleteMany({});
 
@@ -25,6 +25,7 @@ async function main() {
       password: hashedAdminPassword,
       role: 'admin',
       plan: 'PRO',
+      emailVerified: new Date(),
     },
   });
 
@@ -36,6 +37,7 @@ async function main() {
       password: hashedPassword,
       role: 'user',
       plan: 'FREE',
+      emailVerified: new Date(),
     },
   });
 
@@ -47,6 +49,7 @@ async function main() {
       password: hashedPassword,
       role: 'user',
       plan: 'STARTER',
+      emailVerified: new Date(),
     },
   });
 
@@ -58,6 +61,7 @@ async function main() {
       password: hashedPassword,
       role: 'user',
       plan: 'FREE',
+      emailVerified: new Date(),
     },
   });
 
