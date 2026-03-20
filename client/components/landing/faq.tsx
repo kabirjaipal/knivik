@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { PROJECT_NAME } from "@/lib/constants"
 
 const faqs = [
   {
@@ -16,13 +17,13 @@ const faqs = [
   },
   {
     question: "Do I have to write the replies myself?",
-    answer: "IntentRadar generates a highly customized, non-spammy draft reply based on your product's USPs and the context of the user's post. You can optionally edit it, then just click 'copy' or 'reply' to post it natively."
+    answer: `${PROJECT_NAME} generates a highly customized, non-spammy draft reply based on your product's USPs and the context of the user's post. You can optionally edit it, then just click 'copy' or 'reply' to post it natively.`
   },
   {
     question: "Will social networks ban my account for this?",
-    answer: "No. IntentRadar is a listening tool. We do not automate the actual posting of comments (which is what triggers bot bans). We find the leads, and you reply as a human, ensuring your accounts remain completely safe and authentic."
+    answer: `No. ${PROJECT_NAME} is a listening tool. We do not automate the actual posting of comments (which is what triggers bot bans). We find the leads, and you reply as a human, ensuring your accounts remain completely safe and authentic.`
   }
-]
+];
 
 export function FAQ() {
   return (

@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { PROJECT_NAME } from "@/lib/constants"
 
 export function Navbar() {
   const { user, loading, logout } = useAuth()
@@ -27,7 +28,7 @@ export function Navbar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Radar className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold tracking-tight text-lg">IntentRadar</span>
+            <span className="font-bold tracking-tight text-lg">{PROJECT_NAME}</span>
           </Link>
         </div>
         

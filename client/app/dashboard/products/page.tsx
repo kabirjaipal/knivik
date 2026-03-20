@@ -7,6 +7,7 @@ import { Plus, Trash2, Edit3, Save, X, Server, Tags, AlertTriangle, Blocks, Zap 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
+import { PROJECT_NAME } from "@/lib/constants"
 
 export default function ProductsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -190,7 +191,7 @@ export default function ProductsPage() {
                 Products & Triggers
               </h1>
               <p className="text-muted-foreground mt-2">
-                Configure exactly what the IntentRadar engines should look for to catch your leads.
+                Configure exactly what the {PROJECT_NAME} engines should look for to catch your leads.
               </p>
             </motion.div>
             

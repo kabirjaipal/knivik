@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { ArrowRight, Target, MessagesSquare, Zap } from "lucide-react"
 import Link from "next/link"
+import { PROJECT_NAME } from "@/lib/constants"
 
 export function Hero() {
   return (
@@ -19,7 +20,7 @@ export function Hero() {
         >
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-8">
             <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></span>
-            IntentRadar 2.0 is Live
+            {PROJECT_NAME} 2.0 is Live
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6">

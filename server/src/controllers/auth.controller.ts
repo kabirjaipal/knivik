@@ -80,7 +80,7 @@ export const register = async (req: Request, res: Response) => {
     const verifyUrl = `http://localhost:3000/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; max-w-[600px] margin: auto; padding: 20px;">
-        <h2 style="color: #0f172a;">Welcome to IntentRadar!</h2>
+        <h2 style="color: #0f172a;">Welcome to ${config.PROJECT_NAME}!</h2>
         <p>Please confirm your email address so you can log into your dashboard.</p>
         <br/>
         <a href="${verifyUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Verify Email Address</a>
@@ -88,7 +88,7 @@ export const register = async (req: Request, res: Response) => {
       </div>
     `;
 
-    await sendEmail(user.email, "Verify Your IntentRadar Account", htmlTemplate);
+    await sendEmail(user.email, `Verify Your ${config.PROJECT_NAME} Account`, htmlTemplate);
     logger.info(`🚨 DEV VERIFY LINK: ${verifyUrl}`);
 
     res.status(201).json({
@@ -232,7 +232,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; max-w-[600px] margin: auto; padding: 20px;">
         <h2 style="color: #0f172a;">Password Reset Request</h2>
-        <p>You requested to reset your password for IntentRadar. Please click the button below to choose a new password. This link will expire in 20 minutes.</p>
+        <p>You requested to reset your password for ${config.PROJECT_NAME}. Please click the button below to choose a new password. This link will expire in 20 minutes.</p>
         <br/>
         <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Your Password</a>
         <br/>
@@ -240,7 +240,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       </div>
     `;
 
-    await sendEmail(user.email, "Reset your IntentRadar Password", htmlTemplate);
+    await sendEmail(user.email, `Reset your ${config.PROJECT_NAME} Password`, htmlTemplate);
 
     // For local dev, we will log it so we can easily copy-paste
     logger.info(`🚨 DEV PASSWORD RESET LINK: ${resetUrl}`);

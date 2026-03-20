@@ -58,6 +58,7 @@ const configSchema = z.object({
   CACHE_TTL_SECONDS: z.coerce.number().default(60),
   // Scraper controls
   SCRAPER_INTERVAL_MS: z.coerce.number().default(3600000), // Default 1 hour
+  PROJECT_NAME: z.string().default('IntentRadar'),
 });
 
 const configResult = configSchema.safeParse(process.env);

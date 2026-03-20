@@ -99,13 +99,13 @@ async function sendEmailAlert(email: string, lead: any) {
       </ul>
       <p><em>"${lead.title || 'Conversation thread'}"</em></p>
       <p><a href="${lead.url}">View Source Post</a></p>
-      <p><a href="${config.FRONTEND_URL}/dashboard">Open IntentRadar Dashboard</a></p>
+      <p><a href="${config.FRONTEND_URL}/dashboard">Open ${config.PROJECT_NAME} Dashboard</a></p>
     `;
 
     await transporter.sendMail({
       from: config.SMTP_FROM,
       to: email,
-      subject: `🚀 [IntentRadar] New High-Intent Lead for ${lead.product.name} (${lead.intentScore}%)`,
+      subject: `🚀 [${config.PROJECT_NAME}] New High-Intent Lead for ${lead.product.name} (${lead.intentScore}%)`,
       html: body,
     });
 

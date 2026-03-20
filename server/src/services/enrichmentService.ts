@@ -1,3 +1,4 @@
+import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
 import { Platform } from '@prisma/client';
@@ -56,7 +57,7 @@ async function discoverProfiles(
 async function enrichFromReddit(username: string, enrichment: EnrichmentData): Promise<void> {
   try {
     const res = await fetch(`https://www.reddit.com/user/${username}/about.json`, {
-      headers: { 'User-Agent': 'IntentRadar/1.0.0 (contact: me@intentradar.io)' },
+      headers: { 'User-Agent': `${config.PROJECT_NAME}/1.0.0 (contact: support@${config.PROJECT_NAME.toLowerCase()}.io)` },
     });
 
     if (!res.ok) return;

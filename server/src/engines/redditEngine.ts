@@ -1,8 +1,9 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
+import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 
-const USER_AGENT = 'IntentRadar/1.0.0 (Node.js Bot; contact: me@intentradar.io)';
+const USER_AGENT = `${config.PROJECT_NAME}/1.0.0 (Node.js Bot; contact: support@${config.PROJECT_NAME.toLowerCase()}.io)`;
 
 export class RedditEngine extends BaseScraperEngine {
   platform = Platform.REDDIT;

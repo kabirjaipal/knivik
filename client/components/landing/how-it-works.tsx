@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge"
+import { PROJECT_NAME } from "@/lib/constants"
 
 const steps = [
   {
@@ -30,7 +31,7 @@ export function HowItWorks() {
               Turn social chatter into actual revenue.
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Don't wait for inbound marketing to eventually work. IntentRadar actively finds people who are actively looking to spend money but haven't found you yet.
+              Don't wait for inbound marketing to eventually work. {PROJECT_NAME} actively finds people who are actively looking to spend money but haven't found you yet.
             </p>
           </div>
 

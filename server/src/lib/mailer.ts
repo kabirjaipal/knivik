@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
     const info = await transporter.sendMail({
-      from: `"IntentRadar" <${config.SMTP_FROM}>`,
+      from: `"${config.PROJECT_NAME}" <${config.SMTP_FROM}>`,
       to,
       subject,
       html,

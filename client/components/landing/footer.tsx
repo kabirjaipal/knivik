@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Radar } from 'lucide-react'
+import { PROJECT_NAME } from "@/lib/constants"
 
 export function Footer() {
   return (
@@ -12,7 +13,7 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <Radar className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg">IntentRadar</span>
+              <span className="font-bold text-lg">{PROJECT_NAME}</span>
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs leading-relaxed">
               Find high-intent buyers on Auto-Pilot. The smart way to do social listening and accelerate startup growth.
@@ -40,7 +41,7 @@ export function Footer() {
 
         <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} IntentRadar. All rights reserved.
+            © {new Date().getFullYear()} {PROJECT_NAME}. All rights reserved.
           </p>
           <div className="text-sm text-muted-foreground">
             Built for Founders, by Founders.

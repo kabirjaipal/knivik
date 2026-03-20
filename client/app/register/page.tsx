@@ -8,6 +8,7 @@ import { Radar, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PROJECT_NAME } from "@/lib/constants"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -64,7 +65,7 @@ export default function RegisterPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Radar className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-extrabold text-xl tracking-tight">IntentRadar</span>
+            <span className="font-extrabold text-xl tracking-tight">{PROJECT_NAME}</span>
           </div>
 
           <div className="space-y-3 text-center sm:text-left">
@@ -183,7 +184,7 @@ export default function RegisterPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
               <Radar className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="font-extrabold text-2xl tracking-tight text-foreground">IntentRadar</span>
+            <span className="font-extrabold text-2xl tracking-tight text-foreground">{PROJECT_NAME}</span>
         </div>
 
         <div className="mt-24 space-y-8">

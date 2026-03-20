@@ -9,6 +9,7 @@ import { Radar, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PROJECT_NAME } from "@/lib/constants"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -64,7 +65,7 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
               <Radar className="h-6 w-6" />
             </div>
-            <span className="font-extrabold text-2xl tracking-tight">IntentRadar</span>
+            <span className="font-extrabold text-2xl tracking-tight">{PROJECT_NAME}</span>
           </div>
           <h1 className="text-4xl font-extrabold leading-tight mb-4">
             Welcome back to your ultimate growth engine.
@@ -76,7 +77,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 mt-auto">
           <blockquote className="border-l-2 border-white/20 pl-6 italic">
-            "Since using IntentRadar, we've engaged directly with customers at the exact moment they need us. Our conversion rate tripled."
+            "Since using {PROJECT_NAME}, we've engaged directly with customers at the exact moment they need us. Our conversion rate tripled."
             <footer className="mt-4 font-semibold text-sm">
               — Sarah Jenkins, Founder @ TechFlow
             </footer>

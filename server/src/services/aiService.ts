@@ -280,7 +280,7 @@ export const generateProductStrategy = async (
 ): Promise<ProductStrategyResult> => {
   const prompt = `
 You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS.
-Your goal is to build a high-conversion social listening strategy for a product on "IntentRadar".
+Your goal is to build a high-conversion social listening strategy for a product on "${config.PROJECT_NAME}".
 
 Product Profile:
 - Name: "${name}"

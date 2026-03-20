@@ -13,9 +13,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+import { PROJECT_NAME, PROJECT_DESCRIPTION } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "IntentRadar | Find High-Intent Buyers on Auto-Pilot",
+  title: `${PROJECT_NAME} | ${PROJECT_DESCRIPTION}`,
   description: "Stop manually parsing Reddit and HackerNews. We scan millions of social posts daily, instantly scoring buying intent and delivering hot leads straight to your CRM.",
 };
 

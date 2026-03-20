@@ -7,6 +7,7 @@ import { Bell, Slack, Mail, Save, AlertCircle, Info, Sliders } from "lucide-reac
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import { PROJECT_NAME } from "@/lib/constants"
 
 export default function AlertsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -105,7 +106,7 @@ export default function AlertsPage() {
               Alert Routing System
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Configure how the IntentRadar engines should notify you when a high-value signal is detected.
+              Configure how the {PROJECT_NAME} engines should notify you when a high-value signal is detected.
             </p>
           </motion.div>
 
