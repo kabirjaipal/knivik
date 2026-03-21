@@ -313,7 +313,31 @@ export abstract class BaseScraperEngine {
     }
   }
 
-  protected async sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  /**
+   * Automatically adds a 20-30% random time jitter to any sleep call.
+   * This is a crucial stealth technique so requests don't look like an automated 
+   * CRON job hitting exact intervals.
+   */
+  protected async sleep(baseMs: number) {
+    const jitter = baseMs * 0.30; 
+    const fuzz = Math.random() * (jitter * 2) - jitter; // ±30%
+    const finalMs = Math.max(250, baseMs + fuzz); // never sleep less than 250ms
+    return new Promise((resolve) => setTimeout(resolve, finalMs));
+  }
+
+  /**
+   * Randomly selects a highly-common browser User-Agent so our "stealth" engines 
+   * (DuckDuckGo, Nitter) think we are a standard human browsing on a Mac/PC/iPhone.
+   */
+  protected getRandomUserAgent(): string {
+    const agents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+    ];
+    return agents[Math.floor(Math.random() * agents.length)] as string;
   }
 }

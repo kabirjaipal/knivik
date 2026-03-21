@@ -1,6 +1,5 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
-import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 
 export class ProductHuntEngine extends BaseScraperEngine {
@@ -22,7 +21,7 @@ export class ProductHuntEngine extends BaseScraperEngine {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': `${config.PROJECT_NAME} (https://intentradar.io, 1.0.0)`,
+          'User-Agent': this.getRandomUserAgent(),
           'Accept-Language': 'en-US,en;q=0.9',
         },
       });

@@ -1,6 +1,5 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
-import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 
 // Nitter is a privacy-oriented Twitter front-end. It allows scanning public tweets without an API key.
@@ -32,7 +31,7 @@ export class TwitterEngine extends BaseScraperEngine {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': `${config.PROJECT_NAME} (https://intentradar.io, 1.0.0)`,
+          'User-Agent': this.getRandomUserAgent(),
         },
       });
 
@@ -101,7 +100,7 @@ export class TwitterEngine extends BaseScraperEngine {
 
     try {
       const response = await fetch(url, {
-        headers: { 'User-Agent': `${config.PROJECT_NAME} (https://intentradar.io, 1.0.0)` }
+        headers: { 'User-Agent': this.getRandomUserAgent() }
       });
       if (!response.ok) return [];
 
