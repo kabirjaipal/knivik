@@ -1,10 +1,16 @@
 import { RedditEngine } from './redditEngine.js';
 import { HackerNewsEngine } from './hackerNewsEngine.js';
+import { TwitterEngine } from './twitterEngine.js';
+import { LinkedInEngine } from './linkedinEngine.js';
+import { ProductHuntEngine } from './productHuntEngine.js';
 import logger from '../lib/logger.js';
 
 export const engines = [
   new RedditEngine(),
   new HackerNewsEngine(),
+  new TwitterEngine(),
+  new LinkedInEngine(),
+  new ProductHuntEngine(),
 ];
 
 export const runAllEngines = async (userId?: string) => {

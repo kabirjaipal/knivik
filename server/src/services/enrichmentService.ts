@@ -27,7 +27,7 @@ export const enrichLead = async (
 
     await db.client.lead.update({
       where: { id: leadId },
-      data: { enrichment: result },
+      data: { enrichment: result as any },
     });
 
     logger.info({ leadId, username, found: Object.keys(result) }, 'Lead enrichment succeeded');

@@ -136,10 +136,10 @@ const LeadRow = memo(({
     <div className="group relative border-b border-border/40 last:border-0">
       {/* Competitor Alert hot-border */}
       {lead.detectedBy === 'COMPETITOR' && (
-        <div className="absolute left-0 top-0 w-0.5 h-full bg-gradient-to-b from-red-500 to-orange-500" />
+        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-red-500 to-orange-500" />
       )}
       {lead.detectedBy === 'SEMANTIC' && (
-        <div className="absolute left-0 top-0 w-0.5 h-full bg-gradient-to-b from-violet-500 to-purple-500" />
+        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-violet-500 to-purple-500" />
       )}
 
       <div className="p-5 pl-6 md:p-6 md:pl-7 hover:bg-muted/10 transition-colors flex flex-col md:flex-row gap-5 items-start">

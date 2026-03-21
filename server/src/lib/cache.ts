@@ -7,7 +7,7 @@ type CacheValue = unknown;
 
 class CacheClient {
   private redis: Redis | undefined;
-  private mem = new LRUCache<string, CacheValue>({ max: config.CACHE_MAX_ITEMS, ttl: config.CACHE_TTL_SECONDS * 1000 });
+  private mem = new LRUCache<string, CacheValue>({ max: 5000, ttl: config.CACHE_TTL_SECONDS * 1000 });
   private enabled = config.ENABLE_CACHE;
 
   constructor() {
