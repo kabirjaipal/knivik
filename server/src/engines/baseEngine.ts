@@ -146,7 +146,7 @@ export abstract class BaseScraperEngine {
 
       for (const result of results) {
         if (found >= limit) break;
-        if (!result.isMatch || result.intentScore < 55) continue;
+        if (!result.isMatch || result.intentScore < 70) continue; // Bumped from 55 for quality
 
         const rawPost = rawPosts.find(p => p.id === result.id);
         if (!rawPost) continue;
@@ -265,7 +265,7 @@ export abstract class BaseScraperEngine {
       product.userId,
       product.id
     );
-    if (scoreResult.intentScore < 50) return false;
+    if (scoreResult.intentScore < 65) return false; // Bumped from 50 for quality
 
     return this.saveLead(
       product,

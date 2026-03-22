@@ -92,28 +92,32 @@ export const analyzeIntent = async (
 ): Promise<IntentAnalysisResult> => {
   const startTime = Date.now();
   const prompt = `
-Analyze the buying intent of the following post relative to a specific product.
-Target Product: "${productName}"
-Product Description: "${productDescription}"
+Analyze the buying intent of the following post relative to the product "${productName}".
 
-Categories:
-- BUY_NOW: High intent. The user is actively seeking a solution like this, requesting a demo, or asking for pricing/alternatives to buy immediately.
-- RESEARCHING: Medium intent. The user is asking "what is the best...", comparing features, or seeking advice on software that solves this specific problem.
-- COMPARING: The user has a shortlist of products (including perhaps this one or competitors) and is asking for pros/cons to makes a final choice.
-- LOW_INTENT: Passive mentions, complaining without wanting a solution, or general news/discussion without intent to purchase any product in this category.
+Product Profile:
+- Name: "${productName}"
+- Description: "${productDescription}"
 
-CRITICAL: If the post is entirely about a different industry (e.g., job hunting, medical, personal life) AND has no relevance to the Target Product category, you MUST classify it as LOW_INTENT with a score of 0.
+Intent Classification Criteria (Strict):
+1. BUY_NOW (90-100): The user is explicitly asking for a tool recommendation, asking for pricing, or stating they are ready to switch from a competitor.
+2. RESEARCHING (70-89): The user is asking "how do I solve [X]" where X is the core problem your product solves. They are looking for advice/tools.
+3. COMPARING (60-69): The user is comparing specific competitors (e.g. "CapCut vs Descript") and needs a tie-breaker.
+4. LOW_INTENT (0-59): Generic news, philosophical discussions, career advice, or "Show HN" posts that aren't asking for a solution.
 
-Score: 0-100 (Where 90+ is a hot lead for THIS product).
+CRITICAL QUALITY RULES:
+- If the post is an advertisement, a "Show HN" (unless it's a competitor you can poach from), or a generic industry update → LOW_INTENT.
+- If the post is a founder "venting" about their day-to-day without asking for a specific tool → LOW_INTENT.
+- If the post is about a different domain (e.g. Medical, Crypto, Real Estate) even if it uses similar words → LOW_INTENT / Score 0.
+- Quality over Quantity: It is better to give a 0 to a mediocre post than a 60. We only want "Signal", not "Noise".
 
 Post Content:
 """
 ${postText}
 """
 
-Return your analysis strictly as a JSON object with this schema:
+Return your analysis strictly as a JSON object:
 {
-  "reasoning": "A brief explanation of why you chose this level and score given the Target Product",
+  "reasoning": "A brief explanation focusing on why this is or IS NOT a high-quality lead for this specific product category",
   "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
   "intentScore": number
 }
@@ -383,28 +387,29 @@ export const semanticScan = async (
   const postsJson = posts.map(p => `ID: ${p.id}\nText: "${p.text.substring(0, 500)}"`).join('\n\n---\n\n');
 
   const prompt = `
-You are an expert at detecting whether an online post implicitly describes a problem that a specific product can solve.
+You are a lead qualification expert. Your goal is to identify posts where the author is facing a SPECIFIC problem that can be solved by the target product.
 
 Target Product Description:
 "${productDescription}"
 
-Below are ${posts.length} posts. For EACH post, determine:
-1. Does the author describe a problem or pain point that THIS specific product solves?
-2. How strong is their purchase intent for a product like this? (0-100)
+Below are ${posts.length} posts. For EACH post, determine if it represents a REAL OPPORTUNITY or just NOISE.
 
-CRITICAL: If the post is entirely about a different industry (e.g., job hunting, medical, personal life, unrelated hobbies) AND has no relevance to the Target Product's utility, you MUST mark it as isMatch: false and intentScore: 0.
+STRICT FILTERING RULES:
+1. Is this a real person with a real problem? (Skip if: bot, ad, meta-discussion, or "I'm building X").
+2. Does the problem align with the Target Product? (Skip if: generic SaaS advice, hiring posts, or unrelated tools).
+3. "Quality over Quantity": If you are unsure, err on the side of "isMatch: false". We only want the top 10% of posts.
 
 Posts:
 ${postsJson}
 
-Return a JSON object with a single key "results", containing an array of exactly ${posts.length} objects:
+Return a JSON object with a single key "results", containing an array:
 {
   "results": [
     {
-      "id": "the post ID exactly as given",
-      "isMatch": true | false,
-      "intentScore": number (0-100),
-      "reasoning": "one sentence explanation of match or mismatch relative to the product"
+      "id": "post id",
+      "isMatch": boolean,
+      "intentScore": number (70+ for matches, 0 for noise),
+      "reasoning": "Briefly state the specific pain point that matches, or why it was rejected as noise."
     }
   ]
 }
@@ -503,11 +508,12 @@ Focus on:
 - "Recommendation Requests": (e.g., "best tool for", "any recommendations for", "software like")
 - "Budget Hunting": (e.g., "affordable [product type]", "free version of [competitor]")
 
-PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 10-12)
-Focus on filtering out:
-- Career/Education related (e.g., "hiring", "job", "salary", "internship", "course", "resume")
-- Generic News/Casual (e.g., "article", "news", "meme", "funny")
-- Irrelevant contexts (e.g., "video" if the product is about "video editing software" not "movies")
+PILLAR 2: NOISE REDUCTION (Negative Keywords & Disqualifiers) (Generate 15-20)
+Very important to filter out:
+- Career/Education: hiring, job, salary, internship, course, resume, career, interview, bootcamp.
+- Generic News/Casual: article, news, meme, funny, blog post, video essay, documentary.
+- Irrelevant User States: "I built", "Check out my", "I'm looking for a job", "I'm a student".
+- Category Noise: (e.g. if the product is a "Video Editor for SaaS", negative keywords should include "gaming video", "wedding video", "hollywood", "netflix").
 
 PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-6)
 Include:
