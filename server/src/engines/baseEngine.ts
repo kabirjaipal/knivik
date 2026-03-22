@@ -258,7 +258,13 @@ export abstract class BaseScraperEngine {
     if (hasNegative) return false;
 
     // 6. LLM intent analysis
-    const scoreResult = await analyzeIntent(combinedText, product.userId, product.id);
+    const scoreResult = await analyzeIntent(
+      combinedText,
+      product.name,
+      product.description || '',
+      product.userId,
+      product.id
+    );
     if (scoreResult.intentScore < 50) return false;
 
     return this.saveLead(

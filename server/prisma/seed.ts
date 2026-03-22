@@ -20,8 +20,8 @@ async function main() {
   // Admin user
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@intentradar.com',
-      username: 'admin',
+      email: 'arjun@intentradar.com',
+      username: 'arjun_kumar',
       password: hashedAdminPassword,
       role: 'admin',
       plan: 'PRO',
@@ -29,32 +29,46 @@ async function main() {
     },
   });
 
-  console.log('📦 Creating test product for admin...');
+  console.log('📦 Creating high-quality test products...');
+  
+  // Product: FastVideo AI
   await prisma.product.create({
     data: {
-      name: 'IntentRadar AI',
-      description: 'An AI-powered social listening tool that finds high-intent leads on Reddit and HackerNews by analyzing conversations for buying signals and competitor frustration.',
+      name: 'FastVideo AI',
+      description: 'An AI video editor for busy SaaS founders to create high-quality demo videos and LinkedIn ads in minutes.',
       userId: admin.id,
       isActive: true,
       keywords: {
         create: [
-          { keyword: 'alternative to mention' },
-          { keyword: 'best social listening tool' },
-          { keyword: 'how to find leads on reddit' },
+          { keyword: 'best video editor for founders' },
+          { keyword: 'how to make a saas demo video' },
+          { keyword: 'alternative to capcut for business' },
+          { keyword: 'descript alternative' },
+          { keyword: 'tool for making linkedin video ads' },
         ]
       },
       negativeKeywords: {
         create: [
+          { keyword: 'gaming' },
+          { keyword: 'movie' },
+          { keyword: 'cinema' },
           { keyword: 'hiring' },
-          { keyword: 'job' },
-          { keyword: 'course' },
+          { keyword: 'career' },
+        ]
+      },
+      sources: {
+        create: [
+          { platform: 'REDDIT', identifier: 'saas' },
+          { platform: 'REDDIT', identifier: 'videomarketing' },
+          { platform: 'REDDIT', identifier: 'startups' },
+          { platform: 'HACKERNEWS', identifier: 'global' },
         ]
       },
       competitors: {
         create: [
-          { name: 'Mention' },
-          { name: 'Awario' },
-          { name: 'Brand24' },
+          { name: 'CapCut' },
+          { name: 'Descript' },
+          { name: 'InVideo' },
         ]
       }
     }
@@ -63,8 +77,8 @@ async function main() {
   // Regular user 1
   await prisma.user.create({
     data: {
-      email: 'john@intentradar.com',
-      username: 'john_doe',
+      email: 'priya@intentradar.com',
+      username: 'priya_sharma',
       password: hashedPassword,
       role: 'user',
       plan: 'FREE',
@@ -75,8 +89,8 @@ async function main() {
   // Regular user 2
   await prisma.user.create({
     data: {
-      email: 'jane@intentradar.com',
-      username: 'jane_smith',
+      email: 'rahul@intentradar.com',
+      username: 'rahul_gupta',
       password: hashedPassword,
       role: 'user',
       plan: 'STARTER',
@@ -87,8 +101,8 @@ async function main() {
   // Regular user 3
   await prisma.user.create({
     data: {
-      email: 'bob@intentradar.com',
-      username: 'bob_wilson',
+      email: 'ananya@intentradar.com',
+      username: 'ananya_verma',
       password: hashedPassword,
       role: 'user',
       plan: 'FREE',
@@ -141,12 +155,12 @@ async function main() {
 
   console.log('\n🔑 Demo Login Credentials:');
   console.log('Admin User:');
-  console.log('  Email: admin@intentradar.com');
+  console.log('  Email: arjun@intentradar.com');
   console.log('  Password: admin123');
   console.log('Regular Users (Password for all is password123):');
-  console.log('  Email: john@intentradar.com');
-  console.log('  Email: jane@intentradar.com');
-  console.log('  Email: bob@intentradar.com');
+  console.log('  Email: priya@intentradar.com');
+  console.log('  Email: rahul@intentradar.com');
+  console.log('  Email: ananya@intentradar.com');
 }
 
 main()

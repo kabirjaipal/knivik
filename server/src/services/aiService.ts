@@ -85,19 +85,26 @@ export interface IntentAnalysisResult {
  */
 export const analyzeIntent = async (
   postText: string,
+  productName: string,
+  productDescription: string,
   userId?: string,
   productId?: string
 ): Promise<IntentAnalysisResult> => {
   const startTime = Date.now();
   const prompt = `
-Analyze the buying intent of the following post with expert-level precision.
-Categories:
-- BUY_NOW: High intent. The user is actively seeking a product, requesting a demo, or asking for pricing/alternatives to buy immediately.
-- RESEARCHING: Medium intent. The user is asking "what is the best...", comparing features, or seeking advice on what's available.
-- COMPARING: The user has a shortlist of products and is asking for pros/cons to make a final choice.
-- LOW_INTENT: Passive mentions, complaining without wanting a solution, or general news/discussion without intent to purchase.
+Analyze the buying intent of the following post relative to a specific product.
+Target Product: "${productName}"
+Product Description: "${productDescription}"
 
-Score: 0-100 (Where 90+ is a hot lead).
+Categories:
+- BUY_NOW: High intent. The user is actively seeking a solution like this, requesting a demo, or asking for pricing/alternatives to buy immediately.
+- RESEARCHING: Medium intent. The user is asking "what is the best...", comparing features, or seeking advice on software that solves this specific problem.
+- COMPARING: The user has a shortlist of products (including perhaps this one or competitors) and is asking for pros/cons to makes a final choice.
+- LOW_INTENT: Passive mentions, complaining without wanting a solution, or general news/discussion without intent to purchase any product in this category.
+
+CRITICAL: If the post is entirely about a different industry (e.g., job hunting, medical, personal life) AND has no relevance to the Target Product category, you MUST classify it as LOW_INTENT with a score of 0.
+
+Score: 0-100 (Where 90+ is a hot lead for THIS product).
 
 Post Content:
 """
@@ -106,7 +113,7 @@ ${postText}
 
 Return your analysis strictly as a JSON object with this schema:
 {
-  "reasoning": "A brief explanation of why you chose this level and score",
+  "reasoning": "A brief explanation of why you chose this level and score given the Target Product",
   "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
   "intentScore": number
 }
@@ -378,12 +385,14 @@ export const semanticScan = async (
   const prompt = `
 You are an expert at detecting whether an online post implicitly describes a problem that a specific product can solve.
 
-Product Description:
+Target Product Description:
 "${productDescription}"
 
 Below are ${posts.length} posts. For EACH post, determine:
-1. Does the author describe a problem or pain point that this product solves? (even if they don't mention the product by name or use specific keywords)
+1. Does the author describe a problem or pain point that THIS specific product solves?
 2. How strong is their purchase intent for a product like this? (0-100)
+
+CRITICAL: If the post is entirely about a different industry (e.g., job hunting, medical, personal life, unrelated hobbies) AND has no relevance to the Target Product's utility, you MUST mark it as isMatch: false and intentScore: 0.
 
 Posts:
 ${postsJson}
@@ -395,7 +404,7 @@ Return a JSON object with a single key "results", containing an array of exactly
       "id": "the post ID exactly as given",
       "isMatch": true | false,
       "intentScore": number (0-100),
-      "reasoning": "one sentence explanation"
+      "reasoning": "one sentence explanation of match or mismatch relative to the product"
     }
   ]
 }
