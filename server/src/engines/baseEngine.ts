@@ -129,7 +129,14 @@ export abstract class BaseScraperEngine {
     for (const source of product.sources) {
       if (found >= limit) break;
 
-      const rawPosts = await this.fetchRecentPosts(source, 15);
+      let rawPosts = await this.fetchRecentPosts(source, 15);
+      if (!rawPosts.length) continue;
+
+      // Filter out posts older than 1 month
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      rawPosts = rawPosts.filter(p => !p.postedAt || p.postedAt >= oneMonthAgo);
+
       if (!rawPosts.length) continue;
 
       const postsForScan: SemanticScanPost[] = rawPosts.map(p => ({
@@ -187,8 +194,13 @@ export abstract class BaseScraperEngine {
     for (const source of product.sources) {
       if (found >= limit) break;
 
-      const rawPosts = await this.fetchRecentPosts(source, 15);
+      let rawPosts = await this.fetchRecentPosts(source, 15);
       if (!rawPosts.length) continue;
+
+      // Filter out posts older than 1 month
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      rawPosts = rawPosts.filter(p => !p.postedAt || p.postedAt >= oneMonthAgo);
 
       for (const rawPost of rawPosts) {
         if (found >= limit) break;
@@ -231,6 +243,13 @@ export abstract class BaseScraperEngine {
     authorUsername?: string,
     postedAt?: Date
   ): Promise<boolean> {
+    // 0. Age check (max 1 month old)
+    if (postedAt) {
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      if (postedAt < oneMonthAgo) return false;
+    }
+
     // 1. Cache check
     const cached = await db.client.scrapeCache.findUnique({
       where: { platform_externalPostId: { platform: this.platform, externalPostId } },

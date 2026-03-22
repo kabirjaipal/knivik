@@ -18,10 +18,15 @@ export class RedditEngine extends BaseScraperEngine {
     let savedCount = 0;
     const isGlobal = source.identifier.toLowerCase() === 'global';
 
+    // Enforce exact phrase match for multi-word queries to prevent loose/broad matches on Reddit
+    const searchQuery = keyword.keyword.includes(' ') && !keyword.keyword.includes('"')
+      ? `"${keyword.keyword}"`
+      : keyword.keyword;
+
     // Search both Posts and Comments
-    let url = `https://www.reddit.com/search.json?q=${encodeURIComponent(keyword.keyword)}&sort=new&limit=10&type=link,comment`;
+    let url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=10&type=link,comment`;
     if (!isGlobal) {
-      url = `https://www.reddit.com/r/${source.identifier}/search.json?q=${encodeURIComponent(keyword.keyword)}&restrict_sr=1&sort=new&limit=10&type=link,comment`;
+      url = `https://www.reddit.com/r/${source.identifier}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=10&type=link,comment`;
     }
 
     try {

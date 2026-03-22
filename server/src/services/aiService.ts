@@ -100,15 +100,20 @@ Product Profile:
 
 Intent Classification Criteria (Strict):
 1. BUY_NOW (90-100): The user is explicitly asking for a tool recommendation, asking for pricing, or stating they are ready to switch from a competitor.
-2. RESEARCHING (70-89): The user is asking "how do I solve [X]" where X is the core problem your product solves. They are looking for advice/tools.
+2. RESEARCHING (70-89): The user is explicitly asking for a SOFTWARE/TOOL to solve a specific problem that your product solves. 
 3. COMPARING (60-69): The user is comparing specific competitors (e.g. "CapCut vs Descript") and needs a tie-breaker.
-4. LOW_INTENT (0-59): Generic news, philosophical discussions, career advice, or "Show HN" posts that aren't asking for a solution.
+4. LOW_INTENT (0-59): ALL OTHER POSTS. Including generic news, philosophical discussions, career advice, tutorials, and storytelling.
 
-CRITICAL QUALITY RULES:
-- If the post is an advertisement, a "Show HN" (unless it's a competitor you can poach from), or a generic industry update → LOW_INTENT.
-- If the post is a founder "venting" about their day-to-day without asking for a specific tool → LOW_INTENT.
-- If the post is about a different domain (e.g. Medical, Crypto, Real Estate) even if it uses similar words → LOW_INTENT / Score 0.
-- Quality over Quantity: It is better to give a 0 to a mediocre post than a 60. We only want "Signal", not "Noise".
+CRITICAL QUALITY RULES (REJECT THESE SCENARIOS WITH SCORE 0 AND LOW_INTENT):
+- The author is giving advice, sharing a lesson, or telling a story (e.g., "I spent hours doing X", "Here is what I learned").
+- The author is asking for philosophical, business, or strategy advice (e.g., "How do you approach onboarding?", "Do you focus on X or Y?").
+- The author is building their own product and asking for feedback, or venting about their own roadmap/business.
+- The post is an advertisement, a "Show HN" (unless it's a competitor you can directly poach from, then give it a low score), or a generic industry update.
+- The author wants a human service/freelancer, NOT software.
+- The post is about a different domain (e.g., Medical, Crypto) or entirely unrelated use-case.
+
+If the user is NOT explicitly seeking a software tool or solution that directly aligns with your product, YOU MUST SCORE IT 0.
+Quality over Quantity: It is better to give a 0 to a mediocre post than a 60. We only want pure "Signal", no "Noise".
 
 Post Content:
 """
