@@ -62,8 +62,8 @@ async function logLlmUsage(params: {
         errorMessage: errorMessage || null,
       }
     });
-  } catch (error) {
-    logger.error({ error, action }, 'Failed to write LLM telemetry');
+  } catch (error: any) {
+    logger.error({ message: error.message, action }, 'Failed to write LLM telemetry');
   }
 }
 
@@ -167,7 +167,7 @@ Return your analysis strictly as a JSON object:
       intentScore: Math.min(Math.max(assignedScore, 0), 100),
     };
   } catch (error: any) {
-    logger.error({ error }, 'Failed to analyze intent:');
+    logger.error({ message: error.message, status: error.status }, 'Failed to analyze intent:');
     
     setImmediate(() => {
       logLlmUsage({
@@ -244,7 +244,7 @@ ${postText}
 
     return response.choices[0]?.message?.content || '';
   } catch (error: any) {
-    logger.error({ error }, 'Failed to generate reply:');
+    logger.error({ message: error.message, status: error.status }, 'Failed to generate reply:');
     
     setImmediate(() => {
       logLlmUsage({
@@ -337,7 +337,7 @@ Return ONLY a JSON object:
       confidence: typeof parsed.confidence === 'number' ? Math.min(Math.max(parsed.confidence, 0), 100) : 0,
     };
   } catch (error: any) {
-    logger.error({ error }, 'Failed to detect competitor signal:');
+    logger.error({ message: error.message, status: error.status }, 'Failed to detect competitor signal:');
     
     setImmediate(() => {
       logLlmUsage({
@@ -451,7 +451,7 @@ Return a JSON object with a single key "results", containing an array:
       reasoning: r.reasoning || '',
     }));
   } catch (error: any) {
-    logger.error({ error }, 'Semantic scan failed:');
+    logger.error({ message: error.message, status: error.status }, 'Semantic scan failed:');
     
     setImmediate(() => {
       logLlmUsage({
@@ -568,7 +568,7 @@ Return your strategy strictly as a JSON object:
       subreddits: Array.isArray(parsed.subreddits) ? parsed.subreddits : [],
     };
   } catch (error: any) {
-    logger.error({ error }, 'Failed to generate product strategy:');
+    logger.error({ message: error.message, status: error.status }, 'Failed to generate product strategy:');
     
     setImmediate(() => {
       logLlmUsage({

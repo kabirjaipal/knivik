@@ -113,8 +113,8 @@ export abstract class BaseScraperEngine {
 
         logger.info(`[${this.platform}] Done with ${product.name}. Found ${found} leads this cycle.`);
       }
-    } catch (error) {
-      logger.error({ error, platform: this.platform }, 'Fatal error in engine cycle:');
+    } catch (error: any) {
+      logger.error({ message: error.message, platform: this.platform }, 'Fatal error in engine cycle:');
     }
   }
 
@@ -334,7 +334,7 @@ export abstract class BaseScraperEngine {
       return true;
     } catch (err: any) {
       if (err.code !== 'P2002') {
-        logger.error({ error: err }, 'Failed to save lead:');
+        logger.error({ message: err.message }, 'Failed to save lead:');
       }
       return false;
     }

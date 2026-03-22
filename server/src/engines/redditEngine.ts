@@ -61,8 +61,8 @@ export class RedditEngine extends BaseScraperEngine {
       }
 
       await this.sleep(500);
-    } catch (error) {
-      logger.error({ error }, `[REDDIT] Error fetching for keyword: ${keyword.keyword}`);
+    } catch (error: any) {
+      logger.error(`[REDDIT] Error fetching for keyword: ${keyword.keyword}: ${error.message || error}`);
     }
 
     return savedCount;

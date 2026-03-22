@@ -86,8 +86,8 @@ export class TwitterEngine extends BaseScraperEngine {
       }
 
       await this.sleep(1500);
-    } catch (error) {
-      logger.error({ error }, `[TWITTER] Error fetching for keyword: ${keyword.keyword}`);
+    } catch (error: any) {
+      logger.error(`[TWITTER] Error fetching for keyword: ${keyword.keyword}: ${error.message || error}`);
     }
 
     return savedCount;

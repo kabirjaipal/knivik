@@ -63,8 +63,8 @@ export class LinkedInEngine extends BaseScraperEngine {
       }
 
       await this.sleep(2000);
-    } catch (error) {
-      logger.error({ error }, `[LINKEDIN] Error fetching for keyword: ${keyword.keyword}`);
+    } catch (error: any) {
+      logger.error(`[LINKEDIN] Error fetching for keyword: ${keyword.keyword}: ${error.message || error}`);
     }
 
     return savedCount;

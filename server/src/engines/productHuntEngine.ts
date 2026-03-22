@@ -64,8 +64,8 @@ export class ProductHuntEngine extends BaseScraperEngine {
       }
 
       await this.sleep(2000); 
-    } catch (error) {
-      logger.error({ error }, `[PRODUCTHUNT] Error fetching for keyword: ${keyword.keyword}`);
+    } catch (error: any) {
+      logger.error(`[PRODUCTHUNT] Error fetching for keyword: ${keyword.keyword}: ${error.message || error}`);
     }
 
     return savedCount;

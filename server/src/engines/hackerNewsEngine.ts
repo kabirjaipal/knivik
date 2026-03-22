@@ -53,8 +53,8 @@ export class HackerNewsEngine extends BaseScraperEngine {
       }
 
       await this.sleep(1000);
-    } catch (error) {
-      logger.error({ error }, `[HN] Error fetching for keyword: ${keyword.keyword}`);
+    } catch (error: any) {
+      logger.error(`[HN] Error fetching for keyword: ${keyword.keyword}: ${error.message || error}`);
     }
 
     return savedCount;
