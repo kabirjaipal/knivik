@@ -2,6 +2,70 @@ import OpenAI from 'openai';
 import config from '../lib/config.js';
 import { IntentLevel } from '@prisma/client';
 import logger from '../lib/logger.js';
+import { db } from '../lib/db.js';
+
+// Centralized model registry
+const MODELS = {
+  FAST: 'llama-3.1-8b-instant',
+  VERSATILE: 'llama-3.3-70b-versatile',
+};
+
+// Pre-seed known pricing (adjust as needed for accurate dashboard projection later)
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  [MODELS.FAST]: { input: 0.05, output: 0.08 },
+  [MODELS.VERSATILE]: { input: 0.50, output: 0.80 },
+};
+
+async function logLlmUsage(params: {
+  action: string;
+  model: string;
+  userId?: string | null | undefined;
+  productId?: string | null | undefined;
+  inputTokens: number;
+  outputTokens: number;
+  latencyMs: number;
+  status?: string | undefined;
+  errorMessage?: string | undefined;
+}) {
+  const { action, model: modelId, userId, productId, inputTokens, outputTokens, latencyMs, status = 'success', errorMessage } = params;
+  const totalTokens = inputTokens + outputTokens;
+
+  try {
+    // 1. Ensure the pricing model exists in the database (safeguard)
+    const rates = MODEL_PRICING[modelId as keyof typeof MODEL_PRICING] || { input: 0, output: 0 };
+    await db.client.llmModel.upsert({
+      where: { id: modelId },
+      update: {}, 
+      create: { 
+        id: modelId, 
+        inputPrice: rates.input, 
+        outputPrice: rates.output,
+        modelOptions: { 
+          source: 'groq', 
+          reasoning_tokens_supported: modelId.includes('llama-3.3') 
+        } 
+      }
+    });
+
+    // 2. Log exactly how many tokens were used
+    await db.client.llmUsageLog.create({
+      data: {
+        action,
+        modelId,
+        userId: userId || null,
+        productId: productId || null,
+        inputTokens,
+        outputTokens,
+        totalTokens,
+        latencyMs,
+        status,
+        errorMessage: errorMessage || null,
+      }
+    });
+  } catch (error) {
+    logger.error({ error, action }, 'Failed to write LLM telemetry');
+  }
+}
 
 // Initialize Groq client (Groq is OpenAI-compatible)
 const groq = new OpenAI({
@@ -19,7 +83,12 @@ export interface IntentAnalysisResult {
  * Simple task: Classification and Scoring.
  * Model: llama-3.1-8b-instant
  */
-export const analyzeIntent = async (postText: string): Promise<IntentAnalysisResult> => {
+export const analyzeIntent = async (
+  postText: string,
+  userId?: string,
+  productId?: string
+): Promise<IntentAnalysisResult> => {
+  const startTime = Date.now();
   const prompt = `
 Analyze the buying intent of the following post with expert-level precision.
 Categories:
@@ -45,7 +114,7 @@ Return your analysis strictly as a JSON object with this schema:
 
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant', 
+      model: MODELS.FAST, 
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -66,12 +135,43 @@ Return your analysis strictly as a JSON object with this schema:
       
     const assignedScore = typeof parsed.intentScore === 'number' ? parsed.intentScore : 0;
 
+    const elapsed = Date.now() - startTime;
+    const usage = response.usage;
+    
+    // Fire and forget telemetry
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'analyze_intent',
+        model: MODELS.FAST,
+        userId,
+        productId,
+        inputTokens: usage?.prompt_tokens || 0,
+        outputTokens: usage?.completion_tokens || 0,
+        latencyMs: elapsed
+      });
+    });
+
     return {
       intentLevel: assignedLevel,
       intentScore: Math.min(Math.max(assignedScore, 0), 100),
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, 'Failed to analyze intent:');
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'analyze_intent',
+        model: MODELS.FAST,
+        userId,
+        productId,
+        inputTokens: 0,
+        outputTokens: 0,
+        latencyMs: Date.now() - startTime,
+        status: 'error',
+        errorMessage: error?.message || 'Unknown error'
+      });
+    });
+
     // Fallback if LLM fails
     return {
       intentLevel: 'LOW_INTENT',
@@ -87,9 +187,10 @@ Return your analysis strictly as a JSON object with this schema:
  */
 export const generateReply = async (
   postText: string,
-  productInfo: { name: string; description?: string; aiConfig?: any },
+  productInfo: { id?: string; userId?: string; name: string; description?: string; aiConfig?: any },
   tone: string = 'helpful and highly concise'
 ): Promise<string> => {
+  const startTime = Date.now();
   const prompt = `
 You are representing a product called "${productInfo.name}".
 Product description: ${productInfo.description || 'A software tool.'}
@@ -107,7 +208,7 @@ ${postText}
 
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: MODELS.VERSATILE,
       messages: [
         { role: 'system', content: 'You are an authentic, helpful founder replying to online threads.' },
         { role: 'user', content: prompt }
@@ -115,9 +216,39 @@ ${postText}
       temperature: 0.7,
     });
 
+    const elapsed = Date.now() - startTime;
+    const usage = response.usage;
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'generate_reply',
+        model: MODELS.VERSATILE,
+        userId: productInfo.userId,
+        productId: productInfo.id,
+        inputTokens: usage?.prompt_tokens || 0,
+        outputTokens: usage?.completion_tokens || 0,
+        latencyMs: elapsed
+      });
+    });
+
     return response.choices[0]?.message?.content || '';
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, 'Failed to generate reply:');
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'generate_reply',
+        model: MODELS.VERSATILE,
+        userId: productInfo.userId,
+        productId: productInfo.id,
+        inputTokens: 0,
+        outputTokens: 0,
+        latencyMs: Date.now() - startTime,
+        status: 'error',
+        errorMessage: error?.message || 'Unknown error'
+      });
+    });
+
     return 'Hi! Based on your post, our tool might be exactly what you need. Would love to chat more if you are interested.';
   }
 };
@@ -135,9 +266,12 @@ export interface CompetitorSignalResult {
 
 export const detectCompetitorSignal = async (
   postText: string,
-  competitors: string[]
+  competitors: string[],
+  userId?: string,
+  productId?: string
 ): Promise<CompetitorSignalResult> => {
   if (!competitors.length) return { detected: false, competitor: null, confidence: 0 };
+  const startTime = Date.now();
 
   const prompt = `
 You are analyzing an online post to check if the author is frustrated with, leaving, or comparing against a competitor tool.
@@ -161,7 +295,7 @@ Return ONLY a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: MODELS.FAST,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -170,14 +304,44 @@ Return ONLY a JSON object:
     const content = response.choices[0]?.message?.content;
     if (!content) throw new Error('No content');
 
+    const elapsed = Date.now() - startTime;
+    const usage = response.usage;
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'detect_competitor',
+        model: MODELS.FAST,
+        userId,
+        productId,
+        inputTokens: usage?.prompt_tokens || 0,
+        outputTokens: usage?.completion_tokens || 0,
+        latencyMs: elapsed
+      });
+    });
+
     const parsed = JSON.parse(content);
     return {
       detected: Boolean(parsed.detected),
       competitor: parsed.competitor || null,
       confidence: typeof parsed.confidence === 'number' ? Math.min(Math.max(parsed.confidence, 0), 100) : 0,
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, 'Failed to detect competitor signal:');
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'detect_competitor',
+        model: MODELS.FAST,
+        userId,
+        productId,
+        inputTokens: 0,
+        outputTokens: 0,
+        latencyMs: Date.now() - startTime,
+        status: 'error',
+        errorMessage: error?.message || 'Unknown error'
+      });
+    });
+
     return { detected: false, competitor: null, confidence: 0 };
   }
 };
@@ -202,9 +366,12 @@ export interface SemanticScanResult {
 
 export const semanticScan = async (
   posts: SemanticScanPost[],
-  productDescription: string
+  productDescription: string,
+  userId?: string,
+  productId?: string
 ): Promise<SemanticScanResult[]> => {
   if (!posts.length) return [];
+  const startTime = Date.now();
 
   const postsJson = posts.map(p => `ID: ${p.id}\nText: "${p.text.substring(0, 500)}"`).join('\n\n---\n\n');
 
@@ -236,7 +403,7 @@ Return a JSON object with a single key "results", containing an array of exactly
 
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
+      model: MODELS.FAST,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -244,6 +411,21 @@ Return a JSON object with a single key "results", containing an array of exactly
 
     const content = response.choices[0]?.message?.content;
     if (!content) throw new Error('No content');
+
+    const elapsed = Date.now() - startTime;
+    const usage = response.usage;
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'semantic_scan',
+        model: MODELS.FAST,
+        userId,
+        productId,
+        inputTokens: usage?.prompt_tokens || 0,
+        outputTokens: usage?.completion_tokens || 0,
+        latencyMs: elapsed
+      });
+    });
 
     const parsed = JSON.parse(content);
     const results = Array.isArray(parsed.results) ? parsed.results : [];
@@ -254,8 +436,23 @@ Return a JSON object with a single key "results", containing an array of exactly
       intentScore: typeof r.intentScore === 'number' ? Math.min(Math.max(r.intentScore, 0), 100) : 0,
       reasoning: r.reasoning || '',
     }));
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, 'Semantic scan failed:');
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'semantic_scan',
+        model: MODELS.FAST,
+        userId,
+        productId,
+        inputTokens: 0,
+        outputTokens: 0,
+        latencyMs: Date.now() - startTime,
+        status: 'error',
+        errorMessage: error?.message || 'Unknown error'
+      });
+    });
+
     return [];
   }
 };
@@ -276,8 +473,10 @@ export interface ProductStrategyResult {
 
 export const generateProductStrategy = async (
   name: string,
-  description: string
+  description: string,
+  userId?: string
 ): Promise<ProductStrategyResult> => {
+  const startTime = Date.now();
   const prompt = `
 You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS.
 Your goal is to build a high-conversion social listening strategy for a product on "${config.PROJECT_NAME}".
@@ -323,7 +522,7 @@ Return your strategy strictly as a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant', // Fast and effective for this
+      model: MODELS.FAST, // Fast and effective for this
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.2,
@@ -332,6 +531,20 @@ Return your strategy strictly as a JSON object:
     const content = response.choices[0]?.message?.content;
     if (!content) throw new Error('No content');
 
+    const elapsed = Date.now() - startTime;
+    const usage = response.usage;
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'generate_strategy',
+        model: MODELS.FAST,
+        userId,
+        inputTokens: usage?.prompt_tokens || 0,
+        outputTokens: usage?.completion_tokens || 0,
+        latencyMs: elapsed
+      });
+    });
+
     const parsed = JSON.parse(content);
     return {
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
@@ -339,8 +552,22 @@ Return your strategy strictly as a JSON object:
       competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [],
       subreddits: Array.isArray(parsed.subreddits) ? parsed.subreddits : [],
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error({ error }, 'Failed to generate product strategy:');
+    
+    setImmediate(() => {
+      logLlmUsage({
+        action: 'generate_strategy',
+        model: MODELS.FAST,
+        userId,
+        inputTokens: 0,
+        outputTokens: 0,
+        latencyMs: Date.now() - startTime,
+        status: 'error',
+        errorMessage: error?.message || 'Unknown error'
+      });
+    });
+
     return { keywords: [], negativeKeywords: [], competitors: [], subreddits: [] };
   }
 };

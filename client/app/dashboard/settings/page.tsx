@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { User, Lock, Save, AlertCircle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react"
-import { useState } from "react"
+import { User, Lock, Save, AlertCircle, CheckCircle2, Loader2, ShieldCheck, Slack, Mail, Sliders, Info, Bell } from "lucide-react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 
 export default function SettingsPage() {
@@ -19,6 +19,47 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  // Alerts State
+  const [loadingSettings, setLoadingSettings] = useState(true)
+  const [savingAlerts, setSavingAlerts] = useState(false)
+  const [alertError, setAlertError] = useState<string | null>(null)
+  const [alertSuccess, setAlertSuccess] = useState<string | null>(null)
+  
+  const [alertSettings, setAlertSettings] = useState({
+    emailEnabled: true,
+    slackEnabled: false,
+    slackWebhook: "",
+    minIntentScore: 70
+  })
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchAlertSettings()
+    }
+  }, [user, authLoading])
+
+  const fetchAlertSettings = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/alerts`, { credentials: 'include' })
+      if (!res.ok) throw new Error('Failed to fetch settings')
+      const data = await res.json()
+      if (data.settings) {
+        setAlertSettings({
+          emailEnabled: data.settings.emailEnabled,
+          slackEnabled: data.settings.slackEnabled,
+          slackWebhook: data.settings.slackWebhook || "",
+          minIntentScore: data.settings.minIntentScore
+        })
+      }
+    } catch (e: any) {
+      console.error(e)
+      setAlertError("Could not load alert configuration.")
+    } finally {
+      setLoadingSettings(false)
+    }
+  }
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,7 +95,32 @@ export default function SettingsPage() {
     }
   }
 
-  if (authLoading) {
+  const handleSaveAlerts = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingAlerts(true)
+    setAlertError(null)
+    setAlertSuccess(null)
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/alerts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(alertSettings)
+      })
+
+      if (!res.ok) throw new Error('Failed to update settings')
+      setAlertSuccess("Alert settings saved successfully.")
+      setTimeout(() => setAlertSuccess(null), 3000)
+    } catch (e: any) {
+      setAlertError(e.message)
+    } finally {
+      setSavingAlerts(false)
+    }
+  }
+
+  if (authLoading || loadingSettings) {
     return (
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
@@ -77,7 +143,7 @@ export default function SettingsPage() {
         >
           <div className="space-y-2">
             <h1 className="text-4xl font-black tracking-tight text-foreground">Settings</h1>
-            <p className="text-muted-foreground text-lg">Manage your account preferences and security.</p>
+            <p className="text-muted-foreground text-lg">Manage your account preferences, security, and alerts.</p>
           </div>
 
           <div className="grid gap-8">
@@ -111,6 +177,111 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </CardContent>
+            </Card>
+
+            {/* Alert Routing Section */}
+            <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
+                    <Bell className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <CardTitle>Alert Routing</CardTitle>
+                    <CardDescription>Configure how radar detects and delivers high-value signals.</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <form onSubmit={handleSaveAlerts}>
+                <CardContent className="pt-6 space-y-6">
+                  {alertError && (
+                    <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
+                      <AlertCircle className="w-4 h-4 shrink-0" /> {alertError}
+                    </div>
+                  )}
+                  {alertSuccess && (
+                    <div className="p-4 bg-success/10 border border-success/20 text-success rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" /> {alertSuccess}
+                    </div>
+                  )}
+
+                  {/* Intent Score Threshold */}
+                  <div className="space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        <Sliders className="w-4 h-4 text-primary" />
+                        <label className="text-sm font-bold text-foreground">Scan Sensitivity Threshold</label>
+                      </div>
+                      <span className="text-primary text-lg font-black">{alertSettings.minIntentScore}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="100" 
+                      step="5"
+                      value={alertSettings.minIntentScore}
+                      onChange={e => setAlertSettings({...alertSettings, minIntentScore: parseInt(e.target.value)})}
+                      className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-1">
+                      <span>Low (Noisy)</span>
+                      <span>High (Precise)</span>
+                    </div>
+                    <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-lg flex gap-3 text-xs text-muted-foreground leading-relaxed">
+                       <Info className="w-4 h-4 text-primary shrink-0" />
+                       We recommend 70-85% for the best balance between speed and precision. Scores above 90% are usually direct "where do I buy" questions.
+                    </div>
+                  </div>
+
+                  {/* Instant Messaging (Slack) */}
+                  <div className={`space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60 transition-all duration-300 ${!alertSettings.slackEnabled ? 'opacity-60' : ''}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Slack className="w-4 h-4 text-blue-500" />
+                        <label className="text-sm font-bold text-foreground">Instant Messaging</label>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={alertSettings.slackEnabled} onChange={e => setAlertSettings({...alertSettings, slackEnabled: e.target.checked})} />
+                        <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                    
+                    <div className={`space-y-2 transition-all duration-300 ${!alertSettings.slackEnabled ? 'pointer-events-none hidden opacity-0' : 'opacity-100'}`}>
+                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Webhook URL</Label>
+                      <Input 
+                        placeholder="https://hooks.slack.com/services/..."
+                        value={alertSettings.slackWebhook}
+                        onChange={e => setAlertSettings({...alertSettings, slackWebhook: e.target.value})}
+                        className="font-mono text-sm bg-background border-border/60"
+                      />
+                      <p className="text-[11px] text-muted-foreground px-1">
+                        Create an "Incoming Webhook" in your Slack App settings or a "Webhook" in Discord Integrations to get this URL.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Email Notifications */}
+                  <div className={`space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60 transition-all duration-300 ${!alertSettings.emailEnabled ? 'opacity-60' : ''}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-amber-500" />
+                        <label className="text-sm font-bold text-foreground">Email Deliveries</label>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" checked={alertSettings.emailEnabled} onChange={e => setAlertSettings({...alertSettings, emailEnabled: e.target.checked})} />
+                        <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                </CardContent>
+                <CardFooter className="bg-muted/10 border-t border-border/40 py-4">
+                  <Button type="submit" disabled={savingAlerts} className="w-full sm:w-auto min-w-[160px] gap-2">
+                    {savingAlerts ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Alert Config
+                  </Button>
+                </CardFooter>
+              </form>
             </Card>
 
             {/* Security Section */}
@@ -187,3 +358,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+

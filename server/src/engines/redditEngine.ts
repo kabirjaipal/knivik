@@ -12,7 +12,8 @@ export class RedditEngine extends BaseScraperEngine {
     product: ProductWithDetails,
     source: ProductSource,
     keyword: Keyword,
-    limit: number
+    limit: number,
+    signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
     const isGlobal = source.identifier.toLowerCase() === 'global';
@@ -24,7 +25,7 @@ export class RedditEngine extends BaseScraperEngine {
     }
 
     try {
-      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: signal as any });
       if (!response.ok) {
         logger.warn(`[REDDIT] API returned ${response.status} for ${url}`);
         return savedCount;
@@ -70,14 +71,14 @@ export class RedditEngine extends BaseScraperEngine {
   /**
    * Fetches the latest posts from a subreddit (or global Reddit) for semantic + competitor passes.
    */
-  override async fetchRecentPosts(source: ProductSource, limit: number) {
+  override async fetchRecentPosts(source: ProductSource, limit: number, signal?: AbortSignal) {
     const isGlobal = source.identifier.toLowerCase() === 'global';
     const url = isGlobal
       ? `https://www.reddit.com/new.json?limit=${limit}`
       : `https://www.reddit.com/r/${source.identifier}/new.json?limit=${limit}`;
 
     try {
-      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: signal as any });
       if (!response.ok) return [];
 
       const data = (await response.json()) as any;

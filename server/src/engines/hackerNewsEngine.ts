@@ -13,7 +13,8 @@ export class HackerNewsEngine extends BaseScraperEngine {
     product: ProductWithDetails,
     _source: ProductSource,
     keyword: Keyword,
-    limit: number
+    limit: number,
+    signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
 
@@ -21,7 +22,7 @@ export class HackerNewsEngine extends BaseScraperEngine {
     const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(keyword.keyword)}&tags=(story,comment)&hitsPerPage=10`;
 
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { signal: signal as any });
       if (!response.ok) {
         logger.warn(`[HN] Algolia API returned ${response.status}`);
         return savedCount;

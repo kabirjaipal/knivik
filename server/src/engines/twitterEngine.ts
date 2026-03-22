@@ -22,7 +22,8 @@ export class TwitterEngine extends BaseScraperEngine {
     product: ProductWithDetails,
     _source: ProductSource,
     keyword: Keyword,
-    limit: number
+    limit: number,
+    signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
     const host = this.getRandomHost();
@@ -33,6 +34,7 @@ export class TwitterEngine extends BaseScraperEngine {
         headers: {
           'User-Agent': this.getRandomUserAgent(),
         },
+        signal: signal as any
       });
 
       if (!response.ok) {
@@ -91,7 +93,7 @@ export class TwitterEngine extends BaseScraperEngine {
     return savedCount;
   }
 
-  override async fetchRecentPosts(source: ProductSource, limit: number) {
+  override async fetchRecentPosts(source: ProductSource, limit: number, signal?: AbortSignal) {
     const host = this.getRandomHost();
     const isGlobal = source.identifier.toLowerCase() === 'global' || !source.identifier;
     
@@ -100,7 +102,8 @@ export class TwitterEngine extends BaseScraperEngine {
 
     try {
       const response = await fetch(url, {
-        headers: { 'User-Agent': this.getRandomUserAgent() }
+        headers: { 'User-Agent': this.getRandomUserAgent() },
+        signal: signal as any
       });
       if (!response.ok) return [];
 

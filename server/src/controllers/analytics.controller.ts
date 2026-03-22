@@ -127,3 +127,60 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
   });
   return;
 });
+
+export const getLlmUsage = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ success: false, error: 'Unauthorized' });
+    return;
+  }
+
+  const userId = req.user.id;
+
+  // Aggregate usage stats
+  const usageStats = await db.client.llmUsageLog.groupBy({
+    by: ['modelId', 'action'],
+    where: { userId },
+    _sum: {
+      inputTokens: true,
+      outputTokens: true,
+      totalTokens: true,
+    },
+    _count: { id: true },
+  });
+
+  // Get models for cost calculation
+  const models = await db.client.llmModel.findMany();
+  const modelMap = new Map(models.map(m => [m.id, m]));
+
+  const data = usageStats.map(stat => {
+    const model = modelMap.get(stat.modelId);
+    const inputCost = model ? (stat._sum.inputTokens || 0) * (model.inputPrice / 1_000_000) : 0;
+    const outputCost = model ? (stat._sum.outputTokens || 0) * (model.outputPrice / 1_000_000) : 0;
+    
+    return {
+      modelId: stat.modelId,
+      action: stat.action,
+      inputTokens: stat._sum.inputTokens || 0,
+      outputTokens: stat._sum.outputTokens || 0,
+      totalTokens: stat._sum.totalTokens || 0,
+      requestCount: stat._count.id,
+      estimatedCost: inputCost + outputCost,
+    };
+  });
+
+  const totals = data.reduce((acc, curr) => ({
+    inputTokens: acc.inputTokens + curr.inputTokens,
+    outputTokens: acc.outputTokens + curr.outputTokens,
+    totalTokens: acc.totalTokens + curr.totalTokens,
+    estimatedCost: acc.estimatedCost + curr.estimatedCost,
+    requestCount: acc.requestCount + curr.requestCount,
+  }), { inputTokens: 0, outputTokens: 0, totalTokens: 0, estimatedCost: 0, requestCount: 0 });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      breakdown: data,
+      totals
+    }
+  });
+});

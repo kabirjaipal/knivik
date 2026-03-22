@@ -9,7 +9,8 @@ export class ProductHuntEngine extends BaseScraperEngine {
     product: ProductWithDetails,
     _source: ProductSource, 
     keyword: Keyword,
-    limit: number
+    limit: number,
+    signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
 
@@ -24,6 +25,7 @@ export class ProductHuntEngine extends BaseScraperEngine {
           'User-Agent': this.getRandomUserAgent(),
           'Accept-Language': 'en-US,en;q=0.9',
         },
+        signal: signal as any
       });
 
       if (!response.ok) {
@@ -69,7 +71,7 @@ export class ProductHuntEngine extends BaseScraperEngine {
     return savedCount;
   }
 
-  override async fetchRecentPosts(_source: ProductSource, _limit: number) {
+  override async fetchRecentPosts(_source: ProductSource, _limit: number, _signal?: AbortSignal) {
     return [];
   }
 }

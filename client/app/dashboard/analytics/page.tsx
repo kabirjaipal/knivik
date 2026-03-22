@@ -14,7 +14,8 @@ import {
   Sparkles,
   Search,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Brain
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
@@ -34,14 +35,39 @@ interface AnalyticsData {
   conversationsScanned: number;
 }
 
+interface LlmBreakdown {
+  modelId: string;
+  action: string;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  requestCount: number;
+  estimatedCost: number;
+}
+
+interface LlmUsageData {
+  breakdown: LlmBreakdown[];
+  totals: {
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    estimatedCost: number;
+    requestCount: number;
+  };
+}
+
 export default function AnalyticsPage() {
   const { user, loading: authLoading } = useAuth()
   const [data, setData] = useState<AnalyticsData | null>(null)
+  const [llmUsage, setLlmUsage] = useState<LlmUsageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user) fetchAnalytics()
+    if (user) {
+      Promise.all([fetchAnalytics(), fetchLlmUsage()])
+        .finally(() => setLoading(false))
+    }
   }, [user])
 
   const fetchAnalytics = async () => {
@@ -53,8 +79,18 @@ export default function AnalyticsPage() {
       setData(result.data)
     } catch (err: any) {
       setError(err.message)
-    } finally {
-      setLoading(false)
+    }
+  }
+
+  const fetchLlmUsage = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(`${apiUrl}/analytics/llm`, { credentials: 'include' })
+      if (!res.ok) throw new Error("Failed to fetch AI usage")
+      const result = await res.json()
+      setLlmUsage(result.data)
+    } catch (err: any) {
+      console.error(err.message)
     }
   }
 
@@ -106,7 +142,7 @@ export default function AnalyticsPage() {
                 <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Scanned Context</p>
                 <p className="text-lg font-black text-foreground">{data.conversationsScanned.toLocaleString()}</p>
               </div>
-              <div className="h-10 w-[1px] bg-border/50" />
+              <div className="h-10 w-px bg-border/50" />
               <div className="text-right">
                 <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Total Leads Found</p>
                 <p className="text-lg font-black text-primary">{data.totalLeads.toLocaleString()}</p>
@@ -162,7 +198,7 @@ export default function AnalyticsPage() {
                         <motion.div 
                           initial={{ height: 0 }}
                           animate={{ height }}
-                          className="w-full max-w-[40px] rounded-t-lg bg-gradient-to-t from-primary/80 to-primary group-hover:from-primary transition-all duration-500 relative"
+                          className="w-full max-w-[40px] rounded-t-lg bg-linear-to-t from-primary/80 to-primary group-hover:from-primary transition-all duration-500 relative"
                         >
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-border">
                             {day.count}
@@ -245,6 +281,118 @@ export default function AnalyticsPage() {
                   {data.platformDistribution.length === 0 && (
                     <p className="text-xs text-center text-muted-foreground py-4 italic">No platform data available yet.</p>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* AI Usage Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-violet-500/10 rounded-lg">
+                <Brain className="w-5 h-5 text-violet-500" />
+              </div>
+              <h2 className="text-2xl font-black tracking-tight text-foreground">AI Power &amp; Consumption</h2>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Cost & Efficiency */}
+              <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                  <Brain className="w-40 h-40" />
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-violet-400" /> Token Efficiency
+                  </CardTitle>
+                  <CardDescription>Real-time calculation of inference costs.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="flex items-end gap-2">
+                    <span className="text-5xl font-black text-foreground">${llmUsage?.totals.estimatedCost.toFixed(4) || '0.000'}</span>
+                    <span className="text-sm font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Total USD Burned</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-1">Input Tokens</p>
+                      <p className="text-xl font-black text-foreground">{llmUsage?.totals.inputTokens.toLocaleString() || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-1">Output Tokens</p>
+                      <p className="text-xl font-black text-foreground">{llmUsage?.totals.outputTokens.toLocaleString() || 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-border/40">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Usage by Task</p>
+                    <div className="space-y-4">
+                      {llmUsage?.breakdown.map((item, i) => {
+                        const percentage = (item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100
+                        return (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
+                              <span className="text-muted-foreground">{item.action.replace('_', ' ')}</span>
+                              <span className="text-foreground">{Math.round(percentage)}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                className="h-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]"
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Model Breakdown */}
+              <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-violet-400" /> Active Models
+                  </CardTitle>
+                  <CardDescription>Which minds are powering your radar?</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {llmUsage?.breakdown.reduce((acc: any[], curr) => {
+                      const existing = acc.find(a => a.modelId === curr.modelId)
+                      if (existing) {
+                        existing.requestCount += curr.requestCount
+                        existing.estimatedCost += curr.estimatedCost
+                      } else {
+                        acc.push({ ...curr })
+                      }
+                      return acc
+                    }, []).map((model, i) => (
+                      <div key={i} className="p-4 rounded-xl border border-border/40 bg-muted/20 flex items-center justify-between group hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${i === 0 ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-500'}`}>
+                            <Brain className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-foreground tracking-tight">{model.modelId}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{model.requestCount} Requests</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-black text-foreground">${model.estimatedCost.toFixed(4)}</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Model Cost</p>
+                        </div>
+                      </div>
+                    ))}
+                    {!llmUsage?.breakdown.length && (
+                      <div className="py-12 text-center">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground opacity-20" />
+                        <p className="text-xs text-muted-foreground mt-2 italic font-medium">No AI activity recorded yet.</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>

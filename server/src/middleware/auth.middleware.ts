@@ -27,6 +27,8 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
             username: true,
             role: true,
             plan: true,
+            isScanning: true,
+            lastScanStatus: true,
             createdAt: true,
             updatedAt: true
           }

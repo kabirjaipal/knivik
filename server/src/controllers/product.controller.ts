@@ -58,6 +58,35 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
 
     const data = parsed.data;
 
+    // Auto-generate strategy for Onboarding Users who submit empty configs
+    if (data.keywords.length === 0 && data.sources.length === 0 && data.name) {
+      try {
+        const strategy = await generateProductStrategy(data.name, data.description || '', userId);
+        if (strategy) {
+          data.keywords = strategy.keywords || [];
+          data.negativeKeywords = strategy.negativeKeywords || [];
+          data.competitors = strategy.competitors || [];
+          if (strategy.subreddits && strategy.subreddits.length > 0) {
+            data.sources = strategy.subreddits.map(sub => ({
+              platform: Platform.REDDIT,
+              identifier: sub
+            }));
+          }
+        }
+      } catch (err) {
+        logger.warn({ err }, 'Failed to auto-generate strategy during onboarding, applying fallback');
+      }
+      
+      // Fallback if AI generation fails or returned no sources
+      if (data.sources.length === 0) {
+        data.sources = [
+          { platform: Platform.REDDIT, identifier: 'SaaS' },
+          { platform: Platform.REDDIT, identifier: 'startups' }
+        ];
+        data.keywords = [data.name];
+      }
+    }
+
     const product = await db.client.product.create({
       data: {
         userId,
@@ -193,13 +222,15 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
 
 export const analyzeProduct = async (req: Request, res: Response): Promise<void> => {
   try {
+    // @ts-ignore
+    const userId = req.user?.id as string | undefined;
     const { name, description } = req.body;
     if (!name || !description) {
       res.status(400).json({ error: 'Name and description are required for AI analysis' });
       return;
     }
 
-    const strategy = await generateProductStrategy(name, description);
+    const strategy = await generateProductStrategy(name, description, userId);
     res.status(200).json({ success: true, strategy });
   } catch (error) {
     logger.error({ error }, 'Analyze Product error');

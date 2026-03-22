@@ -291,42 +291,30 @@ export default function DashboardPage() {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [hasFetchedProducts, setHasFetchedProducts] = useState(false)
+  const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, estimatedCost: number, requestCount: number } } | null>(null)
 
-  useEffect(() => {
-    if (!authLoading && !user) { router.push("/login"); return }
-    if (!user) return
+  const fetchLlmUsage = useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/llm`, { credentials: 'include' })
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.success) setLlmUsage(data.data)
+    } catch (e) { console.error('Error fetching LLM usage:', e) }
+  }, [])
 
-    fetchLeads()
-    fetchProducts()
-
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || ''
-    const newSocket = io(socketUrl, { withCredentials: true, transports: ['websocket', 'polling'] })
-
-    newSocket.on('connect', () => newSocket.emit('join-user-room', user.id))
-    newSocket.on('new-lead', (newLead: Lead) => {
-      setLeads(prev => prev.find(l => l.id === newLead.id) ? prev : [newLead, ...prev])
-    })
-
-    setSocket(newSocket)
-    return () => { newSocket.disconnect() }
-  }, [user, authLoading, router])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch products')
       const data = await res.json()
-      if (data.products && data.products.length === 0) {
-        setShowOnboarding(true)
-      }
+      if (data.products && data.products.length === 0) setShowOnboarding(true)
       setHasFetchedProducts(true)
-    } catch (e) {
-      console.error('Error fetching products:', e)
-    }
-  }
+    } catch (e) { console.error('Error fetching products:', e) }
+  }, [])
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     try {
+      setLoading(true)
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch leads')
       const data = await res.json()
@@ -340,7 +328,37 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!authLoading && !user) { router.push("/login"); return }
+    if (!user) return
+
+    // Sync initial scanning state
+    if (user.isScanning !== undefined) setIsScanning(user.isScanning)
+
+    fetchLeads()
+    fetchProducts()
+    fetchLlmUsage()
+
+    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || ''
+    const newSocket = io(socketUrl, { withCredentials: true, transports: ['websocket', 'polling'] })
+
+    newSocket.on('connect', () => newSocket.emit('join-user-room', user.id))
+    newSocket.on('new-lead', (newLead: Lead) => {
+      setLeads(prev => prev.find(l => l.id === newLead.id) ? prev : [newLead, ...prev])
+    })
+    newSocket.on('scan-status', (data: { isScanning: boolean }) => {
+      setIsScanning(data.isScanning)
+      if (!data.isScanning) {
+        fetchLeads()
+        fetchLlmUsage()
+      }
+    })
+
+    setSocket(newSocket)
+    return () => { newSocket.disconnect() }
+  }, [user, authLoading, router, fetchLlmUsage, fetchLeads, fetchProducts])
 
   const handleDraftReply = async (leadId: string) => {
     setDraftingLeadId(leadId)
@@ -359,8 +377,15 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/scan`, { method: 'POST', credentials: 'include' })
       if (!res.ok) throw new Error('Scan failed')
-      setTimeout(() => setIsScanning(false), 60000)
+      // The socket will eventually update the scan state, or we can check again
     } catch { setIsScanning(false) }
+  }
+
+  const handleStopScan = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/stop-scan`, { method: 'POST', credentials: 'include' })
+      if (res.ok) setIsScanning(false)
+    } catch { console.error('Failed to stop scan') }
   }
 
   const handleStatusChange = async (leadId: string, status: LeadStatus) => {
@@ -423,6 +448,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-primary/30">
+      <OnboardingModal isOpen={showOnboarding} onComplete={() => {
+        setShowOnboarding(false)
+        fetchProducts()
+      }} />
+      
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05),transparent_70%)] blur-[80px]" />
       </div>
@@ -442,12 +472,19 @@ export default function DashboardPage() {
           </div>
 
           {/* Metric cards */}
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 mb-10">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5 mb-10">
             {[
               { label: 'Total Leads', value: totalLeads, icon: Activity, sub: 'Live tracking', subColor: 'text-primary' },
               { label: 'High-Intent', value: highIntentLeads, icon: Radar, sub: 'Score ≥ 80', subColor: 'text-primary', highlight: true },
               { label: 'Competitor Alerts', value: competitorLeads, icon: Flame, sub: 'High-poach leads', subColor: 'text-red-400' },
               { label: 'Last 24h', value: recentSignals, icon: Clock, sub: 'New signals', subColor: 'text-muted-foreground' },
+              { 
+                label: 'AI Usage (USD)', 
+                value: llmUsage ? `$${llmUsage.totals.estimatedCost.toFixed(4)}` : '$0.000', 
+                icon: Brain, 
+                sub: `${llmUsage?.totals.requestCount || 0} AI inferences`, 
+                subColor: 'text-violet-400' 
+              },
             ].map((m, i) => (
               <Card key={i} className={`shadow-lg border-border/40 overflow-hidden group relative ${m.highlight ? 'bg-primary/5 border-primary/30' : 'bg-card hover:border-primary/40 transition-colors'}`}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -473,10 +510,14 @@ export default function DashboardPage() {
                   Keyword matches, semantic finds, and competitor signals — all in one place.
                 </CardDescription>
               </div>
-              <button onClick={handleForceScan} disabled={isScanning}
-                className="flex items-center gap-2 py-2 px-5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground font-bold rounded-lg text-sm transition-all active:scale-95 disabled:opacity-50">
+              <button onClick={isScanning ? handleStopScan : handleForceScan}
+                className={`flex items-center gap-2 py-2 px-5 font-bold rounded-lg text-sm transition-all active:scale-95 ${
+                  isScanning 
+                    ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white' 
+                    : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground'
+                }`}>
                 {isScanning ? (
-                  <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Scanning...</>
+                  <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Stop Scan</>
                 ) : (
                   <><Zap className="w-3.5 h-3.5" /> Force Scan</>
                 )}

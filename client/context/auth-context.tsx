@@ -8,6 +8,8 @@ interface User {
   username: string
   email: string
   role: string
+  isScanning?: boolean
+  lastScanStatus?: string
 }
 
 interface AuthContextType {

@@ -188,7 +188,7 @@ export default function ProductsPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
               <h1 className="text-4xl font-black tracking-tight text-foreground">
-                Products & Triggers
+                Products
               </h1>
               <p className="text-muted-foreground mt-2">
                 Configure exactly what the {PROJECT_NAME} engines should look for to catch your leads.
@@ -216,7 +216,7 @@ export default function ProductsPage() {
                   <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary to-blue-500" />
                   <CardHeader className="flex flex-row justify-between items-start">
                     <div>
-                      <CardTitle className="text-2xl">{editingProductId ? "Edit Tracking Configuration" : "New Tracking Configuration"}</CardTitle>
+                      <CardTitle className="text-2xl">{editingProductId ? "Edit Product" : "New Product"}</CardTitle>
                       <CardDescription>Engine variables for the AI classifiers</CardDescription>
                     </div>
                     <button 
@@ -287,7 +287,7 @@ export default function ProductsPage() {
 
                       <div className="flex justify-end pt-4 border-t border-border">
                          <button type="submit" className="flex items-center gap-2 bg-foreground text-background px-8 py-3 rounded-lg font-bold hover:bg-foreground/90 transition-all active:scale-95">
-                           <Save className="w-4 h-4" /> Save Configuration
+                           <Save className="w-4 h-4" /> Save Product
                          </button>
                       </div>
                     </form>
@@ -302,8 +302,8 @@ export default function ProductsPage() {
             {products.length === 0 && !isCreating ? (
               <div className="md:col-span-2 flex flex-col items-center justify-center p-20 border border-dashed border-border rounded-3xl bg-muted/10">
                 <Blocks className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">No Tracking Contexts Built</h3>
-                <p className="text-muted-foreground max-w-md text-center">Engine is offline. Establish a Product Configuration Context to begin actively parsing live leads.</p>
+                <h3 className="text-xl font-bold text-foreground mb-2">No Products Added</h3>
+                <p className="text-muted-foreground max-w-md text-center">Engine is offline. Add a Product to begin actively parsing live leads.</p>
               </div>
             ) : (
               products.map((product, i) => (
@@ -341,7 +341,7 @@ function ProductCard({ product, index, onEdit, onDelete }: { product: any, index
               <h3 className="font-black text-2xl tracking-tight text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
                 <Server className="w-5 h-5" /> {product.name}
               </h3>
-              <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">Tracking Context v1.0</p>
+              <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">Product Details</p>
             </div>
             <span className={`text-[10px] font-black tracking-tighter px-3 py-1 rounded-full border ${product.isActive ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-muted text-muted-foreground'}`}>
               {product.isActive ? 'SCANNING' : 'PAUSED'}

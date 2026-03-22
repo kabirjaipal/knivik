@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import logger from './logger.js';
 import config from './config.js';
+import { db } from './db.js';
 
 let io: SocketIOServer | null = null;
 
@@ -15,15 +16,24 @@ export const initSocket = (server: HttpServer) => {
   });
 
   io.on('connection', (socket: Socket) => {
-    logger.info({ socketId: socket.id }, 'New socket connection');
+    logger.info(`New socket connection [ID: ${socket.id}]`);
 
-    socket.on('join-user-room', (userId: string) => {
+    socket.on('join-user-room', async (userId: string) => {
       socket.join(`user:${userId}`);
-      logger.info({ socketId: socket.id, userId }, 'Socket joined user room');
+      logger.info(`Socket joined user room [ID: ${socket.id}, User: ${userId}]`);
+
+      try {
+        const user = await db.client.user.findUnique({ where: { id: userId }, select: { isScanning: true, lastScanStatus: true } });
+        if (user) {
+          socket.emit('scan-status', { isScanning: user.isScanning, status: user.lastScanStatus });
+        }
+      } catch (err) {
+        logger.error({ err }, 'Error fetching user state on join-user-room');
+      }
     });
 
     socket.on('disconnect', () => {
-      logger.info({ socketId: socket.id }, 'Socket disconnected');
+      logger.info(`Socket disconnected [ID: ${socket.id}]`);
     });
   });
 

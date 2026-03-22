@@ -91,7 +91,10 @@ model User {
   otpCodes      OtpCode[]
   sessions      Session[]
   usages        UsageRecord[]
+  llmUsageLogs  LlmUsageLog[]
   metadata      Json? // Store extra profile info (avatar, bio, etc.)
+  lastScanStatus String? // "SUCCESS", "FAILED", "IDLE"
+  isScanning    Boolean? @default(false)
 
   @@index([plan])
   @@map("ir_users")
@@ -184,6 +187,7 @@ model Product {
   negativeKeywords NegativeKeyword[]
   competitors      Competitor[]
   leads            Lead[]
+  llmUsageLogs     LlmUsageLog[]
 
   @@index([userId])
   @@index([userId, isActive])
@@ -449,4 +453,53 @@ model UsageRecord {
   @@unique([userId, type, month, year])
   @@index([userId, month, year])
   @@map("ir_usage_records")
+}
+
+// ─────────────────────────────────────────────
+// LLM MODELS & PRICING
+// Stores token costs per 1M tokens. Costs are calculated dynamically later.
+// ─────────────────────────────────────────────
+
+model LlmModel {
+  id             String   @id // e.g., "llama-3.1-8b-instant"
+  inputPrice     Float    // USD per 1M input tokens
+  outputPrice    Float    // USD per 1M output tokens
+  cachedPrice    Float?   // USD per 1M cached tokens (if applicable)
+  modelOptions       Json?    // For flexible extras: reasoning tokens, context limits, etc.
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  usageLogs      LlmUsageLog[]
+
+  @@map("ir_llm_models")
+}
+
+// ─────────────────────────────────────────────
+// LLM USAGE LOGS
+// Scalable telemetry table for tracking token usage and latency.
+// ─────────────────────────────────────────────
+
+model LlmUsageLog {
+  id             String   @id @default(cuid())
+  userId         String?  
+  productId      String?  
+  action         String   // e.g., "intent_analysis", "reply_generation", "semantic_scan"
+  modelId        String   // Foreign key to LlmModel.id
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  totalTokens    Int      @default(0)
+  latencyMs      Int?
+  status         String   @default("success") // "success", "error"
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  model   LlmModel @relation(fields: [modelId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([modelId])
+  @@map("ir_llm_usage_logs")
 }

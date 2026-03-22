@@ -18,7 +18,7 @@ async function main() {
   console.log('👥 Creating demo users...');
 
   // Admin user
-  await prisma.user.create({
+  const admin = await prisma.user.create({
     data: {
       email: 'admin@intentradar.com',
       username: 'admin',
@@ -27,6 +27,37 @@ async function main() {
       plan: 'PRO',
       emailVerified: new Date(),
     },
+  });
+
+  console.log('📦 Creating test product for admin...');
+  await prisma.product.create({
+    data: {
+      name: 'IntentRadar AI',
+      description: 'An AI-powered social listening tool that finds high-intent leads on Reddit and HackerNews by analyzing conversations for buying signals and competitor frustration.',
+      userId: admin.id,
+      isActive: true,
+      keywords: {
+        create: [
+          { keyword: 'alternative to mention' },
+          { keyword: 'best social listening tool' },
+          { keyword: 'how to find leads on reddit' },
+        ]
+      },
+      negativeKeywords: {
+        create: [
+          { keyword: 'hiring' },
+          { keyword: 'job' },
+          { keyword: 'course' },
+        ]
+      },
+      competitors: {
+        create: [
+          { name: 'Mention' },
+          { name: 'Awario' },
+          { name: 'Brand24' },
+        ]
+      }
+    }
   });
 
   // Regular user 1
@@ -66,6 +97,42 @@ async function main() {
   });
 
   console.log('✅ Created 4 demo users');
+
+  console.log('🤖 Seeding LLM models and pricing...');
+  
+  const models = [
+    {
+      id: 'llama-3.1-8b-instant',
+      inputPrice: 0.05,
+      outputPrice: 0.08,
+      modelOptions: { source: 'groq', speed: 'fast' }
+    },
+    {
+      id: 'llama-3.3-70b-versatile',
+      inputPrice: 0.50,
+      outputPrice: 0.80,
+      modelOptions: { source: 'groq', speed: 'versatile', reasoning_tokens_supported: true }
+    }
+  ];
+
+  for (const model of models) {
+    await prisma.llmModel.upsert({
+      where: { id: model.id },
+      update: {
+        inputPrice: model.inputPrice,
+        outputPrice: model.outputPrice,
+        modelOptions: model.modelOptions as any
+      },
+      create: {
+        id: model.id,
+        inputPrice: model.inputPrice,
+        outputPrice: model.outputPrice,
+        modelOptions: model.modelOptions as any
+      }
+    });
+  }
+
+  console.log('✅ LLM models seeded');
 
   // Display summary
   console.log('\n🎉 Database seeding completed successfully!');

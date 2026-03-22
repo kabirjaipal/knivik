@@ -28,7 +28,8 @@ export abstract class BaseScraperEngine {
     product: ProductWithDetails,
     source: ProductSource,
     keyword: Keyword,
-    limit: number
+    limit: number,
+    signal?: AbortSignal
   ): Promise<number>;
 
   /**
@@ -45,10 +46,11 @@ export abstract class BaseScraperEngine {
   /**
    * Main entry point. Runs keyword scan + semantic scan + competitor scan.
    */
-  async runAll(userId?: string): Promise<void> {
+  async runAll(userId?: string, signal?: AbortSignal): Promise<void> {
     logger.info(`[${this.platform}] Engine starting${userId ? ` for User: ${userId}` : ''}...`);
 
     try {
+      signal?.throwIfAborted();
       const activeProducts = await db.client.product.findMany({
         where: {
           isActive: true,
@@ -68,7 +70,19 @@ export abstract class BaseScraperEngine {
       }
 
       for (const product of activeProducts) {
-        if (product.sources.length === 0) continue;
+        signal?.throwIfAborted();
+        if (product.sources.length === 0) {
+          // Graceful fallback for legacy products without sources configured
+          product.sources = [{
+            id: 'auto-injected-fallback',
+            productId: product.id,
+            platform: this.platform,
+            // Reddit requires a subreddit; others can just search globally
+            identifier: this.platform === 'REDDIT' ? 'startups' : 'global',
+            isActive: true,
+            createdAt: new Date()
+          }];
+        }
 
         logger.info(`[${this.platform}] Processing product: ${product.name}`);
         const MAX = 5;
@@ -77,10 +91,12 @@ export abstract class BaseScraperEngine {
         // Pass 1: Keyword scan (existing behaviour)
         if (product.keywords.length > 0) {
           for (const source of product.sources) {
+            signal?.throwIfAborted();
             if (found >= MAX) break;
             for (const keyword of product.keywords) {
+              signal?.throwIfAborted();
               if (found >= MAX) break;
-              found += await this.scrapeKeyword(product as ProductWithDetails, source, keyword, MAX - found);
+              found += await this.scrapeKeyword(product as ProductWithDetails, source, keyword, MAX - found, signal);
             }
           }
         }
@@ -121,7 +137,12 @@ export abstract class BaseScraperEngine {
         text: `${p.title || ''}\n${p.content}`.trim(),
       }));
 
-      const results = await semanticScan(postsForScan, product.description || product.name);
+      const results = await semanticScan(
+        postsForScan,
+        product.description || product.name,
+        product.userId,
+        product.id
+      );
 
       for (const result of results) {
         if (found >= limit) break;
@@ -173,7 +194,7 @@ export abstract class BaseScraperEngine {
         if (found >= limit) break;
 
         const text = `${rawPost.title || ''}\n${rawPost.content}`.trim();
-        const signal = await detectCompetitorSignal(text, competitorNames);
+        const signal = await detectCompetitorSignal(text, competitorNames, product.userId, product.id);
 
         if (!signal.detected || signal.confidence < 60) continue;
 
@@ -237,7 +258,7 @@ export abstract class BaseScraperEngine {
     if (hasNegative) return false;
 
     // 6. LLM intent analysis
-    const scoreResult = await analyzeIntent(combinedText);
+    const scoreResult = await analyzeIntent(combinedText, product.userId, product.id);
     if (scoreResult.intentScore < 50) return false;
 
     return this.saveLead(

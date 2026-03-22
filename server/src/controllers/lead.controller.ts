@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { generateReply } from '../services/aiService.js';
-import { runAllEngines } from '../engines/index.js';
+import { runAllEngines, stopAllEngines } from '../engines/index.js';
 
 export const getLeads = async (req: Request, res: Response) => {
   try {
@@ -94,20 +94,35 @@ export const generateLeadReply = async (req: Request, res: Response): Promise<vo
 };
 
 export const triggerScan = async (req: Request, res: Response): Promise<void> => {
-   try {
+  try {
      // @ts-ignore
      const userId = req.user?.id as string;
      if (!userId) {
        res.status(401).json({ error: 'Unauthorized' });
        return;
      }
-     
-     // Run synchronously to ensure frontend knows when it's done pulling new objects
-     await runAllEngines(userId);
-     res.status(200).json({ success: true, message: 'Scan complete' });
+
+     // Run asynchronously
+     runAllEngines(userId).catch(err => logger.error({ err }, 'Scan failed'));
+
+     res.status(200).json({ success: true, message: 'Scan started' });
    } catch (error) {
      logger.error({ error }, 'Failed to trigger scan');
-     res.status(500).json({ error: 'Failed to execute radar scan' });
+     res.status(500).json({ error: 'Internal Error' });
+   }
+};
+
+export const stopScan = async (req: Request, res: Response): Promise<void> => {
+   try {
+     // @ts-ignore
+     const userId = req.user?.id as string;
+     if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+     const stopped = await stopAllEngines(userId);
+     res.status(200).json({ success: stopped, message: stopped ? 'Scan stopped' : 'No active scan found' });
+   } catch (error) {
+     logger.error({ error }, 'Failed to stop scan');
+     res.status(500).json({ error: 'Internal server error' });
    }
 };
 
