@@ -54,6 +54,15 @@ async function main() {
           { keyword: 'cinema' },
           { keyword: 'hiring' },
           { keyword: 'career' },
+          { keyword: 'internship' },
+          { keyword: 'Show HN' },
+          { keyword: 'Look what I built' },
+          { keyword: 'I made this' },
+          { keyword: 'How I hit' },
+          { keyword: 'MRR' },
+          { keyword: 'course' },
+          { keyword: 'tutorial' },
+          { keyword: 'resume' },
         ]
       },
       sources: {

@@ -153,7 +153,7 @@ export abstract class BaseScraperEngine {
 
       for (const result of results) {
         if (found >= limit) break;
-        if (!result.isMatch || result.intentScore < 70) continue; // Bumped from 55 for quality
+        if (!result.isMatch || result.intentScore < 80) continue; // Higher bar for quality
 
         const rawPost = rawPosts.find(p => p.id === result.id);
         if (!rawPost) continue;
@@ -263,8 +263,8 @@ export abstract class BaseScraperEngine {
 
     const combinedText = `${title || ''}\n\n${content}`;
 
-    // 3. Minimum content length
-    if (combinedText.trim().length < 20) return false;
+    // 3. Minimum content length: reject one-liners/links without context
+    if (combinedText.trim().length < 100) return false;
 
     // 4. Bot detection
     if (authorUsername?.toLowerCase().includes('bot')) return false;
@@ -284,7 +284,7 @@ export abstract class BaseScraperEngine {
       product.userId,
       product.id
     );
-    if (scoreResult.intentScore < 65) return false; // Bumped from 50 for quality
+    if (scoreResult.intentScore < 75) return false; // Strict threshold for high-signal leads
 
     return this.saveLead(
       product,

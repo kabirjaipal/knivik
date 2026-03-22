@@ -6,16 +6,20 @@ import { db } from '../lib/db.js';
 
 // Centralized model registry
 const MODELS = {
-  FAST: 'llama-3.1-8b-instant',
-  VERSATILE: 'llama-3.3-70b-versatile',
-  REASONER: 'deepseek-r1-distill-llama-70b',
+  FAST: 'llama-3.1-8b-instant',      // Extremely cheap ($0.05/$0.08)
+  LITE: 'llama-3.2-3b-preview',      // Ultra low-cost ($0.06/$0.06)
+  MID: 'llama-3.2-11b-vision-preview', // Balanced ($0.18/$0.18)
+  VERSATILE: 'llama-3.3-70b-versatile', // High reasoning ($0.59/$0.79)
+  REASONER: 'deepseek-r1-distill-llama-70b', // Deep reasoning ($0.75/$0.99)
 };
 
-// Pre-seed known pricing (adjust as needed for accurate dashboard projection later)
+// Pricing per 1M tokens (USD) - Updated 2026 Rates
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   [MODELS.FAST]: { input: 0.05, output: 0.08 },
+  [MODELS.LITE]: { input: 0.06, output: 0.06 },
+  [MODELS.MID]: { input: 0.18, output: 0.18 },
   [MODELS.VERSATILE]: { input: 0.59, output: 0.79 },
-  [MODELS.REASONER]: { input: 0.69, output: 0.99 },
+  [MODELS.REASONER]: { input: 0.75, output: 0.99 },
 };
 
 async function logLlmUsage(params: {
@@ -96,32 +100,35 @@ export const analyzeIntent = async (
   const prompt = `
 Analyze the buying intent of the following post relative to the product "${productName}".
 
-Product Profile:
+Target Product Profile:
 - Name: "${productName}"
-- Description: "${productDescription}"
+- Core Solution: "${productDescription}"
 
-Product Profile:
-- Name: "${productName}"
-- Description: "${productDescription}"
+---
+STEP 1: IDENTITY & ROLE (STRICT FILTER)
+Is the author a "Seeker" or a "Provider"?
+- PROVIDERS (Score 0): founders selling their own tool ("Show HN", "I built X"), experts giving advice ("10 tips for Y"), or storytellers sharing growth hacks ("How I hit 10k MRR").
+- SEEKERS (Potential Lead): people asking for recommendations, complaining about a current tool's cost/difficulty, or expressing a specific pain point that "${productName}" fixes.
 
-STEP 1: ROLE DETECTION
-Is the author a "Potential Buyer" or an "Expert/Advice Giver"?
-- Advice Givers: share lessons, tell stories, give tips, show off their own builds. (SCORE 0)
-- Potential Buyers: ask for tools, complain about costs, express pain, seek recommendations. (KEEP ANALYZING)
+STEP 2: AUTO-REJECTION PATTERNS (CRITICAL - SCORE 0)
+If the post fits ANY of these, it is NOISE. Give it 0:
+- "Look what I made": Posts titled "Show HN", "I built", "Check out my tool".
+- "I'm a Mentor": "Here is how to...", "My lessons after 5 years...", "The definitive guide to...".
+- "Hiring/Job Search": "Looking for a dev...", "I need a job", "Hiring for X".
+- "Generic News": "The new OpenAI update is crazy...", "Is Twitter dying?".
+- "Meta/Community": "How does everyone handle taxes?", "What's the best chair for devs?".
 
-STEP 2: NOISE PATTERNS (AUTO-REJECT - SCORE 0)
-- The "Founder Story": "I spent 100 hours doing X", "How I hit $10k MRR".
-- The "Deep Question": "How do you guys handle X?", "What is your philosophy on Y?".
-- The "Self-Promo": "I built tool Z, what do you think?", "Show HN: My tool".
-- The "News/Meta": "New update for [Competitor]", "Is [Platform] dying?".
+STEP 3: INTENT CLASSIFICATION
+1. BUY_NOW (90-100): Direct "I'm looking for a tool that does X right now", "Which [Competitor] alternative should I use?", "I have $X and need a solution".
+2. RESEARCHING (70-89): "My biggest pain right now is [problem solved by ${productName}]", "How do you guys handle [specific task] without spending hours?".
+3. COMPARING (60-69): "Is [Competitor A] better than [Competitor B] for [Task]?", "Why is [Competitor] so expensive lately?".
+4. LOW_INTENT (0): Relevant topic but NO GAP or PAIN EXPRESSED.
 
-INTENT CLASSIFICATION (STRICT):
-1. BUY_NOW (90-100): Direct requests for a tool now. "Which should I use?", "Help me switch".
-2. RESEARCHING (70-89): Explicitly asking for software to solve a specific pain you solve.
-3. COMPARING (60-69): Direct comparison between your competitors.
-4. LOW_INTENT (0): Everything else including signal that is 1% off-target.
-
-CRITICAL: If the post is 90% relevant but is a STORY or ADVICE, you MUST give it 0. We prioritize PURE SIGNAL.
+---
+STRICTNESS RULE: 
+- 90% of your results should likely be 0. We only want the TOP 1% OF SIGNAL.
+- If the post is 99% relevant but is a STORY or ADVICE, you MUST give it 0.
+- If the user is SHARING A SUCCESS, they are NOT a lead today. Give them 0.
 
 Post Content:
 """
@@ -130,7 +137,7 @@ ${postText}
 
 Return your analysis strictly as a JSON object:
 {
-  "reasoning": "A brief explanation focusing on why this is or IS NOT a high-quality lead for this specific product category",
+  "reasoning": "A blunt explanation: why is this a REAL buyer vs just another noisy founder post?",
   "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
   "intentScore": number
 }
@@ -138,7 +145,7 @@ Return your analysis strictly as a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.REASONER, 
+      model: MODELS.VERSATILE, 
       messages: [
         { 
           role: 'system', 
@@ -172,7 +179,7 @@ Return your analysis strictly as a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'analyze_intent',
-        model: MODELS.FAST,
+        model: MODELS.VERSATILE,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -186,12 +193,16 @@ Return your analysis strictly as a JSON object:
       intentScore: Math.min(Math.max(assignedScore, 0), 100),
     };
   } catch (error: any) {
-    logger.error({ message: error.message, status: error.status }, 'Failed to analyze intent:');
+    logger.error({ 
+      message: error.message, 
+      status: error.status,
+      body: error.error // Groq sometimes puts details here
+    }, 'Failed to analyze intent:');
     
     setImmediate(() => {
       logLlmUsage({
         action: 'analyze_intent',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         productId,
         inputTokens: 0,
@@ -325,7 +336,7 @@ Return ONLY a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.FAST,
+      model: MODELS.LITE,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -340,7 +351,7 @@ Return ONLY a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'detect_competitor',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -361,7 +372,7 @@ Return ONLY a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'detect_competitor',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         productId,
         inputTokens: 0,
@@ -406,19 +417,18 @@ export const semanticScan = async (
   const postsJson = posts.map(p => `ID: ${p.id}\nText: "${p.text.substring(0, 500)}"`).join('\n\n---\n\n');
 
   const prompt = `
-You are a lead qualification expert. Your goal is to identify posts where the author is facing a SPECIFIC problem that can be solved by the target product.
+You are a Lead Qualification Specialist. Your goal is to identify HIGH-INTENT buyer signals and reject 100% of community noise.
 
 Target Product Description:
 "${productDescription}"
 
-Below are ${posts.length} posts. For EACH post, determine if it represents a REAL OPPORTUNITY or just NOISE.
+STRICT FILTERING RULES (The "No-Noise" Policy):
+1. REJECT (isMatch: false): Anyone saying "I built...", "Show HN", "How I did...", "My tool", or "Here are 10 tips".
+2. REJECT (isMatch: false): Hiring posts, news articles, memes, or generic industry questions.
+3. ACCEPT (isMatch: true): Only if the author is EXPRESSING NEED, PAIN, or FRUSTRATION that this product solves.
+4. "BE SKEPTICAL": Most posts are founders talking to founders. They are NOT leads. Only find the 1% who are actually struggling and looking for a tool.
 
-STRICT FILTERING RULES:
-1. Is this a real person with a real problem? (Skip if: bot, ad, meta-discussion, or "I'm building X").
-2. Does the problem align with the Target Product? (Skip if: generic SaaS advice, hiring posts, or unrelated tools).
-3. "Quality over Quantity": If you are unsure, err on the side of "isMatch: false". We only want the top 10% of posts.
-
-Posts:
+Check these ${posts.length} posts:
 ${postsJson}
 
 Return a JSON object with a single key "results", containing an array:
@@ -427,8 +437,8 @@ Return a JSON object with a single key "results", containing an array:
     {
       "id": "post id",
       "isMatch": boolean,
-      "intentScore": number (70+ for matches, 0 for noise),
-      "reasoning": "Briefly state the specific pain point that matches, or why it was rejected as noise."
+      "intentScore": number (80+ for pain/need, 0 for noise/stories),
+      "reasoning": "Why is this a BUYER and not just a person talking?"
     }
   ]
 }
@@ -436,7 +446,7 @@ Return a JSON object with a single key "results", containing an array:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.FAST,
+      model: MODELS.LITE,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -451,7 +461,7 @@ Return a JSON object with a single key "results", containing an array:
     setImmediate(() => {
       logLlmUsage({
         action: 'semantic_scan',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -475,7 +485,7 @@ Return a JSON object with a single key "results", containing an array:
     setImmediate(() => {
       logLlmUsage({
         action: 'semantic_scan',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         productId,
         inputTokens: 0,
@@ -556,7 +566,7 @@ Return your strategy strictly as a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.FAST, // Fast and effective for this
+      model: MODELS.LITE, // Fast and effective for this
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.2,
@@ -571,7 +581,7 @@ Return your strategy strictly as a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'generate_strategy',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         inputTokens: usage?.prompt_tokens || 0,
         outputTokens: usage?.completion_tokens || 0,
@@ -592,7 +602,7 @@ Return your strategy strictly as a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'generate_strategy',
-        model: MODELS.FAST,
+        model: MODELS.LITE,
         userId,
         inputTokens: 0,
         outputTokens: 0,
