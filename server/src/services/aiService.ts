@@ -8,12 +8,14 @@ import { db } from '../lib/db.js';
 const MODELS = {
   FAST: 'llama-3.1-8b-instant',
   VERSATILE: 'llama-3.3-70b-versatile',
+  REASONER: 'deepseek-r1-distill-llama-70b',
 };
 
 // Pre-seed known pricing (adjust as needed for accurate dashboard projection later)
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   [MODELS.FAST]: { input: 0.05, output: 0.08 },
-  [MODELS.VERSATILE]: { input: 0.50, output: 0.80 },
+  [MODELS.VERSATILE]: { input: 0.59, output: 0.79 },
+  [MODELS.REASONER]: { input: 0.69, output: 0.99 },
 };
 
 async function logLlmUsage(params: {
@@ -98,22 +100,28 @@ Product Profile:
 - Name: "${productName}"
 - Description: "${productDescription}"
 
-Intent Classification Criteria (Strict):
-1. BUY_NOW (90-100): The user is explicitly asking for a tool recommendation, asking for pricing, or stating they are ready to switch from a competitor.
-2. RESEARCHING (70-89): The user is explicitly asking for a SOFTWARE/TOOL to solve a specific problem that your product solves. 
-3. COMPARING (60-69): The user is comparing specific competitors (e.g. "CapCut vs Descript") and needs a tie-breaker.
-4. LOW_INTENT (0-59): ALL OTHER POSTS. Including generic news, philosophical discussions, career advice, tutorials, and storytelling.
+Product Profile:
+- Name: "${productName}"
+- Description: "${productDescription}"
 
-CRITICAL QUALITY RULES (REJECT THESE SCENARIOS WITH SCORE 0 AND LOW_INTENT):
-- The author is giving advice, sharing a lesson, or telling a story (e.g., "I spent hours doing X", "Here is what I learned").
-- The author is asking for philosophical, business, or strategy advice (e.g., "How do you approach onboarding?", "Do you focus on X or Y?").
-- The author is building their own product and asking for feedback, or venting about their own roadmap/business.
-- The post is an advertisement, a "Show HN" (unless it's a competitor you can directly poach from, then give it a low score), or a generic industry update.
-- The author wants a human service/freelancer, NOT software.
-- The post is about a different domain (e.g., Medical, Crypto) or entirely unrelated use-case.
+STEP 1: ROLE DETECTION
+Is the author a "Potential Buyer" or an "Expert/Advice Giver"?
+- Advice Givers: share lessons, tell stories, give tips, show off their own builds. (SCORE 0)
+- Potential Buyers: ask for tools, complain about costs, express pain, seek recommendations. (KEEP ANALYZING)
 
-If the user is NOT explicitly seeking a software tool or solution that directly aligns with your product, YOU MUST SCORE IT 0.
-Quality over Quantity: It is better to give a 0 to a mediocre post than a 60. We only want pure "Signal", no "Noise".
+STEP 2: NOISE PATTERNS (AUTO-REJECT - SCORE 0)
+- The "Founder Story": "I spent 100 hours doing X", "How I hit $10k MRR".
+- The "Deep Question": "How do you guys handle X?", "What is your philosophy on Y?".
+- The "Self-Promo": "I built tool Z, what do you think?", "Show HN: My tool".
+- The "News/Meta": "New update for [Competitor]", "Is [Platform] dying?".
+
+INTENT CLASSIFICATION (STRICT):
+1. BUY_NOW (90-100): Direct requests for a tool now. "Which should I use?", "Help me switch".
+2. RESEARCHING (70-89): Explicitly asking for software to solve a specific pain you solve.
+3. COMPARING (60-69): Direct comparison between your competitors.
+4. LOW_INTENT (0): Everything else including signal that is 1% off-target.
+
+CRITICAL: If the post is 90% relevant but is a STORY or ADVICE, you MUST give it 0. We prioritize PURE SIGNAL.
 
 Post Content:
 """
@@ -130,8 +138,14 @@ Return your analysis strictly as a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.FAST, 
-      messages: [{ role: 'user', content: prompt }],
+      model: MODELS.REASONER, 
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are an elite Lead Qualification Agent. Your job is to separate "Buying Signal" from "Community Noise". You have a zero-tolerance policy for noise.' 
+        },
+        { role: 'user', content: prompt }
+      ],
       response_format: { type: 'json_object' },
       temperature: 0.1,
     });

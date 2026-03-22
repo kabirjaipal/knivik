@@ -123,9 +123,15 @@ async function main() {
     },
     {
       id: 'llama-3.3-70b-versatile',
-      inputPrice: 0.50,
-      outputPrice: 0.80,
+      inputPrice: 0.59,
+      outputPrice: 0.79,
       modelOptions: { source: 'groq', speed: 'versatile', reasoning_tokens_supported: true }
+    },
+    {
+      id: 'deepseek-r1-distill-llama-70b',
+      inputPrice: 0.69,
+      outputPrice: 0.99,
+      modelOptions: { source: 'groq', speed: 'reasoning', reasoning_tokens_supported: true, logic: 'deepseek' }
     }
   ];
 
