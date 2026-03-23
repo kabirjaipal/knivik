@@ -20,8 +20,8 @@ async function main() {
   // Admin user
   const admin = await prisma.user.create({
     data: {
-      email: 'arjun@intentradar.com',
-      username: 'arjun_kumar',
+      email: 'kabir@knivik.com',
+      username: 'kabir',
       password: hashedAdminPassword,
       role: 'admin',
       plan: 'PRO',
@@ -86,7 +86,7 @@ async function main() {
   // Regular user 1
   await prisma.user.create({
     data: {
-      email: 'priya@intentradar.com',
+      email: 'priya@knivik.com',
       username: 'priya_sharma',
       password: hashedPassword,
       role: 'user',
@@ -98,7 +98,7 @@ async function main() {
   // Regular user 2
   await prisma.user.create({
     data: {
-      email: 'rahul@intentradar.com',
+      email: 'rahul@knivik.com',
       username: 'rahul_gupta',
       password: hashedPassword,
       role: 'user',
@@ -110,7 +110,7 @@ async function main() {
   // Regular user 3
   await prisma.user.create({
     data: {
-      email: 'ananya@intentradar.com',
+      email: 'ananya@knivik.com',
       username: 'ananya_verma',
       password: hashedPassword,
       role: 'user',
@@ -170,12 +170,12 @@ async function main() {
 
   console.log('\n🔑 Demo Login Credentials:');
   console.log('Admin User:');
-  console.log('  Email: arjun@intentradar.com');
+  console.log('  Email: arjun@knivik.com');
   console.log('  Password: admin123');
   console.log('Regular Users (Password for all is password123):');
-  console.log('  Email: priya@intentradar.com');
-  console.log('  Email: rahul@intentradar.com');
-  console.log('  Email: ananya@intentradar.com');
+  console.log('  Email: priya@knivik.com');
+  console.log('  Email: rahul@knivik.com');
+  console.log('  Email: ananya@knivik.com');
 }
 
 main()

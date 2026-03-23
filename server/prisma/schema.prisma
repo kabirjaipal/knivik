@@ -1,4 +1,4 @@
-// IntentRadar — Prisma Schema
+// Knivik — Prisma Schema
 // Connection URL is configured in prisma.config.ts (Prisma v7+)
 // Table naming convention: ir_{entity} prefix via @@map (model names stay clean)
 

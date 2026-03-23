@@ -1,5 +1,5 @@
 {
-  "name": "intentradar-server",
+  "name": "knivik-server",
   "version": "1.0.0",
   "description": "AI Buying Intent Lead Finder - Scans online conversations to detect potential customers",
   "type": "module",

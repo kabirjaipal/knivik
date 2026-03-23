@@ -1,16 +1,16 @@
-# IntentRadar
+# Knivik
 
 AI Buying Intent Lead Finder
 
-IntentRadar scans online conversations and detects people actively looking for products or solutions.
+Knivik scans online conversations and detects people actively looking for products or solutions.
 
-Businesses use IntentRadar to find potential customers early and join conversations where buyers are asking for recommendations.
+Businesses use Knivik to find potential customers early and join conversations where buyers are asking for recommendations.
 
 ---
 
 # Core Idea
 
-Instead of cold outreach, IntentRadar finds **warm leads**.
+Instead of cold outreach, Knivik finds **warm leads**.
 
 Example conversations:
 
@@ -18,7 +18,7 @@ Example conversations:
 * “Best CRM for freelancers?”
 * “Alternative to Notion?”
 
-IntentRadar detects these signals and alerts businesses.
+Knivik detects these signals and alerts businesses.
 
 ---
 
@@ -278,7 +278,7 @@ created_at
 Repository structure:
 
 ```
-intentradar/
+knivik/
  frontend/
  backend/
  scrapers/
@@ -505,7 +505,7 @@ Messaging:
 ```
 Stop searching Reddit for customers.
 
-IntentRadar finds buyers automatically.
+Knivik finds buyers automatically.
 ```
 
 ---

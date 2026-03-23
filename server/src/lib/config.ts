@@ -44,7 +44,7 @@ const configSchema = z.object({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
-  SMTP_FROM: z.string().default('noreply@intentradar.io'),
+  SMTP_FROM: z.string().default('noreply@knivik.com'),
   // Add:
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -58,7 +58,7 @@ const configSchema = z.object({
   CACHE_TTL_SECONDS: z.coerce.number().default(60),
   // Scraper controls
   SCRAPER_INTERVAL_MS: z.coerce.number().default(3600000), // Default 1 hour
-  PROJECT_NAME: z.string().default('IntentRadar'),
+  PROJECT_NAME: z.string().default('Knivik'),
 });
 
 const configResult = configSchema.safeParse(process.env);
