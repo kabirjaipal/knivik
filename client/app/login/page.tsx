@@ -76,12 +76,22 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 mt-auto">
-          <blockquote className="border-l-2 border-white/20 pl-6 italic">
-            "Since using {PROJECT_NAME}, we've engaged directly with customers at the exact moment they need us. Our conversion rate tripled."
-            <footer className="mt-4 font-semibold text-sm">
-              — Sarah Jenkins, Founder @ TechFlow
-            </footer>
-          </blockquote>
+          <div className="space-y-6">
+            <div className="flex gap-4">
+              <div className="flex-none w-1 h-auto bg-white/20 rounded-full" />
+              <div>
+                <p className="font-bold text-white mb-1">Real-time Intent Detection</p>
+                <p className="text-sm text-primary-foreground/70">Using Llama 3.1 to filter the noise and find the signals that matter.</p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-none w-1 h-auto bg-white/20 rounded-full" />
+              <div>
+                <p className="font-bold text-white mb-1">Multi-Channel Scraper</p>
+                <p className="text-sm text-primary-foreground/70">Reddit, HackerNews, and more consolidated into one dashboard.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -116,12 +126,7 @@ export default function LoginPage() {
             </div>
             
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-foreground font-semibold">Password</Label>
-                <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password" className="text-foreground font-semibold">Password</Label>
               <Input 
                 id="password" 
                 type="password" 
@@ -131,6 +136,12 @@ export default function LoginPage() {
                 disabled={loading}
                 className="h-12 px-4 bg-background border-border/60 focus:ring-primary focus:border-primary transition-all"
               />
+            </div>
+
+            <div className="flex justify-end -mt-3">
+              <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                Forgot password?
+              </Link>
             </div>
 
             {error && (

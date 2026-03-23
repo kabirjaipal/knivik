@@ -7,9 +7,30 @@ const prisma = db.client;
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Clear existing users
-  // Cascading deletes will handle related records if any existed
-  await prisma.user.deleteMany({});
+  // 1. Clear ALL existing tables
+  // We use a transaction to ensure we clear everything before seeding
+  console.log('🧹 Cleaning database...');
+  await prisma.$transaction([
+    prisma.alertLog.deleteMany({}),
+    prisma.alertSetting.deleteMany({}),
+    prisma.reply.deleteMany({}),
+    prisma.leadMatch.deleteMany({}),
+    prisma.lead.deleteMany({}),
+    prisma.keyword.deleteMany({}),
+    prisma.negativeKeyword.deleteMany({}),
+    prisma.competitor.deleteMany({}),
+    prisma.productSource.deleteMany({}),
+    prisma.product.deleteMany({}),
+    prisma.llmUsageLog.deleteMany({}),
+    prisma.usageRecord.deleteMany({}),
+    prisma.otpCode.deleteMany({}),
+    prisma.session.deleteMany({}),
+    prisma.oAuthAccount.deleteMany({}),
+    prisma.user.deleteMany({}),
+    prisma.scrapeCache.deleteMany({}),
+    prisma.requestLog.deleteMany({}),
+    prisma.llmModel.deleteMany({}),
+  ]);
 
   // Hash passwords for demo users
   const hashedPassword = await bcrypt.hash('password123', 12);
@@ -170,7 +191,7 @@ async function main() {
 
   console.log('\n🔑 Demo Login Credentials:');
   console.log('Admin User:');
-  console.log('  Email: arjun@knivik.com');
+  console.log('  Email: kabir@knivik.com');
   console.log('  Password: admin123');
   console.log('Regular Users (Password for all is password123):');
   console.log('  Email: priya@knivik.com');

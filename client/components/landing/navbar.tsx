@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Radar, User, Settings, LogOut, BarChart3 } from "lucide-react"
+import { Radar, User, Settings, LogOut, BarChart3, ShieldAlert } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/context/auth-context"
@@ -70,6 +70,14 @@ export function Navbar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
+                  {user.role === 'admin' && (
+                    <Link href="/admin">
+                      <DropdownMenuItem className="cursor-pointer text-primary font-bold focus:bg-primary/10 focus:text-primary">
+                        <ShieldAlert className="mr-2 h-4 w-4" />
+                        <span>Admin Console</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
                   <Link href="/dashboard">
                     <DropdownMenuItem className="cursor-pointer">
                       <Radar className="mr-2 h-4 w-4" />

@@ -5,12 +5,12 @@ const features = [
   {
     icon: <Search className="h-6 w-6 text-primary" />,
     title: "Real-Time Keyword Scraping",
-    description: "Monitors Reddit, HackerNews, and Discord servers 24/7 for anyone mentioning a problem your product solves."
+    description: "Monitors Reddit and HackerNews 24/7 for anyone mentioning a problem your product solves."
   },
   {
     icon: <BrainCircuit className="h-6 w-6 text-primary" />,
     title: "AI Intent Scoring",
-    description: "Proprietary AI filters out noise and scores every post from 0-100 indicating exact buying intent."
+    description: "Intelligent LLM-based filtering that scores every post from 0-100 indicating exact buying intent."
   },
   {
     icon: <MessageSquareText className="h-6 w-6 text-primary" />,

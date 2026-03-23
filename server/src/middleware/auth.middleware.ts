@@ -48,5 +48,14 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
   } catch (error) {
     logger.warn({ error }, 'Auth middleware token verification failed');
     res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    return;
   }
+};
+
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403).json({ error: 'Forbidden - Admin access required' });
+    return;
+  }
+  next();
 };

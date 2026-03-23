@@ -19,8 +19,8 @@ export function Hero() {
           transition={{ duration: 0.5 }}
         >
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-8">
-            <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></span>
-            {PROJECT_NAME} 2.0 is Live
+            <span className="flex h-2 w-2 rounded-full bg-primary mr-2"></span>
+            AI-Driven Social Listening
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6">
@@ -31,7 +31,7 @@ export function Hero() {
           </h1>
           
           <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground mb-10 leading-relaxed">
-            Stop manually parsing Reddit and HackerNews. We scan millions of social posts daily, instantly scoring buying intent and delivering hot leads straight to your CRM.
+            Stop manually parsing Reddit and HackerNews. We scan recent social posts in real-time, scoring buying intent and delivering hot leads straight to your dashboard.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

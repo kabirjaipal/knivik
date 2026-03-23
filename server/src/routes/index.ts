@@ -6,6 +6,7 @@ import leadRoutes from './lead.routes.js';
 import productRoutes from './product.routes.js';
 import alertRoutes from './alert.routes.js';
 import analyticsRoutes from './analytics.routes.js';
+import adminRoutes from './admin.routes.js';
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use('/api/leads', leadRoutes);
 router.use('/api/products', productRoutes);
 router.use('/api/alerts', alertRoutes);
 router.use('/api/analytics', analyticsRoutes);
+router.use('/api/admin', adminRoutes);
 router.use('/api', healthRoutes);
 
 export default router;

@@ -9,7 +9,7 @@ import { PROJECT_NAME } from "@/lib/constants"
 const faqs = [
   {
     question: "How does the AI intent scoring work?",
-    answer: "Our proprietary AI model analyzes the context, sentiment, and phrasing of every post. It filters out complaints or general discussions, outputting a 0-100 score where 90+ means the user is actively asking to buy a solution right now."
+    answer: "We use Large Language Models (LLMs) to analyze the context, sentiment, and phrasing of every post. The system filters out general chatter and outputs a 0-100 score indicating how likely someone is to be looking for a solution like yours."
   },
   {
     question: "Which platforms do you currently support?",
