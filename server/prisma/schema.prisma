@@ -292,6 +292,7 @@ model Lead {
   notes          String? // User's internal notes
   feedback       Int? // User feedback: 1 (Good), -1 (Bad)
   detectedBy     String   @default("KEYWORD") // KEYWORD | SEMANTIC | COMPETITOR
+  reasoning      String?  @db.Text // AI explanation for qualification
   enrichment     Json? // { linkedinUrl?, twitterUrl?, githubUrl? }
 
   product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)

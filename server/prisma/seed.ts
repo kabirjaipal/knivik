@@ -54,53 +54,51 @@ async function main() {
 
   console.log('📦 Creating high-quality test products...');
 
-  // Product: FastVideo AI
+  // Product: LogScale Analytics
   await prisma.product.create({
     data: {
-      name: 'FastVideo AI',
-      description: 'An AI video editor for busy SaaS founders to create high-quality demo videos and LinkedIn ads in minutes.',
+      name: 'LogScale Analytics',
+      description: 'A privacy-first, cookie-less web analytics tool for developers and SaaS founders who want to move away from Google Analytics and GDPR headaches.',
       userId: admin.id,
       isActive: true,
       keywords: {
         create: [
-          { keyword: 'best video editor for founders' },
-          { keyword: 'how to make a saas demo video' },
-          { keyword: 'alternative to capcut for business' },
-          { keyword: 'descript alternative' },
-          { keyword: 'tool for making linkedin video ads' },
+          { keyword: 'google analytics alternative' },
+          { keyword: 'cookie-less analytics' },
+          { keyword: 'privacy-first tracking' },
+          { keyword: 'how to stop using google analytics' },
+          { keyword: 'lightweight analytics for nextjs' },
+          { keyword: 'gdpr compliant analytics' },
         ]
       },
       negativeKeywords: {
         create: [
-          { keyword: 'gaming' },
-          { keyword: 'movie' },
-          { keyword: 'cinema' },
           { keyword: 'hiring' },
           { keyword: 'career' },
           { keyword: 'internship' },
+          { keyword: 'tutorial' },
+          { keyword: 'resume' },
+          { keyword: 'course' },
           { keyword: 'Show HN' },
           { keyword: 'Look what I built' },
           { keyword: 'I made this' },
-          { keyword: 'How I hit' },
-          { keyword: 'MRR' },
-          { keyword: 'course' },
-          { keyword: 'tutorial' },
-          { keyword: 'resume' },
         ]
       },
       sources: {
         create: [
           { platform: 'REDDIT', identifier: 'saas' },
-          { platform: 'REDDIT', identifier: 'videomarketing' },
           { platform: 'REDDIT', identifier: 'startups' },
+          { platform: 'REDDIT', identifier: 'webdev' },
           { platform: 'HACKERNEWS', identifier: 'global' },
         ]
       },
       competitors: {
         create: [
-          { name: 'CapCut' },
-          { name: 'Descript' },
-          { name: 'InVideo' },
+          { name: 'Google Analytics' },
+          { name: 'Plausible' },
+          { name: 'Fathom' },
+          { name: 'Mixpanel' },
+          { name: 'Amplitude' },
         ]
       }
     }

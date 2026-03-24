@@ -8,9 +8,11 @@ import { db } from '../lib/db.js';
 const MODELS = {
   FAST: 'llama-3.1-8b-instant',      // Fast and cheap ($0.05/$0.08)
   LITE: 'llama-3.1-8b-instant',      // Using stable 8B as preview is deprecated
-  MID: 'llama-3.3-70b-specdec',      // Balanced reasoning power
+  MID: 'llama-3.3-70b-versatile',      // Balanced reasoning power
   VERSATILE: 'llama-3.3-70b-versatile', // Premier 2026 Meta model
   REASONER: 'deepseek-r1-distill-llama-70b', // Best-in-class reasoning
+  POACHER: 'llama-3.3-70b-versatile', // High reasoning for competitor signal
+  SCANNER: 'llama-3.3-70b-versatile',    // Better than 8B for semantic matching
 };
 
 // Pricing per 1M tokens (USD) - Updated 2026 Rates
@@ -82,6 +84,7 @@ const groq = new OpenAI({
 export interface IntentAnalysisResult {
   intentLevel: IntentLevel;
   intentScore: number;
+  reasoning: string;
 }
 
 /**
@@ -191,6 +194,7 @@ Return your analysis strictly as a JSON object:
     return {
       intentLevel: assignedLevel,
       intentScore: Math.min(Math.max(assignedScore, 0), 100),
+      reasoning: parsed.reasoning || 'No reasoning provided.',
     };
   } catch (error: any) {
     logger.error({ 
@@ -217,6 +221,7 @@ Return your analysis strictly as a JSON object:
     return {
       intentLevel: 'LOW_INTENT',
       intentScore: 0,
+      reasoning: 'Error during intent analysis.'
     };
   }
 };
@@ -303,6 +308,7 @@ export interface CompetitorSignalResult {
   detected: boolean;
   competitor: string | null;
   confidence: number; // 0-100
+  reasoning: string;
 }
 
 export const detectCompetitorSignal = async (
@@ -311,7 +317,7 @@ export const detectCompetitorSignal = async (
   userId?: string,
   productId?: string
 ): Promise<CompetitorSignalResult> => {
-  if (!competitors.length) return { detected: false, competitor: null, confidence: 0 };
+  if (!competitors.length) return { detected: false, competitor: null, confidence: 0, reasoning: 'No competitors for this product.' };
   const startTime = Date.now();
 
   const prompt = `
@@ -330,13 +336,14 @@ Return ONLY a JSON object:
 {
   "detected": true | false,
   "competitor": "name of the competitor mentioned, or null",
-  "confidence": number (0-100, how confident you are that this is a frustration/switch signal)
+  "confidence": number (0-100, how confident you are that this is a frustration/switch signal),
+  "reasoning": "What was the signal or lack of?"
 }
 `;
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.LITE,
+      model: MODELS.POACHER,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -351,7 +358,7 @@ Return ONLY a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'detect_competitor',
-        model: MODELS.LITE,
+        model: MODELS.POACHER,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -365,6 +372,7 @@ Return ONLY a JSON object:
       detected: Boolean(parsed.detected),
       competitor: parsed.competitor || null,
       confidence: typeof parsed.confidence === 'number' ? Math.min(Math.max(parsed.confidence, 0), 100) : 0,
+      reasoning: parsed.reasoning || '',
     };
   } catch (error: any) {
     logger.error({ message: error.message, status: error.status }, 'Failed to detect competitor signal:');
@@ -372,7 +380,7 @@ Return ONLY a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'detect_competitor',
-        model: MODELS.LITE,
+        model: MODELS.POACHER,
         userId,
         productId,
         inputTokens: 0,
@@ -383,7 +391,7 @@ Return ONLY a JSON object:
       });
     });
 
-    return { detected: false, competitor: null, confidence: 0 };
+    return { detected: false, competitor: null, confidence: 0, reasoning: 'Error during competitor detection.' };
   }
 };
 
@@ -422,11 +430,8 @@ You are a Lead Qualification Specialist. Your goal is to identify HIGH-INTENT bu
 Target Product Description:
 "${productDescription}"
 
-STRICT FILTERING RULES (The "No-Noise" Policy):
-1. REJECT (isMatch: false): Anyone saying "I built...", "Show HN", "How I did...", "My tool", or "Here are 10 tips".
-2. REJECT (isMatch: false): Hiring posts, news articles, memes, or generic industry questions.
-3. ACCEPT (isMatch: true): Only if the author is EXPRESSING NEED, PAIN, or FRUSTRATION that this product solves.
-4. "BE SKEPTICAL": Most posts are founders talking to founders. They are NOT leads. Only find the 1% who are actually struggling and looking for a tool.
+4. "STRICT RELEVANCE": The post must express a need for THE SPECIFIC SOLUTION describe above. If the product is a "Video Editor" and the post is about "Marketing Strategy" or "Onboarding", it is a REJECT, even if the person is a SaaS founder.
+5. "BE SKEPTICAL": Most posts are founders talking to founders. They are NOT leads. Only find the 1% who are actually struggling and looking for THE SPECIFIC TOOL category.
 
 Check these ${posts.length} posts:
 ${postsJson}
@@ -437,8 +442,8 @@ Return a JSON object with a single key "results", containing an array:
     {
       "id": "post id",
       "isMatch": boolean,
-      "intentScore": number (80+ for pain/need, 0 for noise/stories),
-      "reasoning": "Why is this a BUYER and not just a person talking?"
+      "intentScore": number (85+ for direct pain/need for THIS solution, 0 otherwise),
+      "reasoning": "A blunt reality check: why does THIS product specifically solve THIS person's actual problem? Or why is it irrelevant noise?"
     }
   ]
 }
@@ -446,7 +451,7 @@ Return a JSON object with a single key "results", containing an array:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.LITE,
+      model: MODELS.SCANNER,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -461,7 +466,7 @@ Return a JSON object with a single key "results", containing an array:
     setImmediate(() => {
       logLlmUsage({
         action: 'semantic_scan',
-        model: MODELS.LITE,
+        model: MODELS.SCANNER,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -485,7 +490,7 @@ Return a JSON object with a single key "results", containing an array:
     setImmediate(() => {
       logLlmUsage({
         action: 'semantic_scan',
-        model: MODELS.LITE,
+        model: MODELS.SCANNER,
         userId,
         productId,
         inputTokens: 0,

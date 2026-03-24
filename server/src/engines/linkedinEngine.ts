@@ -48,6 +48,7 @@ export class LinkedInEngine extends BaseScraperEngine {
         if (!link.includes('linkedin.com/posts')) continue;
 
         let snippet = (match[2] || '').replace(/<[^>]*>/g, '').trim();
+        logger.info(`[LINKEDIN] Raw sample: ${snippet.substring(0, 100)}...`);
 
         const isNew = await this.processPotentialLead(
           product,

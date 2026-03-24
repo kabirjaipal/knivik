@@ -49,6 +49,7 @@ export class ProductHuntEngine extends BaseScraperEngine {
         if (!link.includes('producthunt.com/discussions')) continue;
 
         let snippet = (match[2] || '').replace(/<[^>]*>/g, '').trim();
+        logger.info(`[PRODUCTHUNT] Raw sample: ${snippet.substring(0, 100)}...`);
 
         const isNew = await this.processPotentialLead(
           product,

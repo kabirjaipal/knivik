@@ -1,9 +1,7 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
-import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 
-const USER_AGENT = `${config.PROJECT_NAME}/1.0.0 (Node.js Bot; contact: support@${config.PROJECT_NAME.toLowerCase()}.io)`;
 
 export class RedditEngine extends BaseScraperEngine {
   platform = Platform.REDDIT;
@@ -24,13 +22,20 @@ export class RedditEngine extends BaseScraperEngine {
       : keyword.keyword;
 
     // Search both Posts and Comments
+    const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
+    
     let url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=10&type=link,comment`;
     if (!isGlobal) {
-      url = `https://www.reddit.com/r/${source.identifier}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=10&type=link,comment`;
+      url = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=10&type=link,comment`;
     }
 
     try {
-      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: signal as any });
+      const response = await fetch(url, { headers: { 'User-Agent': this.getRandomUserAgent() }, signal: signal as any });
+      if (response.status === 429) {
+        logger.warn(`[REDDIT] 🛑 Rate limit (429) on ${url}. Skipping keyword for now.`);
+        await this.sleep(5000); // Back off 5 seconds on 429
+        return savedCount;
+      }
       if (!response.ok) {
         logger.warn(`[REDDIT] API returned ${response.status} for ${url}`);
         return savedCount;
@@ -65,7 +70,7 @@ export class RedditEngine extends BaseScraperEngine {
         if (isNew) savedCount++;
       }
 
-      await this.sleep(500);
+      await this.sleep(2000); // 2 second pause between keywords
     } catch (error: any) {
       logger.error(`[REDDIT] Error fetching for keyword: ${keyword.keyword}: ${error.message || error}`);
     }
@@ -78,12 +83,18 @@ export class RedditEngine extends BaseScraperEngine {
    */
   override async fetchRecentPosts(source: ProductSource, limit: number, signal?: AbortSignal) {
     const isGlobal = source.identifier.toLowerCase() === 'global';
+    const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
     const url = isGlobal
       ? `https://www.reddit.com/new.json?limit=${limit}`
-      : `https://www.reddit.com/r/${source.identifier}/new.json?limit=${limit}`;
+      : `https://www.reddit.com/r/${subreddit}/new.json?limit=${limit}`;
 
     try {
-      const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT }, signal: signal as any });
+      const response = await fetch(url, { headers: { 'User-Agent': this.getRandomUserAgent() }, signal: signal as any });
+      if (response.status === 429) {
+        logger.warn(`[REDDIT] 🛑 Rate limit (429) on ${url}. Backing off.`);
+        await this.sleep(10000); // Back off 10 seconds for 429
+        return [];
+      }
       if (!response.ok) return [];
 
       const data = (await response.json()) as any;

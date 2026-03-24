@@ -68,34 +68,42 @@ export abstract class BaseScraperEngine {
         return;
       }
 
+      // Randomized stagger delay so engines don't all hit the internet at once
+      const stagger = Math.floor(Math.random() * 5000) + 1000;
+      await this.sleep(stagger);
+
       for (const product of activeProducts) {
         signal?.throwIfAborted();
         if (product.sources.length === 0) {
-          // Graceful fallback for legacy products without sources configured
           product.sources = [{
             id: 'auto-injected-fallback',
             productId: product.id,
             platform: this.platform,
-            // Reddit requires a subreddit; others can just search globally
             identifier: this.platform === 'REDDIT' ? 'startups' : 'global',
             isActive: true,
             createdAt: new Date()
           }];
         }
 
-        logger.info(`[${this.platform}] Processing product: ${product.name}`);
+        logger.info(`[${this.platform}] Starting cycle for: ${product.name}`);
         const MAX = 5;
         let found = 0;
 
-        // Pass 1: Keyword scan (existing behaviour)
-        if (product.keywords.length > 0) {
+        // Shuffle keywords to avoid hitting the same pattern every time
+        const shuffledKeywords = [...product.keywords].sort(() => Math.random() - 0.5);
+
+        // Pass 1: Keyword scan
+        if (shuffledKeywords.length > 0) {
           for (const source of product.sources) {
             signal?.throwIfAborted();
             if (found >= MAX) break;
-            for (const keyword of product.keywords) {
+            for (const keyword of shuffledKeywords) {
               signal?.throwIfAborted();
               if (found >= MAX) break;
               found += await this.scrapeKeyword(product as ProductWithDetails, source, keyword, MAX - found, signal);
+              
+              // Extra pause between keywords to be respectful
+              await this.sleep(3000); 
             }
           }
         }
@@ -171,7 +179,8 @@ export abstract class BaseScraperEngine {
           rawPost.postedAt,
           intentLevel,
           result.intentScore,
-          'SEMANTIC'
+          'SEMANTIC',
+          result.reasoning
         );
         if (saved) found++;
       }
@@ -221,7 +230,8 @@ export abstract class BaseScraperEngine {
           rawPost.postedAt,
           'BUY_NOW' as IntentLevel,
           intentScore,
-          'COMPETITOR'
+          'COMPETITOR',
+          signal.reasoning
         );
         if (saved) found++;
       }
@@ -262,18 +272,21 @@ export abstract class BaseScraperEngine {
 
     const combinedText = `${title || ''}\n\n${content}`;
 
-    // 3. Minimum content length: reject one-liners/links without context
-    if (combinedText.trim().length < 100) return false;
+    // 3. Minimum content length: reject very small fragments 
+    if (combinedText.trim().length < 50) return false;
 
     // 4. Bot detection
     if (authorUsername?.toLowerCase().includes('bot')) return false;
 
     // 5. Smart regex negative keywords
-    const hasNegative = product.negativeKeywords.some((nk: NegativeKeyword) => {
+    const hasNegative = product.negativeKeywords.find((nk: NegativeKeyword) => {
       const regex = new RegExp(`\\b${nk.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
       return regex.test(combinedText);
     });
-    if (hasNegative) return false;
+    if (hasNegative) {
+      logger.debug(`[${this.platform}] Rejected: Negative keyword "${hasNegative.keyword}" found for ${externalPostId}`);
+      return false;
+    }
 
     // 6. LLM intent analysis
     const scoreResult = await analyzeIntent(
@@ -283,7 +296,10 @@ export abstract class BaseScraperEngine {
       product.userId,
       product.id
     );
-    if (scoreResult.intentScore < 75) return false; // Strict threshold for high-signal leads
+    if (scoreResult.intentScore < 75) {
+      logger.debug(`[${this.platform}] Rejected: Low intent score (${scoreResult.intentScore}) for ${externalPostId}. Reason: ${scoreResult.reasoning}`);
+      return false; 
+    }
 
     return this.saveLead(
       product,
@@ -295,7 +311,8 @@ export abstract class BaseScraperEngine {
       postedAt,
       scoreResult.intentLevel,
       scoreResult.intentScore,
-      'KEYWORD'
+      'KEYWORD',
+      scoreResult.reasoning
     );
   }
 
@@ -312,7 +329,8 @@ export abstract class BaseScraperEngine {
     postedAt: Date | undefined,
     intentLevel: IntentLevel,
     intentScore: number,
-    detectedBy: DetectionMode
+    detectedBy: DetectionMode,
+    reasoning?: string
   ): Promise<boolean> {
     try {
       const newLead = await db.client.lead.create({
@@ -328,6 +346,7 @@ export abstract class BaseScraperEngine {
           intentScore,
           postedAt: postedAt ?? null,
           detectedBy,
+          ...(reasoning ? { metadata: { qualificationReasoning: reasoning } } : {}),
         },
       });
 
