@@ -184,8 +184,8 @@ async function startServer() {
       }
     };
     
-    // Initial kick-off
-    startScraperDispatcher();
+    // Start Scraper Dispatcher Loop after the initial interval
+    setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
