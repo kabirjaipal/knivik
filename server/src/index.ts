@@ -13,9 +13,10 @@ import { requestIdMiddleware } from './middleware/requestId.js';
 import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
-import { runAllEngines } from './engines/index.js';
 import { createServer } from 'http';
 import { initSocket } from './lib/socket.js';
+import { scraperQueue } from './lib/queue.js';
+import { startWorkers, stopWorkers } from './workers/index.js';
 
 declare global {
   namespace Express {
@@ -121,6 +122,9 @@ const setupGracefulShutdown = (server: import('http').Server) => {
     try {
       logger.info({ signal }, 'Shutting down');
       await new Promise<void>((resolve) => server.close(() => resolve()));
+      if (config.ENABLE_QUEUE) {
+        await stopWorkers();
+      }
       await db.disconnect();
       logger.info('Shutdown complete');
       process.exit(0);
@@ -152,19 +156,36 @@ async function startServer() {
     
     setupGracefulShutdown(httpServer);
 
-    // Start Background Job for All Scraper Engines
-    const startScraperLoop = async () => {
+    // Start Distributed Workers (if enabled)
+    if (config.ENABLE_QUEUE) {
+      startWorkers();
+    }
+
+    // Start Scraper Dispatcher Loop
+    const startScraperDispatcher = async () => {
       try {
-        await runAllEngines();
+        logger.info('🛰 Dispatching scraper jobs to the queue...');
+        const activeUsers = await db.client.user.findMany({
+          where: { products: { some: { isActive: true } } },
+          select: { id: true }
+        });
+
+        for (const user of activeUsers) {
+          await scraperQueue.add('scrape-user', { userId: user.id }, {
+            jobId: `scrape-${user.id}-${Math.floor(Date.now() / config.SCRAPER_INTERVAL_MS)}`,
+            removeOnComplete: true,
+          });
+        }
+        logger.info(`✅ Dispatched jobs for ${activeUsers.length} users`);
       } catch (err) {
-        logger.error({ err }, 'Error in scraper loop');
+        logger.error({ err }, 'Error in scraper dispatcher');
       } finally {
-        setTimeout(startScraperLoop, config.SCRAPER_INTERVAL_MS);
+        setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
       }
     };
     
-    // Initial kick-off starts after the first interval
-    setTimeout(startScraperLoop, config.SCRAPER_INTERVAL_MS);
+    // Initial kick-off
+    startScraperDispatcher();
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {

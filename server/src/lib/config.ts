@@ -59,6 +59,10 @@ const configSchema = z.object({
   // Scraper controls
   SCRAPER_INTERVAL_MS: z.coerce.number().default(3600000), // Default 1 hour
   PROJECT_NAME: z.string().default('Knivik'),
+  // Queue configuration
+  ENABLE_QUEUE: envBool(true),
+  QUEUE_REDIS_URL: z.string().optional(),
+  SCRAPER_CONCURRENCY: z.coerce.number().default(5),
 });
 
 const configResult = configSchema.safeParse(process.env);

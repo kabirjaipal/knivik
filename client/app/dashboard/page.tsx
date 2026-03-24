@@ -38,12 +38,15 @@ interface Lead {
   status: LeadStatus;
   detectedBy: DetectedBy;
   enrichment?: Enrichment | null;
+  feedback?: number | null;
   notes?: string | null;
-  postedAt: string;
+  postedAt?: string | null;
   createdAt: string;
   product: { name: string };
   replies?: Array<{ id: string; generatedText: string; createdAt: string }>;
 }
+
+import { ThumbsUp, ThumbsDown } from "lucide-react"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -111,7 +114,7 @@ const EnrichmentIcons = ({ enrichment }: { enrichment?: Enrichment | null }) => 
 
 const LeadRow = memo(({
   lead, draftingLeadId, draftedReply, isExpanded,
-  onDraftReply, onToggleExpand, onStatusChange, onNotesChange,
+  onDraftReply, onToggleExpand, onStatusChange, onNotesChange, onFeedbackChange,
 }: {
   lead: Lead
   draftingLeadId: string | null
@@ -121,13 +124,14 @@ const LeadRow = memo(({
   onToggleExpand: (id: string) => void
   onStatusChange: (id: string, status: LeadStatus) => void
   onNotesChange: (id: string, notes: string) => void
+  onFeedbackChange: (id: string, feedback: number) => void
 }) => {
   const [showNotes, setShowNotes] = useState(false)
   const [localNotes, setLocalNotes] = useState(lead.notes || '')
   const currentStatus = STATUS_OPTIONS.find(s => s.value === lead.status) || STATUS_OPTIONS[0]
 
   const handleNotesBlur = useCallback(() => {
-    if (localNotes !== lead.notes) {
+    if (localNotes !== (lead.notes || "")) {
       onNotesChange(lead.id, localNotes)
     }
   }, [lead.id, lead.notes, localNotes, onNotesChange])
@@ -177,7 +181,7 @@ const LeadRow = memo(({
             </span>
             <span className="flex items-center">
               <Clock className="w-3 h-3 mr-1" />
-              {new Date(lead.postedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {new Date(lead.postedAt || lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </span>
             {lead.authorUsername && (
               <span className="flex items-center">
@@ -237,6 +241,25 @@ const LeadRow = memo(({
               className={`p-2 rounded-lg border transition-all active:scale-95 ${showNotes ? 'bg-primary/10 text-primary border-primary/30' : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'}`}>
               <FileText className="w-3.5 h-3.5" />
             </button>
+          </div>
+
+          {/* Feedback section */}
+          <div className="flex items-center justify-between md:justify-start gap-2 mt-1 px-1">
+             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mr-1">Quality:</span>
+             <button 
+              onClick={() => onFeedbackChange(lead.id, lead.feedback === 1 ? 0 : 1)}
+              className={`p-1.5 rounded-md border transition-all active:scale-90 ${lead.feedback === 1 ? 'bg-green-500/20 text-green-500 border-green-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
+              title="Good Lead"
+             >
+                <ThumbsUp className="w-3 h-3" />
+             </button>
+             <button 
+              onClick={() => onFeedbackChange(lead.id, lead.feedback === -1 ? 0 : -1)}
+              className={`p-1.5 rounded-md border transition-all active:scale-90 ${lead.feedback === -1 ? 'bg-red-500/20 text-red-500 border-red-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
+              title="Bad Lead"
+             >
+                <ThumbsDown className="w-3 h-3" />
+             </button>
           </div>
         </div>
       </div>
@@ -413,6 +436,18 @@ export default function DashboardPage() {
     } catch { console.error('Failed to update notes') }
   }
 
+  const handleFeedbackChange = async (leadId: string, feedback: number) => {
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, feedback } : l))
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/feedback`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback }),
+      })
+    } catch { console.error('Failed to update feedback') }
+  }
+
   if (authLoading) return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -566,6 +601,7 @@ export default function DashboardPage() {
                       onToggleExpand={(id) => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }))}
                       onStatusChange={handleStatusChange}
                       onNotesChange={handleNotesChange}
+                      onFeedbackChange={handleFeedbackChange}
                     />
                   ))}
                 </div>

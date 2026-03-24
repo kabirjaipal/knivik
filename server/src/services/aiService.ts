@@ -6,20 +6,20 @@ import { db } from '../lib/db.js';
 
 // Centralized model registry
 const MODELS = {
-  FAST: 'llama-3.1-8b-instant',      // Extremely cheap ($0.05/$0.08)
-  LITE: 'llama-3.2-3b-preview',      // Ultra low-cost ($0.06/$0.06)
-  MID: 'llama-3.2-11b-vision-preview', // Balanced ($0.18/$0.18)
-  VERSATILE: 'llama-3.3-70b-versatile', // High reasoning ($0.59/$0.79)
-  REASONER: 'deepseek-r1-distill-llama-70b', // Deep reasoning ($0.75/$0.99)
+  FAST: 'llama-3.1-8b-instant',      // Fast and cheap ($0.05/$0.08)
+  LITE: 'llama-3.1-8b-instant',      // Using stable 8B as preview is deprecated
+  MID: 'llama-3.3-70b-specdec',      // Balanced reasoning power
+  VERSATILE: 'llama-3.3-70b-versatile', // Premier 2026 Meta model
+  REASONER: 'deepseek-r1-distill-llama-70b', // Best-in-class reasoning
 };
 
 // Pricing per 1M tokens (USD) - Updated 2026 Rates
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   [MODELS.FAST]: { input: 0.05, output: 0.08 },
-  [MODELS.LITE]: { input: 0.06, output: 0.06 },
-  [MODELS.MID]: { input: 0.18, output: 0.18 },
+  [MODELS.LITE]: { input: 0.05, output: 0.08 },
+  [MODELS.MID]: { input: 0.59, output: 0.79 },
   [MODELS.VERSATILE]: { input: 0.59, output: 0.79 },
-  [MODELS.REASONER]: { input: 0.75, output: 0.99 },
+  [MODELS.REASONER]: { input: 0.69, output: 0.99 },
 };
 
 async function logLlmUsage(params: {

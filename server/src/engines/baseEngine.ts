@@ -7,9 +7,8 @@ import {
   SemanticScanPost,
 } from '../services/aiService.js';
 import { Platform, IntentLevel, Product, Keyword, NegativeKeyword, ProductSource, Competitor } from '@prisma/client';
-import { sendLeadAlert } from '../services/alertService.js';
+import { alertQueue, enrichmentQueue } from '../lib/queue.js';
 import { emitToUser } from '../lib/socket.js';
-import { enrichLead } from '../services/enrichmentService.js';
 
 export type ProductWithDetails = Product & {
   keywords: Keyword[];
@@ -344,11 +343,11 @@ export abstract class BaseScraperEngine {
         });
       }
 
-      // Fire enrichment and alerts asynchronously (non-blocking)
+      // Fire enrichment and alerts via BullMQ distributed queues
       if (authorUsername) {
-        setImmediate(() => enrichLead(newLead.id, authorUsername, this.platform));
+        enrichmentQueue.add('enrich', { leadId: newLead.id, username: authorUsername, platform: this.platform });
       }
-      setImmediate(() => sendLeadAlert(newLead.id));
+      alertQueue.add('alert', { leadId: newLead.id });
 
       return true;
     } catch (err: any) {

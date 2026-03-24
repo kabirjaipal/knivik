@@ -3,6 +3,8 @@ import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { generateReply } from '../services/aiService.js';
 import { runAllEngines, stopAllEngines } from '../engines/index.js';
+import { scraperQueue } from '../lib/queue.js';
+import config from '../lib/config.js';
 
 export const getLeads = async (req: Request, res: Response) => {
   try {
@@ -102,10 +104,18 @@ export const triggerScan = async (req: Request, res: Response): Promise<void> =>
        return;
      }
 
-     // Run asynchronously
-     runAllEngines(userId).catch(err => logger.error({ err }, 'Scan failed'));
-
-     res.status(200).json({ success: true, message: 'Scan started' });
+     // Run via Distributed Queue
+     if (config.ENABLE_QUEUE) {
+       await scraperQueue.add('force-scan', { userId }, {
+         priority: 1, // Higher priority for manual scans
+         removeOnComplete: true,
+       });
+     } else {
+       // Fallback for non-queue environments
+       runAllEngines(userId).catch(err => logger.error({ err }, 'Manual scan failed'));
+     }
+ 
+     res.status(200).json({ success: true, message: 'Scan queued successfully' });
    } catch (error) {
      logger.error({ error }, 'Failed to trigger scan');
      res.status(500).json({ error: 'Internal Error' });
@@ -188,6 +198,41 @@ export const updateLeadNotes = async (req: Request, res: Response): Promise<void
     res.status(200).json({ success: true, lead: updated });
   } catch (error) {
     logger.error({ error }, 'Failed to update lead notes');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateLeadFeedback = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id as string;
+    const leadId = req.params['id'] as string;
+    const { feedback } = req.body; // 1 (Good), -1 (Bad), 0 (Reset)
+
+    if (!userId || !leadId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+    if (![1, -1, 0].includes(feedback)) {
+      res.status(400).json({ error: 'Invalid feedback value. Must be 1, -1, or 0.' });
+      return;
+    }
+
+    const lead = await db.client.lead.findUnique({
+      where: { id: leadId },
+      include: { product: { select: { userId: true } } },
+    });
+
+    if (!lead || lead.product.userId !== userId) {
+      res.status(404).json({ error: 'Lead not found or unauthorized' });
+      return;
+    }
+
+    const updated = await db.client.lead.update({
+      where: { id: leadId },
+      data: { feedback: feedback === 0 ? null : feedback },
+    });
+
+    res.status(200).json({ success: true, lead: updated });
+  } catch (error) {
+    logger.error({ error }, 'Failed to update lead feedback');
     res.status(500).json({ error: 'Internal server error' });
   }
 };

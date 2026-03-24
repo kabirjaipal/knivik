@@ -47,11 +47,13 @@ async function main() {
       role: 'admin',
       plan: 'PRO',
       emailVerified: new Date(),
+      isScanning: false,
+      lastScanStatus: null
     },
   });
 
   console.log('📦 Creating high-quality test products...');
-  
+
   // Product: FastVideo AI
   await prisma.product.create({
     data: {
@@ -113,6 +115,8 @@ async function main() {
       role: 'user',
       plan: 'FREE',
       emailVerified: new Date(),
+      isScanning: false,
+      lastScanStatus: null
     },
   });
 
@@ -125,6 +129,8 @@ async function main() {
       role: 'user',
       plan: 'STARTER',
       emailVerified: new Date(),
+      isScanning: false,
+      lastScanStatus: null
     },
   });
 
@@ -137,13 +143,15 @@ async function main() {
       role: 'user',
       plan: 'FREE',
       emailVerified: new Date(),
+      isScanning: false,
+      lastScanStatus: null
     },
   });
 
   console.log('✅ Created 4 demo users');
 
   console.log('🤖 Seeding LLM models and pricing...');
-  
+
   const models = [
     {
       id: 'llama-3.1-8b-instant',
@@ -152,10 +160,16 @@ async function main() {
       modelOptions: { source: 'groq', speed: 'fast' }
     },
     {
+      id: 'llama-3.3-70b-specdec',
+      inputPrice: 0.59,
+      outputPrice: 0.79,
+      modelOptions: { source: 'groq', speed: 'balanced' }
+    },
+    {
       id: 'llama-3.3-70b-versatile',
       inputPrice: 0.59,
       outputPrice: 0.79,
-      modelOptions: { source: 'groq', speed: 'versatile', reasoning_tokens_supported: true }
+      modelOptions: { source: 'groq', speed: 'best', reasoning_tokens_supported: true }
     },
     {
       id: 'deepseek-r1-distill-llama-70b',
