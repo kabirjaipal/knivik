@@ -26,7 +26,10 @@ export default function ProductsPage() {
     keywords: "",
     negativeKeywords: "",
     competitors: "",
-    redditSources: ""
+    redditSources: "",
+    twitterSources: "",
+    linkedinSources: "",
+    productHuntSources: ""
   })
 
   const router = useRouter()
@@ -60,10 +63,27 @@ export default function ProductsPage() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       
-      const sources = formData.redditSources.split(',').map(s => s.trim()).filter(Boolean).map(s => ({
-        platform: 'REDDIT',
-        identifier: s
-      }))
+      const sources: any[] = []
+
+      // Reddit
+      formData.redditSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+        sources.push({ platform: 'REDDIT', identifier: s })
+      })
+
+      // Twitter
+      formData.twitterSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+        sources.push({ platform: 'TWITTER', identifier: s.replace('@', '') })
+      })
+
+      // LinkedIn
+      formData.linkedinSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+        sources.push({ platform: 'LINKEDIN', identifier: s })
+      })
+
+      // ProductHunt
+      formData.productHuntSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
+        sources.push({ platform: 'PRODUCTHUNT', identifier: s })
+      })
 
       // Always include HackerNews global as a base source
       sources.push({ platform: 'HACKERNEWS', identifier: 'global' })
@@ -99,7 +119,10 @@ export default function ProductsPage() {
       
       setIsCreating(false)
       setEditingProductId(null)
-      setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "" })
+      setFormData({ 
+        name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", 
+        redditSources: "", twitterSources: "", linkedinSources: "", productHuntSources: "" 
+      })
     } catch (e: any) {
       setFormError(e.message)
     }
@@ -124,7 +147,10 @@ export default function ProductsPage() {
       keywords: product.keywords?.map((k: any) => k.keyword).join(', ') || "",
       negativeKeywords: product.negativeKeywords?.map((k: any) => k.keyword).join(', ') || "",
       competitors: product.competitors?.map((c: any) => c.name).join(', ') || "",
-      redditSources: product.sources?.map((s: any) => s.identifier).join(', ') || ""
+      redditSources: product.sources?.filter((s:any) => s.platform === 'REDDIT').map((s: any) => s.identifier).join(', ') || "",
+      twitterSources: product.sources?.filter((s:any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(', ') || "",
+      linkedinSources: product.sources?.filter((s:any) => s.platform === 'LINKEDIN').map((s: any) => s.identifier).join(', ') || "",
+      productHuntSources: product.sources?.filter((s:any) => s.platform === 'PRODUCTHUNT').map((s: any) => s.identifier).join(', ') || ""
     })
     setEditingProductId(product.id)
     setIsCreating(true)
@@ -155,7 +181,10 @@ export default function ProductsPage() {
         keywords: data.strategy.keywords.join(', '),
         negativeKeywords: data.strategy.negativeKeywords.join(', '),
         competitors: data.strategy.competitors.join(', '),
-        redditSources: data.strategy.subreddits.join(', ')
+        redditSources: data.strategy.subreddits.join(', '),
+        twitterSources: data.strategy.twitterHandles.join(', '),
+        linkedinSources: data.strategy.linkedinSearchFlags.join(', '),
+        productHuntSources: data.strategy.productHuntCommunities.join(', ')
       })
     } catch (e: any) {
       alert("AI analysis failed: " + e.message)
@@ -220,7 +249,7 @@ export default function ProductsPage() {
                       <CardDescription>Engine variables for the AI classifiers</CardDescription>
                     </div>
                     <button 
-                      onClick={() => { setIsCreating(false); setEditingProductId(null); setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "" }); }} 
+                      onClick={() => { setIsCreating(false); setEditingProductId(null); setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "", linkedinSources: "", productHuntSources: "" }); }} 
                       className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors"
                     >
                       <X className="w-5 h-5" />
@@ -253,41 +282,61 @@ export default function ProductsPage() {
             <button type="button" onClick={handleAnalyze} disabled={isAnalyzing}
               className="group/btn flex items-center justify-center gap-2 w-full py-3 px-4 bg-violet-600 text-white font-bold rounded-xl text-sm transition-all hover:bg-violet-500 hover:shadow-[0_4_20px_rgba(139,92,246,0.3)] active:scale-[0.98] disabled:opacity-50 relative overflow-hidden">
               {isAnalyzing ? (
-                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Strategy...</>
+                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Multi-Platform Strategy...</>
               ) : (
-                 <><Zap className="w-4 h-4 fill-current group-hover/btn:animate-pulse" /> Magic Analyze (AI Tool)</>
+                 <><Zap className="w-4 h-4 fill-current group-hover/btn:animate-pulse" /> Magic Analyze (Full Social Strategy)</>
               )}
             </button>
             <div className="flex items-center gap-1.5 mt-2 px-1">
                <span className="text-[9px] font-black uppercase tracking-tighter bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded leading-none border border-violet-500/20">Recommended</span>
-               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight line-clamp-1">AI will find 10+ keywords & top competitors.</p>
+               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight line-clamp-1">Analyzes Reddit, Twitter, LinkedIn, and PH.</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+                <label className="text-sm font-bold text-foreground mb-1.5 block">Subreddits</label>
+                <input value={formData.redditSources} onChange={e => setFormData({...formData, redditSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="startups, saas" />
+             </div>
+             <div>
+                <label className="text-sm font-bold text-foreground mb-1.5 block">Twitter Handles</label>
+                <input value={formData.twitterSources} onChange={e => setFormData({...formData, twitterSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="@elonmusk, @levelsfio" />
+             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+             <div>
+                <label className="text-sm font-bold text-foreground mb-1.5 block">LinkedIn Queries</label>
+                <input value={formData.linkedinSources} onChange={e => setFormData({...formData, linkedinSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="SaaS marketing help" />
+             </div>
+             <div>
+                <label className="text-sm font-bold text-foreground mb-1.5 block">PH Topics</label>
+                <input value={formData.productHuntSources} onChange={e => setFormData({...formData, productHuntSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="Productivity, DevTools" />
+             </div>
+          </div>
+
           <div>
             <label className="text-sm font-bold text-foreground mb-1.5 block">Target Keywords (AI Generated or Manual)</label>
             <input required value={formData.keywords} onChange={e => setFormData({...formData, keywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="CRM, customer software, sales tool" />
           </div>
-          <div>
-            <label className="text-sm font-bold text-foreground mb-1.5 block">Subreddits to Scan (comma separated, or 'global')</label>
-            <input required value={formData.redditSources} onChange={e => setFormData({...formData, redditSources: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="startups, SaaS, sales" />
-          </div>
-          <div>
-            <label className="text-sm font-bold text-foreground mb-1.5 block">Negative Keywords</label>
-            <input value={formData.negativeKeywords} onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="job, hiring, salary, internship" />
-          </div>
-          <div>
-            <label className="text-sm font-bold text-foreground mb-1.5 block">Competitors</label>
-            <input value={formData.competitors} onChange={e => setFormData({...formData, competitors: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="Hubspot, Salesforce" />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-bold text-foreground mb-1.5 block">Negative Keywords</label>
+              <input value={formData.negativeKeywords} onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 outline-none focus:border-primary transition-all" placeholder="job, hiring" />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-foreground mb-1.5 block">Competitors</label>
+              <input value={formData.competitors} onChange={e => setFormData({...formData, competitors: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 outline-none focus:border-primary transition-all" placeholder="Hubspot, Salesforce" />
+            </div>
           </div>
         </div>
       </div>
 
                       <div className="flex justify-end pt-4 border-t border-border">
                          <button type="submit" className="flex items-center gap-2 bg-foreground text-background px-8 py-3 rounded-lg font-bold hover:bg-foreground/90 transition-all active:scale-95">
-                           <Save className="w-4 h-4" /> Save Product
+                           <Save className="w-4 h-4" /> Save Product & Sync Engines
                          </button>
                       </div>
                     </form>
@@ -325,6 +374,7 @@ export default function ProductsPage() {
 
 function ProductCard({ product, index, onEdit, onDelete }: { product: any, index: number, onEdit: () => void, onDelete: () => void }) {
   const [showFull, setShowFull] = useState(false)
+  const platforms = Array.from(new Set(product.sources.map((s: any) => s.platform)))
   
   return (
     <>
@@ -356,7 +406,7 @@ function ProductCard({ product, index, onEdit, onDelete }: { product: any, index
           
           <div className="mt-8 space-y-4">
             <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Primary Intent Signals</p>
+               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Intent Signals</p>
                <div className="flex flex-wrap gap-1.5">
                  {product.keywords.slice(0, 4).map((k: any) => (
                     <span key={k.id} className="text-[11px] font-bold bg-secondary/50 text-foreground/70 px-2.5 py-1 rounded-lg border border-border/50">
@@ -368,13 +418,14 @@ function ProductCard({ product, index, onEdit, onDelete }: { product: any, index
             </div>
 
             <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Targeted Communities</p>
-               <div className="flex flex-wrap gap-1.5">
-                 {product.sources.slice(0, 3).map((s: any) => (
-                    <span key={s.id} className="text-[10px] font-bold text-muted-foreground bg-muted/30 px-2 py-0.5 rounded border border-border">
-                      {s.platform === 'REDDIT' ? `r/${s.identifier}` : `HN: ${s.identifier}`}
+               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Active Social Radar</p>
+               <div className="flex flex-wrap gap-2 items-center">
+                 {platforms.map((p: any) => (
+                    <span key={p} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-md">
+                       <Zap className="w-2.5 h-2.5 fill-current" /> {p}
                     </span>
                  ))}
+                 <span className="text-[10px] font-bold text-muted-foreground/40 ml-1">Across {product.sources.length} sources</span>
                </div>
             </div>
           </div>
@@ -482,7 +533,10 @@ function ProductCard({ product, index, onEdit, onDelete }: { product: any, index
                       <div className="flex flex-wrap gap-1.5">
                         {product.sources.map((s: any) => (
                           <span key={s.id} className="bg-muted border border-border text-foreground/80 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
-                            {s.platform === 'REDDIT' ? `r/${s.identifier}` : `HN: global`}
+                            {s.platform === 'REDDIT' ? `r/${s.identifier}`
+                             : s.platform === 'TWITTER' ? `@${s.identifier}`
+                             : s.platform === 'HACKERNEWS' ? `HN: global`
+                             : `${s.platform}: ${s.identifier}`}
                           </span>
                         ))}
                       </div>

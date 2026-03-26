@@ -5,7 +5,7 @@ import { Navbar } from "@/components/landing/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Radar, Users, MessageSquareText, Activity, ExternalLink, Zap, Clock, ChevronRight,
-  RotateCw, Linkedin, Twitter, Github, FileText, ChevronDown, Brain, Flame
+  RotateCw, Linkedin, Twitter, Github, FileText, ChevronDown, Brain, Flame, Tags
 } from "lucide-react"
 import { useEffect, useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -40,13 +40,14 @@ interface Lead {
   enrichment?: Enrichment | null;
   feedback?: number | null;
   notes?: string | null;
+  metadata?: { qualificationReasoning?: string } | null;
   postedAt?: string | null;
   createdAt: string;
   product: { name: string };
   replies?: Array<{ id: string; generatedText: string; createdAt: string }>;
 }
 
-import { ThumbsUp, ThumbsDown } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Info } from "lucide-react"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -72,16 +73,20 @@ const getIntentColor = (level: string) => {
 
 const DetectionBadge = ({ detectedBy }: { detectedBy: DetectedBy }) => {
   if (detectedBy === 'COMPETITOR') return (
-    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
-      <Flame className="w-2.5 h-2.5" /> Competitor Alert
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+      <Flame className="w-3 h-3 fill-current" /> Competitor Alert
     </span>
   )
   if (detectedBy === 'SEMANTIC') return (
-    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/30">
-      <Brain className="w-2.5 h-2.5" /> Semantic Find
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-violet-500/15 text-violet-400 border border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.1)]">
+      <Brain className="w-3 h-3" /> Semantic Find
     </span>
   )
-  return null
+  return (
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500/80 border border-emerald-500/20">
+      <Tags className="w-3 h-3" /> Keyword Match
+    </span>
+  )
 }
 
 const EnrichmentIcons = ({ enrichment }: { enrichment?: Enrichment | null }) => {
@@ -172,6 +177,16 @@ const LeadRow = memo(({
           <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {lead.content}
           </p>
+
+          {/* AI Reasoning */}
+          {lead.metadata?.qualificationReasoning && (
+            <div className="mt-2 p-2 bg-primary/5 rounded-lg border border-primary/10 flex gap-2 items-start">
+               <Info className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+               <p className="text-[11px] font-medium text-primary/70 leading-normal italic">
+                 {lead.metadata.qualificationReasoning}
+               </p>
+            </div>
+          )}
 
           {/* Meta row */}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-muted-foreground">
@@ -498,11 +513,11 @@ export default function DashboardPage() {
         <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">
           {/* Header */}
           <div className="mb-10">
-            <h1 className="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+            <h1 className="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
               Welcome back, {user?.username}
             </h1>
             <p className="text-muted-foreground mt-2 text-base max-w-2xl">
-              Your radar is active across Reddit &amp; HackerNews. Keyword, semantic, and competitor signals monitored 24/7.
+              Your radar is active across Reddit, Twitter, LinkedIn, ProductHunt & HN. Multi-platform intelligence monitored 24/7.
             </p>
           </div>
 

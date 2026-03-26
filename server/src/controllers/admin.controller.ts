@@ -139,3 +139,56 @@ export const getLlmUsage = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 };
+
+/**
+ * GET /api/admin/health
+ * Checks real-time health of scraper gateways.
+ */
+export const getEngineHealth = async (req: Request, res: Response) => {
+  try {
+    const checks = [
+      { name: 'Reddit', url: 'https://www.reddit.com/r/saas/.rss' },
+      { name: 'HackerNews', url: 'https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage=1' },
+      { name: 'Twitter/X', url: 'https://nitter.net/search/rss?f=tweets&q=saas' },
+      { name: 'LinkedIn', url: 'https://html.duckduckgo.com/html/?q=site:linkedin.com/posts' },
+      { name: 'ProductHunt', url: 'https://html.duckduckgo.com/html/?q=site:producthunt.com/discussions' },
+    ];
+
+    const results = await Promise.all(checks.map(async (c) => {
+      try {
+        const start = Date.now();
+        const response = await fetch(c.url, { 
+          method: 'GET',
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Knivik/1.0' },
+          signal: AbortSignal.timeout(6000) 
+        });
+        const latency = Date.now() - start;
+        
+        // Some gateways return 403/429 but are technically "up", 
+        // but we'll flag any non-200 as Degraded.
+        let status = 'Operational';
+        if (!response.ok) status = 'Degraded';
+        if (response.status === 429) status = 'Rate Limited';
+        
+        return { 
+          name: c.name, 
+          status, 
+          latency: `${latency}ms`,
+          code: response.status 
+        };
+      } catch (e: any) {
+        return { 
+          name: c.name, 
+          status: 'Offline', 
+          latency: 'timeout', 
+          error: e.message 
+        };
+      }
+    }));
+
+    res.json({ success: true, data: results });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Admin Health Error');
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+};

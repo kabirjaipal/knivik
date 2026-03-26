@@ -517,6 +517,9 @@ export interface ProductStrategyResult {
   negativeKeywords: string[];
   competitors: string[];
   subreddits: string[];
+  twitterHandles: string[];
+  linkedinSearchFlags: string[];
+  productHuntCommunities: string[];
 }
 
 export const generateProductStrategy = async (
@@ -526,52 +529,51 @@ export const generateProductStrategy = async (
 ): Promise<ProductStrategyResult> => {
   const startTime = Date.now();
   const prompt = `
-You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS.
+You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS. 
 Your goal is to build a high-conversion social listening strategy for a product on "${config.PROJECT_NAME}".
 
 Product Profile:
 - Name: "${name}"
 - Core Value Prop: "${description}"
 
-Generate a 4-pillar strategy to capture high-intent leads on Reddit and HackerNews.
+Generate a 5-pillar strategy to capture high-intent leads across Reddit, HackerNews, Twitter, LinkedIn, and ProductHunt.
 
-PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 12-15)
+PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 15-20)
 Focus on:
 - "Alternative Seekers": (e.g., "alternative to [competitor]", "[competitor] too expensive", "switch from [competitor]")
 - "Problem State": (e.g., "how to solve [problem]", "trouble with [task]", "tool for [use case]")
 - "Recommendation Requests": (e.g., "best tool for", "any recommendations for", "software like")
 - "Budget Hunting": (e.g., "affordable [product type]", "free version of [competitor]")
 
-PILLAR 2: NOISE REDUCTION (Negative Keywords & Disqualifiers) (Generate 15-20)
-Very important to filter out:
-- Career/Education: hiring, job, salary, internship, course, resume, career, interview, bootcamp.
-- Generic News/Casual: article, news, meme, funny, blog post, video essay, documentary.
-- Irrelevant User States: "I built", "Check out my", "I'm looking for a job", "I'm a student".
-- Category Noise: (e.g. if the product is a "Video Editor for SaaS", negative keywords should include "gaming video", "wedding video", "hollywood", "netflix").
+PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25)
+Filter out: hiring, job, salary, article, blog, news, career, intern, and category-specific noise.
 
-PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-6)
-Include:
-- Direct competitors (the big players)
-- Indirect competitors (alternative ways users solve the problem today)
+PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8)
+Include direct and indirect competitors.
 
-PILLAR 4: TARGET COMMUNITIES (Generate 6-8 Subreddits)
-Focus on:
-- Primary industry subs (e.g., "SaaS", "startups")
-- Niche user-group subs (e.g., "freelance", "contentcreation", "smallbusiness")
-- "Ask" subreddits where people seek advice.
+PILLAR 4: TARGET COMMUNITIES (Reddit & PH)
+- 6-8 relevant subreddits (e.g. "SaaS", "startups", niche industry subs).
+- 3-4 ProductHunt discussion topics (e.g. "Productivity", "Marketing Tech").
+
+PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn)
+- 5-6 Twitter handles of industry influencers, competitors, or niche accounts to monitor.
+- 5-6 Specific LinkedIn "search flags" or problem-phrases uniquely common on LinkedIn (e.g. "LinkedIn ad alternative", "Sales Navigator tips").
 
 Return your strategy strictly as a JSON object:
 {
   "keywords": ["intent phrase 1", "intent phrase 2", ...],
   "negativeKeywords": ["negative term 1", "negative term 2", ...],
   "competitors": ["competitor 1", "competitor 2", ...],
-  "subreddits": ["subreddit1", "subreddit2", ...]
+  "subreddits": ["subreddit1", "subreddit2", ...],
+  "twitterHandles": ["@handle1", "@handle2", ...],
+  "linkedinSearchFlags": ["flag 1", "flag 2", ...],
+  "productHuntCommunities": ["topic 1", "topic 2", ...]
 }
 `;
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.LITE, // Fast and effective for this
+      model: MODELS.LITE,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.2,
@@ -600,6 +602,9 @@ Return your strategy strictly as a JSON object:
       negativeKeywords: Array.isArray(parsed.negativeKeywords) ? parsed.negativeKeywords : [],
       competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [],
       subreddits: Array.isArray(parsed.subreddits) ? parsed.subreddits : [],
+      twitterHandles: Array.isArray(parsed.twitterHandles) ? parsed.twitterHandles : [],
+      linkedinSearchFlags: Array.isArray(parsed.linkedinSearchFlags) ? parsed.linkedinSearchFlags : [],
+      productHuntCommunities: Array.isArray(parsed.productHuntCommunities) ? parsed.productHuntCommunities : [],
     };
   } catch (error: any) {
     logger.error({ message: error.message, status: error.status }, 'Failed to generate product strategy:');
@@ -617,6 +622,14 @@ Return your strategy strictly as a JSON object:
       });
     });
 
-    return { keywords: [], negativeKeywords: [], competitors: [], subreddits: [] };
+    return { 
+      keywords: [], 
+      negativeKeywords: [], 
+      competitors: [], 
+      subreddits: [], 
+      twitterHandles: [], 
+      linkedinSearchFlags: [], 
+      productHuntCommunities: [] 
+    };
   }
 };

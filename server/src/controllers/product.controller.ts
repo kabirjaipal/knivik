@@ -66,12 +66,33 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
           data.keywords = strategy.keywords || [];
           data.negativeKeywords = strategy.negativeKeywords || [];
           data.competitors = strategy.competitors || [];
+          
           if (strategy.subreddits && strategy.subreddits.length > 0) {
-            data.sources = strategy.subreddits.map(sub => ({
-              platform: Platform.REDDIT,
-              identifier: sub
-            }));
+            strategy.subreddits.forEach(sub => {
+              data.sources.push({ platform: Platform.REDDIT, identifier: sub });
+            });
           }
+
+          if (strategy.twitterHandles && strategy.twitterHandles.length > 0) {
+            strategy.twitterHandles.forEach(handle => {
+              data.sources.push({ platform: Platform.TWITTER, identifier: handle.replace('@', '') });
+            });
+          }
+
+          if (strategy.linkedinSearchFlags && strategy.linkedinSearchFlags.length > 0) {
+            strategy.linkedinSearchFlags.forEach(flag => {
+              data.sources.push({ platform: Platform.LINKEDIN, identifier: flag });
+            });
+          }
+
+          if (strategy.productHuntCommunities && strategy.productHuntCommunities.length > 0) {
+            strategy.productHuntCommunities.forEach(topic => {
+              data.sources.push({ platform: Platform.PRODUCTHUNT, identifier: topic });
+            });
+          }
+
+          // Always add HackerNews global
+          data.sources.push({ platform: Platform.HACKERNEWS, identifier: 'global' });
         }
       } catch (err) {
         logger.warn({ err }, 'Failed to auto-generate strategy during onboarding, applying fallback');
@@ -81,7 +102,8 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       if (data.sources.length === 0) {
         data.sources = [
           { platform: Platform.REDDIT, identifier: 'SaaS' },
-          { platform: Platform.REDDIT, identifier: 'startups' }
+          { platform: Platform.REDDIT, identifier: 'startups' },
+          { platform: Platform.HACKERNEWS, identifier: 'global' }
         ];
         data.keywords = [data.name];
       }
@@ -129,7 +151,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const userId = req.user?.id as string;
     if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
 
-    const productId = req.params['id'];
+    const productId = req.params['id'] as string;
     const parsed = productSchema.safeParse(req.body);
 
     if (!parsed.success || !productId) {
@@ -198,7 +220,7 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
     const userId = req.user?.id as string;
     if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
 
-    const productId = req.params['id'];
+    const productId = req.params['id'] as string;
 
     if (!productId) {
       res.status(400).json({ error: 'Missing product ID' });

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getStats, getUsers, getLlmUsage } from '../controllers/admin.controller.js';
+import { getStats, getUsers, getLlmUsage, getEngineHealth } from '../controllers/admin.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -8,6 +8,7 @@ const router = Router();
 router.use(requireAuth, requireAdmin);
 
 router.get('/stats', getStats);
+router.get('/health', getEngineHealth);
 router.get('/users', getUsers);
 router.get('/llm-usage', getLlmUsage);
 

@@ -14,19 +14,33 @@ interface AdminStats {
 
 export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [health, setHealth] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/stats`, { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) setStats(data.data)
+    const fetchData = async () => {
+      try {
+        const [statsRes, healthRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/stats`, { credentials: 'include' }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/health`, { credentials: 'include' })
+        ])
+        
+        const statsData = await statsRes.json()
+        const healthData = await healthRes.json()
+        
+        if (statsData.success) setStats(statsData.data)
+        if (healthData.success) setHealth(healthData.data)
+      } catch (err) {
+        console.error('Failed to fetch admin data:', err)
+      } finally {
         setLoading(false)
-      })
-      .catch(() => setLoading(false))
+      }
+    }
+    
+    fetchData()
   }, [])
 
-  if (loading) return <div>Loading statistics...</div>
+  if (loading) return <div>Loading diagnostics...</div>
 
   return (
     <div className="space-y-8">
@@ -55,15 +69,39 @@ export default function AdminPage() {
         ))}
       </div>
       
-      {/* Placeholder for recent signups or anomalies */}
-      <Card className="border-border/40">
-        <CardHeader>
-          <CardTitle>System Health</CardTitle>
+      {/* System Health Breakdown */}
+      <Card className="border-border/40 overflow-hidden">
+        <CardHeader className="bg-muted/30 border-b border-border/40 pb-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" />
+            Social Engine Health (Real-time)
+          </CardTitle>
+          <div className="text-[10px] font-bold text-muted-foreground">Gateway Heartbeat Active</div>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 text-sm text-green-500 font-medium">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            All scrapers operational
+        <CardContent className="p-0 bg-transparent">
+          <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-border/40">
+            {(health.length > 0 ? health : [
+              { name: 'Reddit', status: 'Checking...' },
+              { name: 'HackerNews', status: 'Checking...' },
+              { name: 'Twitter/X', status: 'Checking...' },
+              { name: 'LinkedIn', status: 'Checking...' },
+              { name: 'ProductHunt', status: 'Checking...' },
+            ]).map((s, i) => (
+              <div key={i} className="p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-muted/20 transition-colors">
+                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                  {s.name}
+                </span>
+                <div className={`flex items-center gap-2.5 text-sm font-bold ${
+                  s.status.includes('Checking') ? 'text-muted-foreground animate-pulse' : 'text-primary'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full shadow-lg ${
+                    s.status.includes('Checking') ? 'bg-muted-foreground/30 animate-pulse' : 'bg-primary shadow-primary/40 animate-pulse'
+                  }`} />
+                  {s.status}
+                </div>
+                {s.latency && <span className="text-[11px] font-bold text-muted-foreground/50 tracking-wide font-mono">{s.latency}</span>}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

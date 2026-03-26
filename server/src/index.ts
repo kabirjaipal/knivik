@@ -158,6 +158,13 @@ async function startServer() {
 
     // Start Distributed Workers (if enabled)
     if (config.ENABLE_QUEUE) {
+      // Clear any stale jobs from previous runs on startup to prevent immediate scanning
+      try {
+        await scraperQueue.drain();
+        logger.info('🧹 Stale scraper jobs drained from queue.');
+      } catch (err) {
+        logger.warn({ err }, 'Failed to drain scraper queue on startup');
+      }
       startWorkers();
     }
 
@@ -185,7 +192,13 @@ async function startServer() {
     };
     
     // Start Scraper Dispatcher Loop after the initial interval
-    setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
+    // This ensures no automatic scanning happens precisely at boot time.
+    if (config.SCRAPER_INTERVAL_MS > 0) {
+      logger.info(`⏳ Scraper dispatcher scheduled to start in ${config.SCRAPER_INTERVAL_MS / 60000} minutes.`);
+      setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
+    } else {
+      logger.warn('🚫 Scraper interval set to 0 or negative; automatic scanning disabled.');
+    }
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
