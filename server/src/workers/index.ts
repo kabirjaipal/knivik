@@ -2,7 +2,7 @@ import { Worker, Job } from 'bullmq';
 import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { SCRAPER_QUEUE_NAME, ALERT_QUEUE_NAME, ENRICHMENT_QUEUE_NAME } from '../lib/queue.js';
-import { runAllEngines } from '../engines/index.js';
+import { BatchProcessingService } from '../services/batchProcessingService.js';
 import { sendLeadAlert } from '../services/alertService.js';
 import { enrichLead } from '../services/enrichmentService.js';
 
@@ -12,26 +12,34 @@ const redisConnection = {
 };
 
 /**
- * 🚀 Scraper Worker 🔎
- * Handles the heavy lifting of periodic or manual scans.
+ * 🚀 Batch Scraper Worker 🔎
+ * Handles the new optimized batch processing approach.
+ * Collects posts from last month, then makes 1 AI call per user.
  */
 const scraperWorker = new Worker(
   SCRAPER_QUEUE_NAME,
   async (job: Job) => {
     const { userId } = job.data;
-    logger.info(`🔎 Starting scraper job for user ${userId} (Job ID: ${job.id})`);
+    logger.info(`🔎 Starting batch scraper job for user ${userId} (Job ID: ${job.id})`);
     try {
-      await runAllEngines(userId);
+      const result = await BatchProcessingService.processUser(userId);
+      
+      if (result.success) {
+        logger.info(`✅ Batch processing completed for user ${userId}: ${result.postsCollected} posts → ${result.leadsGenerated} leads in ${result.processingTime}ms`);
+      } else {
+        logger.error(`❌ Batch processing failed for user ${userId}: ${result.error}`);
+      }
+      
     } catch (err: any) {
-      logger.error({ err, userId }, 'Scraper work failed');
+      logger.error({ err, userId }, 'Batch scraper work failed');
       throw err; // Allow BullMQ to handle retries
     }
   },
   { 
     connection: redisConnection,
     concurrency: config.SCRAPER_CONCURRENCY,
-    // Ensure jobs aren't killed early if they take a long time
-    lockDuration: 300000, // 5 minutes
+    // Batch processing takes longer - increase lock duration
+    lockDuration: 600000, // 10 minutes
   }
 );
 

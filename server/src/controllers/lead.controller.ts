@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { generateReply } from '../services/aiService.js';
-import { runAllEngines, stopAllEngines } from '../engines/index.js';
+import { BatchProcessingService } from '../services/batchProcessingService.js';
 import { scraperQueue } from '../lib/queue.js';
 import config from '../lib/config.js';
 
@@ -104,22 +104,28 @@ export const triggerScan = async (req: Request, res: Response): Promise<void> =>
        return;
      }
 
-     // Run via Distributed Queue
+     // Mark user as scanning
+     await db.client.user.update({
+       where: { id: userId },
+       data: { isScanning: true, lastScanStatus: 'RUNNING' }
+     });
+
+     // Run via Distributed Queue (Batch Processing)
      if (config.ENABLE_QUEUE) {
        await scraperQueue.add('force-scan', { userId }, {
          priority: 1, // Higher priority for manual scans
          removeOnComplete: true,
        });
      } else {
-       // Fallback for non-queue environments
-       runAllEngines(userId).catch(err => logger.error({ err }, 'Manual scan failed'));
+       // Fallback for non-queue environments - direct batch processing
+       BatchProcessingService.processUser(userId).catch((err: Error) => logger.error({ err }, 'Manual batch scan failed'));
      }
  
-     res.status(200).json({ success: true, message: 'Scan queued successfully' });
-   } catch (error) {
-     logger.error({ error }, 'Failed to trigger scan');
+     res.status(200).json({ success: true, message: 'Batch scan queued successfully' });
+  } catch (error) {
+     logger.error({ error }, 'Failed to trigger batch scan');
      res.status(500).json({ error: 'Internal Error' });
-   }
+  }
 };
 
 export const stopScan = async (req: Request, res: Response): Promise<void> => {
@@ -128,10 +134,15 @@ export const stopScan = async (req: Request, res: Response): Promise<void> => {
      const userId = req.user?.id as string;
      if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
 
-     const stopped = await stopAllEngines(userId);
-     res.status(200).json({ success: stopped, message: stopped ? 'Scan stopped' : 'No active scan found' });
+     // Update user status to stop scanning
+     await db.client.user.update({
+       where: { id: userId },
+       data: { isScanning: false, lastScanStatus: 'STOPPED' }
+     });
+
+     res.status(200).json({ success: true, message: 'Batch scan stopped' });
    } catch (error) {
-     logger.error({ error }, 'Failed to stop scan');
+     logger.error({ error }, 'Failed to stop batch scan');
      res.status(500).json({ error: 'Internal server error' });
    }
 };

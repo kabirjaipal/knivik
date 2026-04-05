@@ -24,7 +24,7 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   [MODELS.REASONER]: { input: 0.69, output: 0.99 },
 };
 
-async function logLlmUsage(params: {
+export async function logLlmUsage(params: {
   action: string;
   model: string;
   userId?: string | null | undefined;
