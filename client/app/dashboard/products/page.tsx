@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { Navbar } from "@/components/landing/navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Trash2, Edit3, X, Server, Zap } from "lucide-react"
+import { Plus, Trash2, Edit3, X, Server, Zap, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -314,12 +314,11 @@ export default function ProductsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product, index) => (
-              <ProductCard 
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {products.map((product) => (
+              <CompactProductCard 
                 key={product.id} 
                 product={product} 
-                onEdit={() => handleEdit(product)}
                 onDelete={() => handleDelete(product.id)}
               />
             ))}
@@ -330,96 +329,72 @@ export default function ProductsPage() {
   )
 }
 
-function ProductCard({ product, onEdit, onDelete }: { product: any, onEdit: () => void, onDelete: () => void }) {
+function CompactProductCard({ product, onDelete }: { product: any, onDelete: () => void }) {
   const platforms = Array.from(new Set(product.sources.map((s: any) => s.platform)))
+  const router = useRouter()
   
   return (
-    <Card className="border-border hover:shadow-md transition-all duration-200 hover:border-primary/50 group">
-      <CardHeader className="bg-card/50">
+    <Card className="border-border hover:shadow-md transition-all duration-200 hover:border-primary/50 group cursor-pointer"
+      onClick={() => router.push(`/dashboard/products/${product.id}`)}>
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">{product.name}</h3>
-            <div className="text-sm text-muted-foreground mt-1">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">
+              {product.name}
+            </h3>
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
               {product.isActive ? (
                 <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                   Active
                 </span>
               ) : (
                 <span className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
                   Paused
                 </span>
               )}
+              <span>•</span>
+              <span>{platforms.length} platforms</span>
             </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {product.description}
+      <CardContent className="pt-0 space-y-3">
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+          {product.description || "No description"}
         </p>
         
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Keywords</p>
-            <div className="flex flex-wrap gap-1">
-              {product.keywords.slice(0, 3).map((k: any) => (
-                <span key={k.id} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-md border border-border">
-                  {k.keyword}
-                </span>
-              ))}
-              {product.keywords.length > 3 && (
-                <span className="text-xs text-muted-foreground font-medium">+{product.keywords.length - 3} more</span>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Platforms</p>
-            <div className="flex flex-wrap gap-1">
-              {platforms.map((p: any) => (
-                <span key={p} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md border border-primary/20 flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> {p}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Search Queries */}
-          {product.searchQueries && product.searchQueries.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider flex items-center gap-1">
-                <Zap className="w-3 h-3 text-yellow-500" /> AI Search Queries
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {product.searchQueries.slice(0, 5).map((query: string, idx: number) => (
-                  <span key={idx} className="text-xs bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded-md border border-yellow-500/20" title={query}>
-                    {query.length > 25 ? query.substring(0, 25) + '...' : query}
-                  </span>
-                ))}
-                {product.searchQueries.length > 5 && (
-                  <span className="text-xs text-muted-foreground font-medium">+{product.searchQueries.length - 5} more</span>
-                )}
-              </div>
-            </div>
+        <div className="flex flex-wrap gap-1">
+          {product.keywords.slice(0, 3).map((k: any) => (
+            <span key={k.id} className="text-xs bg-secondary px-1.5 py-0.5 rounded">
+              {k.keyword.length > 12 ? k.keyword.substring(0, 12) + '...' : k.keyword}
+            </span>
+          ))}
+          {product.keywords.length > 3 && (
+            <span className="text-xs text-muted-foreground">+{product.keywords.length - 3}</span>
           )}
         </div>
 
-        <div className="flex gap-2 pt-3 border-t border-border">
+        {/* AI Search Queries count */}
+        {product.searchQueries && product.searchQueries.length > 0 && (
+          <div className="flex items-center gap-1 text-xs text-yellow-600">
+            <Zap className="w-3 h-3" />
+            <span>{product.searchQueries.length} AI queries</span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-2 border-t border-border">
           <button 
-            onClick={onEdit} 
-            className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+            onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+            className="text-xs text-destructive hover:text-destructive/80 transition-colors"
           >
-            <Edit3 className="w-3 h-3" /> Edit
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
-          <button 
-            onClick={onDelete} 
-            className="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors font-medium"
-          >
-            <Trash2 className="w-3 h-3" /> Delete
-          </button>
+          <span className="text-xs text-primary flex items-center gap-0.5 group-hover:gap-1 transition-all">
+            View <ChevronRight className="w-3.5 h-3.5" />
+          </span>
         </div>
       </CardContent>
     </Card>

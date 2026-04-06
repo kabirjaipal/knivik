@@ -51,6 +51,46 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+export const getProductById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id as string;
+    if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    const productId = req.params['id'] as string;
+    if (!productId) {
+      res.status(400).json({ error: 'Missing product ID' });
+      return;
+    }
+
+    const product = await db.client.product.findUnique({
+      where: { id: productId },
+      include: {
+        keywords: true,
+        negativeKeywords: true,
+        competitors: true,
+        sources: true,
+      },
+    });
+
+    if (!product || product.userId !== userId) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    // Transform to include searchQueries as array
+    const transformedProduct = {
+      ...product,
+      searchQueries: (product.searchQueries as string[]) || []
+    };
+
+    res.status(200).json({ success: true, product: transformedProduct });
+  } catch (error) {
+    logger.error({ error }, 'Get Product By ID error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const createProduct = async (req: Request, res: Response): Promise<void> => {
   try {
     // @ts-ignore
