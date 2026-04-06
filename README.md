@@ -152,15 +152,7 @@ First version monitors:
 ```
 Reddit
 HackerNews
-```
-
-Later versions add:
-
-```
 Twitter
-LinkedIn
-Discord
-ProductHunt
 ```
 
 ---
@@ -187,7 +179,7 @@ PostgreSQL
 AI
 
 ```
-OpenAI API
+Groq API
 embeddings
 intent classification
 ```
@@ -536,7 +528,6 @@ After MVP:
 
 ```
 Twitter scanning
-LinkedIn signals
 AI outreach automation
 CRM integration
 lead enrichment
