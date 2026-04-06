@@ -158,20 +158,34 @@ async function startServer() {
 
     // Start Distributed Workers (if enabled)
     if (config.ENABLE_QUEUE) {
-      // Clear any stale jobs from previous runs on startup to prevent immediate scanning
+      // Clear ALL jobs from previous runs to prevent immediate scanning
       try {
+        // Drain waiting jobs
         await scraperQueue.drain();
         logger.info('🧹 Stale scraper jobs drained from queue.');
+        
+        // Clean up active, completed, and failed jobs
+        await scraperQueue.clean(0, 0, 'active');
+        await scraperQueue.clean(0, 0, 'completed');
+        await scraperQueue.clean(0, 0, 'failed');
+        await scraperQueue.clean(0, 0, 'delayed');
+        
+        logger.info('🧹 All scraper job states cleaned from queue.');
       } catch (err) {
-        logger.warn({ err }, 'Failed to drain scraper queue on startup');
+        logger.warn({ err }, 'Failed to clean scraper queue on startup');
       }
+      
+      // Small delay before starting workers to ensure cleanup is complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       startWorkers();
+      logger.info('⚙️ Distributed workers started and listening for jobs...');
     }
 
-    // Start Scraper Dispatcher Loop
+    // Start Scraper Dispatcher Loop (only if enabled)
     const startScraperDispatcher = async () => {
       try {
-        logger.info('🛰 Dispatching scraper jobs to the queue...');
+        logger.info(`🛰 Dispatching scraper jobs to the queue (interval: ${config.SCRAPER_INTERVAL_MS / 60000} minutes)...`);
         const activeUsers = await db.client.user.findMany({
           where: { products: { some: { isActive: true } } },
           select: { id: true }
@@ -187,7 +201,10 @@ async function startServer() {
       } catch (err) {
         logger.error({ err }, 'Error in scraper dispatcher');
       } finally {
-        setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
+        // Schedule next run based on SCRAPER_INTERVAL_MS
+        if (config.SCRAPER_INTERVAL_MS > 0) {
+          setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
+        }
       }
     };
     
@@ -197,7 +214,7 @@ async function startServer() {
       logger.info(`⏳ Scraper dispatcher scheduled to start in ${config.SCRAPER_INTERVAL_MS / 60000} minutes.`);
       setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
     } else {
-      logger.warn('🚫 Scraper interval set to 0 or negative; automatic scanning disabled.');
+      logger.info('⏸️ Scraper dispatcher disabled (SCRAPER_INTERVAL_MS set to 0)');
     }
 
     // Handle uncaught exceptions

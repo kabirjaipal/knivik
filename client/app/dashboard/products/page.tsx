@@ -2,10 +2,9 @@
 
 import { useAuth } from "@/context/auth-context"
 import { Navbar } from "@/components/landing/navbar"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Plus, Trash2, Edit3, Save, X, Server, Tags, AlertTriangle, Blocks, Zap } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Plus, Trash2, Edit3, X, Server, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { PROJECT_NAME } from "@/lib/constants"
 
@@ -16,7 +15,6 @@ export default function ProductsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   // Form State
   const [formData, setFormData] = useState({
@@ -48,7 +46,7 @@ export default function ProductsPage() {
       const data = await res.json()
       setProducts(data.products)
     } catch (e: any) {
-      console.error(e)
+      console.error('Failed to fetch products:', e)
     } finally {
       setLoading(false)
     }
@@ -60,489 +58,352 @@ export default function ProductsPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      
-      const sources: any[] = []
-
-      // Reddit
-      formData.redditSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
-        sources.push({ platform: 'REDDIT', identifier: s })
-      })
-
-      // Twitter
-      formData.twitterSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
-        sources.push({ platform: 'TWITTER', identifier: s.replace('@', '') })
-      })
-
-
-      // Always include HackerNews global as a base source
-      sources.push({ platform: 'HACKERNEWS', identifier: 'global' })
-
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        websiteUrl: formData.websiteUrl,
-        keywords: formData.keywords.split(',').map(s => s.trim()).filter(Boolean),
-        negativeKeywords: formData.negativeKeywords.split(',').map(s => s.trim()).filter(Boolean),
-        competitors: formData.competitors.split(',').map(s => s.trim()).filter(Boolean),
-        sources
-      }
-
-      const method = editingProductId ? 'PUT' : 'POST'
-      const urlEnding = editingProductId ? `/${editingProductId}` : ''
-
-      const res = await fetch(`${apiUrl}/products${urlEnding}`, {
-        method,
+      const res = await fetch(`${apiUrl}/products`, {
+        method: editingProductId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ...formData,
+          keywords: formData.keywords.split(',').map(k => k.trim()).filter(k => k),
+          negativeKeywords: formData.negativeKeywords.split(',').map(k => k.trim()).filter(k => k),
+          competitors: formData.competitors.split(',').map(c => c.trim()).filter(c => c),
+          redditSources: formData.redditSources.split(',').map(r => r.trim()).filter(r => r),
+          twitterSources: formData.twitterSources.split(',').map(t => t.trim()).filter(t => t),
+          ...(editingProductId && { id: editingProductId })
+        })
       })
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || `Failed to ${editingProductId ? 'update' : 'create'} product`)
+      if (!res.ok) throw new Error('Failed to save product')
       
-      if (editingProductId) {
-         setProducts(products.map(p => p.id === editingProductId ? data.product : p))
-      } else {
-         setProducts([data.product, ...products])
-      }
-      
+      // Reset form
+      setFormData({
+        name: "", description: "", websiteUrl: "", keywords: "",
+        negativeKeywords: "", competitors: "", redditSources: "", twitterSources: ""
+      })
       setIsCreating(false)
       setEditingProductId(null)
-      setFormData({ 
-        name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", 
-        redditSources: "", twitterSources: "" 
-      })
+      fetchProducts()
     } catch (e: any) {
       setFormError(e.message)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this product tracing context?")) return;
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure? This will delete all associated leads.')) return
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      await fetch(`${apiUrl}/products/${id}`, { method: 'DELETE', credentials: 'include' })
-      setProducts(products.filter(p => p.id !== id))
-    } catch (e) {
-      console.error(e)
+      const res = await fetch(`${apiUrl}/products/${productId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (!res.ok) throw new Error('Failed to delete product')
+      fetchProducts()
+    } catch (e: any) {
+      alert('Failed to delete product: ' + e.message)
     }
   }
 
   const handleEdit = (product: any) => {
     setFormData({
       name: product.name,
-      description: product.description || "",
+      description: product.description,
       websiteUrl: product.websiteUrl || "",
-      keywords: product.keywords?.map((k: any) => k.keyword).join(', ') || "",
-      negativeKeywords: product.negativeKeywords?.map((k: any) => k.keyword).join(', ') || "",
-      competitors: product.competitors?.map((c: any) => c.name).join(', ') || "",
-      redditSources: product.sources?.filter((s:any) => s.platform === 'REDDIT').map((s: any) => s.identifier).join(', ') || "",
-      twitterSources: product.sources?.filter((s:any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(', ') || ""
+      keywords: product.keywords.map((k: any) => k.keyword).join(', '),
+      negativeKeywords: product.negativeKeywords.map((k: any) => k.keyword).join(', '),
+      competitors: product.competitors.map((c: any) => c.name).join(', '),
+      redditSources: product.sources.filter((s: any) => s.platform === 'REDDIT').map((s: any) => s.identifier).join(', '),
+      twitterSources: product.sources.filter((s: any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(', '),
     })
     setEditingProductId(product.id)
     setIsCreating(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const handleAnalyze = async () => {
-    if (!formData.name || !formData.description) {
-      alert("Please provide at least a name and a short description first.")
-      return
-    }
-    
-    setIsAnalyzing(true)
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/products/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name: formData.name, description: formData.description })
-      })
-      
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      
-      setFormData({
-        ...formData,
-        keywords: data.strategy.keywords.join(', '),
-        negativeKeywords: data.strategy.negativeKeywords.join(', '),
-        competitors: data.strategy.competitors.join(', '),
-        redditSources: data.strategy.subreddits.join(', '),
-        twitterSources: data.strategy.twitterHandles.join(', ')
-      })
-    } catch (e: any) {
-      alert("AI analysis failed: " + e.message)
-    } finally {
-      setIsAnalyzing(false)
-    }
   }
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-muted-foreground">Loading...</p>
+          </div>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-primary/30">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-         <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] bg-linear-to-r from-blue-500/10 to-transparent rounded-full blur-[120px] opacity-70"></div>
-      </div>
-
-      <div className="relative z-10 flex flex-col h-full">
-        <Navbar />
-        
-        <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <h1 className="text-4xl font-black tracking-tight text-foreground">
-                Products
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Configure exactly what the {PROJECT_NAME} engines should look for to catch your leads.
-              </p>
-            </motion.div>
-            
-            <motion.button 
-              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              onClick={() => setIsCreating(true)}
-              className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] active:scale-95"
-            >
-              <Plus className="w-5 h-5" /> New Product
-            </motion.button>
-          </div>
-
-          <AnimatePresence>
-            {isCreating && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0, y: -20 }} 
-                animate={{ opacity: 1, height: 'auto', y: 0 }} 
-                exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                className="mb-10 overflow-hidden"
-              >
-                <Card className="border-primary/20 shadow-2xl bg-card/60 backdrop-blur-xl relative">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-primary to-blue-500" />
-                  <CardHeader className="flex flex-row justify-between items-start">
-                    <div>
-                      <CardTitle className="text-2xl">{editingProductId ? "Edit Product" : "New Product"}</CardTitle>
-                      <CardDescription>Engine variables for the AI classifiers</CardDescription>
-                    </div>
-                    <button 
-                      onClick={() => { setIsCreating(false); setEditingProductId(null); setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" }); }} 
-                      className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleCreateProduct} className="space-y-6">
-                      {formError && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm font-semibold flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4" /> {formError}
-                        </div>
-                      )}
-
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-4">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <label className="text-sm font-bold text-foreground mb-1.5 block">Product Name</label>
-            <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Acme CRM" />
-            <p className="text-[10px] text-muted-foreground mt-1 font-medium italic">Keep it short and catchy.</p>
+            <h1 className="text-3xl font-bold text-foreground">Products</h1>
+            <p className="text-muted-foreground mt-1">Configure what the engines should look for</p>
           </div>
           
-          <div>
-            <label className="text-sm font-bold text-foreground mb-1.5 block">Short Description</label>
-            <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full h-24 bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all resize-none" placeholder="We help freelancers track sales..." />
-            <p className="text-[10px] text-muted-foreground mt-1 font-medium">Explain what it does, who it's for, and why they need it.</p>
-          </div>
-
-          <div className="relative group/magic pt-2">
-            <button type="button" onClick={handleAnalyze} disabled={isAnalyzing}
-              className="group/btn flex items-center justify-center gap-2 w-full py-3 px-4 bg-violet-600 text-white font-bold rounded-xl text-sm transition-all hover:bg-violet-500 hover:shadow-[0_4_20px_rgba(139,92,246,0.3)] active:scale-[0.98] disabled:opacity-50 relative overflow-hidden">
-              {isAnalyzing ? (
-                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Generating Multi-Platform Strategy...</>
-              ) : (
-                 <><Zap className="w-4 h-4 fill-current group-hover/btn:animate-pulse" /> Magic Analyze (Full Social Strategy)</>
-              )}
-            </button>
-            <div className="flex items-center gap-1.5 mt-2 px-1">
-               <span className="text-[9px] font-black uppercase tracking-tighter bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded leading-none border border-violet-500/20">Recommended</span>
-               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight line-clamp-1">Analyzes Reddit, Twitter, and HackerNews.</p>
-            </div>
-          </div>
+          <button 
+            onClick={() => setIsCreating(true)}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> New Product
+          </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-             <div>
-                <label className="text-sm font-bold text-foreground mb-1.5 block">Subreddits</label>
-                <input value={formData.redditSources} onChange={e => setFormData({...formData, redditSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="startups, saas" />
-             </div>
-             <div>
-                <label className="text-sm font-bold text-foreground mb-1.5 block">Twitter Handles</label>
-                <input value={formData.twitterSources} onChange={e => setFormData({...formData, twitterSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="@elonmusk, @levelsfio" />
-             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-          </div>
-
-          <div>
-            <label className="text-sm font-bold text-foreground mb-1.5 block">Target Keywords (AI Generated or Manual)</label>
-            <input required value={formData.keywords} onChange={e => setFormData({...formData, keywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2.5 outline-none focus:border-primary transition-all" placeholder="CRM, customer software, sales tool" />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-bold text-foreground mb-1.5 block">Negative Keywords</label>
-              <input value={formData.negativeKeywords} onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 outline-none focus:border-primary transition-all" placeholder="job, hiring" />
-            </div>
-            <div>
-              <label className="text-sm font-bold text-foreground mb-1.5 block">Competitors</label>
-              <input value={formData.competitors} onChange={e => setFormData({...formData, competitors: e.target.value})} className="w-full bg-background border border-border rounded-lg px-4 py-2 outline-none focus:border-primary transition-all" placeholder="Hubspot, Salesforce" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-                      <div className="flex justify-end pt-4 border-t border-border">
-                         <button type="submit" className="flex items-center gap-2 bg-foreground text-background px-8 py-3 rounded-lg font-bold hover:bg-foreground/90 transition-all active:scale-95">
-                           <Save className="w-4 h-4" /> Save Product & Sync Engines
-                         </button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Product Grid */}
-          <div className="grid gap-8 md:grid-cols-2">
-            {products.length === 0 && !isCreating ? (
-              <div className="md:col-span-2 flex flex-col items-center justify-center p-20 border border-dashed border-border rounded-3xl bg-muted/10">
-                <Blocks className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                <h3 className="text-xl font-bold text-foreground mb-2">No Products Added</h3>
-                <p className="text-muted-foreground max-w-md text-center">Engine is offline. Add a Product to begin actively parsing live leads.</p>
+        {/* Create/Edit Form */}
+        {isCreating && (
+          <Card className="mb-8 border-border">
+            <CardHeader className="bg-card/50">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-foreground">{editingProductId ? "Edit Product" : "New Product"}</CardTitle>
+                <button 
+                  onClick={() => { 
+                    setIsCreating(false); 
+                    setEditingProductId(null); 
+                    setFormData({ 
+                      name: "", description: "", websiteUrl: "", keywords: "", 
+                      negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+                    }); 
+                  }} 
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            ) : (
-              products.map((product, i) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
-                  index={i} 
-                  onEdit={() => handleEdit(product)} 
-                  onDelete={() => handleDelete(product.id)} 
-                />
-              ))
-            )}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <form onSubmit={handleCreateProduct} className="space-y-4">
+                {formError && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">
+                    {formError}
+                  </div>
+                )}
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">Product Name</label>
+                    <input 
+                      required 
+                      value={formData.name} 
+                      onChange={e => setFormData({...formData, name: e.target.value})} 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      placeholder="e.g. Acme CRM" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">Website</label>
+                    <input 
+                      type="url"
+                      value={formData.websiteUrl} 
+                      onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      placeholder="https://example.com" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-foreground">Description</label>
+                  <textarea 
+                    required 
+                    value={formData.description} 
+                    onChange={e => setFormData({...formData, description: e.target.value})} 
+                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors h-20 resize-none" 
+                    placeholder="We help freelancers track sales..." 
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">Keywords (comma separated)</label>
+                    <input 
+                      required 
+                      value={formData.keywords} 
+                      onChange={e => setFormData({...formData, keywords: e.target.value})} 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      placeholder="CRM, customer software, sales tool" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">Negative Keywords (comma separated)</label>
+                    <input 
+                      value={formData.negativeKeywords} 
+                      onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      placeholder="free, open source, cheap" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">Subreddits (comma separated)</label>
+                    <input 
+                      value={formData.redditSources} 
+                      onChange={e => setFormData({...formData, redditSources: e.target.value})} 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      placeholder="startups, saas, entrepreneurship" 
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground">Twitter Sources (comma separated)</label>
+                    <input 
+                      value={formData.twitterSources} 
+                      onChange={e => setFormData({...formData, twitterSources: e.target.value})} 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      placeholder="global" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-foreground">Competitors (comma separated)</label>
+                  <input 
+                    value={formData.competitors} 
+                    onChange={e => setFormData({...formData, competitors: e.target.value})} 
+                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                    placeholder="competitor1, competitor2" 
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button 
+                    type="submit" 
+                    className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                  >
+                    {editingProductId ? "Update" : "Create"} Product
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { 
+                      setIsCreating(false); 
+                      setEditingProductId(null); 
+                      setFormData({ 
+                        name: "", description: "", websiteUrl: "", keywords: "", 
+                        negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+                      }); 
+                    }} 
+                    className="border border-input bg-background hover:bg-muted px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Products Grid */}
+        {products.length === 0 ? (
+          <Card className="border-border">
+            <CardContent className="text-center py-12">
+              <Server className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">No products yet</h3>
+              <p className="text-muted-foreground mb-6">Create your first product to start finding leads</p>
+              <button 
+                onClick={() => setIsCreating(true)}
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                Create Product
+              </button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product, index) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                onEdit={() => handleEdit(product)}
+                onDelete={() => handleDelete(product.id)}
+              />
+            ))}
           </div>
-        </main>
-      </div>
+        )}
+      </main>
     </div>
   )
 }
 
-function ProductCard({ product, index, onEdit, onDelete }: { product: any, index: number, onEdit: () => void, onDelete: () => void }) {
-  const [showFull, setShowFull] = useState(false)
+function ProductCard({ product, onEdit, onDelete }: { product: any, onEdit: () => void, onDelete: () => void }) {
   const platforms = Array.from(new Set(product.sources.map((s: any) => s.platform)))
   
   return (
-    <>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
-        onClick={() => setShowFull(true)}
-        className="group relative flex flex-col bg-card/40 backdrop-blur-xl border border-border/60 rounded-[2rem] overflow-hidden hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all cursor-pointer min-h-[320px]"
-      >
-        <div className={`absolute top-0 left-0 w-full h-1.5 ${product.isActive ? 'bg-linear-to-r from-green-500 to-emerald-400' : 'bg-muted'}`} />
-        
-        <CardHeader className="p-8 pb-4">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="font-black text-2xl tracking-tight text-foreground group-hover:text-primary transition-colors flex items-center gap-2">
-                <Server className="w-5 h-5" /> {product.name}
-              </h3>
-              <p className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">Product Details</p>
-            </div>
-            <span className={`text-[10px] font-black tracking-tighter px-3 py-1 rounded-full border ${product.isActive ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-muted text-muted-foreground'}`}>
-              {product.isActive ? 'SCANNING' : 'PAUSED'}
-            </span>
+    <Card className="border-border hover:shadow-md transition-all duration-200 hover:border-primary/50 group">
+      <CardHeader className="bg-card/50">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">{product.name}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {product.isActive ? (
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Active
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                  Paused
+                </span>
+              )}
+            </p>
           </div>
-        </CardHeader>
-
-        <CardContent className="px-8 pb-6 flex-1">
-          <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed font-medium italic">
-            "{product.description}"
-          </p>
-          
-          <div className="mt-8 space-y-4">
-            <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Intent Signals</p>
-               <div className="flex flex-wrap gap-1.5">
-                 {product.keywords.slice(0, 4).map((k: any) => (
-                    <span key={k.id} className="text-[11px] font-bold bg-secondary/50 text-foreground/70 px-2.5 py-1 rounded-lg border border-border/50">
-                      {k.keyword}
-                    </span>
-                 ))}
-                 {product.keywords.length > 4 && <span className="text-[10px] font-bold text-primary self-center ml-1">+{product.keywords.length - 4} more</span>}
-               </div>
-            </div>
-
-            <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 mb-2">Active Social Radar</p>
-               <div className="flex flex-wrap gap-2 items-center">
-                 {platforms.map((p: any) => (
-                    <span key={p} className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-md">
-                       <Zap className="w-2.5 h-2.5 fill-current" /> {p}
-                    </span>
-                 ))}
-                 <span className="text-[10px] font-bold text-muted-foreground/40 ml-1">Across {product.sources.length} sources</span>
-               </div>
-            </div>
-          </div>
-        </CardContent>
-
-        <div className="px-8 py-5 border-t border-border/20 bg-muted/5 flex justify-between items-center group-hover:bg-muted/20 transition-all">
-           <div className="flex items-center gap-4">
-             <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="flex items-center gap-1.5 text-xs font-black text-primary hover:scale-105 transition-transform">
-               <Edit3 className="w-3.5 h-3.5" /> Configure
-             </button>
-             <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="flex items-center gap-1.5 text-xs font-black text-destructive/60 hover:text-destructive transition-colors">
-               <Trash2 className="w-3.5 h-3.5" /> Terminate
-             </button>
-           </div>
-           
-           <div className="flex items-center gap-1.5 text-muted-foreground/30">
-              <span className="text-[10px] font-bold">Details</span>
-              <Plus className="w-3 h-3 rotate-45" />
-           </div>
         </div>
-      </motion.div>
+      </CardHeader>
 
-      {/* Full Detail Modal */}
-      <AnimatePresence>
-        {showFull && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowFull(false)}
-              className="absolute inset-0 bg-background/80 backdrop-blur-md"
-            />
-            
-            <motion.div 
-              initial={{ scale: 0.98, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.98, opacity: 0, y: 10 }}
-              className="relative w-full max-w-4xl max-h-[85vh] bg-card border border-border/80 shadow-2xl rounded-[1.5rem] overflow-hidden flex flex-col"
-            >
-              <div className="p-6 border-b border-border/40 flex justify-between items-center bg-muted/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <Server className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black tracking-tight leading-none">{product.name}</h2>
-                    <p className="text-xs text-muted-foreground mt-1 font-medium">{product.description}</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowFull(false)} className="bg-muted hover:bg-muted/80 p-2 rounded-lg transition-all active:scale-95 text-muted-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
-                {/* Visual Stats row */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { label: 'Expressions', val: product.keywords.length, icon: Tags, color: 'text-primary' },
-                    { label: 'Radar Sites', val: product.sources.length, icon: Blocks, color: 'text-emerald-400' },
-                    { label: 'Negatives', val: product.negativeKeywords.length, icon: AlertTriangle, color: 'text-red-400' },
-                    { label: 'Competitors', val: product.competitors.length, icon: Zap, color: 'text-orange-400' },
-                  ].map((stat, idx) => (
-                    <div key={idx} className="px-4 py-3 bg-secondary/20 rounded-xl border border-border/40 flex items-center gap-3">
-                      <stat.icon className={`w-3.5 h-3.5 ${stat.color} opacity-60`} />
-                      <div>
-                        <p className="text-sm font-black leading-none">{stat.val}</p>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mt-1">{stat.label}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-primary/70 mb-3">
-                         Intent Signals
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {product.keywords.map((k: any) => (
-                          <span key={k.id} className="bg-primary/5 text-primary px-2.5 py-1 rounded-lg text-xs font-bold border border-primary/10">
-                            {k.keyword}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-red-400/70 mb-3">
-                         Negative Suppression
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {product.negativeKeywords.map((k: any) => (
-                          <span key={k.id} className="bg-red-500/5 text-red-400/80 px-2.5 py-1 rounded-lg text-xs font-bold border border-red-500/10">
-                            ! {k.keyword}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-emerald-400/70 mb-3">
-                         Radar Sources
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {product.sources.map((s: any) => (
-                          <span key={s.id} className="bg-muted border border-border text-foreground/80 px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
-                            {s.platform === 'REDDIT' ? `r/${s.identifier}`
-                             : s.platform === 'TWITTER' ? `@${s.identifier}`
-                             : s.platform === 'HACKERNEWS' ? `HN: global`
-                             : `${s.platform}: ${s.identifier}`}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-orange-400/70 mb-3">
-                         Poach Targets
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {product.competitors.length > 0 ? product.competitors.map((c: any) => (
-                          <span key={c.id} className="bg-orange-500/5 text-orange-400 px-2.5 py-1 rounded-lg text-xs font-bold border border-orange-500/10">
-                            {c.name}
-                          </span>
-                        )) : <p className="text-xs italic text-muted-foreground/40 ml-1 leading-none">None configured.</p>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-5 border-t border-border/40 bg-muted/10 flex justify-end">
-                 <button onClick={() => { setShowFull(false); onEdit(); }} className="flex items-center gap-2 bg-foreground text-background px-5 py-2 rounded-xl font-bold text-xs hover:opacity-90 transition-all active:scale-95 shadow-lg">
-                   <Edit3 className="w-3.5 h-3.5" /> Modify Context
-                 </button>
-              </div>
-            </motion.div>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+          {product.description}
+        </p>
+        
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Keywords</p>
+            <div className="flex flex-wrap gap-1">
+              {product.keywords.slice(0, 3).map((k: any) => (
+                <span key={k.id} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-md border border-border">
+                  {k.keyword}
+                </span>
+              ))}
+              {product.keywords.length > 3 && (
+                <span className="text-xs text-muted-foreground font-medium">+{product.keywords.length - 3} more</span>
+              )}
+            </div>
           </div>
-        )}
-      </AnimatePresence>
-    </>
+
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">Platforms</p>
+            <div className="flex flex-wrap gap-1">
+              {platforms.map((p: any) => (
+                <span key={p} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md border border-primary/20 flex items-center gap-1">
+                  <Zap className="w-3 h-3" /> {p}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-3 border-t border-border">
+          <button 
+            onClick={onEdit} 
+            className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+          >
+            <Edit3 className="w-3 h-3" /> Edit
+          </button>
+          <button 
+            onClick={onDelete} 
+            className="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors font-medium"
+          >
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
