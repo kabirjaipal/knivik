@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     question: "Which platforms do you currently support?",
-    answer: "We currently monitor Reddit and HackerNews in real-time. Twitter/X and Discord integrations are currently in development for our Growth tier customers."
+    answer: "We currently monitor Reddit, Twitter/X, and HackerNews in real-time. All three platforms are fully integrated and working."
   },
   {
     question: "Do I have to write the replies myself?",

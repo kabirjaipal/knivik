@@ -1,6 +1,8 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
-import { redditProtection } from '../utils/ipProtection.js';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import * as UserAgent from 'user-agents';
 import logger from '../lib/logger.js';
 
 // High-value subreddits for business discussions
@@ -20,8 +22,122 @@ const BUYING_SIGNALS = [
   'want to purchase', 'considering', 'thinking about'
 ];
 
+interface RedditPost {
+  id: string;
+  title: string;
+  content: string;
+  url: string;
+  author: string;
+  score: number;
+  subreddit: string;
+  postedAt: Date;
+  externalPostId: string;
+}
+
 export class RedditEngine extends BaseScraperEngine {
   platform = Platform.REDDIT;
+
+  private getRandomDelay(): number {
+    // Random delay between 2-4 seconds to mimic human behavior
+    return 2000 + Math.random() * 2000;
+  }
+
+  override getRandomUserAgent(): string {
+    return (UserAgent as any).random();
+  }
+
+  private async scrapeRedditPage(url: string): Promise<RedditPost[]> {
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        timeout: 15000
+      });
+
+      const $ = cheerio.load(response.data);
+      const posts: RedditPost[] = [];
+
+      // Reddit's current post structure (2026)
+      $('div[data-testid="post-container"]').each((index, element) => {
+        if (posts.length >= 25) return false; // Limit to 25 posts maximum
+
+        try {
+          const postEl = $(element);
+          
+          // Extract title
+          const titleEl = postEl.find('h3[data-testid="post-content-title"] a, h3 a');
+          const title = titleEl.text().trim() || '';
+          const postUrl = titleEl.attr('href') || '';
+          
+          // Full URL if relative
+          const fullUrl = postUrl.startsWith('http') ? postUrl : `https://www.reddit.com${postUrl}`;
+          
+          // Extract post ID from URL
+          const postIdMatch = postUrl.match(/\/comments\/([a-z0-9]+)\//);
+          const postId = postIdMatch ? postIdMatch[1] : postEl.attr('id') || `post_${index}`;
+          
+          // Ensure postId is a string
+          const finalPostId = postId || `post_${index}`;
+          
+          // Extract content/text
+          const contentEl = postEl.find('div[data-testid="post-content"] p, div p');
+          const content = contentEl.first().text().trim() || title;
+          
+          // Extract author
+          const authorEl = postEl.find('a[data-testid="post-author-link"]');
+          const author = authorEl.text().trim() || 'unknown';
+          
+          // Extract score
+          const scoreEl = postEl.find('div[data-testid="post-vote-score"]');
+          const scoreText = scoreEl.text().trim();
+          const score = parseInt(scoreText) || 0;
+          
+          // Extract subreddit
+          const subredditEl = postEl.find('a[data-testid="subreddit-name"]');
+          const subreddit = subredditEl.text().trim() || 'unknown';
+          
+          // Extract timestamp
+          const postedAt = new Date();
+          
+          if (title && content) {
+            posts.push({
+              id: finalPostId,
+              title,
+              content,
+              url: fullUrl,
+              author,
+              score,
+              subreddit,
+              postedAt,
+              externalPostId: finalPostId
+            });
+          }
+        } catch (error) {
+          // Skip malformed posts
+          return true; // continue to next element
+        }
+        
+        return true; // continue processing
+      });
+
+      return posts;
+    } catch (error: any) {
+      logger.error(`[REDDIT] Error scraping page ${url}: ${error.message}`);
+      return [];
+    }
+  }
+
+  private containsBuyingIntent(text: string): boolean {
+    const lowerText = text.toLowerCase();
+    return BUYING_SIGNALS.some(signal => lowerText.includes(signal));
+  }
 
   protected async scrapeKeyword(
     product: ProductWithDetails,
@@ -33,204 +149,102 @@ export class RedditEngine extends BaseScraperEngine {
     let savedCount = 0;
     const isGlobal = source.identifier.toLowerCase() === 'global';
 
-    // Enforce exact phrase match for multi-word queries
-    const searchQuery = keyword.keyword.includes(' ') && !keyword.keyword.includes('"')
-      ? `"${keyword.keyword}"`
-      : keyword.keyword;
-
-    const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
-    
-    let url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=25&type=link,comment`;
-    if (!isGlobal) {
-      url = `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=25&type=link,comment`;
-    }
-
-    const response = await redditProtection.safeFetch(url);
-    if (!response) return savedCount;
-
     try {
-      const data = (await response.json()) as any;
-      const children = data?.data?.children;
-      if (!children || !Array.isArray(children)) return savedCount;
+      let posts: RedditPost[] = [];
 
-      for (const child of children) {
-        if (savedCount >= limit) break;
-        const postData = child.data;
-        if (!postData?.id) continue;
-
-        const title = postData.title || (postData.link_title ? `Comment on: ${postData.link_title}` : '');
-        const content = postData.body || postData.selftext || '';
-        const link = postData.permalink
-          ? `https://reddit.com${postData.permalink}`
-          : postData.context
-          ? `https://reddit.com${postData.context}`
-          : url;
-
-        const isNew = await this.processPotentialLead(
-          product,
-          postData.id,
-          title,
-          content,
-          link,
-          postData.author,
-          new Date(postData.created_utc * 1000)
-        );
-        if (isNew) savedCount++;
+      if (isGlobal) {
+        // Search across multiple high-value subreddits
+        const searchPromises = HIGH_VALUE_SUBREDDITS.slice(0, 5).map(async (subreddit) => {
+          const url = `https://www.reddit.com/r/${subreddit}/new/`;
+          return this.scrapeRedditPage(url);
+        });
+        
+        const results = await Promise.all(searchPromises);
+        posts = results.flat();
+      } else {
+        // Scrape specific subreddit
+        const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
+        const url = `https://www.reddit.com/r/${subreddit}/new/`;
+        posts = await this.scrapeRedditPage(url);
       }
 
-      // Additional delay between keywords (handled by IP protection)
-      await redditProtection['sleep'](2000);
+      // Filter posts that contain the keyword and buying intent
+      const matchingPosts = posts.filter(post => {
+        if (signal?.aborted) return false;
+        
+        const searchText = `${post.title} ${post.content}`.toLowerCase();
+        const hasKeyword = keyword.keyword.toLowerCase().split(' ').every(word => 
+          searchText.includes(word.toLowerCase())
+        );
+        const hasBuyingIntent = this.containsBuyingIntent(searchText);
+        
+        return hasKeyword && hasBuyingIntent;
+      });
+
+      // Process matching posts
+      for (const post of matchingPosts.slice(0, limit)) {
+        if (signal?.aborted) break;
+        
+        const isNew = await this.processPotentialLead(
+          product,
+          post.externalPostId,
+          post.title,
+          post.content,
+          post.url,
+          post.author,
+          post.postedAt
+        );
+        
+        if (isNew) {
+          savedCount++;
+          logger.info(`[REDDIT] Found lead: ${post.title.substring(0, 50)}...`);
+        }
+      }
+
+      logger.info(`[REDDIT] Processed ${savedCount} leads for keyword: ${keyword.keyword}`);
     } catch (error: any) {
-      logger.error(`[REDDIT] Error processing keyword ${keyword.keyword}: ${error.message}`);
+      logger.error(`[REDDIT] Error scraping keyword ${keyword.keyword}: ${error.message}`);
     }
 
+    // Polite delay before next request
+    await this.sleep(this.getRandomDelay());
     return savedCount;
   }
 
-  /**
-   * Fetches the latest posts with IP protection
-   */
-  override async fetchRecentPosts(source: ProductSource, limit: number, signal?: AbortSignal) {
-    const isGlobal = source.identifier.toLowerCase() === 'global';
-    const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
-    const url = isGlobal
-      ? `https://www.reddit.com/new.json?limit=${limit}`
-      : `https://www.reddit.com/r/${subreddit}/new.json?limit=${limit}`;
-
-    const response = await redditProtection.safeFetch(url);
-    if (!response) return [];
-
-    try {
-      const data = (await response.json()) as any;
-      const children = data?.data?.children || [];
-
-      const posts = await Promise.all(
-        children.slice(0, limit).map(async (child: any) => {
-          const postData = child.data;
-          if (!postData?.id) return null;
-
-          const title = postData.title || '';
-          const content = postData.selftext || '';
-          const postedAt = new Date(postData.created_utc * 1000);
-
-          // Score content quality
-          const qualityScore = this.scoreContent(title, content, postData.num_comments || 0);
-          
-          // Only process high-quality posts
-          if (qualityScore < 30) return null;
-
-          // Get comments for high-value posts (with rate limiting)
-          let comments: any[] = [];
-          if (postData.num_comments > 5 && qualityScore > 50) {
-            comments = await this.getPostComments(postData.id, 10);
-          }
-
-          return {
-            id: postData.id,
-            title,
-            content,
-            url: `https://reddit.com${postData.permalink}`,
-            author: postData.author,
-            postedAt,
-            numComments: postData.num_comments || 0,
-            qualityScore,
-            buyingSignals: this.detectBuyingSignals(`${title} ${content}`),
-            comments: comments.slice(0, 3),
-            hasHighValueComments: comments.some(c => c.qualityScore > 40)
-          };
-        })
-      );
-
-      return posts.filter(Boolean);
-    } catch (error: any) {
-      logger.error(`[REDDIT] Error fetching posts: ${error.message}`);
-      return [];
-    }
-  }
-
-  /**
-   * Get comments with careful rate limiting
-   */
-  private async getPostComments(postId: string, limit: number = 50): Promise<any[]> {
-    const url = `https://www.reddit.com/comments/${postId}.json?limit=${limit}`;
-    const response = await redditProtection.safeFetch(url);
+  override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal) {
+    const isGlobal = source.identifier.toLowerCase() === 'global' || !source.identifier;
     
-    if (!response) return [];
-
     try {
-      const data = (await response.json()) as any;
-      const comments = (data as any)[1]?.data?.children || [];
-
-      return comments
-        .filter((comment: any) => comment.data.body && comment.data.author)
-        .map((comment: any) => {
-          const content = comment.data.body || '';
-          return {
-            id: comment.data.id,
-            content,
-            author: comment.data.author,
-            postedAt: new Date(comment.data.created_utc * 1000),
-            depth: comment.data.depth || 0,
-            score: comment.data.score || 0,
-            qualityScore: this.scoreContent('', content, 0),
-            buyingSignals: this.detectBuyingSignals(content)
-          };
-        })
-        .filter((comment: any) => comment.qualityScore > 20);
+      if (isGlobal) {
+        // Get recent posts from high-value subreddits
+        const url = `https://www.reddit.com/r/startups/new/`;
+        const posts = await this.scrapeRedditPage(url);
+        
+        return posts.slice(0, limit).map(post => ({
+          id: post.externalPostId,
+          title: post.title,
+          content: post.content,
+          url: post.url,
+          author: post.author,
+          postedAt: post.postedAt
+        }));
+      } else {
+        const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
+        const url = `https://www.reddit.com/r/${subreddit}/new/`;
+        const posts = await this.scrapeRedditPage(url);
+        
+        return posts.slice(0, limit).map(post => ({
+          id: post.externalPostId,
+          title: post.title,
+          content: post.content,
+          url: post.url,
+          author: post.author,
+          postedAt: post.postedAt
+        }));
+      }
     } catch (error: any) {
-      logger.warn(`[REDDIT] Failed to get comments for ${postId}: ${error.message}`);
+      logger.error(`[REDDIT] Error fetching recent posts: ${error.message}`);
       return [];
     }
-  }
-
-  /**
-   * Score content quality based on various factors
-   */
-  private scoreContent(title: string, content: string, numComments: number): number {
-    let score = 0;
-
-    // Title quality (30 points max)
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('?')) score += 10;
-    if (BUYING_SIGNALS.some(signal => titleLower.includes(signal))) score += 20;
-    if (titleLower.length > 50) score += 5;
-
-    // Content quality (30 points max)
-    if (content.length > 100) score += 10;
-    if (content.length > 500) score += 10;
-    if (content.toLowerCase().includes('problem') || content.toLowerCase().includes('issue')) score += 10;
-
-    // Engagement quality (20 points max)
-    if (numComments > 10) score += 10;
-    if (numComments > 50) score += 10;
-
-    // Length quality (20 points max)
-    const totalLength = title.length + content.length;
-    if (totalLength > 200) score += 10;
-    if (totalLength > 500) score += 10;
-
-    return Math.min(score, 100);
-  }
-
-  /**
-   * Detect buying signals in content
-   */
-  private detectBuyingSignals(content: string): string[] {
-    const contentLower = content.toLowerCase();
-    return BUYING_SIGNALS.filter(signal => contentLower.includes(signal));
-  }
-
-  /**
-   * Get high-value subreddits
-   */
-  static getHighValueSubreddits(): string[] {
-    return HIGH_VALUE_SUBREDDITS;
-  }
-
-  /**
-   * Get rate limit status
-   */
-  getRateLimitStatus() {
-    return redditProtection.getRateLimitStatus();
   }
 }

@@ -1,6 +1,9 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
 import { hackerNewsProtection } from '../utils/ipProtection.js';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import * as UserAgent from 'user-agents';
 import logger from '../lib/logger.js';
 
 // Business-relevant keywords for HN content filtering
@@ -19,11 +22,79 @@ const BUYING_SIGNALS = [
   'want to purchase', 'considering', 'thinking about'
 ];
 
+interface HNPost {
+  id: string;
+  title: string;
+  url: string;
+  content: string;
+  author: string;
+  postedAt: Date;
+  externalPostId: string;
+  score?: number;
+}
+
 /**
  * Enhanced HackerNews engine with IP protection and rate limiting
  */
 export class HackerNewsEngine extends BaseScraperEngine {
   platform = Platform.HACKERNEWS;
+
+  override getRandomUserAgent(): string {
+    return (UserAgent as any).random();
+  }
+
+  private async scrapeHNWithCheerio(): Promise<HNPost[]> {
+    try {
+      const response = await axios.get('https://news.ycombinator.com', {
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        timeout: 15000
+      });
+
+      const $ = cheerio.load(response.data);
+      const posts: HNPost[] = [];
+
+      $('.athing').each((index, element) => {
+        const storyEl = $(element);
+        const titleEl = storyEl.find('.titleline a');
+        const title = titleEl.text().trim();
+        const url = titleEl.attr('href') || '';
+        const scoreEl = $(`#score_${storyEl.attr('id')}`);
+        const scoreText = scoreEl.text().trim();
+        const score = parseInt(scoreText) || 0;
+
+        if (title && url) {
+          posts.push({
+            id: storyEl.attr('id') || `hn_${index}`,
+            title,
+            url,
+            content: title, // HN doesn't have content, use title
+            author: 'unknown',
+            postedAt: new Date(),
+            externalPostId: storyEl.attr('id') || `hn_${index}`,
+            score
+          });
+        }
+      });
+
+      return posts;
+    } catch (error: any) {
+      logger.error(`[HACKERNEWS] Cheerio backup failed: ${error.message}`);
+      return [];
+    }
+  }
+
+  private containsBuyingIntent(text: string): boolean {
+    const lowerText = text.toLowerCase();
+    return BUYING_SIGNALS.some(signal => lowerText.includes(signal));
+  }
+
+  private isBusinessRelevant(text: string): boolean {
+    const lowerText = text.toLowerCase();
+    return BUSINESS_KEYWORDS.some(keyword => lowerText.includes(keyword));
+  }
 
   protected async scrapeKeyword(
     product: ProductWithDetails,
@@ -34,252 +105,128 @@ export class HackerNewsEngine extends BaseScraperEngine {
   ): Promise<number> {
     let savedCount = 0;
 
-    // Algolia HN Search API — best-in-class for HN search
-    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(keyword.keyword)}&tags=(story,comment)&hitsPerPage=25`;
-
-    const response = await hackerNewsProtection.safeFetch(url);
-    if (!response) return savedCount;
-
     try {
+      // Try Algolia API first (primary method)
+      const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(keyword.keyword)}&tags=(story,comment)&hitsPerPage=25`;
+
+      const response = await hackerNewsProtection.safeFetch(url);
+      if (!response) {
+        // Fallback to Cheerio scraping
+        logger.warn('[HACKERNEWS] Algolia API failed, trying Cheerio backup');
+        const posts = await this.scrapeHNWithCheerio();
+        return this.processHNPosts(posts, product, keyword, limit, signal, savedCount);
+      }
+
       const data = (await response.json()) as any;
       const hits = data?.hits;
       if (!hits || !Array.isArray(hits)) return savedCount;
 
-      for (const hit of hits) {
-        if (savedCount >= limit) break;
-        if (!hit.objectID) continue;
+      const posts: HNPost[] = hits.map((hit: any) => ({
+        id: hit.objectID || `hn_${Date.now()}_${Math.random()}`,
+        title: hit.title || hit.story_text?.substring(0, 100) || 'No title',
+        url: hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
+        content: hit.story_text || hit.title || '',
+        author: hit.author || 'unknown',
+        postedAt: new Date(hit.created_at_i * 1000) || new Date(),
+        externalPostId: hit.objectID,
+        score: hit.points || 0
+      }));
 
-        const title = hit.title || hit.story_title || 'HN Conversation Thread';
-        // Strip HTML from comments
-        const content = (hit.comment_text || hit.story_text || hit.title || '').replace(/<[^>]*>/gm, '');
-
-        // Detect if this is a comment (higher buying signal)
-        const isComment = !!hit.comment_text;
-        
-        // Detect Ask HN posts (highest buying signal)
-        const isAskHN = title.startsWith('Ask HN');
-        
-        // Score the content
-        const qualityScore = this.scoreContent(title, content, isComment, isAskHN);
-        
-        // Skip low-quality content
-        if (qualityScore < 30) continue;
-
-        const isNew = await this.processPotentialLead(
-          product,
-          hit.objectID,
-          title,
-          content,
-          `https://news.ycombinator.com/item?id=${hit.objectID}`,
-          hit.author,
-          new Date(hit.created_at)
-        );
-        if (isNew) savedCount++;
-      }
-
-      // Additional delay between keywords (handled by IP protection)
-      await hackerNewsProtection['sleep'](1000);
+      return this.processHNPosts(posts, product, keyword, limit, signal, savedCount);
     } catch (error: any) {
-      logger.error(`[HN] Error processing keyword ${keyword.keyword}: ${error.message}`);
+      logger.error(`[HACKERNEWS] Error with Algolia API, trying Cheerio: ${error.message}`);
+      
+      // Fallback to Cheerio scraping
+      const posts = await this.scrapeHNWithCheerio();
+      return this.processHNPosts(posts, product, keyword, limit, signal, savedCount);
     }
-
-    return savedCount;
   }
 
-  /**
-   * Fetches the latest posts from HackerNews with IP protection
-   */
-  override async fetchRecentPosts(_source: ProductSource, limit: number, signal?: AbortSignal) {
-    try {
-      // Get latest stories
-      const idsUrl = 'https://hacker-news.firebaseio.com/v0/newstories.json';
-      const idsRes = await hackerNewsProtection.safeFetch(idsUrl);
-      if (!idsRes) return [];
+  private async processHNPosts(
+    posts: HNPost[],
+    product: ProductWithDetails,
+    keyword: Keyword,
+    limit: number,
+    signal?: AbortSignal,
+    savedCount: number = 0
+  ): Promise<number> {
+    let count = savedCount;
 
-      const ids = (await idsRes.json()) as number[];
-      const topIds = ids.slice(0, limit * 2); // Get more to filter for quality
-
-      // Process stories in smaller batches to avoid overwhelming the API
-      const batchSize = 5;
-      const posts = [];
+    // Filter posts that contain the keyword and have buying intent
+    const matchingPosts = posts.filter(post => {
+      if (signal?.aborted) return false;
       
-      for (let i = 0; i < topIds.length; i += batchSize) {
-        const batch = topIds.slice(i, i + batchSize);
-        const batchResults = await Promise.allSettled(
-          batch.map(async (id) => {
-            const res = await hackerNewsProtection.safeFetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-            if (!res) return null;
-            const item = (await res.json()) as any;
-            if (!item) return null;
+      const searchText = `${post.title} ${post.content}`.toLowerCase();
+      const hasKeyword = keyword.keyword.toLowerCase().split(' ').every(word => 
+        searchText.includes(word.toLowerCase())
+      );
+      const hasBuyingIntent = this.containsBuyingIntent(searchText);
+      const isBusiness = this.isBusinessRelevant(searchText);
+      
+      return hasKeyword && (hasBuyingIntent || isBusiness);
+    });
 
-            // Include both stories and high-quality comments
-            if (item.type !== 'story' && item.type !== 'comment') return null;
+    // Process matching posts
+    for (const post of matchingPosts.slice(0, limit)) {
+      if (signal?.aborted) break;
+      
+      const isNew = await this.processPotentialLead(
+        product,
+        post.externalPostId,
+        post.title,
+        post.content,
+        post.url,
+        post.author,
+        post.postedAt
+      );
+      
+      if (isNew) {
+        count++;
+        logger.info(`[HACKERNEWS] Found lead: ${post.title.substring(0, 50)}...`);
+      }
+    }
 
-            const title = item.title || (item.comment_text ? `Comment on ${item.story_title || 'HN Thread'}` : 'HN Discussion');
-            const content = (item.text || item.comment_text || '').replace(/<[^>]*>/gm, '');
-            const url = `https://news.ycombinator.com/item?id=${item.id}`;
+    logger.info(`[HACKERNEWS] Processed ${count} leads for keyword: ${keyword.keyword}`);
+    return count;
+  }
 
-            // Detect content type and signals
-            const isComment = item.type === 'comment';
-            const isAskHN = title.startsWith('Ask HN');
-            const isShowHN = title.startsWith('Show HN');
-            const isBusinessRelevant = this.isBusinessRelevant(`${title} ${content}`);
+  override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal) {
+    const isGlobal = source.identifier.toLowerCase() === 'global' || !source.identifier;
 
-            // Skip non-business content
-            if (!isBusinessRelevant && !isAskHN) return null;
-
-            // Score the content
-            const qualityScore = this.scoreContent(title, content, isComment, isAskHN);
-
-            // Only return high-quality content
-            if (qualityScore < 40) return null;
-
-            return {
-              id: String(item.id),
-              title,
-              content,
-              url,
-              author: item.by,
-              postedAt: item.time ? new Date(item.time * 1000) : undefined,
-              type: item.type,
-              isAskHN,
-              isShowHN,
-              isComment,
-              qualityScore,
-              buyingSignals: this.detectBuyingSignals(`${title} ${content}`),
-              businessRelevance: isBusinessRelevant,
-              score: item.score || 0,
-              commentCount: item.descendants || 0
-            };
-          })
-        );
-
-        // Add successful results from this batch
-        const batchPosts = batchResults
-          .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-          .map(r => r.value);
+    try {
+      if (isGlobal) {
+        // Try Algolia API first
+        const url = `https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage=${limit}`;
+        const response = await hackerNewsProtection.safeFetch(url);
         
-        posts.push(...batchPosts);
-
-        // Small delay between batches
-        if (i + batchSize < topIds.length) {
-          await hackerNewsProtection['sleep'](500);
+        if (response) {
+          const data = (await response.json()) as any;
+          const hits = data?.hits || [];
+          
+          return hits.slice(0, limit).map((hit: any) => ({
+            id: hit.objectID,
+            title: hit.title || 'No title',
+            content: hit.story_text || hit.title || '',
+            url: hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`,
+            author: hit.author || 'unknown',
+            postedAt: new Date(hit.created_at_i * 1000) || new Date()
+          }));
         }
       }
 
-      // Sort by quality and limit to requested number
-      return posts
-        .sort((a, b) => b.qualityScore - a.qualityScore)
-        .slice(0, limit);
-        
+      // Fallback to Cheerio scraping
+      const posts = await this.scrapeHNWithCheerio();
+      return posts.slice(0, limit).map(post => ({
+        id: post.externalPostId,
+        title: post.title,
+        content: post.content,
+        url: post.url,
+        author: post.author,
+        postedAt: post.postedAt
+      }));
     } catch (error: any) {
-      logger.error(`[HN] Error fetching posts: ${error.message}`);
+      logger.error(`[HACKERNEWS] Error fetching recent posts: ${error.message}`);
       return [];
     }
-  }
-
-  /**
-   * Get comments for a specific HN post/thread with rate limiting
-   */
-  private async getPostComments(postId: string, limit: number = 50): Promise<any[]> {
-    const url = `https://hn.algolia.com/api/v1/search_by_date?tags=comment,story_${postId}&hitsPerPage=${limit}`;
-    const response = await hackerNewsProtection.safeFetch(url);
-    
-    if (!response) return [];
-
-    try {
-      const data = (await response.json()) as any;
-      const hits = (data as any)?.hits || [];
-
-      return hits
-        .filter((hit: any) => hit.comment_text && hit.author)
-        .map((hit: any) => {
-          const content = hit.comment_text.replace(/<[^>]*>/gm, '');
-          const qualityScore = this.scoreContent('', content, true, false);
-          
-          // Only return quality comments
-          if (qualityScore < 25) return null;
-
-          return {
-            id: hit.objectID,
-            content,
-            author: hit.author,
-            postedAt: new Date(hit.created_at),
-            qualityScore,
-            buyingSignals: this.detectBuyingSignals(content),
-            score: hit.points || 0
-          };
-        })
-        .filter(Boolean);
-    } catch (error: any) {
-      logger.warn(`[HN] Failed to get comments for ${postId}: ${error.message}`);
-      return [];
-    }
-  }
-
-  /**
-   * Score content quality based on various factors
-   */
-  private scoreContent(title: string, content: string, isComment: boolean, isAskHN: boolean): number {
-    let score = 0;
-
-    // Type bonuses (30 points max)
-    if (isAskHN) score += 30; // Ask HN posts are gold
-    if (isComment) score += 15; // Comments often contain buying signals
-    if (title.startsWith('Show HN')) score += 5; // Show HN can be relevant
-
-    // Title quality (25 points max)
-    const titleLower = title.toLowerCase();
-    if (titleLower.includes('?')) score += 10;
-    if (BUYING_SIGNALS.some(signal => titleLower.includes(signal))) score += 15;
-    if (BUSINESS_KEYWORDS.some(keyword => titleLower.includes(keyword))) score += 10;
-
-    // Content quality (25 points max)
-    if (content.length > 100) score += 10;
-    if (content.length > 500) score += 15;
-    if (content.toLowerCase().includes('problem') || content.toLowerCase().includes('issue')) score += 10;
-
-    // Engagement quality (20 points max)
-    if (content.toLowerCase().includes('recommend')) score += 10;
-    if (content.toLowerCase().includes('experience')) score += 10;
-
-    return Math.min(score, 100);
-  }
-
-  /**
-   * Check if content is business-relevant
-   */
-  private isBusinessRelevant(content: string): boolean {
-    const contentLower = content.toLowerCase();
-    return BUSINESS_KEYWORDS.some(keyword => contentLower.includes(keyword));
-  }
-
-  /**
-   * Detect buying signals in content
-   */
-  private detectBuyingSignals(content: string): string[] {
-    const contentLower = content.toLowerCase();
-    return BUYING_SIGNALS.filter(signal => contentLower.includes(signal));
-  }
-
-  /**
-   * Get business keywords for filtering
-   */
-  static getBusinessKeywords(): string[] {
-    return BUSINESS_KEYWORDS;
-  }
-
-  /**
-   * Get buying signals for detection
-   */
-  static getBuyingSignals(): string[] {
-    return BUYING_SIGNALS;
-  }
-
-  /**
-   * Get rate limit status
-   */
-  getRateLimitStatus() {
-    return hackerNewsProtection.getRateLimitStatus();
   }
 }

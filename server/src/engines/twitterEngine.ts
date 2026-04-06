@@ -1,20 +1,138 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import * as UserAgent from 'user-agents';
 import logger from '../lib/logger.js';
 
-// Nitter is a privacy-oriented Twitter front-end. It allows scanning public tweets without an API key.
-// In a production MVP, rotating these is needed or using a dedicated proxy.
-const NITTER_HOSTS = [
+// Nitter instances (privacy-focused Twitter front-ends) - 2026 working list
+const NITTER_INSTANCES = [
   'nitter.net',
-  'nitter.cz',
+  'nitter.cz', 
   'nitter.privacydev.net',
-  'nitter.sethforprivacy.com'
+  'nitter.sethforprivacy.com',
+  'nitter.ktachibana.party',
+  'nitter.unixfox.eu',
+  'nitter.exonip.de',
+  'nitter.dcs0.hu'
 ];
+
+// Buying signal patterns
+const BUYING_SIGNALS = [
+  'looking for', 'recommendation', 'suggestion', 'alternative',
+  'anyone know', 'what do you use', 'how do you',
+  'need a', 'searching for', 'best tool for', 'suggestions for',
+  'can anyone recommend', 'what software', 'looking to buy',
+  'want to purchase', 'considering', 'thinking about'
+];
+
+interface TwitterPost {
+  id: string;
+  content: string;
+  url: string;
+  author: string;
+  postedAt: Date;
+  externalPostId: string;
+}
 
 export class TwitterEngine extends BaseScraperEngine {
   platform = Platform.TWITTER;
 
+  private getRandomDelay(): number {
+    // Random delay between 3-6 seconds for Twitter
+    return 3000 + Math.random() * 3000;
+  }
 
+  override getRandomUserAgent(): string {
+    return (UserAgent as any).random();
+  }
+
+  private getRandomNitterInstance(): string {
+    const shuffled = [...NITTER_INSTANCES].sort(() => Math.random() - 0.5);
+    return shuffled[0] || 'nitter.net';
+  }
+
+  private async scrapeNitterSearch(query: string, limit: number): Promise<TwitterPost[]> {
+    const instance = this.getRandomNitterInstance();
+    const url = `https://${instance}/search?f=tweets&q=${encodeURIComponent(query)}&lang=en`;
+
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive'
+        },
+        timeout: 20000
+      });
+
+      const $ = cheerio.load(response.data);
+      const posts: TwitterPost[] = [];
+
+      // Nitter's tweet structure
+      $('.timeline-item').each((index, element) => {
+        if (posts.length >= limit) return false;
+
+        try {
+          const tweetEl = $(element);
+          
+          // Skip retweets
+          if (tweetEl.find('.retweet-header').length > 0) return true;
+          
+          // Extract content
+          const contentEl = tweetEl.find('.tweet-content');
+          const content = contentEl.text().trim();
+          
+          if (!content) return true;
+          
+          // Extract author
+          const authorEl = tweetEl.find('.username');
+          const author = authorEl.text().trim().replace('@', '') || 'unknown';
+          
+          // Extract tweet URL
+          const linkEl = tweetEl.find('.tweet-link a');
+          const tweetUrl = linkEl.attr('href') || '';
+          const fullUrl = tweetUrl ? `https://twitter.com${tweetUrl}` : `https://twitter.com/unknown`;
+          
+          // Extract tweet ID from URL
+          const idMatch = tweetUrl.match(/\/status\/(\d+)/);
+          const tweetId = idMatch ? idMatch[1] : `tw_${Date.now()}_${index}`;
+          
+          // Extract timestamp
+          const postedAt = new Date(); // Nitter doesn't always provide exact dates
+          
+          if (content && tweetId) {
+            posts.push({
+              id: tweetId,
+              content,
+              url: fullUrl,
+              author,
+              postedAt,
+              externalPostId: tweetId
+            });
+          }
+        } catch (error) {
+          // Skip malformed tweets
+          return true;
+        }
+        
+        return true;
+      });
+
+      return posts;
+    } catch (error: any) {
+      logger.error(`[TWITTER] Nitter instance ${instance} failed: ${error.message}`);
+      return [];
+    }
+  }
+
+  private containsBuyingIntent(text: string): boolean {
+    const lowerText = text.toLowerCase();
+    return BUYING_SIGNALS.some(signal => lowerText.includes(signal));
+  }
 
   protected async scrapeKeyword(
     product: ProductWithDetails,
@@ -24,125 +142,67 @@ export class TwitterEngine extends BaseScraperEngine {
     signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
-    const shuffledHosts = [...NITTER_HOSTS].sort(() => Math.random() - 0.5);
 
-    for (const host of shuffledHosts) {
-      if (savedCount >= limit) break;
-      const url = `https://${host}/search/rss?f=tweets&q=${encodeURIComponent(keyword.keyword)}`;
+    try {
+      // Build search query with buying intent signals
+      const searchQuery = `${keyword.keyword} (${BUYING_SIGNALS.slice(0, 3).join(' OR ')})`;
+      
+      const posts = await this.scrapeNitterSearch(searchQuery, limit);
+      
+      // Filter posts with strong buying intent
+      const matchingPosts = posts.filter(post => {
+        if (signal?.aborted) return false;
+        return this.containsBuyingIntent(post.content);
+      });
 
-      try {
-        const response = await fetch(url, {
-          headers: { 'User-Agent': this.getRandomUserAgent() },
-          signal: signal as any
-        });
-
-        if (!response.ok) {
-          logger.warn(`[TWITTER] RSS Gateway returned ${response.status} from ${host}. Retrying with next host...`);
-          continue; 
-        }
-
-        const xml = await response.text();
-        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-        let match;
+      // Process matching posts
+      for (const post of matchingPosts) {
+        if (signal?.aborted) break;
         
-        while ((match = itemRegex.exec(xml)) !== null && savedCount < limit) {
-          const itemXml = match[1] || '';
-          const titleMatch = /<title>([\s\S]*?)<\/title>/.exec(itemXml);
-          const descMatch = /<description>([\s\S]*?)<\/description>/.exec(itemXml);
-          const linkMatch = /<link>([\s\S]*?)<\/link>/.exec(itemXml);
-          const creatorMatch = /<dc:creator>([\s\S]*?)<\/dc:creator>/.exec(itemXml);
-          const dateMatch = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(itemXml);
-          
-          let link = (linkMatch && linkMatch[1]) ? linkMatch[1] : '';
-          link = link.replace(`https://${host}`, 'https://twitter.com');
-          
-          const titleText = (titleMatch && titleMatch[1]) ? titleMatch[1] : '';
-          if (titleText.startsWith('RT by')) continue;
-
-          let content = (descMatch && descMatch[1]) ? descMatch[1].replace(/<[^>]*>/g, '').trim() : '';
-          const author = (creatorMatch && creatorMatch[1]) ? creatorMatch[1].replace('@', '') : 'anonymous';
-          const dateStr = (dateMatch && dateMatch[1]) ? dateMatch[1] : null;
-          
-          const tweetIdMatch = /\/status\/(\d+)/.exec(link);
-          const tweetId = (tweetIdMatch && tweetIdMatch[1]) ? tweetIdMatch[1] : `tw_${Date.now()}_${Math.random()}`;
-
-          if (!content) continue;
-
-          const isNew = await this.processPotentialLead(
-            product,
-            tweetId,
-            null,
-            content,
-            link,
-            author,
-            dateStr ? new Date(dateStr) : new Date()
-          );
-          
-          if (isNew) savedCount++;
+        const isNew = await this.processPotentialLead(
+          product,
+          post.externalPostId,
+          null,
+          post.content,
+          post.url,
+          post.author,
+          post.postedAt
+        );
+        
+        if (isNew) {
+          savedCount++;
+          logger.info(`[TWITTER] Found lead: ${post.content.substring(0, 50)}...`);
         }
-
-        break; // Success with current host, exit host loop
-      } catch (error: any) {
-        logger.warn(`[TWITTER] Failed to fetch from ${host}: ${error.message || error}. Retrying...`);
       }
+
+      logger.info(`[TWITTER] Processed ${savedCount} leads for keyword: ${keyword.keyword}`);
+    } catch (error: any) {
+      logger.error(`[TWITTER] Error scraping keyword ${keyword.keyword}: ${error.message}`);
     }
 
-    await this.sleep(1500);
+    // Polite delay before next request
+    await this.sleep(this.getRandomDelay());
     return savedCount;
   }
 
-  override async fetchRecentPosts(source: ProductSource, limit: number, signal?: AbortSignal) {
+  override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal) {
     const isGlobal = source.identifier.toLowerCase() === 'global' || !source.identifier;
-    const searchParam = isGlobal ? 'saas problem' : source.identifier;
-    const shuffledHosts = [...NITTER_HOSTS].sort(() => Math.random() - 0.5);
+    const searchQuery = isGlobal ? 'saas OR software OR tool' : source.identifier;
 
-    for (const host of shuffledHosts) {
-      const url = `https://${host}/search/rss?f=tweets&q=${encodeURIComponent(searchParam)}`;
-
-      try {
-        const response = await fetch(url, {
-          headers: { 'User-Agent': this.getRandomUserAgent() },
-          signal: signal as any
-        });
-        if (!response.ok) continue;
-
-        const xml = await response.text();
-        const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-        const posts = [];
-        let match;
-        
-        while ((match = itemRegex.exec(xml)) !== null && posts.length < limit) {
-          const itemXml = match[1] || '';
-          const descMatch = /<description>([\s\S]*?)<\/description>/.exec(itemXml);
-          const linkMatch = /<link>([\s\S]*?)<\/link>/.exec(itemXml);
-          const creatorMatch = /<dc:creator>([\s\S]*?)<\/dc:creator>/.exec(itemXml);
-          const dateMatch = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(itemXml);
-          
-          let link = (linkMatch && linkMatch[1]) ? linkMatch[1] : '';
-          link = link.replace(`https://${host}`, 'https://twitter.com');
-          const content = (descMatch && descMatch[1]) ? descMatch[1].replace(/<[^>]*>/g, '').trim() : '';
-          const author = (creatorMatch && creatorMatch[1]) ? creatorMatch[1].replace('@', '') : 'anonymous';
-          const tweetIdMatch = /\/status\/(\d+)/.exec(link);
-          const tweetId = (tweetIdMatch && tweetIdMatch[1]) ? tweetIdMatch[1] : `tw_${Date.now()}`;
-          const dateStr = (dateMatch && dateMatch[1]) ? dateMatch[1] : null;
-
-          if (content) {
-            posts.push({
-              id: tweetId,
-              title: null,
-              content: content,
-              url: link,
-              author: author,
-              postedAt: dateStr ? new Date(dateStr) : new Date(),
-            });
-          }
-        }
-
-        return posts; // Return results once a host succeeds
-      } catch {
-        continue;
-      }
+    try {
+      const posts = await this.scrapeNitterSearch(searchQuery, limit);
+      
+      return posts.map(post => ({
+        id: post.externalPostId,
+        title: null,
+        content: post.content,
+        url: post.url,
+        author: post.author,
+        postedAt: post.postedAt
+      }));
+    } catch (error: any) {
+      logger.error(`[TWITTER] Error fetching recent posts: ${error.message}`);
+      return [];
     }
-    return [];
   }
 }

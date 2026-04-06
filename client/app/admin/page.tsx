@@ -84,8 +84,6 @@ export default function AdminPage() {
               { name: 'Reddit', status: 'Checking...' },
               { name: 'HackerNews', status: 'Checking...' },
               { name: 'Twitter/X', status: 'Checking...' },
-              { name: 'LinkedIn', status: 'Checking...' },
-              { name: 'ProductHunt', status: 'Checking...' },
             ]).map((s, i) => (
               <div key={i} className="p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-muted/20 transition-colors">
                 <span className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">

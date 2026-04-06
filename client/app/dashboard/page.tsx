@@ -517,7 +517,7 @@ export default function DashboardPage() {
               Welcome back, {user?.username}
             </h1>
             <p className="text-muted-foreground mt-2 text-base max-w-2xl">
-              Your radar is active across Reddit, Twitter, LinkedIn, ProductHunt & HN. Multi-platform intelligence monitored 24/7.
+              Your radar is active across Reddit, Twitter, and HackerNews. Multi-platform intelligence monitored 24/7.
             </p>
           </div>
 

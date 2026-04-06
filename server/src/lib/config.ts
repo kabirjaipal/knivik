@@ -48,9 +48,7 @@ const configSchema = z.object({
   // Add:
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  // OpenAI / OpenRouter controls
-  OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
+  // OpenAI / Groq controls
   GROQ_API_KEY: z.string().min(1),
   GROQ_BASE_URL: z.string().default('https://api.groq.com/openai/v1'),
   // Cache controls

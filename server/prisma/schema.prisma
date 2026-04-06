@@ -29,9 +29,6 @@ enum Platform {
   REDDIT
   HACKERNEWS
   TWITTER
-  LINKEDIN
-  DISCORD
-  PRODUCTHUNT
 }
 
 enum IntentLevel {

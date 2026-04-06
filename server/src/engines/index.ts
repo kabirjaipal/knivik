@@ -1,8 +1,6 @@
 import { RedditEngine } from './redditEngine.js';
 import { HackerNewsEngine } from './hackerNewsEngine.js';
 import { TwitterEngine } from './twitterEngine.js';
-import { LinkedInEngine } from './linkedinEngine.js';
-import { ProductHuntEngine } from './productHuntEngine.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
 import { emitToUser } from '../lib/socket.js';
@@ -11,8 +9,6 @@ export const engines = [
   new RedditEngine(),
   new HackerNewsEngine(),
   new TwitterEngine(),
-  new LinkedInEngine(),
-  new ProductHuntEngine(),
 ];
 
 const abortControllers = new Map<string, AbortController>();

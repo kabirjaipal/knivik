@@ -28,8 +28,6 @@ export default function ProductsPage() {
     competitors: "",
     redditSources: "",
     twitterSources: "",
-    linkedinSources: "",
-    productHuntSources: ""
   })
 
   const router = useRouter()
@@ -75,15 +73,6 @@ export default function ProductsPage() {
         sources.push({ platform: 'TWITTER', identifier: s.replace('@', '') })
       })
 
-      // LinkedIn
-      formData.linkedinSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
-        sources.push({ platform: 'LINKEDIN', identifier: s })
-      })
-
-      // ProductHunt
-      formData.productHuntSources.split(',').map(s => s.trim()).filter(Boolean).forEach(s => {
-        sources.push({ platform: 'PRODUCTHUNT', identifier: s })
-      })
 
       // Always include HackerNews global as a base source
       sources.push({ platform: 'HACKERNEWS', identifier: 'global' })
@@ -121,7 +110,7 @@ export default function ProductsPage() {
       setEditingProductId(null)
       setFormData({ 
         name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", 
-        redditSources: "", twitterSources: "", linkedinSources: "", productHuntSources: "" 
+        redditSources: "", twitterSources: "" 
       })
     } catch (e: any) {
       setFormError(e.message)
@@ -148,9 +137,7 @@ export default function ProductsPage() {
       negativeKeywords: product.negativeKeywords?.map((k: any) => k.keyword).join(', ') || "",
       competitors: product.competitors?.map((c: any) => c.name).join(', ') || "",
       redditSources: product.sources?.filter((s:any) => s.platform === 'REDDIT').map((s: any) => s.identifier).join(', ') || "",
-      twitterSources: product.sources?.filter((s:any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(', ') || "",
-      linkedinSources: product.sources?.filter((s:any) => s.platform === 'LINKEDIN').map((s: any) => s.identifier).join(', ') || "",
-      productHuntSources: product.sources?.filter((s:any) => s.platform === 'PRODUCTHUNT').map((s: any) => s.identifier).join(', ') || ""
+      twitterSources: product.sources?.filter((s:any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(', ') || ""
     })
     setEditingProductId(product.id)
     setIsCreating(true)
@@ -182,9 +169,7 @@ export default function ProductsPage() {
         negativeKeywords: data.strategy.negativeKeywords.join(', '),
         competitors: data.strategy.competitors.join(', '),
         redditSources: data.strategy.subreddits.join(', '),
-        twitterSources: data.strategy.twitterHandles.join(', '),
-        linkedinSources: data.strategy.linkedinSearchFlags.join(', '),
-        productHuntSources: data.strategy.productHuntCommunities.join(', ')
+        twitterSources: data.strategy.twitterHandles.join(', ')
       })
     } catch (e: any) {
       alert("AI analysis failed: " + e.message)
@@ -249,7 +234,7 @@ export default function ProductsPage() {
                       <CardDescription>Engine variables for the AI classifiers</CardDescription>
                     </div>
                     <button 
-                      onClick={() => { setIsCreating(false); setEditingProductId(null); setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "", linkedinSources: "", productHuntSources: "" }); }} 
+                      onClick={() => { setIsCreating(false); setEditingProductId(null); setFormData({ name: "", description: "", websiteUrl: "", keywords: "", negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" }); }} 
                       className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors"
                     >
                       <X className="w-5 h-5" />
@@ -289,7 +274,7 @@ export default function ProductsPage() {
             </button>
             <div className="flex items-center gap-1.5 mt-2 px-1">
                <span className="text-[9px] font-black uppercase tracking-tighter bg-violet-500/20 text-violet-400 px-1.5 py-0.5 rounded leading-none border border-violet-500/20">Recommended</span>
-               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight line-clamp-1">Analyzes Reddit, Twitter, LinkedIn, and PH.</p>
+               <p className="text-[10px] text-muted-foreground/80 font-medium leading-tight line-clamp-1">Analyzes Reddit, Twitter, and HackerNews.</p>
             </div>
           </div>
         </div>
@@ -306,14 +291,6 @@ export default function ProductsPage() {
              </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-             <div>
-                <label className="text-sm font-bold text-foreground mb-1.5 block">LinkedIn Queries</label>
-                <input value={formData.linkedinSources} onChange={e => setFormData({...formData, linkedinSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="SaaS marketing help" />
-             </div>
-             <div>
-                <label className="text-sm font-bold text-foreground mb-1.5 block">PH Topics</label>
-                <input value={formData.productHuntSources} onChange={e => setFormData({...formData, productHuntSources: e.target.value})} className="w-full text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-all" placeholder="Productivity, DevTools" />
-             </div>
           </div>
 
           <div>
