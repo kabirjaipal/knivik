@@ -44,7 +44,7 @@ export class IPProtection {
    * Get a realistic user agent with rotation
    */
   getRandomUserAgent(): string {
-    return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+    return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)] || USER_AGENTS[0]!;
   }
 
   /**
@@ -135,7 +135,7 @@ export class IPProtection {
               this.requestCount = Math.max(0, this.requestCount - 5);
               return retryResponse;
             }
-          } catch (error) {
+          } catch (error: any) {
             logger.warn(`[${platform}] Retry attempt ${attempt + 1} failed: ${error.message}`);
           }
         }

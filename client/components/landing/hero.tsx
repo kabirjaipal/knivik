@@ -23,26 +23,26 @@ export function Hero() {
             AI-Driven Social Listening
           </div>
           
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-foreground mb-6">
-            Find High-Intent Buyers <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-blue-400">
-              on Auto-Pilot.
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-foreground mb-8">
+            The smarter way <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-linear-to-b from-primary to-primary/60">
+              to find customers.
             </span>
           </h1>
           
-          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground mb-10 leading-relaxed">
-            Stop manually parsing Reddit and HackerNews. We scan recent social posts in real-time, scoring buying intent and delivering hot leads straight to your dashboard.
+          <p className="mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground mb-12 leading-relaxed font-medium">
+            Knivik scans Reddit and HackerNews in real-time. We find people with problems your product solves and deliver them as high-intent leads.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link href="/register">
-              <Button size="lg" className="h-14 px-8 text-base font-semibold shadow-lg shadow-primary/20">
-                Start Tracking for Free <ArrowRight className="ml-2 h-5 w-5" />
+              <Button size="lg" className="h-14 px-10 text-base font-bold shadow-2xl transition-all hover:scale-105">
+                Start Tracking for Free
               </Button>
             </Link>
-            <Link href="#demo">
-              <Button size="lg" variant="outline" className="h-14 px-8 text-base font-semibold">
-                See How It Works
+            <Link href="/pricing">
+              <Button size="lg" variant="ghost" className="h-14 px-10 text-base font-semibold">
+                View Pricing <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>

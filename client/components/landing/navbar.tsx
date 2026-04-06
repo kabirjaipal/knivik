@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Radar, User, Settings, LogOut, BarChart3, ShieldAlert } from "lucide-react"
+import { Radar, User, Settings, LogOut, BarChart3, ShieldAlert, CreditCard } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/context/auth-context"
@@ -32,21 +32,7 @@ export function Navbar() {
           </Link>
         </div>
         
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          {user && !loading ? (
-            <>
-              <Link href="/dashboard" className="transition-colors hover:text-foreground text-foreground/60">Dashboard</Link>
-              <Link href="/dashboard/analytics" className="transition-colors hover:text-foreground text-foreground/60">Analytics</Link>
-              <Link href="/dashboard/products" className="transition-colors hover:text-foreground text-foreground/60">Products</Link>
-            </>
-          ) : (
-            <>
-              <Link href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">Features</Link>
-              <Link href="#how-it-works" className="transition-colors hover:text-foreground/80 text-foreground/60">How it Works</Link>
-              <Link href="#pricing" className="transition-colors hover:text-foreground/80 text-foreground/60">Pricing</Link>
-            </>
-          )}
-        </nav>
+        {/* Navigation Hidden for Minimalist UI */}
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
@@ -94,6 +80,12 @@ export function Navbar() {
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Products</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/dashboard/billing">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      <span>Billing</span>
                     </DropdownMenuItem>
                   </Link>
                   <Link href="/dashboard/settings">

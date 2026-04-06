@@ -20,6 +20,11 @@ export interface User {
   email: string;
   username: string;
   role: string;
+  plan: string;
+  subscriptionStatus: string | null;
+  billingCycle: string | null;
+  currentPeriodEnd: Date | null;
+  paddleCustomerId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

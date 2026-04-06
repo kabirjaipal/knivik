@@ -3,24 +3,19 @@ import { Search, BrainCircuit, MessageSquareText, BellRing } from "lucide-react"
 
 const features = [
   {
-    icon: <Search className="h-6 w-6 text-primary" />,
-    title: "Real-Time Keyword Scraping",
-    description: "Monitors Reddit and HackerNews 24/7 for anyone mentioning a problem your product solves."
+    icon: <Search className="h-5 w-5 text-primary" />,
+    title: "Real-Time Listening",
+    description: "Monitor Reddit and HackerNews 24/7 for tailored keywords."
   },
   {
-    icon: <BrainCircuit className="h-6 w-6 text-primary" />,
-    title: "AI Intent Scoring",
-    description: "Intelligent LLM-based filtering that scores every post from 0-100 indicating exact buying intent."
+    icon: <BrainCircuit className="h-5 w-5 text-primary" />,
+    title: "Intent Scoring",
+    description: "AI filters out the noise to find people ready to buy."
   },
   {
-    icon: <MessageSquareText className="h-6 w-6 text-primary" />,
+    icon: <MessageSquareText className="h-5 w-5 text-primary" />,
     title: "Auto-Drafted Replies",
-    description: "We use your product's USPs to craft the perfect, non-spammy reply so you just have to click 'Send'."
-  },
-  {
-    icon: <BellRing className="h-6 w-6 text-primary" />,
-    title: "Instant Live Alerts",
-    description: "Get pinged via Slack or Email the millisecond a highly-qualified score match is detected."
+    description: "Personalized Outreach generated based on your product features."
   }
 ]
 
@@ -37,21 +32,17 @@ export function Features() {
           </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-12 sm:grid-cols-3 max-w-5xl mx-auto">
           {features.map((feature, index) => (
-            <Card key={index} className="border-border/50 bg-background/50 hover:bg-background/80 transition-colors shadow-sm">
-              <CardHeader className="pb-4">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  {feature.icon}
-                </div>
-                <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed text-sm">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+            <div key={index} className="flex flex-col items-center">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/5 text-primary">
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm text-center">
+                {feature.description}
+              </p>
+            </div>
           ))}
         </div>
       </div>

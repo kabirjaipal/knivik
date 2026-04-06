@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/userService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import type { AuthenticatedRequest } from '../types/index.js';
+import { getPaymentHistory, getActiveSubscription } from '../lib/billing.js';
+import logger from '../lib/logger.js';
+import paddle from '../lib/paddle.js';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await UserService.createUser(req.body, req.requestId);
@@ -42,7 +45,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getUserById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const userId = req.params['id'];
+  const userId = req.params['id'] as string;
   if (!userId) {
     res.status(400).json({
       success: false,
@@ -57,7 +60,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response): Pro
     return;
   }
 
-  const user = await UserService.getUserById(userId, req.requestId);
+  const user = await UserService.getUserById(userId, req.requestId as string | undefined);
   
   if (!user) {
     res.status(404).json({
@@ -81,7 +84,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response): Pro
 });
 
 export const deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-  const userId = req.params['id'];
+  const userId = req.params['id'] as string;
   if (!userId) {
     res.status(400).json({
       success: false,
@@ -96,7 +99,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
     return;
   }
 
-  await UserService.deleteUser(userId, req.requestId);
+  await UserService.deleteUser(userId, req.requestId as string | undefined);
   
   res.status(204).send();
 });
@@ -139,4 +142,98 @@ export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res
     message: 'Password updated successfully',
     requestId: req.requestId,
   });
+});
+
+// Billing endpoints
+export const getBillingInfo = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: { status: 401, code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    });
+    return;
+  }
+
+  const [payments, subscription] = await Promise.all([
+    getPaymentHistory(req.user.id),
+    getActiveSubscription(req.user.id),
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      plan: req.user.plan,
+      subscriptionStatus: req.user.subscriptionStatus || (req.user.plan === 'FREE' ? 'active' : null),
+      billingCycle: req.user.billingCycle,
+      currentPeriodEnd: req.user.currentPeriodEnd,
+      paddleCustomerId: req.user.paddleCustomerId,
+      subscription,
+      payments,
+    },
+    requestId: req.requestId,
+  });
+});
+
+export const createCustomerPortal = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user?.paddleCustomerId) {
+    res.status(400).json({
+      success: false,
+      error: { status: 400, code: 'BAD_REQUEST', message: 'No active subscription found' },
+    });
+    return;
+  }
+
+  try {
+    // Generate an authenticated customer portal session via Paddle SDK
+    const session = await paddle.customerPortalSessions.create(req.user.paddleCustomerId, []);
+    const portalUrl = session.urls.general.overview;
+    
+    res.status(200).json({
+      success: true,
+      data: { url: portalUrl },
+      requestId: req.requestId,
+    });
+  } catch (error: any) {
+    logger.error({ error, userId: req.user.id }, 'Failed to create customer portal session');
+    res.status(error.status || 500).json({
+      success: false,
+      error: { 
+        status: error.status || 500, 
+        code: 'PADDLE_ERROR', 
+        message: error.message || 'Failed to generate billing session. Please try again later.' 
+      },
+    });
+  }
+});
+
+export const getPrices = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const prices = await paddle.prices.list({
+      status: ['active'],
+    });
+    
+    let result = [];
+    for await (const price of prices) {
+      result.push({
+        id: price.id,
+        productId: price.productId,
+        name: price.name,
+        amount: parseInt(price.unitPrice.amount, 10),
+        currency: price.unitPrice.currencyCode,
+        billingCycle: price.billingCycle,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      requestId: req.requestId,
+    });
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to fetch prices from Paddle');
+    res.status(500).json({
+      success: false,
+      error: { status: 500, code: 'INTERNAL_ERROR', message: 'Failed to retrieve pricing data' },
+    });
+  }
 });

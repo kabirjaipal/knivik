@@ -127,17 +127,17 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
             });
           }
 
-          if (strategy.linkedinSearchFlags && strategy.linkedinSearchFlags.length > 0) {
-            strategy.linkedinSearchFlags.forEach(flag => {
-              data.sources.push({ platform: Platform.LINKEDIN, identifier: flag });
-            });
-          }
+          // if (strategy.linkedinSearchFlags && strategy.linkedinSearchFlags.length > 0) {
+          //   strategy.linkedinSearchFlags.forEach(flag => {
+          //     data.sources.push({ platform: "LINKEDIN" as any, identifier: flag });
+          //   });
+          // }
 
-          if (strategy.productHuntCommunities && strategy.productHuntCommunities.length > 0) {
-            strategy.productHuntCommunities.forEach(topic => {
-              data.sources.push({ platform: Platform.PRODUCTHUNT, identifier: topic });
-            });
-          }
+          // if (strategy.productHuntCommunities && strategy.productHuntCommunities.length > 0) {
+          //   strategy.productHuntCommunities.forEach(topic => {
+          //     data.sources.push({ platform: "PRODUCTHUNT" as any, identifier: topic });
+          //   });
+          // }
 
           // Always add HackerNews global
           data.sources.push({ platform: Platform.HACKERNEWS, identifier: 'global' });

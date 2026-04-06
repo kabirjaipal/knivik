@@ -6,7 +6,7 @@ import logger from '../lib/logger.js';
  * GET /api/admin/stats
  * Returns high-level system statistics.
  */
-export const getStats = async (req: Request, res: Response) => {
+export const getStats = async (_req: Request, res: Response) => {
   try {
     const [userCount, productCount, leadCount, activeScans] = await Promise.all([
       db.client.user.count(),
@@ -43,7 +43,7 @@ export const getStats = async (req: Request, res: Response) => {
  * GET /api/admin/users
  * Returns list of all users with their plan and product count.
  */
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (_req: Request, res: Response) => {
   try {
     const users = await db.client.user.findMany({
       select: {
@@ -72,7 +72,7 @@ export const getUsers = async (req: Request, res: Response) => {
  * GET /api/admin/llm-usage
  * Aggregates LLM costs system-wide.
  */
-export const getLlmUsage = async (req: Request, res: Response) => {
+export const getLlmUsage = async (_req: Request, res: Response) => {
   try {
     const logs = await db.client.llmUsageLog.findMany({
       include: {
@@ -144,7 +144,7 @@ export const getLlmUsage = async (req: Request, res: Response) => {
  * GET /api/admin/health
  * Checks real-time health of scraper gateways.
  */
-export const getEngineHealth = async (req: Request, res: Response) => {
+export const getEngineHealth = async (_req: Request, res: Response) => {
   try {
     const checks = [
       { name: 'Reddit', url: 'https://www.reddit.com/r/saas/.rss' },

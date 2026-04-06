@@ -92,6 +92,15 @@ model User {
   metadata      Json? // Store extra profile info (avatar, bio, etc.)
   lastScanStatus String? // "SUCCESS", "FAILED", "IDLE"
   isScanning    Boolean? @default(false)
+  
+  // Paddle subscription fields
+  paddleCustomerId String? @unique
+  subscriptionStatus String? // active, past_due, canceled
+  billingCycle String? // monthly, yearly
+  currentPeriodEnd DateTime?
+  
+  subscriptions Subscription[]
+  payments      Payment[]
 
   @@index([plan])
   @@map("ir_users")
@@ -501,4 +510,51 @@ model LlmUsageLog {
   @@index([action, createdAt])
   @@index([modelId])
   @@map("ir_llm_usage_logs")
+}
+
+// ─────────────────────────────────────────────
+// SUBSCRIPTIONS
+// Paddle subscription tracking
+// ─────────────────────────────────────────────
+
+model Subscription {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  paddleSubscriptionId String @unique
+  paddleCustomerId String
+
+  plan UserPlan
+  billingCycle String
+
+  status String
+  currentPeriodEnd DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("ir_subscriptions")
+}
+
+// ─────────────────────────────────────────────
+// PAYMENTS
+// Paddle payment records
+// ─────────────────────────────────────────────
+
+model Payment {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  paddlePaymentId String @unique
+  amount Int
+  currency String
+  status String
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("ir_payments")
 }

@@ -211,7 +211,7 @@ export class BatchCollectionService {
    * Generate advanced search queries from product data
    * This creates multiple query variations to find more leads
    */
-  private static generateSearchQueries(product: ProductWithDetails): string[] {
+  public static generateSearchQueries(product: ProductWithDetails): string[] {
     const queries: string[] = [];
     const keywords = product.keywords.map(k => k.keyword);
     const competitors = product.competitors.map(c => c.name);

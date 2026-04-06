@@ -40,9 +40,11 @@ export default function LoginPage() {
         throw new Error(data.error || "Failed to login")
       }
 
-      // Success - Refresh AuthContext UI State, then Redirect user to dashboard
+      // Success - Refresh AuthContext UI State, then Redirect user to dashboard or intended page
       await refresh()
-      router.push("/dashboard")
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectTo = searchParams.get("redirect") || "/dashboard";
+      router.push(redirectTo)
     } catch (err: any) {
       setError(err.message)
     } finally {

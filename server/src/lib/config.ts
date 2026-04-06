@@ -61,6 +61,11 @@ const configSchema = z.object({
   ENABLE_QUEUE: envBool(true),
   QUEUE_REDIS_URL: z.string().optional(),
   SCRAPER_CONCURRENCY: z.coerce.number().default(5),
+  // Paddle configuration
+  PADDLE_API_KEY: z.string().optional(),
+  PADDLE_CLIENT_TOKEN: z.string().optional(),
+  PADDLE_WEBHOOK_SECRET: z.string().optional(),
+  PADDLE_ENVIRONMENT: z.enum(['production', 'sandbox']).default('sandbox'),
 });
 
 const configResult = configSchema.safeParse(process.env);
