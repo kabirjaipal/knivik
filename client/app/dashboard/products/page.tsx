@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Trash2, Edit3, X, Server, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { PROJECT_NAME } from "@/lib/constants"
 
 export default function ProductsPage() {
   const { user, loading: authLoading } = useAuth()
