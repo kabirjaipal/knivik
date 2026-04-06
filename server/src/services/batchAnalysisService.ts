@@ -2,7 +2,6 @@ import OpenAI from 'openai';
 import config from '../lib/config.js';
 import { IntentLevel } from '@prisma/client';
 import logger from '../lib/logger.js';
-import { db } from '../lib/db.js';
 import { logLlmUsage } from './aiService.js';
 
 // Initialize Groq client
@@ -65,6 +64,7 @@ export const analyzeUserPostsBatch = async (
   const startTime = Date.now();
   
   if (collectedPostsByProduct.length === 0) {
+    logger.info(`[ANALYSIS] No posts to analyze for user ${userId}`);
     return {
       userId,
       results: [],
@@ -72,6 +72,9 @@ export const analyzeUserPostsBatch = async (
       processingTime: Date.now() - startTime,
     };
   }
+
+  const totalPosts = collectedPostsByProduct.reduce((sum, p) => sum + p.posts.length, 0);
+  logger.info(`[ANALYSIS] Starting AI analysis for user ${userId}: ${totalPosts} posts across ${collectedPostsByProduct.length} products`);
 
   // Build comprehensive context for AI
   const productsContext = collectedPostsByProduct.map(({ product, posts }) => ({
@@ -95,8 +98,6 @@ export const analyzeUserPostsBatch = async (
       url: post.url
     }))
   }));
-
-  const totalPosts = productsContext.reduce((sum, p) => sum + p.postCount, 0);
 
   const prompt = `
 You are an elite B2B lead qualification specialist. Your task is to analyze ${totalPosts} collected posts across ${collectedPostsByProduct.length} products and identify the SINGLE BEST lead for each product.
@@ -153,6 +154,8 @@ Return your analysis as JSON:
   "overallSummary": "Summary of the batch analysis"
 }`;
 
+  logger.info(`[ANALYSIS] Prompt size: ${prompt.length} chars, sending to AI...`);
+
   try {
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -191,12 +194,15 @@ Return your analysis as JSON:
 
     // Convert AI response to our format
     const results: ProductAnalysisResult[] = [];
+    let leadsFound = 0;
 
     for (const productCtx of productsContext) {
       const aiResult = parsed.results.find((r: any) => r.productId === productCtx.productId);
       
       if (aiResult?.bestLead) {
-        const originalPost = productCtx.posts.find(p => p.id === aiResult.bestLead.postId);
+        // Find original post from collectedPostsByProduct, not from productsContext
+        const originalProductData = collectedPostsByProduct.find(p => p.product.id === productCtx.productId);
+        const originalPost = originalProductData?.posts.find(p => p.id === aiResult.bestLead.postId);
         if (originalPost) {
           results.push({
             productId: productCtx.productId,
@@ -209,6 +215,7 @@ Return your analysis as JSON:
             },
             analysisSummary: aiResult.analysisSummary || 'Analysis completed'
           });
+          leadsFound++;
         }
       } else {
         // No quality lead found for this product
@@ -220,6 +227,8 @@ Return your analysis as JSON:
         });
       }
     }
+
+    logger.info(`[ANALYSIS] Complete: ${leadsFound}/${collectedPostsByProduct.length} products have leads (score: ${results.filter(r => r.bestLead).map(r => r.bestLead?.intentScore).join(', ') || 'none'})`);
 
     return {
       userId,

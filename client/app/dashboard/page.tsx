@@ -324,11 +324,9 @@ export default function DashboardPage() {
   const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
-  const [isScanning, setIsScanning] = useState(false)
   const router = useRouter()
   const [socket, setSocket] = useState<Socket | null>(null)
   const [showOnboarding, setShowOnboarding] = useState(false)
-  const [hasFetchedProducts, setHasFetchedProducts] = useState(false)
   const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, estimatedCost: number, requestCount: number } } | null>(null)
 
   const fetchLlmUsage = useCallback(async () => {
@@ -346,7 +344,6 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error('Failed to fetch products')
       const data = await res.json()
       if (data.products && data.products.length === 0) setShowOnboarding(true)
-      setHasFetchedProducts(true)
     } catch (e) { console.error('Error fetching products:', e) }
   }, [])
 
@@ -372,9 +369,6 @@ export default function DashboardPage() {
     if (!authLoading && !user) { router.push("/login"); return }
     if (!user) return
 
-    // Sync initial scanning state
-    if (user.isScanning !== undefined) setIsScanning(user.isScanning)
-
     fetchLeads()
     fetchProducts()
     fetchLlmUsage()
@@ -385,13 +379,6 @@ export default function DashboardPage() {
     newSocket.on('connect', () => newSocket.emit('join-user-room', user.id))
     newSocket.on('new-lead', (newLead: Lead) => {
       setLeads(prev => prev.find(l => l.id === newLead.id) ? prev : [newLead, ...prev])
-    })
-    newSocket.on('scan-status', (data: { isScanning: boolean }) => {
-      setIsScanning(data.isScanning)
-      if (!data.isScanning) {
-        fetchLeads()
-        fetchLlmUsage()
-      }
     })
 
     setSocket(newSocket)
@@ -408,22 +395,6 @@ export default function DashboardPage() {
       setExpandedReplies(prev => ({ ...prev, [leadId]: true }))
     } catch (e) { console.error(e) }
     finally { setDraftingLeadId(null) }
-  }
-
-  const handleForceScan = async () => {
-    setIsScanning(true)
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/scan`, { method: 'POST', credentials: 'include' })
-      if (!res.ok) throw new Error('Scan failed')
-      // The socket will eventually update the scan state, or we can check again
-    } catch { setIsScanning(false) }
-  }
-
-  const handleStopScan = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/stop-scan`, { method: 'POST', credentials: 'include' })
-      if (res.ok) setIsScanning(false)
-    } catch { console.error('Failed to stop scan') }
   }
 
   const handleStatusChange = async (leadId: string, status: LeadStatus) => {
@@ -551,27 +522,13 @@ export default function DashboardPage() {
 
           {/* Lead stream */}
           <Card className="border-border/50 shadow-xl bg-card overflow-hidden rounded-2xl">
-            <CardHeader className="border-b border-border/40 bg-muted/10 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl font-bold flex items-center">
-                  <Radar className="mr-2.5 text-primary h-5 w-5" /> Live Detection Stream
-                </CardTitle>
-                <CardDescription className="text-sm mt-1">
-                  Keyword matches, semantic finds, and competitor signals — all in one place.
-                </CardDescription>
-              </div>
-              <button onClick={isScanning ? handleStopScan : handleForceScan}
-                className={`flex items-center gap-2 py-2 px-5 font-bold rounded-lg text-sm transition-all active:scale-95 ${
-                  isScanning 
-                    ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white' 
-                    : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground'
-                }`}>
-                {isScanning ? (
-                  <><div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" /> Stop Scan</>
-                ) : (
-                  <><Zap className="w-3.5 h-3.5" /> Force Scan</>
-                )}
-              </button>
+            <CardHeader className="border-b border-border/40 bg-muted/10 pb-5">
+              <CardTitle className="text-xl font-bold flex items-center">
+                <Radar className="mr-2.5 text-primary h-5 w-5" /> Live Detection Stream
+              </CardTitle>
+              <CardDescription className="text-sm mt-1">
+                Keyword matches, semantic finds, and competitor signals — all in one place.
+              </CardDescription>
             </CardHeader>
 
             {/* Tabs */}
@@ -603,7 +560,7 @@ export default function DashboardPage() {
                 <div className="h-64 flex flex-col items-center justify-center">
                   <Radar className="h-12 w-12 text-muted-foreground/30 mb-4" />
                   <p className="font-bold text-foreground">No signals in this view</p>
-                  <p className="text-sm text-muted-foreground mt-1">Run a scan or adjust your filters.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Adjust your filters or check back later.</p>
                 </div>
               ) : (
                 <div>

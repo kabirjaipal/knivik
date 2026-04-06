@@ -2,9 +2,6 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { generateReply } from '../services/aiService.js';
-import { BatchProcessingService } from '../services/batchProcessingService.js';
-import { scraperQueue } from '../lib/queue.js';
-import config from '../lib/config.js';
 
 export const getLeads = async (req: Request, res: Response) => {
   try {
@@ -93,58 +90,6 @@ export const generateLeadReply = async (req: Request, res: Response): Promise<vo
     logger.error({ error }, 'Failed to generate AI reply');
     res.status(500).json({ error: 'Failed to communicate with AI Engine' });
   }
-};
-
-export const triggerScan = async (req: Request, res: Response): Promise<void> => {
-  try {
-     // @ts-ignore
-     const userId = req.user?.id as string;
-     if (!userId) {
-       res.status(401).json({ error: 'Unauthorized' });
-       return;
-     }
-
-     // Mark user as scanning
-     await db.client.user.update({
-       where: { id: userId },
-       data: { isScanning: true, lastScanStatus: 'RUNNING' }
-     });
-
-     // Run via Distributed Queue (Batch Processing)
-     if (config.ENABLE_QUEUE) {
-       await scraperQueue.add('force-scan', { userId }, {
-         priority: 1, // Higher priority for manual scans
-         removeOnComplete: true,
-       });
-     } else {
-       // Fallback for non-queue environments - direct batch processing
-       BatchProcessingService.processUser(userId).catch((err: Error) => logger.error({ err }, 'Manual batch scan failed'));
-     }
- 
-     res.status(200).json({ success: true, message: 'Batch scan queued successfully' });
-  } catch (error) {
-     logger.error({ error }, 'Failed to trigger batch scan');
-     res.status(500).json({ error: 'Internal Error' });
-  }
-};
-
-export const stopScan = async (req: Request, res: Response): Promise<void> => {
-   try {
-     // @ts-ignore
-     const userId = req.user?.id as string;
-     if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
-
-     // Update user status to stop scanning
-     await db.client.user.update({
-       where: { id: userId },
-       data: { isScanning: false, lastScanStatus: 'STOPPED' }
-     });
-
-     res.status(200).json({ success: true, message: 'Batch scan stopped' });
-   } catch (error) {
-     logger.error({ error }, 'Failed to stop batch scan');
-     res.status(500).json({ error: 'Internal server error' });
-   }
 };
 
 const VALID_STATUSES = ['NEW', 'QUALIFIED', 'SAVED', 'CONTACTED', 'CONVERTED', 'DISMISSED'];

@@ -42,6 +42,8 @@ export class BatchCollectionService {
   static async collectUserPosts(userId: string): Promise<CollectionResult> {
     const startTime = Date.now();
     
+    logger.info(`[COLLECTION] Starting collection for user ${userId}`);
+    
     try {
       // Get all active products with full details
       const activeProducts = await db.client.product.findMany({
@@ -58,7 +60,7 @@ export class BatchCollectionService {
       });
 
       if (activeProducts.length === 0) {
-        logger.info(`[BATCH] No active products for user ${userId}`);
+        logger.warn(`[COLLECTION] No active products for user ${userId}`);
         return {
           userId,
           productsWithPosts: [],
@@ -67,22 +69,33 @@ export class BatchCollectionService {
         };
       }
 
+      logger.info(`[COLLECTION] Found ${activeProducts.length} active products for user ${userId}`);
+      
       const productsWithPosts = [];
       let totalPosts = 0;
 
       for (const product of activeProducts) {
-        const productPosts = await this.collectProductPosts(product);
+        const sourceBreakdown: Record<string, number> = {};
+        const productPosts = await this.collectProductPosts(product, sourceBreakdown);
+        
         if (productPosts.length > 0) {
           productsWithPosts.push({
             product,
             posts: productPosts,
           });
           totalPosts += productPosts.length;
-          logger.info(`[BATCH] Collected ${productPosts.length} posts for product: ${product.name}`);
+          
+          // Log per-product summary with source breakdown
+          const sourceSummary = Object.entries(sourceBreakdown)
+            .map(([source, count]) => `${source}:${count}`)
+            .join(', ');
+          logger.info(`[COLLECTION] Product "${product.name}": ${productPosts.length} posts (${sourceSummary})`);
+        } else {
+          logger.warn(`[COLLECTION] Product "${product.name}": 0 posts collected`);
         }
       }
 
-      logger.info(`[BATCH] User ${userId}: Collected ${totalPosts} total posts across ${productsWithPosts.length} products`);
+      logger.info(`[COLLECTION] User ${userId}: ${totalPosts} total posts across ${productsWithPosts.length} products in ${Date.now() - startTime}ms`);
 
       return {
         userId,
@@ -92,7 +105,7 @@ export class BatchCollectionService {
       };
 
     } catch (error: any) {
-      logger.error({ error, userId }, 'Batch collection failed');
+      logger.error({ error, userId }, '[COLLECTION] Failed');
       return {
         userId,
         productsWithPosts: [],
@@ -105,7 +118,10 @@ export class BatchCollectionService {
   /**
    * Collect posts for a single product across all its sources
    */
-  private static async collectProductPosts(product: ProductWithDetails): Promise<CollectedPost[]> {
+  private static async collectProductPosts(
+    product: ProductWithDetails,
+    sourceBreakdown: Record<string, number> = {}
+  ): Promise<CollectedPost[]> {
     const allPosts: CollectedPost[] = [];
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
@@ -127,6 +143,10 @@ export class BatchCollectionService {
       try {
         const sourcePosts = await this.collectFromSource(product, source, oneMonthAgo);
         allPosts.push(...sourcePosts);
+        
+        // Track posts per source for reporting
+        const sourceKey = `${source.platform}:${source.identifier}`;
+        sourceBreakdown[sourceKey] = (sourceBreakdown[sourceKey] || 0) + sourcePosts.length;
       } catch (error: any) {
         logger.warn({ error, productId: product.id, source: source.identifier }, 'Failed to collect from source');
       }
@@ -305,7 +325,7 @@ export class BatchCollectionService {
    */
   private static async collectFromHackerNews(
     product: ProductWithDetails,
-    source: any,
+    _source: any,
     oneMonthAgo: Date
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
@@ -390,7 +410,7 @@ export class BatchCollectionService {
   /**
    * Basic filtering to remove obvious noise before AI analysis
    */
-  private static passesBasicFilters(text: string, product: ProductWithDetails): boolean {
+  private static passesBasicFilters(text: string, _product: ProductWithDetails): boolean {
     const lower = text.toLowerCase();
 
     // Minimum content length
@@ -400,7 +420,7 @@ export class BatchCollectionService {
     if (lower.includes('bot')) return false;
 
     // Negative keywords
-    for (const negKeyword of product.negativeKeywords) {
+    for (const negKeyword of _product.negativeKeywords) {
       if (lower.includes(negKeyword.keyword.toLowerCase())) {
         return false;
       }
@@ -424,7 +444,7 @@ export class BatchCollectionService {
   /**
    * Remove duplicates and apply final filtering
    */
-  private static deduplicateAndFilter(posts: CollectedPost[], product: ProductWithDetails): CollectedPost[] {
+  private static deduplicateAndFilter(posts: CollectedPost[], _product: ProductWithDetails): CollectedPost[] {
     const seen = new Set<string>();
     const unique: CollectedPost[] = [];
 
@@ -460,11 +480,11 @@ export class BatchCollectionService {
    * Get random user agent for requests
    */
   private static getRandomUserAgent(): string {
-    const agents = [
+    const agents: string[] = [
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1',
     ];
-    return agents[Math.floor(Math.random() * agents.length)];
+    return agents[Math.floor(Math.random() * agents.length)]!;
   }
 }
