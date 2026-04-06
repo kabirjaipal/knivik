@@ -188,7 +188,7 @@ export default function ProductsPage() {
                       required 
                       value={formData.name} 
                       onChange={e => setFormData({...formData, name: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                       placeholder="e.g. Acme CRM" 
                     />
                   </div>
@@ -199,7 +199,7 @@ export default function ProductsPage() {
                       type="url"
                       value={formData.websiteUrl} 
                       onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                       placeholder="https://example.com" 
                     />
                   </div>
@@ -211,7 +211,7 @@ export default function ProductsPage() {
                     required 
                     value={formData.description} 
                     onChange={e => setFormData({...formData, description: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors h-20 resize-none" 
+                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors h-20 resize-none" 
                     placeholder="We help freelancers track sales..." 
                   />
                 </div>
@@ -223,7 +223,7 @@ export default function ProductsPage() {
                       required 
                       value={formData.keywords} 
                       onChange={e => setFormData({...formData, keywords: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                       placeholder="CRM, customer software, sales tool" 
                     />
                   </div>
@@ -233,7 +233,7 @@ export default function ProductsPage() {
                     <input 
                       value={formData.negativeKeywords} 
                       onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                       placeholder="free, open source, cheap" 
                     />
                   </div>
@@ -245,7 +245,7 @@ export default function ProductsPage() {
                     <input 
                       value={formData.redditSources} 
                       onChange={e => setFormData({...formData, redditSources: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                       placeholder="startups, saas, entrepreneurship" 
                     />
                   </div>
@@ -255,7 +255,7 @@ export default function ProductsPage() {
                     <input 
                       value={formData.twitterSources} 
                       onChange={e => setFormData({...formData, twitterSources: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                      className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                       placeholder="global" 
                     />
                   </div>
@@ -266,7 +266,7 @@ export default function ProductsPage() {
                   <input 
                     value={formData.competitors} 
                     onChange={e => setFormData({...formData, competitors: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors" 
+                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:ring-0 focus:border-primary transition-colors" 
                     placeholder="competitor1, competitor2" 
                   />
                 </div>
@@ -339,7 +339,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: any, onEdit: () =
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">{product.name}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-sm text-muted-foreground mt-1">
               {product.isActive ? (
                 <span className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -351,7 +351,7 @@ function ProductCard({ product, onEdit, onDelete }: { product: any, onEdit: () =
                   Paused
                 </span>
               )}
-            </p>
+            </div>
           </div>
         </div>
       </CardHeader>
