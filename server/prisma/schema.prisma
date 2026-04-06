@@ -175,6 +175,7 @@ model Product {
   websiteUrl  String?
   isActive    Boolean  @default(true)
   aiConfig    Json? // Store USPs, Tone of Voice, and "Avoid" rules
+  searchQueries Json? // Array of pre-generated search queries for scraping
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

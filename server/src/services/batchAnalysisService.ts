@@ -76,6 +76,15 @@ export const analyzeUserPostsBatch = async (
   const totalPosts = collectedPostsByProduct.reduce((sum, p) => sum + p.posts.length, 0);
   logger.info(`[ANALYSIS] Starting AI analysis for user ${userId}: ${totalPosts} posts across ${collectedPostsByProduct.length} products`);
 
+  // Debug: Log all posts being analyzed
+  for (const { product, posts } of collectedPostsByProduct) {
+    logger.info(`[ANALYSIS] Product "${product.name}" posts to analyze:`);
+    posts.forEach((post, i) => {
+      logger.info(`[ANALYSIS]  ${i + 1}. [${post.platform}] ${post.title?.substring(0, 80) || 'No title'}... (${post.detectionMode})`);
+      logger.info(`[ANALYSIS]     Content: ${post.content?.substring(0, 150) || 'No content'}...`);
+    });
+  }
+
   // Build comprehensive context for AI
   const productsContext = collectedPostsByProduct.map(({ product, posts }) => ({
     productId: product.id,
@@ -89,7 +98,7 @@ export const analyzeUserPostsBatch = async (
       platform: post.platform,
       source: post.source,
       title: post.title,
-      content: post.content.substring(0, 1000), // Limit content length
+      content: post.content.substring(0, 500), // Limit content length (reduced from 1000)
       author: post.authorUsername,
       postedAt: post.postedAt?.toISOString(),
       detectionMode: post.detectionMode,

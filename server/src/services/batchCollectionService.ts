@@ -44,6 +44,27 @@ export class BatchCollectionService {
     
     logger.info(`[COLLECTION] Starting collection for user ${userId}`);
     
+    // Overall timeout wrapper - max 5 minutes for entire collection
+    const timeoutPromise = new Promise<CollectionResult>((_, reject) => {
+      setTimeout(() => reject(new Error('Collection timeout')), 5 * 60 * 1000);
+    });
+    
+    const collectionPromise = this._collectUserPostsInternal(userId, startTime);
+    
+    try {
+      return await Promise.race([collectionPromise, timeoutPromise]);
+    } catch (error: any) {
+      logger.error({ error: error.message, userId }, '[COLLECTION] Timeout or error');
+      return {
+        userId,
+        productsWithPosts: [],
+        totalPostsCollected: 0,
+        collectionTime: Date.now() - startTime,
+      };
+    }
+  }
+
+  private static async _collectUserPostsInternal(userId: string, startTime: number): Promise<CollectionResult> {
     try {
       // Get all active products with full details
       const activeProducts = await db.client.product.findMany({
@@ -155,8 +176,8 @@ export class BatchCollectionService {
     // Remove duplicates and apply final filtering
     const uniquePosts = this.deduplicateAndFilter(allPosts, product);
     
-    // Limit to top 50 posts per product to control AI token usage
-    return uniquePosts.slice(0, 50);
+    // Limit to top 25 posts per product to control AI token usage (was 50)
+    return uniquePosts.slice(0, 25);
   }
 
   /**
@@ -187,6 +208,103 @@ export class BatchCollectionService {
   }
 
   /**
+   * Generate advanced search queries from product data
+   * This creates multiple query variations to find more leads
+   */
+  private static generateSearchQueries(product: ProductWithDetails): string[] {
+    const queries: string[] = [];
+    const keywords = product.keywords.map(k => k.keyword);
+    const competitors = product.competitors.map(c => c.name);
+    const description = product.description?.toLowerCase() || '';
+    
+    // 1. Direct keyword searches (exact matches)
+    keywords.forEach(keyword => {
+      queries.push(keyword);
+    });
+    
+    // 2. Competitor + "alternative/frustrated" combinations (high intent)
+    competitors.forEach(competitor => {
+      queries.push(`${competitor} alternative`);
+      queries.push(`tired of ${competitor}`);
+      queries.push(`frustrated with ${competitor}`);
+      queries.push(`${competitor} too expensive`);
+      queries.push(`moving away from ${competitor}`);
+      queries.push(`looking for ${competitor} alternative`);
+    });
+    
+    // 3. Solution + intent phrases
+    const solutionTerms = this.extractKeyTerms(description);
+    solutionTerms.forEach(term => {
+      queries.push(`need ${term}`);
+      queries.push(`looking for ${term}`);
+      queries.push(`best ${term}`);
+      queries.push(`${term} recommendation`);
+    });
+    
+    // 4. Problem + "help/solution" combinations
+    keywords.forEach(keyword => {
+      const parts = keyword.split(' ');
+      if (parts.length > 1) {
+        // Take first 2 words as core concept
+        const coreTerm = parts.slice(0, 2).join(' ');
+        queries.push(`need help with ${coreTerm}`);
+        queries.push(`struggling with ${coreTerm}`);
+        queries.push(`${coreTerm} solution`);
+      }
+    });
+    
+    // 5. Boolean-style combined queries (OR operators)
+    if (competitors.length >= 2) {
+      queries.push(`(${competitors.slice(0, 3).join(' OR ')}) AND (alternative OR switch OR migrate)`);
+    }
+    
+    // Deduplicate and limit
+    return [...new Set(queries)].slice(0, 20);
+  }
+  
+  /**
+   * Extract key solution terms from product description
+   */
+  private static extractKeyTerms(description: string): string[] {
+    if (!description) return [];
+    
+    // Common solution indicators
+    const patterns = [
+      /(\w+\s+tool)/g,
+      /(\w+\s+platform)/g,
+      /(\w+\s+software)/g,
+      /(\w+\s+service)/g,
+      /(\w+\s+chatbot)/g,
+      /(\w+\s+analytics?)/g,
+    ];
+    
+    const terms: string[] = [];
+    patterns.forEach(pattern => {
+      const matches = description.match(pattern);
+      if (matches) {
+        matches.forEach(match => {
+          if (match.length > 5 && !terms.includes(match)) {
+            terms.push(match);
+          }
+        });
+      }
+    });
+    
+    // Also extract nouns that follow "provides" or "offers"
+    const provideMatches = description.match(/provides?\s+(\w+(?:\s+\w+){0,2})/g);
+    if (provideMatches) {
+      provideMatches.forEach(match => {
+        const term = match.replace(/provides?\s+/, '');
+        if (term.length > 3 && !terms.includes(term)) {
+          terms.push(term);
+        }
+      });
+    }
+    
+    return terms.slice(0, 5);
+  }
+
+  /**
    * Collect posts from Reddit using keyword search and recent posts
    */
   private static async collectFromReddit(
@@ -198,23 +316,45 @@ export class BatchCollectionService {
     const isGlobal = source.identifier.toLowerCase() === 'global';
     const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
 
-    // Strategy 1: Keyword-based collection
-    for (const keyword of product.keywords.slice(0, 5)) { // Limit keywords
+    // Generate advanced search queries from product data
+    // Use stored queries if available, otherwise generate on-the-fly
+    const { SearchQueryService } = await import('./searchQueryService.js');
+    const searchQueries = await SearchQueryService.getStoredQueries(product.id);
+    
+    if (searchQueries.length === 0) {
+      logger.warn(`[COLLECTION] No search queries available for product "${product.name}"`);
+      return posts;
+    }
+    
+    logger.info(`[COLLECTION] Using ${searchQueries.length} stored search queries for product "${product.name}"`);
+
+    // Strategy 1: Advanced query-based collection
+    for (const query of searchQueries.slice(0, 8)) { // Limit to top 8 queries per source
       try {
-        const searchQuery = keyword.keyword.includes(' ') && !keyword.keyword.includes('"')
-          ? `"${keyword.keyword}"`
-          : keyword.keyword;
+        const searchQuery = query.includes(' ') && !query.includes('"') && !query.includes('(')
+          ? `"${query}"`
+          : query;
 
         const url = isGlobal
-          ? `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=25&type=link,comment`
-          : `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=25&type=link,comment`;
+          ? `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=15&type=link,comment`
+          : `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=15&type=link,comment`;
+
+        logger.debug(`[COLLECTION] Searching Reddit: ${query.substring(0, 50)}...`);
 
         const response = await fetch(url, {
           headers: { 'User-Agent': this.getRandomUserAgent() },
           signal: AbortSignal.timeout(10000) // 10 second timeout
         });
 
-        if (!response.ok) continue;
+        if (!response.ok) {
+          logger.warn({ 
+            status: response.status, 
+            statusText: response.statusText,
+            query: query.substring(0, 50),
+            url: url.substring(0, 100)
+          }, 'Reddit search API failed');
+          continue;
+        }
 
         const data = (await response.json()) as any;
         const children = data?.data?.children;
@@ -233,7 +373,7 @@ export class BatchCollectionService {
 
           if (!this.passesBasicFilters(combinedText, product)) continue;
 
-          posts.push({
+        posts.push({
             id: `reddit-${postData.id}`,
             platform: 'REDDIT',
             externalPostId: postData.id,
@@ -244,15 +384,15 @@ export class BatchCollectionService {
             postedAt,
             source: source.identifier,
             detectionMode: 'KEYWORD',
-            keywordMatch: keyword.keyword
+            keywordMatch: query
           });
         }
 
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Rate limiting - reduced to 500ms to prevent job stalls
+        await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (error: any) {
-        logger.warn({ error, keyword: keyword.keyword }, 'Reddit keyword search failed');
+        logger.warn({ error, query: query.substring(0, 50) }, 'Reddit query search failed');
       }
     }
 
@@ -285,10 +425,12 @@ export class BatchCollectionService {
 
             if (!this.passesBasicFilters(combinedText, product)) continue;
 
-            // Check for competitor mentions
+            // Check for keyword matches in the content (not just competitor mentions)
             let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'SEMANTIC';
+            let keywordMatch: string | undefined;
             let competitorMatch: string | undefined;
             
+            // First check for competitor mentions (high priority)
             for (const competitor of product.competitors) {
               if (combinedText.toLowerCase().includes(competitor.name.toLowerCase())) {
                 detectionMode = 'COMPETITOR';
@@ -296,6 +438,20 @@ export class BatchCollectionService {
                 break;
               }
             }
+            
+            // Then check for keyword matches (only if not already a competitor match)
+            if (!competitorMatch) {
+              for (const keyword of product.keywords) {
+                if (combinedText.toLowerCase().includes(keyword.keyword.toLowerCase())) {
+                  detectionMode = 'KEYWORD';
+                  keywordMatch = keyword.keyword;
+                  break;
+                }
+              }
+            }
+            
+            // Skip if no keyword or competitor match found
+            if (!keywordMatch && !competitorMatch) continue;
 
             posts.push({
               id: `reddit-recent-${postData.id}`,
@@ -308,6 +464,7 @@ export class BatchCollectionService {
               postedAt,
               source: source.identifier,
               detectionMode,
+              ...(keywordMatch && { keywordMatch }),
               ...(competitorMatch && { competitorMatch })
             });
           }
@@ -338,7 +495,7 @@ export class BatchCollectionService {
       if (!response.ok) return posts;
 
       const storyIds = (await response.json()) as number[];
-      const recentStoryIds = storyIds.slice(0, 100); // Limit to recent 100
+      const recentStoryIds = storyIds.slice(0, 50); // Limit to recent 50 (reduced from 100)
 
       for (const storyId of recentStoryIds) {
         try {

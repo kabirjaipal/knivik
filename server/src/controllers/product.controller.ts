@@ -4,6 +4,7 @@ import logger from '../lib/logger.js';
 import { z } from 'zod';
 import { Platform } from '@prisma/client';
 import { generateProductStrategy } from '../services/aiService.js';
+import { SearchQueryService } from '../services/searchQueryService.js';
 
 const productSchema = z.object({
   name: z.string().min(1).max(255),
@@ -36,7 +37,14 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
       },
       orderBy: { createdAt: 'desc' },
     });
-    res.status(200).json({ success: true, products });
+    
+    // Transform to include searchQueries as array
+    const transformedProducts = products.map(p => ({
+      ...p,
+      searchQueries: (p.searchQueries as string[]) || []
+    }));
+    
+    res.status(200).json({ success: true, products: transformedProducts });
   } catch (error) {
     logger.error({ error }, 'Get Products error');
     res.status(500).json({ error: 'Internal server error' });
@@ -138,6 +146,16 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       },
     });
 
+    // Generate AI search queries asynchronously (don't block response)
+    setImmediate(async () => {
+      try {
+        await SearchQueryService.generateAndSaveQueries(product.id);
+        logger.info({ productId: product.id }, 'Auto-generated search queries for new product');
+      } catch (err) {
+        logger.error({ err, productId: product.id }, 'Failed to auto-generate search queries');
+      }
+    });
+
     res.status(201).json({ success: true, product });
   } catch (error) {
     logger.error({ error }, 'Create Product error');
@@ -185,6 +203,8 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           websiteUrl: data.websiteUrl || null,
           isActive: data.isActive,
           aiConfig: data.aiConfig || {},
+          // Clear old queries - will regenerate
+          searchQueries: [],
           keywords: {
             create: data.keywords.map((k) => ({ keyword: k })),
           },
@@ -205,6 +225,16 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           sources: true,
         },
       });
+    });
+
+    // Regenerate AI search queries asynchronously after update
+    setImmediate(async () => {
+      try {
+        await SearchQueryService.generateAndSaveQueries(productId);
+        logger.info({ productId }, 'Regenerated search queries after product update');
+      } catch (err) {
+        logger.error({ err, productId }, 'Failed to regenerate search queries after update');
+      }
     });
 
     res.status(200).json({ success: true, product: updated });

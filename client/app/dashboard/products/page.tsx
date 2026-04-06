@@ -386,6 +386,25 @@ function ProductCard({ product, onEdit, onDelete }: { product: any, onEdit: () =
               ))}
             </div>
           </div>
+
+          {/* AI Search Queries */}
+          {product.searchQueries && product.searchQueries.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider flex items-center gap-1">
+                <Zap className="w-3 h-3 text-yellow-500" /> AI Search Queries
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {product.searchQueries.slice(0, 5).map((query: string, idx: number) => (
+                  <span key={idx} className="text-xs bg-yellow-500/10 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded-md border border-yellow-500/20" title={query}>
+                    {query.length > 25 ? query.substring(0, 25) + '...' : query}
+                  </span>
+                ))}
+                {product.searchQueries.length > 5 && (
+                  <span className="text-xs text-muted-foreground font-medium">+{product.searchQueries.length - 5} more</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 pt-3 border-t border-border">

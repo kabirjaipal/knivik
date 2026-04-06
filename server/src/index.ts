@@ -183,36 +183,69 @@ async function startServer() {
     }
 
     // Start Scraper Dispatcher Loop (only if enabled)
-    const startScraperDispatcher = async () => {
+    // This schedules scans sequentially - waits for current scan to finish + interval
+    const runScraperDispatcher = async () => {
       try {
-        logger.info(`🛰 Dispatching scraper jobs to the queue (interval: ${config.SCRAPER_INTERVAL_MS / 60000} minutes)...`);
+        logger.info(`🛰 Dispatching scraper jobs to the queue...`);
         const activeUsers = await db.client.user.findMany({
           where: { products: { some: { isActive: true } } },
           select: { id: true }
         });
 
+        const jobIds: string[] = [];
         for (const user of activeUsers) {
+          const jobId = `scrape-${user.id}`;
           await scraperQueue.add('scrape-user', { userId: user.id }, {
-            jobId: `scrape-${user.id}-${Math.floor(Date.now() / config.SCRAPER_INTERVAL_MS)}`,
+            jobId,
             removeOnComplete: true,
           });
+          jobIds.push(jobId);
         }
-        logger.info(`✅ Dispatched jobs for ${activeUsers.length} users`);
+        logger.info(`✅ Dispatched jobs for ${activeUsers.length} users, waiting for completion...`);
+
+        // Wait for all jobs to complete
+        await waitForJobsToComplete(jobIds);
+        logger.info(`✅ All ${activeUsers.length} jobs completed`);
       } catch (err) {
         logger.error({ err }, 'Error in scraper dispatcher');
-      } finally {
-        // Schedule next run based on SCRAPER_INTERVAL_MS
-        if (config.SCRAPER_INTERVAL_MS > 0) {
-          setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
+      }
+    };
+
+    const waitForJobsToComplete = async (jobIds: string[]): Promise<void> => {
+      const maxWaitTime = 10 * 60 * 1000; // 10 minutes max wait
+      const checkInterval = 2000; // Check every 2 seconds
+      const startTime = Date.now();
+
+      while (Date.now() - startTime < maxWaitTime) {
+        const jobs = await Promise.all(jobIds.map(id => scraperQueue.getJob(id)));
+        const allCompleted = jobs.every(job => !job || job.finishedOn);
+        
+        if (allCompleted) {
+          return;
         }
+        
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+      }
+      
+      logger.warn('Timeout waiting for jobs to complete, proceeding to next interval');
+    };
+
+    const scheduleNextScraperRun = async () => {
+      if (config.SCRAPER_INTERVAL_MS > 0) {
+        logger.info(`⏳ Waiting ${config.SCRAPER_INTERVAL_MS / 60000} minutes before next scan...`);
+        await new Promise(resolve => setTimeout(resolve, config.SCRAPER_INTERVAL_MS));
+        await runScraperDispatcher();
+        await scheduleNextScraperRun(); // Schedule the next one after this completes
       }
     };
     
-    // Start Scraper Dispatcher Loop after the initial interval
-    // This ensures no automatic scanning happens precisely at boot time.
+    // Start the loop
     if (config.SCRAPER_INTERVAL_MS > 0) {
-      logger.info(`⏳ Scraper dispatcher scheduled to start in ${config.SCRAPER_INTERVAL_MS / 60000} minutes.`);
-      setTimeout(startScraperDispatcher, config.SCRAPER_INTERVAL_MS);
+      logger.info(`⏳ Initial scan starting in ${config.SCRAPER_INTERVAL_MS / 60000} minutes`);
+      setTimeout(async () => {
+        await runScraperDispatcher();
+        await scheduleNextScraperRun();
+      }, config.SCRAPER_INTERVAL_MS);
     } else {
       logger.info('⏸️ Scraper dispatcher disabled (SCRAPER_INTERVAL_MS set to 0)');
     }

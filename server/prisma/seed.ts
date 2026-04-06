@@ -1,8 +1,19 @@
 import { db } from '../src/lib/db.js';
 import bcrypt from 'bcryptjs';
+import { Queue } from 'bullmq';
+import Redis from 'ioredis';
+import { SearchQueryService } from '../src/services/searchQueryService.js';
 
 // Get the pre-configured PrismaClient instance which has the adapter injected
 const prisma = db.client;
+
+// Redis connection for clearing queues
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+// BullMQ queue names
+const SCRAPER_QUEUE_NAME = 'scraper-jobs';
+const ALERT_QUEUE_NAME = 'alert-jobs';
+const ENRICHMENT_QUEUE_NAME = 'enrichment-jobs';
 
 async function main() {
   console.log('🌱 Starting database seeding...');
@@ -32,6 +43,36 @@ async function main() {
     prisma.llmModel.deleteMany({}),
   ]);
 
+  // 2. Clear BullMQ queues in Redis
+  console.log('🧹 Clearing BullMQ queues...');
+  try {
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':id');
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':wait');
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':active');
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':completed');
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':failed');
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':delayed');
+    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':events');
+    
+    await redis.del('bull:' + ALERT_QUEUE_NAME + ':id');
+    await redis.del('bull:' + ALERT_QUEUE_NAME + ':wait');
+    await redis.del('bull:' + ALERT_QUEUE_NAME + ':active');
+    await redis.del('bull:' + ALERT_QUEUE_NAME + ':completed');
+    await redis.del('bull:' + ALERT_QUEUE_NAME + ':failed');
+    await redis.del('bull:' + ALERT_QUEUE_NAME + ':delayed');
+    
+    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':id');
+    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':wait');
+    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':active');
+    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':completed');
+    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':failed');
+    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':delayed');
+    
+    console.log('✅ All BullMQ queues cleared');
+  } catch (err) {
+    console.warn('⚠️ Could not clear BullMQ queues:', err);
+  }
+
   // Hash passwords for demo users
   const hashedPassword = await bcrypt.hash('password123', 12);
   const hashedAdminPassword = await bcrypt.hash('admin123', 12);
@@ -54,23 +95,23 @@ async function main() {
 
   console.log('📦 Creating test product...');
 
-  // Single best product for testing: LogScale Analytics (Privacy-focused analytics)
-  await prisma.product.create({
+  // Single best product for testing: AI Customer Support Chatbot
+  const product = await prisma.product.create({
     data: {
-      name: 'LogScale Analytics',
-      description: 'A privacy-first, cookie-less web analytics tool for developers and SaaS founders who want to move away from Google Analytics and GDPR headaches.',
+      name: 'AI Customer Support Chatbot',
+      description: 'Intelligent chatbot platform that learns from your business documentation to provide 24/7 customer support and reduce support tickets. Perfect alternative to expensive helpdesk software.',
       userId: admin.id,
       isActive: true,
       keywords: {
         create: [
-          { keyword: 'google analytics alternative' },
-          { keyword: 'cookie-less analytics' },
-          { keyword: 'privacy-first tracking' },
-          { keyword: 'how to stop using google analytics' },
-          { keyword: 'lightweight analytics for nextjs' },
-          { keyword: 'gdpr compliant analytics' },
-          { keyword: 'web analytics without cookies' },
-          { keyword: 'simple analytics for saas' },
+          { keyword: 'zendesk alternative' },
+          { keyword: 'intercom alternative' },
+          { keyword: 'looking for helpdesk software' },
+          { keyword: 'customer support tool recommendation' },
+          { keyword: 'best chatbot for customer service' },
+          { keyword: 'reduce support tickets' },
+          { keyword: 'automated customer support' },
+          { keyword: 'tired of zendesk' },
         ]
       },
       negativeKeywords: {
@@ -91,22 +132,27 @@ async function main() {
           { platform: 'REDDIT', identifier: 'saas' },
           { platform: 'REDDIT', identifier: 'startups' },
           { platform: 'REDDIT', identifier: 'webdev' },
-          { platform: 'REDDIT', identifier: 'programming' },
-          { platform: 'REDDIT', identifier: 'privacy' },
+          { platform: 'REDDIT', identifier: 'smallbusiness' },
+          { platform: 'REDDIT', identifier: 'ecommerce' },
           { platform: 'HACKERNEWS', identifier: 'global' },
         ]
       },
       competitors: {
         create: [
-          { name: 'Google Analytics' },
-          { name: 'Plausible' },
-          { name: 'Fathom' },
-          { name: 'Mixpanel' },
-          { name: 'Amplitude' },
+          { name: 'Zendesk' },
+          { name: 'Intercom' },
+          { name: 'Drift' },
+          { name: 'Freshdesk' },
+          { name: 'Crisp' },
         ]
       }
     }
   });
+
+  // Generate search queries for the product
+  console.log('🔍 Generating search queries...');
+  const queries = await SearchQueryService.generateAndSaveQueries(product.id);
+  console.log(`✅ Generated ${queries.length} search queries`);
 
   console.log('🤖 Seeding LLM models and pricing...');
 
@@ -160,7 +206,7 @@ async function main() {
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📊 Summary:');
   console.log('👥 Users created: 1 (admin only)');
-  console.log('📦 Products created: 1 (LogScale Analytics - privacy-first web analytics)');
+  console.log('📦 Products created: 1 (AI Customer Support Chatbot)');
   console.log('🔍 Keywords: 8 high-intent keywords');
   console.log('🚫 Negative keywords: 9 filters');
   console.log('🌐 Sources: 6 targeted subreddits + HN');
@@ -181,4 +227,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await redis.disconnect();
   });
