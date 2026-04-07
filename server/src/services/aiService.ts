@@ -237,10 +237,11 @@ export const generateReply = async (
   tone: string = 'helpful and highly concise'
 ): Promise<string> => {
   const startTime = Date.now();
+  const customPersona = productInfo.aiConfig?.customPersona;
+  
   const prompt = `
 You are representing a product called "${productInfo.name}".
 Product description: ${productInfo.description || 'A software tool.'}
-Additional guidelines (if any): ${JSON.stringify(productInfo.aiConfig || {})}
 
 Write a helpful response to this person's post.
 Goal: Suggest our product naturally as a solution. Provide genuine value, don't sound like a spam bot.
@@ -252,11 +253,15 @@ ${postText}
 """
 `;
 
+  const systemContent = customPersona 
+    ? `You are an authentic, helpful founder replying to online threads. STRICTLY FOLLOW THIS CUSTOM PERSONA: ${customPersona}`
+    : `You are an authentic, helpful founder replying to online threads.`;
+
   try {
     const response = await groq.chat.completions.create({
       model: MODELS.VERSATILE,
       messages: [
-        { role: 'system', content: 'You are an authentic, helpful founder replying to online threads.' },
+        { role: 'system', content: systemContent },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,

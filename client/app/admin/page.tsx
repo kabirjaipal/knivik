@@ -52,9 +52,9 @@ export default function AdminPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {[
           { label: 'Total Users', value: stats?.userCount, icon: Users, color: 'text-blue-500' },
-          { label: 'Total Products', value: stats?.productCount, icon: LayoutDashboard, color: 'text-violet-500' },
-          { label: 'Total Leads', value: stats?.leadCount, icon: Radar, color: 'text-emerald-500' },
-          { label: 'Leads Found Today', value: stats?.leadsToday, icon: Zap, color: 'text-amber-500' },
+          { label: 'Total Products', value: stats?.productCount, icon: LayoutDashboard, color: 'text-primary' },
+          { label: 'Total Leads', value: stats?.leadCount, icon: Radar, color: 'text-primary' },
+          { label: 'Leads Found Today', value: stats?.leadsToday, icon: Zap, color: 'text-primary' },
           { label: 'Active Scans', value: stats?.activeScans, icon: Activity, color: 'text-red-500' },
         ].map((m, i) => (
           <Card key={i} className="bg-card/50 border-border/40">

@@ -15,6 +15,7 @@ interface Product {
   negativeKeywords: Array<{ id: string; keyword: string }>
   competitors: Array<{ id: string; name: string }>
   sources: Array<{ id: string; platform: string; identifier: string }>
+  aiConfig?: any
 }
 
 interface EditProductModalProps {
@@ -41,6 +42,7 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
       .filter((s) => s.platform === "TWITTER")
       .map((s) => s.identifier)
       .join(", "),
+    customPersona: product.aiConfig?.customPersona || "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +63,10 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
           description: formData.description,
           websiteUrl: formData.websiteUrl,
           isActive: formData.isActive,
+          aiConfig: {
+            ...product.aiConfig,
+            customPersona: formData.customPersona
+          },
           keywords: formData.keywords
             .split(",")
             .map((k) => k.trim())
@@ -235,6 +241,21 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
                 className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
                 placeholder="competitor1, competitor2"
               />
+            </div>
+
+            <div className="space-y-2 pt-4 border-t border-border/50">
+              <label className="block text-sm font-bold text-primary">
+                Custom AI Persona (Pro Only)
+              </label>
+              <textarea
+                value={formData.customPersona}
+                onChange={(e) =>
+                  setFormData({ ...formData, customPersona: e.target.value })
+                }
+                className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary h-20 resize-none"
+                placeholder="e.g. Speak like a helpful Gen-Z founder, always mention that we have a 30-day free trial, keep it under 30 words."
+              />
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">This tells the AI how to draft replies to leads.</p>
             </div>
 
             <div className="flex items-center gap-2 pt-2">

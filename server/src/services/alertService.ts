@@ -32,14 +32,15 @@ export const sendLeadAlert = async (leadId: string) => {
       return;
     }
 
-    // 2. Webhook (Slack/Discord)
+    // 2. Webhook (Slack/Discord/Custom)
     if (alertSetting.slackEnabled && alertSetting.slackWebhook) {
-      await sendWebhookAlert(alertSetting.slackWebhook, lead);
+      await sendWebhookAlert(alertSetting, lead);
     }
 
     // 3. Email (Nodemailer Simulation)
     if (alertSetting.emailEnabled) {
-      await sendEmailAlert(lead.product.user.email, lead);
+      const emailDest = alertSetting.emailTarget || lead.product.user.email;
+      await sendEmailAlert(emailDest, lead);
     }
 
   } catch (error) {
@@ -47,16 +48,53 @@ export const sendLeadAlert = async (leadId: string) => {
   }
 };
 
-async function sendWebhookAlert(url: string, lead: any) {
+async function sendWebhookAlert(alertSetting: any, lead: any) {
+  const url = alertSetting.slackWebhook;
+  const webhookType = alertSetting.webhookType || 'SLACK';
   try {
-    const payload = {
-      content: `🚀 **New High-Intent Lead Detected!**\n\n**Product:** ${lead.product.name}\n**Intent Score:** ${lead.intentScore}% (${lead.intentLevel})\n**Content:** ${lead.title || 'Conversation thread'}\n**Platform:** ${lead.platform}\n\n[View Post](${lead.url})\n[Open Dashboard](${config.FRONTEND_URL}/dashboard)`,
-      text: `New Lead: ${lead.product.name} - ${lead.intentScore}% intent. ${lead.url}`
-    };
+    let payload: any = {};
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    switch (webhookType) {
+      case 'SLACK':
+        payload = {
+          text: `🚀 *New High-Intent Lead Detected!*\n*Product:* ${lead.product.name}\n*Intent Score:* ${lead.intentScore}%\n*Content:* ${lead.title || 'Conversation thread'}\n<${lead.url}|View Post> | <${config.FRONTEND_URL}/dashboard|Open Dashboard>`,
+        };
+        break;
+      case 'DISCORD':
+        payload = {
+          content: null,
+          embeds: [{
+            title: `🚀 New Lead: ${lead.product.name}`,
+            description: `**Intent Score:** ${lead.intentScore}%\n**Platform:** ${lead.platform}\n\n${lead.title || 'Conversation thread'}`,
+            url: lead.url,
+            color: 5814783,
+          }]
+        };
+        break;
+      case 'ZAPIER':
+      case 'MAKE':
+      case 'CUSTOM':
+      default:
+        payload = {
+          event: 'lead.detected',
+          data: {
+            id: lead.id,
+            intentScore: lead.intentScore,
+            intentLevel: lead.intentLevel,
+            platform: lead.platform,
+            title: lead.title,
+            url: lead.url,
+            productName: lead.product.name,
+            dashboardUrl: `${config.FRONTEND_URL}/dashboard`
+          }
+        };
+        break;
+    }
 
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(payload)
     });
 

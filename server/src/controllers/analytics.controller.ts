@@ -113,6 +113,15 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
 
   const conversationsScanned = await db.client.scrapeCache.count();
 
+  // 7. Advanced ROI Analytics (Pro feature)
+  const user = await db.client.user.findUnique({ where: { id: userId } });
+  const isAdvancedAnalyticsEnabled = user?.plan !== 'FREE';
+  const totalConverted = statusDistRaw.find(s => s.status === 'CONVERTED')?._count.id || 0;
+  
+  // Default lead value assumption: $250
+  const estimatedPipelineValue = totalConverted * 250;
+  const leadConversionRate = totalLeads > 0 ? ((totalConverted / totalLeads) * 100).toFixed(1) : 0;
+
   res.status(200).json({
     success: true,
     data: {
@@ -121,7 +130,10 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
       platformDistribution,
       statusDistribution,
       totalLeads,
-      conversationsScanned
+      conversationsScanned,
+      isAdvancedAnalyticsEnabled,
+      estimatedPipelineValue,
+      leadConversionRate
     },
     requestId: req.requestId
   });

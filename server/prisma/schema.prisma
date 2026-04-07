@@ -365,9 +365,11 @@ model Reply {
 model AlertSetting {
   id             String   @id @default(cuid())
   userId         String   @unique
-  emailEnabled   Boolean  @default(true)
+  emailEnabled   Boolean  @default(false)
+  emailTarget    String?
   slackEnabled   Boolean  @default(false)
   slackWebhook   String?
+  webhookType    String   @default("SLACK") // SLACK, DISCORD, ZAPIER, MAKE, CUSTOM
   minIntentScore Int      @default(70)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

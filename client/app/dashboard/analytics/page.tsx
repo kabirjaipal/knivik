@@ -15,11 +15,13 @@ import {
   Search,
   Loader2,
   AlertCircle,
-  Brain
+  Brain,
+  Lock,
+  BadgeDollarSign,
+  Percent
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { PROJECT_NAME } from "@/lib/constants"
 
 interface MetricData {
   label: string;
@@ -33,6 +35,9 @@ interface AnalyticsData {
   statusDistribution: MetricData[];
   totalLeads: number;
   conversationsScanned: number;
+  isAdvancedAnalyticsEnabled: boolean;
+  estimatedPipelineValue: number;
+  leadConversionRate: string;
 }
 
 interface LlmBreakdown {
@@ -154,11 +159,11 @@ export default function AnalyticsPage() {
           <div className="grid md:grid-cols-4 gap-6">
             {[
               { label: "Leads (Total)", value: data.totalLeads, icon: Target, color: "text-primary bg-primary/10" },
-              { label: "Converted", value: data.statusDistribution.find(s => s.label === 'CONVERTED')?.count || 0, icon: Sparkles, color: "text-success bg-success/10" },
-              { label: "Scanning Power", value: "24/7", icon: Activity, color: "text-amber-500 bg-amber-500/10" },
-              { label: "Intent Accuracy", value: "94%", icon: PieChart, color: "text-violet-500 bg-violet-500/10" },
+              { label: "Converted", value: data.statusDistribution.find(s => s.label === 'CONVERTED')?.count || 0, icon: Sparkles, color: "text-primary bg-primary/10" },
+              { label: "Scanning Power", value: "24/7", icon: Activity, color: "text-primary bg-primary/10" },
+              { label: "Intent Accuracy", value: "94%", icon: PieChart, color: "text-primary bg-primary/10" },
             ].map((stat, i) => (
-              <Card key={i} className="border-border/50 shadow-sm overflow-hidden">
+              <Card key={i} className="border shadow-none bg-card overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -174,9 +179,65 @@ export default function AnalyticsPage() {
             ))}
           </div>
 
+          {/* Advanced ROI Analytics Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BadgeDollarSign className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
+                Advanced ROI Analytics
+                {!data.isAdvancedAnalyticsEnabled && (
+                  <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                    <Lock className="w-3 h-3" /> Starter / Pro
+                  </span>
+                )}
+              </h2>
+            </div>
+            
+            <div className={`grid md:grid-cols-2 gap-6 relative ${!data.isAdvancedAnalyticsEnabled ? 'overflow-hidden' : ''}`}>
+              {!data.isAdvancedAnalyticsEnabled && (
+                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[6px] flex flex-col items-center justify-center rounded-xl border border-border">
+                  <Lock className="w-8 h-8 text-muted-foreground mb-3" />
+                  <p className="text-lg font-bold">Unlock Advanced ROI</p>
+                  <p className="text-sm text-muted-foreground mb-4">Upgrade to see estimated pipeline value and conversion metrics.</p>
+                  <a href="/dashboard/billing" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium text-sm">Upgrade Plan</a>
+                </div>
+              )}
+              
+              <Card className="border shadow-none bg-card">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BadgeDollarSign className="w-4 h-4 text-primary" /> Estimated Pipeline Value
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-black text-foreground">${data.estimatedPipelineValue.toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Based on an average estimated value of $250 per CONVERTED lead.</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border shadow-none bg-card">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Percent className="w-4 h-4 text-primary" /> Lead Conversion Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-black text-foreground">{data.leadConversionRate}%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Percentage of all scanned leads that changed to CONVERTED status.</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Leads Over Time - Bar Chart Visualization */}
-            <Card className="lg:col-span-2 border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
+            <Card className="lg:col-span-2 border shadow-none bg-card">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                   <CardTitle className="flex items-center gap-2">
@@ -217,7 +278,7 @@ export default function AnalyticsPage() {
             {/* Distribution Charts */}
             <div className="space-y-8">
               {/* Intent Level */}
-              <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
+              <Card className="border shadow-none bg-card">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Layers className="w-4 h-4 text-primary" /> Intent Mix
@@ -251,7 +312,7 @@ export default function AnalyticsPage() {
               </Card>
 
               {/* Platform Dist */}
-              <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
+              <Card className="border shadow-none bg-card">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Search className="w-4 h-4 text-primary" /> Source Channels
@@ -289,21 +350,18 @@ export default function AnalyticsPage() {
           {/* AI Usage Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-500/10 rounded-lg">
-                <Brain className="w-5 h-5 text-violet-500" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Brain className="w-5 h-5 text-primary" />
               </div>
               <h2 className="text-2xl font-black tracking-tight text-foreground">AI Power &amp; Consumption</h2>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Cost & Efficiency */}
-              <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                  <Brain className="w-40 h-40" />
-                </div>
+              <Card className="border shadow-none bg-card overflow-hidden">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-violet-400" /> Token Efficiency
+                    <Sparkles className="w-4 h-4 text-primary" /> Token Efficiency
                   </CardTitle>
                   <CardDescription>Real-time calculation of inference costs.</CardDescription>
                 </CardHeader>
@@ -339,7 +397,7 @@ export default function AnalyticsPage() {
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${percentage}%` }}
-                                className="h-full bg-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]"
+                                className="h-full bg-primary"
                               />
                             </div>
                           </div>
@@ -351,10 +409,10 @@ export default function AnalyticsPage() {
               </Card>
 
               {/* Model Breakdown */}
-              <Card className="border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
+              <Card className="border shadow-none bg-card">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-violet-400" /> Active Models
+                    <Activity className="w-4 h-4 text-primary" /> Active Models
                   </CardTitle>
                   <CardDescription>Which minds are powering your radar?</CardDescription>
                 </CardHeader>
@@ -372,7 +430,7 @@ export default function AnalyticsPage() {
                     }, []).map((model, i) => (
                       <div key={i} className="p-4 rounded-xl border border-border/40 bg-muted/20 flex items-center justify-between group hover:bg-muted/30 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${i === 0 ? 'bg-primary/10 text-primary' : 'bg-violet-500/10 text-violet-500'}`}>
+                          <div className={`p-2 rounded-lg bg-primary/10 text-primary`}>
                             <Brain className="w-4 h-4" />
                           </div>
                           <div>

@@ -144,6 +144,33 @@ export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res
   });
 });
 
+export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { username, metadata } = req.body;
+
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: {
+        status: 401,
+        code: 'UNAUTHORIZED',
+        message: 'User session expired or invalid',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
+  const user = await UserService.updateProfile(req.user.id, { username, metadata }, req.requestId);
+  
+  res.status(200).json({
+    success: true,
+    data: { user },
+    message: 'Profile updated successfully',
+    requestId: req.requestId,
+  });
+});
+
 // Billing endpoints
 export const getBillingInfo = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   if (!req.user) {

@@ -19,6 +19,7 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  metadata?: any | null;
   role: string;
   plan: string;
   subscriptionStatus: string | null;

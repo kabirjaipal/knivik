@@ -41,17 +41,18 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full focus:ring-2 focus:ring-primary focus:outline-none">
-                  <Avatar className="h-9 w-9 border border-border">
-                    <AvatarImage src={`https://avatar.vercel.sh/${user.username}.png`} alt={user.username} />
-                    <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <Avatar className="h-9 w-9 border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
+                    <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
+                      {user.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.username}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    <p className="text-sm font-bold leading-none">{user.metadata?.fullName || user.username}</p>
+                    <p className="text-[10px] font-medium leading-none text-muted-foreground mt-1">{user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

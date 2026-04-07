@@ -49,7 +49,7 @@ const PLANS = {
     name: "Pro",
     description: "Built for agencies and growing teams",
     price: 69,
-    features: ["Unlimited product tracking", "Unlimited leads per month", "All platforms (incl. LinkedIn)", "Instant real-time monitoring", "AI Personalised reply engine", "Advanced ROI analytics", "Full API & Webhook access", "Dedicated account manager"],
+    features: ["Unlimited product tracking", "Unlimited leads per month", "Reddit, HN & Twitter alerts", "Instant real-time monitoring", "Custom AI persona for replies", "Advanced ROI analytics", "Standard & Premium Webhook support", "Priority support"],
   },
 };
 
@@ -158,7 +158,7 @@ export default function BillingPage() {
       case "active":
         return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Active</Badge>;
       case "past_due":
-        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Past Due</Badge>;
+        return <Badge className="bg-primary/10 text-primary border-primary/20">Past Due</Badge>;
       case "canceled":
         return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Canceled</Badge>;
       default:

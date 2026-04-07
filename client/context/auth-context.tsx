@@ -9,6 +9,7 @@ interface User {
   email: string
   role: string
   plan: string
+  metadata?: any
   subscriptionStatus: string | null
   paddleCustomerId: string | null
   isScanning?: boolean

@@ -55,6 +55,7 @@ export class UserService {
         username: true,
         role: true,
         plan: true,
+        metadata: true,
         subscriptionStatus: true,
         billingCycle: true,
         currentPeriodEnd: true,
@@ -98,6 +99,7 @@ export class UserService {
         username: user.username,
         role: user.role,
         plan: user.plan,
+        metadata: user.metadata,
         subscriptionStatus: user.subscriptionStatus,
         billingCycle: user.billingCycle,
         currentPeriodEnd: user.currentPeriodEnd,
@@ -122,6 +124,7 @@ export class UserService {
         username: true,
         role: true,
         plan: true,
+        metadata: true,
         subscriptionStatus: true,
         billingCycle: true,
         currentPeriodEnd: true,
@@ -147,6 +150,7 @@ export class UserService {
         username: true,
         role: true,
         plan: true,
+        metadata: true,
         subscriptionStatus: true,
         billingCycle: true,
         currentPeriodEnd: true,
@@ -198,5 +202,36 @@ export class UserService {
       where: { id: userId },
       data: { password: hashedNewPassword },
     });
+  }
+
+  static async updateProfile(userId: string, input: { username?: string, metadata?: any }, _requestId?: string): Promise<User> {
+    const user = await db.client.user.update({
+      where: { id: userId },
+      data: {
+        ...(input.username && { username: input.username }),
+        ...(input.metadata !== undefined && { metadata: input.metadata }),
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        plan: true,
+        metadata: true,
+        subscriptionStatus: true,
+        billingCycle: true,
+        currentPeriodEnd: true,
+        paddleCustomerId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await Promise.all([
+      cache.del('users:all'),
+      cache.del(`user:${userId}`),
+    ]);
+
+    return user;
   }
 }

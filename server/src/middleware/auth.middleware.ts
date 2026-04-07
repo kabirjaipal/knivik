@@ -27,6 +27,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
             username: true,
             role: true,
             plan: true,
+            metadata: true,
             subscriptionStatus: true,
             billingCycle: true,
             currentPeriodEnd: true,

@@ -106,6 +106,17 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
 
     const data = parsed.data;
 
+    // Check plan limits
+    const user = await db.client.user.findUnique({ where: { id: userId } });
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    const activeProductCount = await db.client.product.count({ where: { userId, isActive: true } });
+    const { canAddProduct } = await import('../lib/plans.js');
+    if (!canAddProduct(activeProductCount, user.plan as any)) {
+      res.status(403).json({ error: 'Plan limits reached. Upgrade to track more products.' });
+      return;
+    }
+
     // Auto-generate strategy for Onboarding Users who submit empty configs
     if (data.keywords.length === 0 && data.sources.length === 0 && data.name) {
       try {
@@ -225,6 +236,12 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     }
 
     const data = parsed.data;
+
+    const user = await db.client.user.findUnique({ where: { id: userId } });
+    if (data.aiConfig?.['customPersona'] && (!user || user.plan === 'FREE')) {
+      // Strip out the custom persona if they are on the free plan, fail silently
+      delete data.aiConfig['customPersona'];
+    }
 
     // We'll use a transaction to cleanly overwrite the relations
     const updated = await db.client.$transaction(async (tx) => {

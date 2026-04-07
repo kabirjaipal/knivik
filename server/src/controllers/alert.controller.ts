@@ -4,9 +4,11 @@ import logger from '../lib/logger.js';
 import { z } from 'zod';
 
 const alertSettingSchema = z.object({
-  emailEnabled: z.boolean().default(true),
+  emailEnabled: z.boolean().default(false),
+  emailTarget: z.string().optional().or(z.literal('')),
   slackEnabled: z.boolean().default(false),
   slackWebhook: z.string().url().optional().or(z.literal('')),
+  webhookType: z.string().default('SLACK'),
   minIntentScore: z.number().min(0).max(100).default(70),
 });
 
@@ -48,19 +50,40 @@ export const updateAlertSettings = async (req: Request, res: Response): Promise<
 
     const data = parsed.data;
 
+    // Plan check for Premium Features (Slack/Webhooks -> PRO only)
+    const user = await db.client.user.findUnique({ where: { id: userId } });
+    if (data.slackEnabled || data.slackWebhook) {
+      if (!user || user.plan !== 'PRO') {
+        res.status(403).json({ error: 'Webhooks are only available on the Pro plan.' });
+        return;
+      }
+    }
+
+    // Plan check for Email Alerts -> STARTER/PRO only
+    if (data.emailEnabled) {
+      if (!user || user.plan === 'FREE') {
+        res.status(403).json({ error: 'Email Deliveries are only available on Starter or Pro plans.' });
+        return;
+      }
+    }
+
     const settings = await db.client.alertSetting.upsert({
       where: { userId },
       update: {
         emailEnabled: data.emailEnabled,
+        emailTarget: data.emailTarget || null,
         slackEnabled: data.slackEnabled,
         slackWebhook: data.slackWebhook || null,
+        webhookType: data.webhookType,
         minIntentScore: data.minIntentScore,
       },
       create: {
         userId,
         emailEnabled: data.emailEnabled,
+        emailTarget: data.emailTarget || null,
         slackEnabled: data.slackEnabled,
         slackWebhook: data.slackWebhook || null,
+        webhookType: data.webhookType,
         minIntentScore: data.minIntentScore,
       },
     });

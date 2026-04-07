@@ -14,6 +14,7 @@ interface Product {
   competitors: Array<{ id: string; name: string }>
   sources: Array<{ id: string; platform: string; identifier: string }>
   searchQueries?: string[]
+  aiConfig?: any
 }
 
 interface ProductDetailsProps {
@@ -157,6 +158,21 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Config */}
+      {product.aiConfig?.customPersona && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-primary">
+              <Zap className="w-4 h-4" />
+              Custom AI Persona
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-medium italic text-muted-foreground">{product.aiConfig.customPersona}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* AI Search Queries */}
       {product.searchQueries && product.searchQueries.length > 0 && (

@@ -54,8 +54,8 @@ import { ThumbsUp, ThumbsDown, Info } from "lucide-react"
 const STATUS_OPTIONS: { value: LeadStatus; label: string; color: string }[] = [
   { value: 'NEW',       label: 'New',       color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
   { value: 'QUALIFIED', label: 'Qualified', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  { value: 'SAVED',     label: 'Saved',     color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-  { value: 'CONTACTED', label: 'Contacted', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  { value: 'SAVED',     label: 'Saved',     color: 'bg-primary/10 text-primary border-primary/20' },
+  { value: 'CONTACTED', label: 'Contacted', color: 'bg-primary/10 text-primary border-primary/20' },
   { value: 'CONVERTED', label: 'Converted 🎉', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
   { value: 'DISMISSED', label: 'Dismissed', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
 ]
@@ -65,7 +65,7 @@ const STATUS_OPTIONS: { value: LeadStatus; label: string; color: string }[] = [
 const getIntentColor = (level: string) => {
   switch (level) {
     case 'BUY_NOW':     return 'bg-red-500/10 text-red-500 border-red-500/20'
-    case 'COMPARING':   return 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+    case 'COMPARING':   return 'bg-primary/10 text-primary border-primary/20'
     case 'RESEARCHING': return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
     default:            return 'bg-slate-500/10 text-slate-500 border-slate-500/20'
   }
@@ -78,12 +78,12 @@ const DetectionBadge = ({ detectedBy }: { detectedBy: DetectedBy }) => {
     </span>
   )
   if (detectedBy === 'SEMANTIC') return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-violet-500/15 text-violet-400 border border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.1)]">
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-primary/15 text-primary border border-primary/30 shadow-[0_0_10px_rgba(139,92,246,0.1)]">
       <Brain className="w-3 h-3" /> Semantic Find
     </span>
   )
   return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500/80 border border-emerald-500/20">
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-primary/10 text-primary/80 border border-primary/20">
       <Tags className="w-3 h-3" /> Keyword Match
     </span>
   )
@@ -148,7 +148,7 @@ const LeadRow = memo(({
         <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-red-500 to-orange-500" />
       )}
       {lead.detectedBy === 'SEMANTIC' && (
-        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-violet-500 to-purple-500" />
+        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-primary to-primary" />
       )}
 
       <div className="p-5 pl-6 md:p-6 md:pl-7 hover:bg-muted/10 transition-colors flex flex-col md:flex-row gap-5 items-start">
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                 value: llmUsage ? `$${llmUsage.totals.estimatedCost.toFixed(4)}` : '$0.000', 
                 icon: Brain, 
                 sub: `${llmUsage?.totals.requestCount || 0} AI inferences`, 
-                subColor: 'text-violet-400' 
+                subColor: 'text-primary' 
               },
             ].map((m, i) => (
               <Card key={i} className={`shadow-lg border-border/40 overflow-hidden group relative ${m.highlight ? 'bg-primary/5 border-primary/30' : 'bg-card hover:border-primary/40 transition-colors'}`}>

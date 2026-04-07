@@ -47,11 +47,11 @@ export const PLANS = {
     features: [
       "Unlimited products",
       "Unlimited leads",
-      "All platforms (LinkedIn, Slack, etc.)",
+      "Reddit, HN & Twitter alerts",
       "Priority AI intent processing",
       "Custom AI persona for replies",
-      "Advanced analytics & CSV export",
-      "Full API access",
+      "Advanced ROI analytics",
+      "Standard & Premium Webhook support",
       "Priority 24/7 support",
     ],
     limits: {
