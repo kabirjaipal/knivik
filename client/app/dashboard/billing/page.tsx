@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
-import { Navbar } from "@/components/landing/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +8,7 @@ import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, CreditCard, Calendar, AlertCircle, Check, Sparkles, Zap, ArrowRight, ExternalLink } from "lucide-react";
+import { Loader2, CreditCard, AlertCircle, Check, Sparkles, ExternalLink } from "lucide-react";
 import { FormatPrice, PlanBadge } from "@/components/billing/PricingUtils";
 
 interface BillingInfo {
@@ -152,7 +151,6 @@ export default function BillingPage() {
   };
 
   const getStatusBadge = (status: string | null) => {
-    console.log("Status", status);
     const normalizedStatus = (status || "").toLowerCase();
     switch (normalizedStatus) {
       case "active":
@@ -189,253 +187,247 @@ export default function BillingPage() {
 
   if (isInitializing || isLoadingBilling) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight">Billing</h1>
-          {currentPlan !== "FREE" && (
-            <Badge variant="outline" className="px-3 py-1 border-primary/20 bg-primary/5 text-primary">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Premium Access Enabled
-            </Badge>
-          )}
-        </div>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-extrabold tracking-tight">Billing</h1>
+        {currentPlan !== "FREE" && (
+          <Badge variant="outline" className="px-3 py-1 border-primary/20 bg-primary/5 text-primary">
+            <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            Premium Access Enabled
+          </Badge>
+        )}
+      </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-6">
-            {/* Subscription status card */}
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-              <div className="h-1 bg-primary w-full" />
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between flex-wrap gap-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                       <PlanBadge plan={currentPlan} className="text-xs px-3 py-1" />
-                       {getStatusBadge(billingInfo?.subscriptionStatus ?? null)}
-                    </div>
-                    
-                    <div>
-                      <h2 className="text-2xl font-bold tracking-tight">{planConfig.name}</h2>
-                      <p className="text-sm text-muted-foreground mt-1">{planConfig.description}</p>
-                    </div>
-
-                    {billingInfo?.subscriptionStatus === "active" && (
-                      <div className="flex items-center gap-6 pt-2 border-t border-border/40">
-                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Next Billing</span>
-                            <span className="text-sm font-medium">{formatDate(billingInfo?.currentPeriodEnd)}</span>
-                         </div>
-                         <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Price</span>
-                            <span className="text-sm font-medium">
-                              ${currentPlan !== "FREE" ? getDynamicPrice(currentPlan as "STARTER" | "PRO", billingInfo?.billingCycle as "monthly" | "yearly" || "monthly") : 0}/{billingInfo?.billingCycle === 'yearly' ? 'yr' : 'mo'}
-                            </span>
-                         </div>
-                      </div>
-                    )}
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-6">
+          {/* Subscription status card */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+            <div className="h-1 bg-primary w-full" />
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between flex-wrap gap-4">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                     <PlanBadge plan={currentPlan} className="text-xs px-3 py-1" />
+                     {getStatusBadge(billingInfo?.subscriptionStatus ?? null)}
+                  </div>
+                  
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight">{planConfig.name}</h2>
+                    <p className="text-sm text-muted-foreground mt-1">{planConfig.description}</p>
                   </div>
 
-                  {currentPlan !== "FREE" && (billingInfo?.paddleCustomerId || billingInfo?.subscription?.paddleCustomerId) ? (
-                    <Button 
-                      variant="outline" 
-                      className="h-9 text-xs font-bold gap-2 min-w-[150px]" 
-                      onClick={handleOpenCustomerPortal}
-                      disabled={isRedirecting}
-                    >
-                      {isRedirecting ? (
-                        <>
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          Manage Subscription <ExternalLink className="h-3 w-3" />
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Link href="/pricing" className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-bold transition-all shadow-lg shadow-primary/20">
-                      View Plans
-                    </Link>
+                  {billingInfo?.subscriptionStatus === "active" && (
+                    <div className="flex items-center gap-6 pt-2 border-t border-border/40">
+                       <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Next Billing</span>
+                          <span className="text-sm font-medium">{formatDate(billingInfo?.currentPeriodEnd)}</span>
+                       </div>
+                       <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Price</span>
+                          <span className="text-sm font-medium">
+                            ${currentPlan !== "FREE" ? getDynamicPrice(currentPlan as "STARTER" | "PRO", billingInfo?.billingCycle as "monthly" | "yearly" || "monthly") : 0}/{billingInfo?.billingCycle === 'yearly' ? 'yr' : 'mo'}
+                          </span>
+                       </div>
+                    </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Payment History - Clean table */}
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold">Invoices</CardTitle>
-                <CardDescription>Records of your subscription payments</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {payments.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
-                    <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                    <p className="text-sm font-medium">No payment history found</p>
-                  </div>
+                {currentPlan !== "FREE" && (billingInfo?.paddleCustomerId || billingInfo?.subscription?.paddleCustomerId) ? (
+                  <Button 
+                    variant="outline" 
+                    className="h-9 text-xs font-bold gap-2 min-w-[150px]" 
+                    onClick={handleOpenCustomerPortal}
+                    disabled={isRedirecting}
+                  >
+                    {isRedirecting ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        Manage Subscription <ExternalLink className="h-3 w-3" />
+                      </>
+                    )}
+                  </Button>
                 ) : (
-                  <div className="space-y-0.5">
-                    {payments.map((payment) => (
-                      <div
-                        key={payment.id}
-                        className="flex items-center justify-between p-3.5 hover:bg-muted/30 rounded-lg transition-colors border-b border-border/40 last:border-0"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center">
-                             <CreditCard className="h-5 w-5 text-primary opacity-70" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold">{formatAmount(payment.amount, payment.currency)}</p>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{formatDate(payment.createdAt)}</p>
-                          </div>
+                  <Link href="/pricing" className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md text-sm font-bold transition-all shadow-lg shadow-primary/20">
+                    View Plans
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment History - Clean table */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold">Invoices</CardTitle>
+              <CardDescription>Records of your subscription payments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {payments.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-sm font-medium">No payment history found</p>
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  {payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="flex items-center justify-between p-3.5 hover:bg-muted/30 rounded-lg transition-colors border-b border-border/40 last:border-0"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center">
+                           <CreditCard className="h-5 w-5 text-primary opacity-70" />
                         </div>
-                        <Badge variant="outline" className={`text-[10px] uppercase font-bold ${payment.status === "completed" ? "bg-green-500/5 text-green-600 border-green-500/20" : ""}`}>
-                          {payment.status}
-                        </Badge>
+                        <div>
+                          <p className="text-sm font-bold">{formatAmount(payment.amount, payment.currency)}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{formatDate(payment.createdAt)}</p>
+                        </div>
                       </div>
-                    ))}
+                      <Badge variant="outline" className={`text-[10px] uppercase font-bold ${payment.status === "completed" ? "bg-green-500/5 text-green-600 border-green-500/20" : ""}`}>
+                        {payment.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upgrade/Change Plan - Only show if not on Pro Yearly */}
+          {currentPlan !== "FREE" && (
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-bold">Change your plan</CardTitle>
+                    <CardDescription>Upgrade to yearly to save more or switch tiers</CardDescription>
                   </div>
+                  {/* Compact Toggle */}
+                  <div className="flex items-center gap-3 bg-muted/50 p-1 rounded-full border border-border/40">
+                    <button
+                      onClick={() => setBillingCycle("monthly")}
+                      className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      onClick={() => setBillingCycle("yearly")}
+                      className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "yearly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   {/* Starter Option */}
+                   <div className={`p-4 rounded-xl border transition-all ${currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Starter</span>
+                         {currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle && (
+                           <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">Current</Badge>
+                         )}
+                      </div>
+                      <FormatPrice 
+                        amount={getDynamicPrice("STARTER", billingCycle)} 
+                        billingCycle={billingCycle} 
+                        className="mb-4"
+                      />
+                      {!(currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle) && (
+                        <CheckoutButton
+                          priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_STARTER_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_STARTER_YEARLY_PRICE_ID!}
+                          email={user?.email || ""}
+                          userId={user?.id || ""}
+                          planName="Starter"
+                          className="w-full h-8 text-[11px] font-bold"
+                          onSuccess={() => fetchBillingInfo()}
+                        >
+                          Switch to Starter
+                        </CheckoutButton>
+                      )}
+                   </div>
+
+                   {/* Pro Option */}
+                   <div className={`p-4 rounded-xl border transition-all ${currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50 ring-1 ring-primary/20"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pro</span>
+                         {currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle && (
+                           <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">Current</Badge>
+                         )}
+                      </div>
+                      <FormatPrice 
+                        amount={getDynamicPrice("PRO", billingCycle)} 
+                        billingCycle={billingCycle} 
+                        className="mb-4"
+                      />
+                      {!(currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle) && (
+                        <CheckoutButton
+                          priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID!}
+                          email={user?.email || ""}
+                          userId={user?.id || ""}
+                          planName="Pro"
+                          variant="default"
+                          className="w-full h-8 text-[11px] font-bold shadow-lg shadow-primary/10"
+                          onSuccess={() => fetchBillingInfo()}
+                        >
+                          Upgrade to Pro
+                        </CheckoutButton>
+                      )}
+                   </div>
+                </div>
+                {billingCycle === "yearly" && (
+                  <p className="text-[10px] text-center text-primary font-bold bg-primary/5 py-1.5 rounded-lg border border-primary/10">
+                    ⚡ RECOMMENDED: You save roughly $138/year with the Pro Yearly plan
+                  </p>
                 )}
               </CardContent>
             </Card>
-
-            {/* Upgrade/Change Plan - Only show if not on Pro Yearly */}
-            {currentPlan !== "FREE" && (
-              <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg font-bold">Change your plan</CardTitle>
-                      <CardDescription>Upgrade to yearly to save more or switch tiers</CardDescription>
-                    </div>
-                    {/* Compact Toggle */}
-                    <div className="flex items-center gap-3 bg-muted/50 p-1 rounded-full border border-border/40">
-                      <button
-                        onClick={() => setBillingCycle("monthly")}
-                        className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                      >
-                        Monthly
-                      </button>
-                      <button
-                        onClick={() => setBillingCycle("yearly")}
-                        className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "yearly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                      >
-                        Yearly
-                      </button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     {/* Starter Option */}
-                     <div className={`p-4 rounded-xl border transition-all ${currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50"}`}>
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Starter</span>
-                           {currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle && (
-                             <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">Current</Badge>
-                           )}
-                        </div>
-                        <FormatPrice 
-                          amount={getDynamicPrice("STARTER", billingCycle)} 
-                          billingCycle={billingCycle} 
-                          className="mb-4"
-                        />
-                        {!(currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle) && (
-                          <CheckoutButton
-                            priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_STARTER_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_STARTER_YEARLY_PRICE_ID!}
-                            email={user?.email || ""}
-                            userId={user?.id || ""}
-                            planName="Starter"
-                            className="w-full h-8 text-[11px] font-bold"
-                            onSuccess={() => fetchBillingInfo()}
-                          >
-                            Switch to Starter
-                          </CheckoutButton>
-                        )}
-                     </div>
-
-                     {/* Pro Option */}
-                     <div className={`p-4 rounded-xl border transition-all ${currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50 ring-1 ring-primary/20"}`}>
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pro</span>
-                           {currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle && (
-                             <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">Current</Badge>
-                           )}
-                        </div>
-                        <FormatPrice 
-                          amount={getDynamicPrice("PRO", billingCycle)} 
-                          billingCycle={billingCycle} 
-                          className="mb-4"
-                        />
-                        {!(currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle) && (
-                          <CheckoutButton
-                            priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID!}
-                            email={user?.email || ""}
-                            userId={user?.id || ""}
-                            planName="Pro"
-                            variant="default"
-                            className="w-full h-8 text-[11px] font-bold shadow-lg shadow-primary/10"
-                            onSuccess={() => fetchBillingInfo()}
-                          >
-                            Upgrade to Pro
-                          </CheckoutButton>
-                        )}
-                     </div>
-                  </div>
-                  {billingCycle === "yearly" && (
-                    <p className="text-[10px] text-center text-primary font-bold bg-primary/5 py-1.5 rounded-lg border border-primary/10">
-                      ⚡ RECOMMENDED: You save roughly $138/year with the Pro Yearly plan
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          <aside className="space-y-6">
-            {/* Features list based on plan */}
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader className="pb-3 border-b border-border/40">
-                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Plan Limits</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <ul className="space-y-3">
-                  {planConfig.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm">
-                      <div className="mt-1 bg-primary/10 rounded-full p-0.5">
-                        <Check className="h-3 w-3 text-primary" />
-                      </div>
-                      <span className="text-foreground/80 leading-relaxed font-medium">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Support box */}
-            <div className="p-5 rounded-xl bg-primary text-primary-foreground shadow-xl shadow-primary/10 flex flex-col gap-4">
-               <div>
-                 <h3 className="font-bold text-lg">Need help?</h3>
-                 <p className="text-sm opacity-90 leading-relaxed font-medium">Have issues with billing or need a custom plan?</p>
-               </div>
-               <Button variant="secondary" className="w-full font-bold h-10" asChild>
-                 <a href="mailto:support@knivik.com">Contact Support</a>
-               </Button>
-            </div>
-          </aside>
+          )}
         </div>
+
+        <aside className="space-y-6">
+          {/* Features list based on plan */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3 border-b border-border/40">
+              <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Plan Limits</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ul className="space-y-3">
+                {planConfig.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3 text-sm">
+                    <div className="mt-1 bg-primary/10 rounded-full p-0.5">
+                      <Check className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="text-foreground/80 leading-relaxed font-medium">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Support box */}
+          <div className="p-5 rounded-xl bg-primary text-primary-foreground shadow-xl shadow-primary/10 flex flex-col gap-4">
+             <div>
+               <h3 className="font-bold text-lg">Need help?</h3>
+               <p className="text-sm opacity-90 leading-relaxed font-medium">Have issues with billing or need a custom plan?</p>
+             </div>
+             <Button variant="secondary" className="w-full font-bold h-10" asChild>
+               <a href="mailto:support@knivik.com">Contact Support</a>
+             </Button>
+          </div>
+        </aside>
       </div>
     </div>
   );

@@ -1,27 +1,18 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Radar, User, Settings, LogOut, BarChart3, ShieldAlert, CreditCard } from "lucide-react"
+import { Radar } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/context/auth-context"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PROJECT_NAME } from "@/lib/constants"
 
 export function Navbar() {
-  const { user, loading, logout } = useAuth()
+  const { user, loading } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center space-x-2">
@@ -32,84 +23,26 @@ export function Navbar() {
           </Link>
         </div>
         
-        {/* Navigation Hidden for Minimalist UI */}
-
         <div className="flex items-center gap-4">
           <ThemeToggle />
           
           {!loading && user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full focus:ring-2 focus:ring-primary focus:outline-none">
-                  <Avatar className="h-9 w-9 border-2 border-primary/20 bg-primary/10 flex items-center justify-center overflow-hidden">
-                    <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
-                      {user.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-bold leading-none">{user.metadata?.fullName || user.username}</p>
-                    <p className="text-[10px] font-medium leading-none text-muted-foreground mt-1">{user.email}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  {user.role === 'admin' && (
-                    <Link href="/admin">
-                      <DropdownMenuItem className="cursor-pointer text-primary font-bold focus:bg-primary/10 focus:text-primary">
-                        <ShieldAlert className="mr-2 h-4 w-4" />
-                        <span>Admin Console</span>
-                      </DropdownMenuItem>
-                    </Link>
-                  )}
-                  <Link href="/dashboard">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Radar className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/dashboard/analytics">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      <span>Analytics</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/dashboard/products">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Products</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/dashboard/billing">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      <span>Billing</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/dashboard/settings">
-                    <DropdownMenuItem className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </DropdownMenuItem>
-                  </Link>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={logout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link href="/dashboard" title="Go to Dashboard">
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full focus:ring-2 focus:ring-primary focus:outline-none p-0 overflow-hidden group">
+                <Avatar className="h-9 w-9 border-2 border-primary/20 transition-all group-hover:border-primary">
+                  <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">
+                    {user.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </Link>
           ) : !loading && !user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link href="/login" className="hidden sm:inline-block">
-                <Button variant="ghost" className="text-sm font-medium">Log in</Button>
+                <Button variant="ghost" className="text-sm font-bold">Log in</Button>
               </Link>
               <Link href="/register">
-                <Button size="sm" className="font-medium shadow-sm">Get Started</Button>
+                <Button size="sm" className="font-bold shadow-lg shadow-primary/20 h-9">Get Started</Button>
               </Link>
             </div>
           ) : (

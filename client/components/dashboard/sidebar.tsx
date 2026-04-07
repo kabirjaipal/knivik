@@ -1,0 +1,205 @@
+"use client"
+
+import { useAuth } from "@/context/auth-context"
+import { 
+  Radar, 
+  BarChart3, 
+  Settings, 
+  CreditCard, 
+  User, 
+  LogOut, 
+  ShieldAlert, 
+  Users, 
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  LayoutDashboard
+} from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { PROJECT_NAME } from "@/lib/constants"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+
+interface SidebarProps {
+  className?: string
+}
+
+import { LucideIcon } from "lucide-react"
+
+interface NavLink {
+  href: string
+  label: string
+  icon: LucideIcon
+  accent?: boolean
+}
+
+export function Sidebar({ className }: SidebarProps) {
+  const { user, logout } = useAuth()
+  const pathname = usePathname()
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  const isAtAdmin = pathname.startsWith('/admin')
+
+  const userLinks: NavLink[] = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/products", label: "Products", icon: Settings },
+    { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+    { href: "/dashboard/settings", label: "Settings", icon: User },
+  ]
+
+  const adminLinks: NavLink[] = [
+    { href: "/admin", label: "System Overview", icon: Radar },
+    { href: "/admin/users", label: "User Directory", icon: Users },
+    { href: "/admin/usage", label: "LLM Usage", icon: Activity },
+    { href: "/dashboard", label: "Return to App", icon: Radar, accent: true },
+  ]
+
+  const links = isAtAdmin ? adminLinks : userLinks
+
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed)
+  const toggleMobile = () => setIsMobileOpen(!isMobileOpen)
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setIsMobileOpen(false)
+  }, [pathname])
+
+  return (
+    <>
+      {/* Mobile Header */}
+      <div className="lg:hidden sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-sm">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Radar className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <span className="font-bold tracking-tight text-lg">{PROJECT_NAME}</span>
+        </Link>
+        <Button variant="ghost" size="icon" onClick={toggleMobile}>
+          <Menu className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm lg:hidden"
+          onClick={toggleMobile}
+        />
+      )}
+
+      {/* Sidebar Content */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border/40 bg-background transition-all duration-300 lg:sticky lg:h-screen lg:z-40",
+        isCollapsed ? "w-20" : "w-64",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        className
+      )}>
+        {/* Logo Container */}
+        <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
+              <Radar className="h-5 w-5 text-primary-foreground" />
+            </div>
+            {!isCollapsed && (
+              <span className="font-bold tracking-tight text-lg truncate animate-in fade-in duration-300">
+                {PROJECT_NAME}
+              </span>
+            )}
+          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="hidden lg:flex h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={toggleSidebar}
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
+          
+          {links.map((link) => {
+            const isActive = pathname === link.href
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
+                  isActive 
+                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  link.accent && !isActive && "text-primary hover:bg-primary/5"
+                )}
+                title={isCollapsed ? link.label : undefined}
+              >
+                <link.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive && "scale-110")} />
+                {!isCollapsed && <span className="text-sm tracking-tight">{link.label}</span>}
+                {isCollapsed && isActive && (
+                  <div className="absolute left-0 w-1 h-6 bg-primary-foreground rounded-r-full" />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Admin Switcher (If Admin is on User Dashboard) */}
+        {!isAtAdmin && user?.role === 'admin' && (
+          <div className="px-4 py-2">
+            <Link 
+              href="/admin"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group",
+                isCollapsed && "justify-center px-0"
+              )}
+              title={isCollapsed ? "Go to Admin" : undefined}
+            >
+              <ShieldAlert className="h-5 w-5" />
+              {!isCollapsed && <span className="text-xs font-black uppercase tracking-widest">Go to Admin</span>}
+            </Link>
+          </div>
+        )}
+
+        {/* Footer Area */}
+        <div className="border-t border-border/40 p-4 space-y-4">
+          <div className={cn("flex items-center justify-between gap-4 px-2", isCollapsed && "flex-col")}>
+            <div className="flex items-center gap-3 min-w-0">
+               <Avatar className="h-8 w-8 border border-border shadow-sm">
+                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">
+                    {user?.username?.slice(0, 2) || "U"}
+                  </AvatarFallback>
+               </Avatar>
+               {!isCollapsed && (
+                 <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold truncate">{user?.username}</span>
+                    <span className="text-[10px] text-muted-foreground truncate">{user?.email}</span>
+                 </div>
+               )}
+            </div>
+            <ThemeToggle />
+          </div>
+
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "w-full flex items-center justify-start gap-3 px-3 py-2 text-destructive hover:bg-destructive/10 hover:text-destructive",
+              isCollapsed && "justify-center px-0 h-9"
+            )}
+            onClick={logout}
+          >
+            <LogOut className="h-5 w-5" />
+            {!isCollapsed && <span className="text-sm font-semibold">Logout</span>}
+          </Button>
+        </div>
+      </aside>
+    </>
+  )
+}

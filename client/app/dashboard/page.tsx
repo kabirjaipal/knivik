@@ -1,14 +1,13 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
-import { Navbar } from "@/components/landing/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Radar, Users, MessageSquareText, Activity, ExternalLink, Zap, Clock, ChevronRight,
-  RotateCw, Linkedin, Twitter, Github, FileText, ChevronDown, Brain, Flame, Tags
+  RotateCw, Linkedin, Twitter, Github, FileText, ChevronDown, Brain, Flame, Tags,
+  ThumbsUp, ThumbsDown, Info
 } from "lucide-react"
 import { useEffect, useState, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { io, Socket } from "socket.io-client"
 import React, { memo } from "react"
@@ -46,8 +45,6 @@ interface Lead {
   product: { name: string };
   replies?: Array<{ id: string; generatedText: string; createdAt: string }>;
 }
-
-import { ThumbsUp, ThumbsDown, Info } from "lucide-react"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -316,7 +313,7 @@ LeadRow.displayName = "LeadRow"
 type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -366,7 +363,6 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!authLoading && !user) { router.push("/login"); return }
     if (!user) return
 
     fetchLeads()
@@ -383,7 +379,7 @@ export default function DashboardPage() {
 
     setSocket(newSocket)
     return () => { newSocket.disconnect() }
-  }, [user, authLoading, router, fetchLlmUsage, fetchLeads, fetchProducts])
+  }, [user, fetchLlmUsage, fetchLeads, fetchProducts])
 
   const handleDraftReply = async (leadId: string) => {
     setDraftingLeadId(leadId)
@@ -434,15 +430,6 @@ export default function DashboardPage() {
     } catch { console.error('Failed to update feedback') }
   }
 
-  if (authLoading) return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    </div>
-  )
-
   // ─── Metrics ───────────────────────────────────────────────────────────────
   const totalLeads = leads.length
   const highIntentLeads = leads.filter(l => l.intentScore >= 80).length
@@ -468,7 +455,7 @@ export default function DashboardPage() {
   })
 
   return (
-    <div className="min-h-screen flex flex-col bg-background selection:bg-primary/30">
+    <>
       <OnboardingModal isOpen={showOnboarding} onComplete={() => {
         setShowOnboarding(false)
         fetchProducts()
@@ -478,10 +465,7 @@ export default function DashboardPage() {
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05),transparent_70%)] blur-[80px]" />
       </div>
 
-      <div className="relative z-10">
-        <Navbar />
-
-        <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">
+      <div className="relative z-10 w-full">
           {/* Header */}
           <div className="mb-10">
             <h1 className="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/70">
@@ -580,7 +564,6 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-        </main>
       </div>
 
       <OnboardingModal 
@@ -590,6 +573,6 @@ export default function DashboardPage() {
           fetchLeads()
         }} 
       />
-    </div>
+    </>
   )
 }

@@ -1,12 +1,11 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
-import { Navbar } from "@/components/landing/navbar"
 import { ProductDetails } from "@/components/dashboard/ProductDetails"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { EditProductModal } from "@/components/dashboard/EditProductModal"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit3, Trash2 } from "lucide-react"
+import { ArrowLeft, Edit3, Trash2, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 
@@ -24,7 +23,7 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
   const params = useParams()
   const productId = params.id as string
@@ -34,12 +33,10 @@ export default function ProductDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login")
-    } else if (user && productId) {
+    if (user && productId) {
       fetchProduct()
     }
-  }, [user, authLoading, router, productId])
+  }, [user, productId])
 
   const fetchProduct = async () => {
     try {
@@ -74,107 +71,91 @@ export default function ProductDetailPage() {
     }
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-muted-foreground">Loading...</p>
-          </div>
-        </main>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-12 max-w-7xl">
-          <div className="text-center">
-            <p className="text-muted-foreground">Product not found</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => router.push("/dashboard/products")}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Products
-            </Button>
-          </div>
-        </main>
+      <div className="flex flex-col items-center justify-center space-y-4 h-64">
+        <p className="text-muted-foreground font-bold">Product not found</p>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/dashboard/products")}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Products
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="space-y-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <button 
+          onClick={() => router.push("/dashboard/products")}
+          className="hover:text-primary transition-colors flex items-center gap-1 font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" /> Products
+        </button>
+        <span className="opacity-30">/</span>
+        <span className="text-foreground font-bold tracking-tight truncate max-w-[200px]">{product.name}</span>
+      </div>
 
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-          <button 
-            onClick={() => router.push("/dashboard/products")}
-            className="hover:text-primary transition-colors flex items-center gap-1"
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">{product.name}</h1>
+          <div className="text-sm mt-1.5 flex items-center gap-2">
+            {product.isActive ? (
+              <span className="flex items-center gap-1.5 text-green-500 font-bold uppercase tracking-wider text-[10px]">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                In-flight scanning active
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-[10px]">
+                <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></span>
+                Scanning standby
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            className="font-bold gap-2 rounded-xl"
+            onClick={() => setIsEditModalOpen(true)}
           >
-            <ArrowLeft className="w-4 h-4" /> Products
-          </button>
-          <span>/</span>
-          <span className="text-foreground truncate max-w-[200px]">{product.name}</span>
+            <Edit3 className="w-4 h-4" /> Edit Configuration
+          </Button>
+          <Button
+            variant="destructive"
+            className="font-bold gap-2 rounded-xl"
+            onClick={handleDelete}
+          >
+            <Trash2 className="w-4 h-4" /> Purge Product
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="grid lg:grid-cols-2 gap-10">
+        {/* Left: Product Details */}
+        <div className="space-y-6">
+          <ProductDetails product={product} />
         </div>
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{product.name}</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {product.isActive ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Scanning active
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-muted-foreground rounded-full"></span>
-                  Scanning paused
-                </span>
-              )}
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditModalOpen(true)}
-            >
-              <Edit3 className="w-4 h-4 mr-2" /> Edit
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> Delete
-            </Button>
-          </div>
+        {/* Right: Leads */}
+        <div className="space-y-6">
+          <ProductLeads productId={productId} />
         </div>
-
-        {/* Content */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Product Details */}
-          <div>
-            <ProductDetails product={product} />
-          </div>
-
-          {/* Right: Leads */}
-          <div>
-            <ProductLeads productId={productId} />
-          </div>
-        </div>
-      </main>
+      </div>
 
       {/* Edit Modal */}
       <EditProductModal
