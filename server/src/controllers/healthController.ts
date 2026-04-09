@@ -1,17 +1,30 @@
 import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
+import { scraperQueue } from '../lib/queue.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import logger from '../lib/logger.js';
 
 export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
   const dbHealth = await db.healthCheck();
+  
+  let redisHealth = false;
+  try {
+    const client = await (scraperQueue as any).client;
+    const ping = await client.ping();
+    redisHealth = ping === 'PONG';
+  } catch (err) {
+    logger.error({ err }, 'Redis health check failed');
+  }
+
   const uptime = process.uptime();
   const memoryUsage = process.memoryUsage();
   
   const health = {
-    status: dbHealth ? 'healthy' : 'unhealthy',
+    status: (dbHealth && redisHealth) ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
     uptime: `${Math.floor(uptime)} seconds`,
     database: dbHealth ? 'connected' : 'disconnected',
+    redis: redisHealth ? 'connected' : 'disconnected',
     memory: {
       used: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
       total: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
@@ -20,7 +33,7 @@ export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
     node: process.version,
   };
 
-  res.status(dbHealth ? 200 : 503).json({
+  res.status((dbHealth && redisHealth) ? 200 : 503).json({
     success: true,
     data: health,
     requestId: req.requestId,

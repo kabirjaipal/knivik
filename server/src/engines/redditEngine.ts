@@ -1,6 +1,6 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
-import axios from 'axios';
+import httpClient from '../lib/httpClient.js';
 import * as cheerio from 'cheerio';
 import * as UserAgent from 'user-agents';
 import logger from '../lib/logger.js';
@@ -48,7 +48,7 @@ export class RedditEngine extends BaseScraperEngine {
 
   private async scrapeRedditPage(url: string): Promise<RedditPost[]> {
     try {
-      const response = await axios.get(url, {
+      const response = await httpClient.get(url, {
         headers: {
           'User-Agent': this.getRandomUserAgent(),
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -57,56 +57,57 @@ export class RedditEngine extends BaseScraperEngine {
           'DNT': '1',
           'Connection': 'keep-alive',
           'Upgrade-Insecure-Requests': '1'
-        },
-        timeout: 15000
+        }
       });
 
       const $ = cheerio.load(response.data);
       const posts: RedditPost[] = [];
 
       // Reddit's current post structure (2026)
-      $('div[data-testid="post-container"]').each((index, element) => {
-        if (posts.length >= 25) return false; // Limit to 25 posts maximum
+      $('div[data-testid="post-container"], shreddit-post, .Post').each((index, element) => {
+        if (posts.length >= 25) return false; 
 
         try {
           const postEl = $(element);
           
-          // Extract title
-          const titleEl = postEl.find('h3[data-testid="post-content-title"] a, h3 a');
-          const title = titleEl.text().trim() || '';
-          const postUrl = titleEl.attr('href') || '';
+          // TITLE FALLBACKS
+          const titleEl = postEl.find('h3[data-testid="post-content-title"] a, h3 a, a[slot="title"], .title');
+          const title = titleEl.first().text().trim() || postEl.attr('post-title') || '';
+          
+          // URL FALLBACKS
+          let postUrl = titleEl.attr('href') || postEl.attr('permalink') || '';
+          if (!postUrl && postEl.find('a').length > 0) {
+            postUrl = postEl.find('a').first().attr('href') || '';
+          }
           
           // Full URL if relative
-          const fullUrl = postUrl.startsWith('http') ? postUrl : `https://www.reddit.com${postUrl}`;
+          const fullUrl = postUrl && !postUrl.startsWith('http') ? `https://www.reddit.com${postUrl}` : postUrl;
           
-          // Extract post ID from URL
+          // POST ID FALLBACKS
           const postIdMatch = postUrl.match(/\/comments\/([a-z0-9]+)\//);
-          const postId = postIdMatch ? postIdMatch[1] : postEl.attr('id') || `post_${index}`;
+          const postId = postIdMatch ? postIdMatch[1] : (postEl.attr('id') || postEl.attr('data-post-id') || `post_${index}`);
+          const finalPostId = postId?.replace('t3_', '') || `post_${index}`;
           
-          // Ensure postId is a string
-          const finalPostId = postId || `post_${index}`;
-          
-          // Extract content/text
-          const contentEl = postEl.find('div[data-testid="post-content"] p, div p');
+          // CONTENT FALLBACKS
+          const contentEl = postEl.find('div[data-testid="post-content"] p, div p, slot[name="text-body"] p, .post-text');
           const content = contentEl.first().text().trim() || title;
           
-          // Extract author
-          const authorEl = postEl.find('a[data-testid="post-author-link"]');
-          const author = authorEl.text().trim() || 'unknown';
+          // AUTHOR FALLBACKS
+          const authorEl = postEl.find('a[data-testid="post-author-link"], [slot="authorName"], .author');
+          const author = authorEl.first().text().trim() || postEl.attr('author') || 'unknown';
           
-          // Extract score
-          const scoreEl = postEl.find('div[data-testid="post-vote-score"]');
-          const scoreText = scoreEl.text().trim();
-          const score = parseInt(scoreText) || 0;
+          // SCORE FALLBACKS
+          const scoreEl = postEl.find('div[data-testid="post-vote-score"], [slot="score"], .score');
+          const scoreText = scoreEl.first().text().trim() || postEl.attr('score') || '0';
+          const score = parseInt(scoreText.replace(/[^0-9]/g, '')) || 0;
           
-          // Extract subreddit
-          const subredditEl = postEl.find('a[data-testid="subreddit-name"]');
-          const subreddit = subredditEl.text().trim() || 'unknown';
+          // SUBREDDIT FALLBACKS
+          const subredditEl = postEl.find('a[data-testid="subreddit-name"], [slot="subredditName"], .subreddit');
+          const subreddit = subredditEl.first().text().trim() || postEl.attr('subreddit-prefixed') || 'unknown';
           
-          // Extract timestamp
           const postedAt = new Date();
           
-          if (title && content) {
+          if ((title || content) && fullUrl) {
             posts.push({
               id: finalPostId,
               title,
@@ -120,11 +121,10 @@ export class RedditEngine extends BaseScraperEngine {
             });
           }
         } catch (error) {
-          // Skip malformed posts
-          return true; // continue to next element
+          return true;
         }
         
-        return true; // continue processing
+        return true;
       });
 
       return posts;

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-// import { Paddle } from '@paddle/paddle-node-sdk';
+import { Paddle, EventName } from '@paddle/paddle-node-sdk';
 import { db } from '../lib/db.js';
 import config from '../lib/config.js';
 import logger from '../lib/logger.js';
@@ -13,10 +13,9 @@ import { getPlanFromPriceId } from '../lib/plans.js';
 
 const router = Router();
 
-// Initialize Paddle
-// const _paddle = new Paddle(config.PADDLE_API_KEY || '', {
-//   environment: (config.PADDLE_ENVIRONMENT === 'production' ? 'production' : 'sandbox') as any,
-// });
+const paddle = new Paddle(config.PADDLE_API_KEY || '', {
+  environment: (config.PADDLE_ENVIRONMENT === 'production' ? 'production' : 'sandbox') as any,
+});
 
 /**
  * POST /api/webhooks/paddle
@@ -24,34 +23,33 @@ const router = Router();
  */
 router.post('/paddle', async (req, res, next) => {
   try {
-    // const _signature = req.headers['x-paddle-signature'] as string || '';
-    const eventType = req.body.event_type;
-    const payload = req.body.data;
+    const signature = req.headers['x-paddle-signature'] as string || '';
+    const rawBody = JSON.stringify(req.body); // Express.json() is used, but Paddle SDK might need raw body for verification if not handled by SDK
     
-    logger.info({ eventType }, 'Received Paddle webhook');
-
-    // Verify webhook secret in production
+    // In production, we MUST verify the signature
     if (config.PADDLE_WEBHOOK_SECRET) {
-      // In production, verify the signature
-      // For now, we trust the webhook from our middleware
-    }
-
-    switch (eventType) {
-      case 'subscription.created':
-      case 'subscription.updated':
-        await handleSubscriptionCreatedOrUpdated(payload);
-        break;
-
-      case 'subscription.canceled':
-        await handleSubscriptionCanceled(payload);
-        break;
-
-      case 'transaction.completed':
-        await handleTransactionCompleted(payload);
-        break;
-
-      default:
-        logger.info({ eventType }, 'Unhandled Paddle event type');
+      try {
+        const event = paddle.webhooks.unmarshal(rawBody, config.PADDLE_WEBHOOK_SECRET, signature);
+        if (!event) {
+          throw new Error('Invalid webhook signature');
+        }
+        
+        const eventType = event.eventType;
+        const payload = event.data;
+        
+        logger.info({ eventType }, 'Received verified Paddle webhook');
+        await processPaddleEvent(eventType as any, payload);
+      } catch (err) {
+        logger.error({ err, signature }, 'Paddle signature verification failed');
+        res.status(401).json({ success: false, error: 'Invalid signature' });
+        return;
+      }
+    } else {
+      // In development/test if secret is missing, skip verification (NOT recommended for prod)
+      const eventType = req.body.event_type;
+      const payload = req.body.data;
+      logger.warn({ eventType }, 'Processing UNVERIFIED Paddle webhook (PADDLE_WEBHOOK_SECRET missing)');
+      await processPaddleEvent(eventType, payload);
     }
 
     res.json({ success: true });
@@ -60,6 +58,26 @@ router.post('/paddle', async (req, res, next) => {
     next(error);
   }
 });
+
+async function processPaddleEvent(eventType: EventName, payload: any) {
+  switch (eventType) {
+    case 'subscription.created':
+    case 'subscription.updated':
+      await handleSubscriptionCreatedOrUpdated(payload);
+      break;
+
+    case 'subscription.canceled':
+      await handleSubscriptionCanceled(payload);
+      break;
+
+    case 'transaction.completed':
+      await handleTransactionCompleted(payload);
+      break;
+
+    default:
+      logger.info({ eventType }, 'Unhandled Paddle event type');
+  }
+}
 
 async function handleSubscriptionCreatedOrUpdated(payload: any) {
   const {

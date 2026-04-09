@@ -1,7 +1,7 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
 import { hackerNewsProtection } from '../utils/ipProtection.js';
-import axios from 'axios';
+import httpClient from '../lib/httpClient.js';
 import * as cheerio from 'cheerio';
 import * as UserAgent from 'user-agents';
 import logger from '../lib/logger.js';
@@ -45,12 +45,11 @@ export class HackerNewsEngine extends BaseScraperEngine {
 
   private async scrapeHNWithCheerio(): Promise<HNPost[]> {
     try {
-      const response = await axios.get('https://news.ycombinator.com', {
+      const response = await httpClient.get('https://news.ycombinator.com', {
         headers: {
           'User-Agent': this.getRandomUserAgent(),
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        },
-        timeout: 15000
+        }
       });
 
       const $ = cheerio.load(response.data);
