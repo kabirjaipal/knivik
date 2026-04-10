@@ -23,9 +23,14 @@ declare global {
     Paddle?: {
       Checkout: {
         open: (config: {
-          items: Array<{ priceId: string }>;
+          items: Array<{ priceId: string; quantity?: number }>;
           customer?: { email: string };
           customData?: Record<string, string>;
+          settings?: {
+            displayMode?: "overlay" | "inline";
+            theme?: "light" | "dark";
+            successUrl?: string;
+          };
           successCallback?: (data: any) => void;
           closeCallback?: () => void;
         }) => void;
