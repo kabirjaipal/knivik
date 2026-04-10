@@ -3,7 +3,8 @@ import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
-import rateLimit, { type Store as RateLimitStore } from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
+import type { Store as RateLimitStore } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import Redis from 'ioredis';
 import { db } from './lib/db.js';
@@ -46,7 +47,7 @@ app.disable('x-powered-by');
 app.set('trust proxy', config.TRUST_PROXY);
 
 // Security middleware
-app.use(helmet());
+app.use((helmet as any)());
 app.use(cors({
   origin: config.CORS_ORIGIN.split(',').map((origin: string) => origin.trim()),
   credentials: true,
