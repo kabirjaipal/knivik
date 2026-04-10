@@ -29,7 +29,7 @@ router.post('/paddle', async (req, res, next) => {
     // In production, we MUST verify the signature
     if (config.PADDLE_WEBHOOK_SECRET) {
       try {
-        const event = paddle.webhooks.unmarshal(rawBody, config.PADDLE_WEBHOOK_SECRET, signature);
+        const event = await paddle.webhooks.unmarshal(rawBody, config.PADDLE_WEBHOOK_SECRET, signature);
         if (!event) {
           throw new Error('Invalid webhook signature');
         }
