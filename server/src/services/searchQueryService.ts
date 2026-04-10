@@ -1,6 +1,6 @@
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
-import OpenAI from 'openai';
+import { OpenAI } from 'openai';
 import config from '../lib/config.js';
 import { logLlmUsage } from './aiService.js';
 

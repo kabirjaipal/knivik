@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { OpenAI } from 'openai';
 import config from '../lib/config.js';
 import { IntentLevel } from '@prisma/client';
 import logger from '../lib/logger.js';
