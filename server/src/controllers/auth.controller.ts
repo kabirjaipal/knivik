@@ -163,7 +163,7 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -195,7 +195,11 @@ export const logout = async (req: Request, res: Response) => {
       });
     }
 
-    res.clearCookie('token');
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     logger.error({ error }, 'Logout error');
@@ -444,7 +448,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 

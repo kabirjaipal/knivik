@@ -42,7 +42,11 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     });
 
     if (!session || session.expiresAt < new Date()) {
-      res.clearCookie('token');
+      res.clearCookie('token', {
+        httpOnly: true,
+        secure: config.NODE_ENV === 'production',
+        sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+      });
       res.status(401).json({ error: 'Unauthorized - Session expired or invalid' });
       return;
     }
