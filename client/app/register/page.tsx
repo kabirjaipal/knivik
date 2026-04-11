@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/auth-context"
 import { Radar, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,7 @@ import { PROJECT_NAME } from "@/lib/constants"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
@@ -19,6 +21,13 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard')
+    }
+  }, [user, authLoading, router])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
