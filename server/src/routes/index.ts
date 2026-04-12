@@ -8,8 +8,14 @@ import alertRoutes from './alert.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import adminRoutes from './admin.routes.js';
 import webhookRoutes from './webhook.routes.js';
+import { optionalAuth } from '../middleware/auth.middleware.js';
+import { smartCacheMiddleware } from '../middleware/smartCache.js';
 
 const router = Router();
+
+// "Clean as Fuck" Performance Engine
+router.use(optionalAuth);
+router.use(smartCacheMiddleware);
 
 router.use('/api/users', userRoutes);
 router.use('/api/auth', authRoutes);

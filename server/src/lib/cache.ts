@@ -55,11 +55,32 @@ class CacheClient {
   this.mem.set(key, value, { ttl: ttlMs });
   }
 
-  async del(key: string): Promise<void> {
-    if (this.redis) {
-      try { await (this.redis as unknown as { del: (k: string) => Promise<unknown> }).del(key); } catch { /* ignore */ }
+  async del(key: string) {
+    if (this.redis) { try { await (this.redis as any).del(key); } catch {} }
+    this.mem.delete(key);
+  }
+
+  // Smart Caching: Associate keys with tags for group invalidation
+  async setWithTags(key: string, value: CacheValue, tags: string[], ttl = config.CACHE_TTL_SECONDS) {
+    if (!this.enabled) return;
+    await this.set(key, value, ttl);
+    if (this.redis && tags.length > 0) {
+      try {
+        const pipe = this.redis.pipeline();
+        tags.forEach(t => { pipe.sadd(`tag:${t}`, key); pipe.expire(`tag:${t}`, ttl * 2); });
+        await pipe.exec();
+      } catch (err) { logger.warn({ err }, 'Tag index fail'); }
     }
-  this.mem.delete(key);
+  }
+
+  async invalidateTags(tags: string[]) {
+    if (!this.enabled || !this.redis) return;
+    try {
+      for (const t of tags) {
+        const keys = await this.redis.smembers(`tag:${t}`);
+        if (keys.length > 0) { await this.redis.del(...keys, `tag:${t}`); }
+      }
+    } catch (err) { logger.warn({ err }, 'Tag purge fail'); }
   }
 }
 

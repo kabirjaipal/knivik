@@ -68,3 +68,34 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
   }
   next();
 };
+
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.cookies?.['token'] || req.headers.authorization?.split(' ')[1];
+    if (!token) return next();
+
+    const session = await db.client.session.findUnique({
+      where: { sessionToken: token },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            role: true,
+            plan: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        }
+      }
+    });
+
+    if (session && session.expiresAt > new Date()) {
+      req.user = session.user as any;
+    }
+    next();
+  } catch (error) {
+    next();
+  }
+};
