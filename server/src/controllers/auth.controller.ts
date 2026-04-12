@@ -376,11 +376,24 @@ export const googleAuthUrl = (_req: Request, res: Response) => {
     return;
   }
 
-  const client = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, 'http://localhost:3001/api/auth/google/callback');
+  // Generate a cryptographically secure state for CSRF protection
+  const state = crypto.randomBytes(32).toString('hex');
+  
+  // Store state in a secure, short-lived cookie
+  res.cookie('oauth_state', state, {
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 15 * 60 * 1000, // 15 minutes
+    path: '/'
+  });
+
+  const client = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, config.GOOGLE_REDIRECT_URI);
   
   const authUrl = client.generateAuthUrl({
     access_type: 'offline',
-    scope: ['email', 'profile']
+    scope: ['email', 'profile'],
+    state: state // Pass state to Google
   });
   
   res.redirect(authUrl);
@@ -388,13 +401,31 @@ export const googleAuthUrl = (_req: Request, res: Response) => {
 
 export const googleCallback = async (req: Request, res: Response) => {
   const code = req.query?.['code'] as string;
+  const returnedState = req.query?.['state'] as string;
+  const storedState = req.cookies?.['oauth_state'];
+
+  // Clear state cookie immediately
+  res.clearCookie('oauth_state', {
+    httpOnly: true,
+    secure: config.NODE_ENV === 'production',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/'
+  });
+
+  // 1. Validate State (CSRF Protection)
+  if (!returnedState || !storedState || returnedState !== storedState) {
+    logger.warn('🚨 Potential CSRF attack detected in Google OAuth callback');
+    res.redirect(`${config.FRONTEND_URL}/login?error=Invalid+state+parameter`);
+    return;
+  }
+
   if (!code) {
     res.redirect(`${config.FRONTEND_URL}/login?error=Missing+Google+Auth+Code`);
     return;
   }
 
   try {
-    const client = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, 'http://localhost:3001/api/auth/google/callback');
+    const client = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, config.GOOGLE_REDIRECT_URI);
     const { tokens } = await client.getToken(code);
     const ticket = await client.verifyIdToken({
       idToken: tokens.id_token || "",

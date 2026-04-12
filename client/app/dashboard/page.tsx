@@ -11,7 +11,6 @@ import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { io, Socket } from "socket.io-client"
 import React, { memo } from "react"
-import { OnboardingModal } from "@/components/dashboard/OnboardingModal"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -323,7 +322,6 @@ export default function DashboardPage() {
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
   const router = useRouter()
   const [socket, setSocket] = useState<Socket | null>(null)
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, estimatedCost: number, requestCount: number } } | null>(null)
 
   const fetchLlmUsage = useCallback(async () => {
@@ -333,15 +331,6 @@ export default function DashboardPage() {
       const data = await res.json()
       if (data.success) setLlmUsage(data.data)
     } catch (e) { console.error('Error fetching LLM usage:', e) }
-  }, [])
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, { credentials: 'include' })
-      if (!res.ok) throw new Error('Failed to fetch products')
-      const data = await res.json()
-      if (data.products && data.products.length === 0) setShowOnboarding(true)
-    } catch (e) { console.error('Error fetching products:', e) }
   }, [])
 
   const fetchLeads = useCallback(async () => {
@@ -366,7 +355,6 @@ export default function DashboardPage() {
     if (!user) return
 
     fetchLeads()
-    fetchProducts()
     fetchLlmUsage()
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin
@@ -379,7 +367,7 @@ export default function DashboardPage() {
 
     setSocket(newSocket)
     return () => { newSocket.disconnect() }
-  }, [user, fetchLlmUsage, fetchLeads, fetchProducts])
+  }, [user, fetchLlmUsage, fetchLeads])
 
   const handleDraftReply = async (leadId: string) => {
     setDraftingLeadId(leadId)
@@ -456,11 +444,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <OnboardingModal isOpen={showOnboarding} onComplete={() => {
-        setShowOnboarding(false)
-        fetchProducts()
-      }} />
-      
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05),transparent_70%)] blur-[80px]" />
       </div>
@@ -566,13 +549,6 @@ export default function DashboardPage() {
           </Card>
       </div>
 
-      <OnboardingModal 
-        isOpen={showOnboarding} 
-        onComplete={() => {
-          setShowOnboarding(false)
-          fetchLeads()
-        }} 
-      />
     </>
   )
 }

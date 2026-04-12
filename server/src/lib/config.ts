@@ -48,6 +48,7 @@ const configSchema = z.object({
   // Add:
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().default('http://localhost:3001/api/auth/google/callback'),
   // OpenAI / Groq controls
   GROQ_API_KEY: z.string().min(1),
   GROQ_BASE_URL: z.string().default('https://api.groq.com/openai/v1'),

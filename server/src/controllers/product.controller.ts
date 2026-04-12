@@ -168,6 +168,19 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       }
     }
 
+    // Deduplicate sources to prevent P2002 unique constraint error
+    // Filter narrows optional Zod type to required type for the Map
+    const uniqueSourcesMap = new Map<string, { platform: Platform; identifier: string }>();
+    data.sources
+      .filter((s): s is { platform: Platform; identifier: string } => !!s.platform && !!s.identifier)
+      .forEach(s => {
+        const key = `${s.platform}:${s.identifier}`;
+        if (!uniqueSourcesMap.has(key)) {
+          uniqueSourcesMap.set(key, s);
+        }
+      });
+    data.sources = Array.from(uniqueSourcesMap.values());
+
     const product = await db.client.product.create({
       data: {
         userId,
@@ -242,6 +255,19 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
       // Strip out the custom persona if they are on the free plan, fail silently
       delete data.aiConfig['customPersona'];
     }
+
+    // Deduplicate sources to prevent P2002 unique constraint error
+    // Filter narrows optional Zod type to required type for the Map
+    const uniqueSourcesMap = new Map<string, { platform: Platform; identifier: string }>();
+    data.sources
+      .filter((s): s is { platform: Platform; identifier: string } => !!s.platform && !!s.identifier)
+      .forEach(s => {
+        const key = `${s.platform}:${s.identifier}`;
+        if (!uniqueSourcesMap.has(key)) {
+          uniqueSourcesMap.set(key, s);
+        }
+      });
+    data.sources = Array.from(uniqueSourcesMap.values());
 
     // We'll use a transaction to cleanly overwrite the relations
     const updated = await db.client.$transaction(async (tx) => {
