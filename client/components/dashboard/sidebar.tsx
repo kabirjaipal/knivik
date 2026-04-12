@@ -74,12 +74,12 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur-sm">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+      <div className="lg:hidden sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/95 px-6 backdrop-blur-xl shadow-sm">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
             <Radar className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-bold tracking-tight text-lg">{PROJECT_NAME}</span>
+          <span className="font-black tracking-tighter text-xl text-foreground">{PROJECT_NAME}</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={toggleMobile}>
           <Menu className="h-6 w-6" />
@@ -103,12 +103,12 @@ export function Sidebar({ className }: SidebarProps) {
       )}>
         {/* Logo Container */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] shrink-0">
               <Radar className="h-5 w-5 text-primary-foreground" />
             </div>
             {!isCollapsed && (
-              <span className="font-bold tracking-tight text-lg truncate animate-in fade-in duration-300">
+              <span className="font-black tracking-tighter text-xl text-foreground truncate animate-in fade-in duration-300">
                 {PROJECT_NAME}
               </span>
             )}
