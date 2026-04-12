@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation"
 import { PROJECT_NAME } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
@@ -46,22 +46,22 @@ export function Sidebar({ className }: SidebarProps) {
 
   const isAtAdmin = pathname.startsWith('/admin')
 
-  const userLinks: NavLink[] = [
+  const userLinks: NavLink[] = useMemo(() => [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/products", label: "Products", icon: Settings },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
     { href: "/dashboard/settings", label: "Settings", icon: User },
-  ]
+  ], [])
 
-  const adminLinks: NavLink[] = [
+  const adminLinks: NavLink[] = useMemo(() => [
     { href: "/admin", label: "System Overview", icon: Radar },
     { href: "/admin/users", label: "User Directory", icon: Users },
     { href: "/admin/usage", label: "LLM Usage", icon: Activity },
     { href: "/dashboard", label: "Return to App", icon: Radar, accent: true },
-  ]
+  ], [])
 
-  const links = isAtAdmin ? adminLinks : userLinks
+  const links = useMemo(() => isAtAdmin ? adminLinks : userLinks, [isAtAdmin, adminLinks, userLinks])
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
   const toggleMobile = () => setIsMobileOpen(!isMobileOpen)

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface User {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/auth/me`, { credentials: 'include' })
@@ -48,13 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchUser()
-  }, [])
+  }, [fetchUser])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       await fetch(`${apiUrl}/auth/logout`, { method: 'POST', credentials: 'include' })
@@ -64,10 +64,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error(e)
     }
-  }
+  }, [router]);
+
+  const value = useMemo(() => ({
+    user,
+    loading,
+    logout,
+    refresh: fetchUser
+  }), [user, loading, logout, fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refresh: fetchUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
