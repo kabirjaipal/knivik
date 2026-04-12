@@ -77,7 +77,7 @@ export const register = async (req: Request, res: Response) => {
     });
 
     // Send Verification Email
-    const verifyUrl = `http://localhost:3000/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+    const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; max-w-[600px] margin: auto; padding: 20px;">
         <h2 style="color: #0f172a;">Welcome to ${config.PROJECT_NAME}!</h2>
@@ -164,7 +164,8 @@ export const login = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
       sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/'
     });
 
     res.status(200).json({
@@ -199,6 +200,7 @@ export const logout = async (req: Request, res: Response) => {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
       sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
     });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
@@ -235,7 +237,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
 
     // Send the email via Nodemailer
-    const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
+    const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
     
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; max-w-[600px] margin: auto; padding: 20px;">
@@ -387,7 +389,7 @@ export const googleAuthUrl = (_req: Request, res: Response) => {
 export const googleCallback = async (req: Request, res: Response) => {
   const code = req.query?.['code'] as string;
   if (!code) {
-    res.redirect('http://localhost:3000/login?error=Missing+Google+Auth+Code');
+    res.redirect(`${config.FRONTEND_URL}/login?error=Missing+Google+Auth+Code`);
     return;
   }
 
@@ -453,10 +455,10 @@ export const googleCallback = async (req: Request, res: Response) => {
     });
 
     // 4. Return them straight to the glorious dashboard
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(`${config.FRONTEND_URL}/dashboard`);
 
   } catch (error) {
     logger.error({ error }, 'Google OAuth Error');
-    res.redirect('http://localhost:3000/login?error=Google+Authentication+Failed');
+    res.redirect(`${config.FRONTEND_URL}/login?error=Google+Authentication+Failed`);
   }
 };

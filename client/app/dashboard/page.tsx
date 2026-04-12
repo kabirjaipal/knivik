@@ -369,7 +369,7 @@ export default function DashboardPage() {
     fetchProducts()
     fetchLlmUsage()
 
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || ''
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin
     const newSocket = io(socketUrl, { withCredentials: true, transports: ['websocket', 'polling'] })
 
     newSocket.on('connect', () => newSocket.emit('join-user-room', user.id))
