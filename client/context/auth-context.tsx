@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 interface User {
   id: string
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
 
   const fetchUser = useCallback(async () => {
     try {
@@ -36,8 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch(`${apiUrl}/auth/me`, { credentials: 'include' })
       if (!res.ok) {
         if (res.status === 401) {
-           // Purge invalid/dead cookies natively so Next.js middleware doesn't trap the user in a redirect loop
-           await fetch(`${apiUrl}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+           // Skip clearing if we are already on auth pages
+           const isAuthPage = pathname === '/login' || pathname === '/register';
+           if (!isAuthPage) {
+             await fetch(`${apiUrl}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+           }
         }
         throw new Error('Not logged in')
       }

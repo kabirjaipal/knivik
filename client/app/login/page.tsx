@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
-import { Radar, ArrowLeft, Loader2 } from "lucide-react"
+import { Radar, ArrowLeft, Loader2, KeyRound } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { PROJECT_NAME } from "@/lib/constants"
 
 export default function LoginPage() {
@@ -16,7 +17,6 @@ export default function LoginPage() {
   const { user, loading: authLoading, refresh } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -38,16 +38,12 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include" // Important: Tells the browser to accept the backend's HTTP-Only Session Cookie
+        credentials: "include"
       })
 
       const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to login")
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to login")
-      }
-
-      // Success - Refresh AuthContext UI State, then Redirect user to dashboard or intended page
       await refresh()
       const searchParams = new URLSearchParams(window.location.search);
       const redirectTo = searchParams.get("redirect") || "/dashboard";
@@ -60,140 +56,110 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left Panel */}
-      <div className="hidden lg:flex flex-col justify-between bg-primary p-12 text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_bottom_left,var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none"></div>
-        
-        <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm font-medium mb-12">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to home
-          </Link>
-          <div className="flex items-center space-x-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-              <Radar className="h-6 w-6" />
-            </div>
-            <span className="font-extrabold text-2xl tracking-tight">{PROJECT_NAME}</span>
-          </div>
-          <h1 className="text-4xl font-extrabold leading-tight mb-4">
-            Welcome back to your ultimate growth engine.
-          </h1>
-          <p className="text-primary-foreground/80 text-lg max-w-md">
-            Your automated pipeline is ready. Log in to check your latest high-intent leads and close some deals today.
-          </p>
-        </div>
-
-        <div className="relative z-10 mt-auto">
-          <div className="space-y-6">
-            <div className="flex gap-4">
-              <div className="flex-none w-1 h-auto bg-white/20 rounded-full" />
-              <div>
-                <p className="font-bold text-white mb-1">Real-time Intent Detection</p>
-                <p className="text-sm text-primary-foreground/70">Using Llama 3.1 to filter the noise and find the signals that matter.</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-none w-1 h-auto bg-white/20 rounded-full" />
-              <div>
-                <p className="font-bold text-white mb-1">Multi-Channel Scraper</p>
-                <p className="text-sm text-primary-foreground/70">Reddit, HackerNews, and more consolidated into one dashboard.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      {/* Premium Background Glow */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.07),transparent_70%)] blur-[120px]" />
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex flex-col items-center justify-center p-8 lg:p-16 bg-background">
-        <Link href="/" className="absolute top-8 left-8 lg:hidden inline-flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to home
-        </Link>
-        
-        <div className="w-full max-w-[400px] space-y-8">
-          <div className="space-y-3 text-center sm:text-left">
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Sign in</h1>
-            <p className="text-muted-foreground text-base">
-              Enter your email and password to access your dashboard.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-3">
-              <Label htmlFor="email" className="text-foreground font-semibold">Email address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com" 
-                required 
-                disabled={loading}
-                className="h-12 px-4 bg-background border-border/60 focus:ring-primary focus:border-primary transition-all"
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="password" className="text-foreground font-semibold">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-                disabled={loading}
-                className="h-12 px-4 bg-background border-border/60 focus:ring-primary focus:border-primary transition-all"
-              />
-            </div>
-
-            <div className="flex justify-end -mt-3">
-              <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                Forgot password?
+      <div className="relative z-10 w-full max-w-[400px] animate-in fade-in zoom-in-95 duration-500">
+        <Card className="border-border/40 shadow-2xl bg-card/80 backdrop-blur-xl rounded-2xl overflow-hidden">
+          <CardHeader className="space-y-4 pb-4 pt-6 text-center">
+            {/* Logo Section */}
+            <div className="flex flex-col items-center">
+              <Link href="/" className="group flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+                  <Radar className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
               </Link>
             </div>
-
-            {error && (
-              <div className="text-sm font-medium text-destructive mt-2 bg-destructive/10 p-3 rounded-md border border-destructive/20">
-                {error}
-              </div>
-            )}
-            
-            <Button type="submit" disabled={loading} className="w-full h-12 text-base font-semibold shadow-sm mt-2">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-            
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/80" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase font-semibold">
-                <span className="bg-background px-3 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-black tracking-tight">Welcome back</CardTitle>
+              <CardDescription className="text-sm">
+                Enter your credentials to access your dashboard.
+              </CardDescription>
             </div>
+          </CardHeader>
+          
+          <CardContent className="pb-4">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com" 
+                  required 
+                  disabled={loading}
+                  className="h-11 bg-background/50 border-border/60 focus:ring-primary focus:border-primary rounded-xl transition-all"
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between ml-1">
+                  <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Password</Label>
+                  <Link href="/forgot-password" title="Recover Password"
+                    className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">
+                    Forgot?
+                  </Link>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                  disabled={loading}
+                  className="h-11 bg-background/50 border-border/60 focus:ring-primary focus:border-primary rounded-xl transition-all"
+                />
+              </div>
 
-            <div className="flex flex-col gap-4">
+              {error && (
+                <div className="text-xs font-bold text-destructive px-3 py-2 bg-destructive/10 rounded-xl border border-destructive/20">
+                  {error}
+                </div>
+              )}
+              
+              <Button type="submit" disabled={loading} className="w-full h-11 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all rounded-xl">
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+              
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
+                <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+                  <span className="bg-card px-2 text-muted-foreground/60">Or</span>
+                </div>
+              </div>
+
               <Button 
                 variant="outline" 
                 type="button" 
-                className="w-full h-12 font-semibold border-border/80 hover:bg-muted/40 transition-colors"
+                disabled={loading}
+                className="w-full h-11 text-xs font-bold border-border/60 hover:bg-muted/50 rounded-xl transition-all active:scale-95"
                 onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
               >
                 Continue with Google
               </Button>
-            </div>
-          </form>
-
-          <p className="text-sm text-muted-foreground text-center pt-4">
-            Don't have an account?{" "}
-            <Link href="/register" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-              Sign up for free
+            </form>
+          </CardContent>
+          
+          <CardFooter className="pb-6 pt-5 flex flex-col items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              New here?{" "}
+              <Link href="/register" className="font-bold text-primary hover:text-primary/80 transition-colors">
+                Create account
+              </Link>
+            </p>
+            <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors text-xs font-black uppercase tracking-widest opacity-60">
+              <ArrowLeft className="mr-1 h-3 w-3" />
+              Home
             </Link>
-          </p>
-        </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )
