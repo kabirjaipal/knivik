@@ -7,11 +7,11 @@ export function Footer() {
     <footer className="border-t border-border/40 bg-background py-10">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-              <Radar className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]">
+              <Radar className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-bold tracking-tight text-foreground">{PROJECT_NAME}</span>
+            <span className="font-black tracking-tighter text-lg text-foreground">{PROJECT_NAME}</span>
           </div>
           
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground font-medium">

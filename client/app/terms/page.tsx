@@ -26,7 +26,7 @@ export default function TermsPage() {
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">2. Description of Service</h2>
               <p>
-                {PROJECT_NAME} provides AI-driven social listening and lead generation tools. We scan public platforms (like Reddit and HackerNews) to identify potential sales opportunities based on your target keywords.
+                {PROJECT_NAME} provides AI-driven social listening and lead generation tools. We scan the public web (including community forums and social platforms) to identify potential sales opportunities based on your target keywords.
               </p>
             </section>
 

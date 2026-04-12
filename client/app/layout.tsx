@@ -22,7 +22,7 @@ import { PROJECT_NAME, PROJECT_DESCRIPTION } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: `${PROJECT_NAME} | ${PROJECT_DESCRIPTION}`,
-  description: "Stop manually parsing Reddit and HackerNews. We scan millions of social posts daily, instantly scoring buying intent and delivering hot leads straight to your CRM.",
+  description: "Find high-intent buyers across the entire internet. We scan millions of public posts daily, instantly scoring buying intent and delivering hot leads straight to your dashboard.",
 };
 
 export default function RootLayout({

@@ -21,7 +21,7 @@ interface ProductData {
 /**
  * AI-Powered Search Query Generation Service
  * 
- * This service uses AI to generate smart, contextual search queries for Reddit/HN
+ * This service uses AI to generate smart, contextual search queries across the public web
  * based on product data (name, description, keywords, competitors).
  * 
  * Queries are generated once when product is created/updated and stored in DB.
@@ -124,7 +124,7 @@ export class SearchQueryService {
     const keywords = product.keywords.map(k => k.keyword).join(', ');
     const competitors = product.competitors.map(c => c.name).join(', ');
     
-    const prompt = `You are a B2B lead generation expert specializing in finding high-intent prospects on Reddit and HackerNews.
+    const prompt = `You are a B2B lead generation expert specializing in finding high-intent prospects across online forums and social platforms.
 
 PRODUCT INFORMATION:
 Name: ${product.name}
@@ -144,7 +144,7 @@ QUERY STRATEGY:
 
 REQUIREMENTS:
 - Each query should be 2-6 words
-- Focus on Reddit-style language (casual, problem-focused)
+- Focus on forum-style language (casual, problem-focused)
 - Include specific competitor names when relevant
 - Mix of explicit ("zendesk alternative") and implicit ("automate support")
 - Prioritize high-buying-intent phrases over generic keywords

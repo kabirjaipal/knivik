@@ -12,14 +12,14 @@ export function Navbar() {
   const { user, loading } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
+    <header className="fixed top-0 z-50 w-full border-b border-border/40 bg-background/60 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
               <Radar className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-bold tracking-tight text-lg">{PROJECT_NAME}</span>
+            <span className="font-black tracking-tighter text-xl text-foreground">{PROJECT_NAME}</span>
           </Link>
         </div>
         
@@ -39,10 +39,12 @@ export function Navbar() {
           ) : !loading && !user ? (
             <div className="flex items-center gap-3">
               <Link href="/login" className="hidden sm:inline-block">
-                <Button variant="ghost" className="text-sm font-bold">Log in</Button>
+                <Button variant="ghost" className="text-sm font-black uppercase tracking-widest\">Log in</Button>
               </Link>
               <Link href="/register">
-                <Button size="sm" className="font-bold shadow-lg shadow-primary/20 h-9">Get Started</Button>
+                <Button size="sm" className="font-black uppercase tracking-widest shadow-lg shadow-primary/20 h-9 px-6 rounded-xl text-[10px]">
+                  Get Started
+                </Button>
               </Link>
             </div>
           ) : (
