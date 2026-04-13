@@ -48,4 +48,13 @@ export const enrichmentQueue = new Queue(ENRICHMENT_QUEUE_NAME, {
   },
 });
 
+// CRITICAL: BullMQ Queue objects maintain their own Redis connection. Without an
+// 'error' listener, connection failures (e.g. Upstash quota exceeded) become
+// unhandled rejections that crash the Node.js process.
+[scraperQueue, alertQueue, enrichmentQueue].forEach(queue => {
+  queue.on('error', (err) => {
+    logger.error({ err, queueName: queue.name }, 'BullMQ queue connection error');
+  });
+});
+
 logger.info('🚀 BullMQ Queues initialized');

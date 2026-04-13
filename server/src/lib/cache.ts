@@ -11,17 +11,28 @@ class CacheClient {
   private enabled = config.ENABLE_CACHE;
 
   constructor() {
-  if (this.enabled && config.REDIS_URL) {
+    if (this.enabled && config.REDIS_URL) {
       try {
         this.redis = new Redis(config.REDIS_URL, {
           lazyConnect: true,
           maxRetriesPerRequest: 1,
-          enableAutoPipelining: true,
+          // Do NOT enable auto-pipelining on quota-limited providers (e.g. Upstash free tier).
+          // It batches commands transparently and rapidly inflates the monthly request count.
+          enableAutoPipelining: false,
+          // Stop retrying immediately when the server returns a hard quota error.
+          reconnectOnError: (err) => {
+            const isQuotaError = err.message.includes('max requests limit exceeded');
+            if (isQuotaError) {
+              logger.warn({ err }, 'Redis quota exceeded; disabling Redis and falling back to memory cache');
+              return false; // Do not reconnect
+            }
+            return true;
+          },
         });
-    this.redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis cache error'));
+        this.redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis cache error'));
       } catch (err) {
         logger.warn({ err }, 'Redis init failed; using memory cache');
-    this.redis = undefined;
+        this.redis = undefined;
       }
     }
   }

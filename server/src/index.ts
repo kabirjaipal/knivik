@@ -60,11 +60,12 @@ const createRateLimiter = () => {
       const redis = new Redis(config.REDIS_URL, {
         lazyConnect: true,
         maxRetriesPerRequest: 1,
-        enableAutoPipelining: true,
+        // Auto-pipelining inflates request count on quota-limited providers.
+        enableAutoPipelining: false,
       });
-      // Connect asynchronously; if it fails, fallback will be used
-      redis.on('error', (err) => logger.warn({ err }, 'Redis error'));
-  return rateLimit({
+      // Swallow connection errors — rate limiter falls back to memory automatically.
+      redis.on('error', (err) => logger.warn({ err }, 'Rate-limit Redis error'));
+      return rateLimit({
         windowMs: config.RATE_LIMIT_WINDOW_MS,
         max: config.RATE_LIMIT_MAX_REQUESTS,
         standardHeaders: true,
@@ -77,11 +78,11 @@ const createRateLimiter = () => {
             message: 'Too many requests from this IP, please try again later.',
           },
         },
-  store: new RedisStore({
+        store: new RedisStore({
           // @ts-ignore type mismatch from store interface
           sendCommand: (...args: string[]) => redis.call(...args as [string, ...string[]]) as unknown as Promise<unknown>,
           prefix: 'rate-limit:',
-  }) as unknown as RateLimitStore,
+        }) as unknown as RateLimitStore,
       });
     }
   } catch (err) {

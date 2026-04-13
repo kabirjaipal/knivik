@@ -89,6 +89,11 @@ const enrichmentWorker = new Worker(
 
 // Graceful listener error handling
 [scraperWorker, alertWorker, enrichmentWorker].forEach(worker => {
+  // CRITICAL: Without an 'error' listener, Redis auth failures from a quota-exceeded
+  // Upstash instance emit an unhandledRejection that kills the Node.js process.
+  worker.on('error', (err) => {
+    logger.error({ err, workerName: worker.name }, 'BullMQ worker connection error');
+  });
   worker.on('failed', (job, err) => {
     logger.error({ jobId: job?.id, err, queueName: worker.name }, 'Job failed');
   });
