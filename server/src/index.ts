@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import type { Store as RateLimitStore } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { db } from './lib/db.js';
 import config from './lib/config.js';
 import logger from './lib/logger.js';

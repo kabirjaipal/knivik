@@ -1,6 +1,6 @@
 import config from './config.js';
 import logger from './logger.js';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { LRUCache } from 'lru-cache';
 
 type CacheValue = unknown;
@@ -28,10 +28,9 @@ class CacheClient {
 
   async get<T = unknown>(key: string): Promise<T | undefined> {
     if (!this.enabled) return undefined;
-  if (this.redis) {
+    if (this.redis) {
       try {
-    // @ts-ignore ambient types are minimal
-    const raw = await this.redis.get(key);
+        const raw = await this.redis.get(key);
         return raw ? (JSON.parse(raw) as T) : undefined;
       } catch {
         // fall through to memory
@@ -43,20 +42,23 @@ class CacheClient {
   async set(key: string, value: CacheValue, ttlSeconds = config.CACHE_TTL_SECONDS): Promise<void> {
     if (!this.enabled) return;
     const ttlMs = ttlSeconds * 1000;
-  if (this.redis) {
+    if (this.redis) {
       try {
-    // @ts-ignore ambient types are minimal
-    await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+        await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
         return;
       } catch {
         // fall back
       }
     }
-  this.mem.set(key, value, { ttl: ttlMs });
+    this.mem.set(key, value, { ttl: ttlMs });
   }
 
   async del(key: string) {
-    if (this.redis) { try { await (this.redis as any).del(key); } catch {} }
+    if (this.redis) {
+      try {
+        await this.redis.del(key);
+      } catch {}
+    }
     this.mem.delete(key);
   }
 
