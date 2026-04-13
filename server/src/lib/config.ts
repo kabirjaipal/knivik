@@ -30,8 +30,7 @@ const configSchema = z.object({
   WORKER_COUNT: z.coerce.number().default(os.cpus().length),
   TRUST_PROXY: envBool(true),
   REQUEST_BODY_LIMIT: z.string().default('1mb'),
-  // Rate limit store (memory or redis)
-  RATE_LIMIT_STORE: z.enum(['memory', 'redis']).default('memory'),
+  // Redis (optional — when absent, caching uses LRU memory and queues run in-process)
   REDIS_URL: z.string().optional(),
   // DB request logging controls
   LOG_REQUESTS_TO_DB: envBool(false),
@@ -60,7 +59,6 @@ const configSchema = z.object({
   PROJECT_NAME: z.string().default('Knivik'),
   // Queue configuration
   ENABLE_QUEUE: envBool(true),
-  QUEUE_REDIS_URL: z.string().optional(),
   SCRAPER_CONCURRENCY: z.coerce.number().default(5),
   // Paddle configuration
   PADDLE_API_KEY: z.string().optional(),

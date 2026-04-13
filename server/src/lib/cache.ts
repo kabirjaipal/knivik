@@ -8,34 +8,70 @@ type CacheValue = unknown;
 class CacheClient {
   private redis: Redis | undefined;
   private mem = new LRUCache<string, CacheValue>({ max: 5000, ttl: config.CACHE_TTL_SECONDS * 1000 });
-  private enabled = config.ENABLE_CACHE;
+  private readonly enabled = config.ENABLE_CACHE;
+  /** True once Redis has been confirmed unreachable and we've emitted the warning. */
+  private redisDegraded = false;
 
   constructor() {
-    if (this.enabled && config.REDIS_URL) {
-      try {
-        this.redis = new Redis(config.REDIS_URL, {
-          lazyConnect: true,
-          maxRetriesPerRequest: 1,
-          // Do NOT enable auto-pipelining on quota-limited providers (e.g. Upstash free tier).
-          // It batches commands transparently and rapidly inflates the monthly request count.
-          enableAutoPipelining: false,
-          // Stop retrying immediately when the server returns a hard quota error.
-          reconnectOnError: (err) => {
-            const isQuotaError = err.message.includes('max requests limit exceeded');
-            if (isQuotaError) {
-              logger.warn({ err }, 'Redis quota exceeded; disabling Redis and falling back to memory cache');
-              return false; // Do not reconnect
-            }
-            return true;
-          },
-        });
-        this.redis.on('error', (err: unknown) => logger.warn({ err }, 'Redis cache error'));
-      } catch (err) {
-        logger.warn({ err }, 'Redis init failed; using memory cache');
-        this.redis = undefined;
-      }
+    if (!this.enabled) {
+      logger.info('Cache disabled (ENABLE_CACHE=false). Skipping initialisation.');
+      return;
+    }
+
+    if (!config.REDIS_URL) {
+      logger.info('No REDIS_URL provided. Cache is running in memory-only mode (LRU).');
+      return;
+    }
+
+    try {
+      this.redis = new Redis(config.REDIS_URL, {
+        lazyConnect: true,
+        maxRetriesPerRequest: 1,
+        // Auto-pipelining inflates request counts on quota-limited providers (e.g. Upstash free tier).
+        enableAutoPipelining: false,
+        reconnectOnError: (err) => {
+          const isQuotaError = err.message.includes('max requests limit exceeded');
+          if (isQuotaError) {
+            this.markRedisDegraded('Redis quota exceeded; falling back to in-memory cache.', err);
+            return false; // Do not reconnect
+          }
+          return true;
+        },
+      });
+
+      this.redis.on('error', (err: unknown) => {
+        // Only emit the degraded warning once to avoid log spam.
+        if (!this.redisDegraded) {
+          this.markRedisDegraded('Redis connection error; falling back to in-memory cache.', err);
+        }
+      });
+
+      this.redis.on('connect', () => {
+        logger.info('✅ Redis cache connected.');
+      });
+    } catch (err) {
+      this.markRedisDegraded('Redis initialisation failed; running in memory-only cache mode.', err);
+      this.redis = undefined;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  private markRedisDegraded(reason: string, err?: unknown): void {
+    this.redisDegraded = true;
+    // Emit a prominent console message so it is visible even in non-pretty log modes.
+    console.error(`\n❌ [CACHE] ${reason}\n`);
+    logger.warn({ err }, `[CACHE] ${reason}`);
+    // Destroy the Redis client so future operations fall through to the LRU.
+    this.redis?.disconnect();
+    this.redis = undefined;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------------
 
   async get<T = unknown>(key: string): Promise<T | undefined> {
     if (!this.enabled) return undefined;
@@ -44,7 +80,7 @@ class CacheClient {
         const raw = await this.redis.get(key);
         return raw ? (JSON.parse(raw) as T) : undefined;
       } catch {
-        // fall through to memory
+        // Redis call failed for this operation — fall through to memory.
       }
     }
     return this.mem.get(key) as T | undefined;
@@ -58,42 +94,55 @@ class CacheClient {
         await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
         return;
       } catch {
-        // fall back
+        // Redis write failed — fall through to memory.
       }
     }
     this.mem.set(key, value, { ttl: ttlMs });
   }
 
-  async del(key: string) {
+  async del(key: string): Promise<void> {
     if (this.redis) {
       try {
         await this.redis.del(key);
-      } catch {}
+      } catch { /* ignore */ }
     }
     this.mem.delete(key);
   }
 
-  // Smart Caching: Associate keys with tags for group invalidation
-  async setWithTags(key: string, value: CacheValue, tags: string[], ttl = config.CACHE_TTL_SECONDS) {
+  /**
+   * Store a value and associate it with one or more tags for group invalidation.
+   * Tags are only tracked in Redis; in memory-only mode plain `set` is used.
+   */
+  async setWithTags(key: string, value: CacheValue, tags: string[], ttl = config.CACHE_TTL_SECONDS): Promise<void> {
     if (!this.enabled) return;
     await this.set(key, value, ttl);
     if (this.redis && tags.length > 0) {
       try {
         const pipe = this.redis.pipeline();
-        tags.forEach(t => { pipe.sadd(`tag:${t}`, key); pipe.expire(`tag:${t}`, ttl * 2); });
+        tags.forEach(tag => {
+          pipe.sadd(`tag:${tag}`, key);
+          pipe.expire(`tag:${tag}`, ttl * 2);
+        });
         await pipe.exec();
-      } catch (err) { logger.warn({ err }, 'Tag index fail'); }
+      } catch (err) {
+        logger.warn({ err }, '[CACHE] Tag index write failed');
+      }
     }
   }
 
-  async invalidateTags(tags: string[]) {
+  /** Invalidate all cache keys associated with the given tags. No-op in memory-only mode. */
+  async invalidateTags(tags: string[]): Promise<void> {
     if (!this.enabled || !this.redis) return;
     try {
-      for (const t of tags) {
-        const keys = await this.redis.smembers(`tag:${t}`);
-        if (keys.length > 0) { await this.redis.del(...keys, `tag:${t}`); }
+      for (const tag of tags) {
+        const keys = await this.redis.smembers(`tag:${tag}`);
+        if (keys.length > 0) {
+          await this.redis.del(...keys, `tag:${tag}`);
+        }
       }
-    } catch (err) { logger.warn({ err }, 'Tag purge fail'); }
+    } catch (err) {
+      logger.warn({ err }, '[CACHE] Tag purge failed');
+    }
   }
 }
 

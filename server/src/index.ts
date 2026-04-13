@@ -4,13 +4,11 @@ import cors from 'cors';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
-import type { Store as RateLimitStore } from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
-import { Redis } from 'ioredis';
 import { db } from './lib/db.js';
 import config from './lib/config.js';
 import logger from './lib/logger.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
+
 import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
@@ -53,57 +51,23 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting (Memory or Redis)
-const createRateLimiter = () => {
-  try {
-    if (config.RATE_LIMIT_STORE === 'redis' && config.REDIS_URL) {
-      const redis = new Redis(config.REDIS_URL, {
-        lazyConnect: true,
-        maxRetriesPerRequest: 1,
-        // Auto-pipelining inflates request count on quota-limited providers.
-        enableAutoPipelining: false,
-      });
-      // Swallow connection errors — rate limiter falls back to memory automatically.
-      redis.on('error', (err) => logger.warn({ err }, 'Rate-limit Redis error'));
-      return rateLimit({
-        windowMs: config.RATE_LIMIT_WINDOW_MS,
-        max: config.RATE_LIMIT_MAX_REQUESTS,
-        standardHeaders: true,
-        legacyHeaders: false,
-        message: {
-          success: false,
-          error: {
-            status: 429,
-            code: 'RATE_LIMIT_EXCEEDED',
-            message: 'Too many requests from this IP, please try again later.',
-          },
-        },
-        store: new RedisStore({
-          // @ts-ignore type mismatch from store interface
-          sendCommand: (...args: string[]) => redis.call(...args as [string, ...string[]]) as unknown as Promise<unknown>,
-          prefix: 'rate-limit:',
-        }) as unknown as RateLimitStore,
-      });
-    }
-  } catch (err) {
-    logger.warn({ err }, 'Failed to initialize Redis rate limiter; falling back to memory');
-  }
-  return rateLimit({
-    windowMs: config.RATE_LIMIT_WINDOW_MS,
-    max: config.RATE_LIMIT_MAX_REQUESTS,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-      success: false,
-      error: {
-        status: 429,
-        code: 'RATE_LIMIT_EXCEEDED',
-        message: 'Too many requests from this IP, please try again later.',
-      },
+// Rate limiting — always memory-based.
+// Redis is reserved for caching and background queues.
+const rateLimiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  max: config.RATE_LIMIT_MAX_REQUESTS,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      status: 429,
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many requests from this IP, please try again later.',
     },
-  });
-};
-app.use(createRateLimiter());
+  },
+});
+app.use(rateLimiter);
 
 // Basic middleware
 app.use(compression());
