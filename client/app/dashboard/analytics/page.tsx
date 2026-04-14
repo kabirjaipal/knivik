@@ -134,12 +134,12 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-4 bg-muted/40 p-4 rounded-2xl border border-border/50">
           <div className="text-right">
             <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Scanned Context</p>
-            <p className="text-lg font-black text-foreground">{data.conversationsScanned.toLocaleString()}</p>
+            <p className="text-lg font-black text-foreground">{(data.conversationsScanned || 0).toLocaleString()}</p>
           </div>
           <div className="h-10 w-px bg-border/50" />
           <div className="text-right">
             <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Total Leads Found</p>
-            <p className="text-lg font-black text-primary">{data.totalLeads.toLocaleString()}</p>
+            <p className="text-lg font-black text-primary">{(data.totalLeads || 0).toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-foreground">${data.estimatedPipelineValue.toLocaleString()}</span>
+                <span className="text-4xl font-black text-foreground">${(data.estimatedPipelineValue || 0).toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Based on an average estimated value of $250 per CONVERTED lead.</p>
             </CardContent>
@@ -216,7 +216,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-foreground">{data.leadConversionRate}%</span>
+                <span className="text-4xl font-black text-foreground">{data.leadConversionRate || 0}%</span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Percentage of all scanned leads that changed to CONVERTED status.</p>
             </CardContent>

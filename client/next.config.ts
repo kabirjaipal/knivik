@@ -47,8 +47,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "frame-src 'self' https://checkout.paddle.com",
-              "connect-src 'self' https://checkout.paddle.com"
+              "frame-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com https://buy.paddle.com",
+              "connect-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com"
             ].join("; "),
           },
         ],
