@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
-import { scraperQueue } from '../lib/queue.js';
+import { pipelineQueue } from '../lib/queue.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import logger from '../lib/logger.js';
 
@@ -9,7 +9,7 @@ export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
   
   let redisHealth = false;
   try {
-    const client = await (scraperQueue as any).client;
+    const client = await (pipelineQueue as any).client;
     const ping = await client.ping();
     redisHealth = ping === 'PONG';
   } catch (err) {

@@ -7,7 +7,8 @@ import {
   SemanticScanPost,
 } from '../services/aiService.js';
 import { Platform, IntentLevel, Product, Keyword, NegativeKeyword, ProductSource, Competitor } from '@prisma/client';
-import { alertQueue, enrichmentQueue } from '../lib/queue.js';
+import { enrichLead } from '../services/enrichmentService.js';
+import { sendLeadAlert } from '../services/alertService.js';
 import { emitToUser } from '../lib/socket.js';
 
 export type ProductWithDetails = Product & {
@@ -372,11 +373,11 @@ export abstract class BaseScraperEngine {
         });
       }
 
-      // Fire enrichment and alerts via BullMQ distributed queues
+      // Unified Pipeline: Enrich and Alert directly
       if (authorUsername) {
-        enrichmentQueue.add('enrich', { leadId: newLead.id, username: authorUsername, platform: this.platform });
+        enrichLead(newLead.id, authorUsername, this.platform).catch(() => {});
       }
-      alertQueue.add('alert', { leadId: newLead.id });
+      sendLeadAlert(newLead.id).catch(() => {});
 
       return true;
     } catch (err: any) {

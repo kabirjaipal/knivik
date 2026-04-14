@@ -139,8 +139,8 @@ export class BatchCollectionService {
   /**
    * Collect posts for a single product across all its sources
    */
-  private static async collectProductPosts(
-    product: ProductWithDetails,
+  public static async collectProductPosts(
+    product: any,
     sourceBreakdown: Record<string, number> = {}
   ): Promise<CollectedPost[]> {
     const allPosts: CollectedPost[] = [];
@@ -159,10 +159,16 @@ export class BatchCollectionService {
       }];
     }
 
+    // Pre-load search queries once for the whole product to avoid redundant DB calls
+    const { SearchQueryService } = await import('./searchQueryService.js');
+    const searchQueries = await SearchQueryService.getStoredQueries(product.id);
+    logger.info(`[COLLECTION] Starting scan for product "${product.name}" using ${searchQueries.length} pre-loaded queries across ${product.sources.length} sources.`);
+
     // Collect from each source
     for (const source of product.sources) {
       try {
-        const sourcePosts = await this.collectFromSource(product, source, oneMonthAgo);
+        logger.info(`[COLLECTION] [${source.platform}] Processing source: ${source.identifier}`);
+        const sourcePosts = await this.collectFromSource(product, source, oneMonthAgo, searchQueries);
         allPosts.push(...sourcePosts);
         
         // Track posts per source for reporting
@@ -186,13 +192,14 @@ export class BatchCollectionService {
   private static async collectFromSource(
     product: ProductWithDetails,
     source: any,
-    oneMonthAgo: Date
+    oneMonthAgo: Date,
+    searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
 
     switch (source.platform) {
       case Platform.REDDIT:
-        const redditPosts = await this.collectFromReddit(product, source, oneMonthAgo);
+        const redditPosts = await this.collectFromReddit(product, source, oneMonthAgo, searchQueries);
         posts.push(...redditPosts);
         break;
       case Platform.HACKERNEWS:
@@ -310,70 +317,123 @@ export class BatchCollectionService {
   private static async collectFromReddit(
     product: ProductWithDetails,
     source: any,
-    oneMonthAgo: Date
+    oneMonthAgo: Date,
+    searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
     const isGlobal = source.identifier.toLowerCase() === 'global';
     const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
 
-    // Generate advanced search queries from product data
-    // Use stored queries if available, otherwise generate on-the-fly
-    const { SearchQueryService } = await import('./searchQueryService.js');
-    const searchQueries = await SearchQueryService.getStoredQueries(product.id);
-    
     if (searchQueries.length === 0) {
-      logger.warn(`[COLLECTION] No search queries available for product "${product.name}"`);
+      logger.warn(`[COLLECTION] No search queries available for Reddit scan of "${product.name}"`);
       return posts;
     }
-    
-    logger.info(`[COLLECTION] Using ${searchQueries.length} stored search queries for product "${product.name}"`);
 
+    // To respect Reddit's strict 10 requests/minute unauthenticated limit, we randomly pick
+    // just 3 queries per cycle. Since the job runs repeatedly, all queries will eventually be covered.
+    const shuffledQueries = [...searchQueries].sort(() => 0.5 - Math.random());
+    const cycleQueries = shuffledQueries.slice(0, 3);
+    
     // Strategy 1: Advanced query-based collection
-    for (const query of searchQueries.slice(0, 8)) { // Limit to top 8 queries per source
+    for (const query of cycleQueries) { 
       try {
-        const searchQuery = query.includes(' ') && !query.includes('"') && !query.includes('(')
-          ? `"${query}"`
-          : query;
+        const searchQuery = query;
 
         const url = isGlobal
           ? `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=15&type=link,comment`
           : `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=15&type=link,comment`;
 
-        logger.debug(`[COLLECTION] Searching Reddit: ${query.substring(0, 50)}...`);
+        logger.info(`[DEEP-LOG] [REDDIT] Searching: "${query}" | URL: ${url}`);
 
         const response = await fetch(url, {
           headers: { 'User-Agent': this.getRandomUserAgent() },
-          signal: AbortSignal.timeout(10000) // 10 second timeout
+          signal: AbortSignal.timeout(10000)
         });
 
+        if (response.status === 429) {
+          logger.warn(`[DEEP-LOG] [REDDIT] 🚨 Rate limit hit (429)! Reddit restricts to 10 req/minute. Sleeping for 30s...`);
+          await new Promise(resolve => setTimeout(resolve, 30000));
+          continue; // Skip this query, move to the next after resting
+        }
+
         if (!response.ok) {
-          logger.warn({ 
-            status: response.status, 
-            statusText: response.statusText,
-            query: query.substring(0, 50),
-            url: url.substring(0, 100)
-          }, 'Reddit search API failed');
+          logger.warn(`[DEEP-LOG] [REDDIT] Fetch failed (${response.status} ${response.statusText}) for query: ${query}`);
           continue;
         }
 
         const data = (await response.json()) as any;
         const children = data?.data?.children;
-        if (!Array.isArray(children)) continue;
+        if (!Array.isArray(children)) {
+          logger.debug(`[DEEP-LOG] [REDDIT] No children array in response for query: ${query}`);
+          continue;
+        }
 
+        logger.debug(`[DEEP-LOG] [REDDIT] Found ${children.length} raw items for query: "${query}"`);
+
+        let queryMatches = 0;
         for (const child of children) {
           const postData = child.data;
           if (!postData?.id) continue;
 
           const postedAt = new Date(postData.created_utc * 1000);
-          if (postedAt < oneMonthAgo) continue;
+          if (postedAt < oneMonthAgo) {
+            logger.debug(`[DEEP-LOG] [REDDIT] Skipping post ${postData.id}: Too old (${postedAt.toISOString()})`);
+            continue;
+          }
 
           const title = postData.title || (postData.link_title ? `Comment on: ${postData.link_title}` : '');
           const content = postData.body || postData.selftext || '';
           const combinedText = `${title} ${content}`;
 
-          if (!this.passesBasicFilters(combinedText, product)) continue;
+          const filterResult = this.passesBasicFiltersWithReason(combinedText, product);
+          if (!filterResult.passed) {
+            logger.debug(`[DEEP-LOG] [REDDIT] Filter rejected ${postData.id}: ${filterResult.reason}`);
+            continue;
+          }
 
-        posts.push({
+          // Local Verification: Because Reddit's search API is very loose when unquoted,
+          // we securely verify that the text ACTUALLY contains a match.
+          let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'KEYWORD';
+          let verifiedKeywordMatch: string | undefined;
+          let verifiedCompetitorMatch: string | undefined;
+          let isQueryPresent = false;
+
+          for (const competitor of product.competitors) {
+            if (combinedText.toLowerCase().includes(competitor.name.toLowerCase())) {
+              detectionMode = 'COMPETITOR';
+              verifiedCompetitorMatch = competitor.name;
+              break;
+            }
+          }
+
+          if (!verifiedCompetitorMatch) {
+            for (const keyword of product.keywords) {
+              if (combinedText.toLowerCase().includes(keyword.keyword.toLowerCase())) {
+                detectionMode = 'KEYWORD';
+                verifiedKeywordMatch = keyword.keyword;
+                break;
+              }
+            }
+          }
+
+          if (!verifiedCompetitorMatch && !verifiedKeywordMatch) {
+            // Do a 'Loose AND' check - verify all significant words in the query exist somewhere in the text
+            const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+            const containsAllQueryWords = queryWords.length > 0 && queryWords.every(w => combinedText.toLowerCase().includes(w));
+            
+            if (containsAllQueryWords) {
+              detectionMode = 'KEYWORD';
+              isQueryPresent = true;
+            }
+          }
+
+          // Reject if Reddit's loose search returned a post that has NONE of our actual target phrases
+          if (!verifiedCompetitorMatch && !verifiedKeywordMatch && !isQueryPresent) {
+             logger.debug(`[DEEP-LOG] [REDDIT] Filter rejected ${postData.id}: Loose Reddit match did not contain query/keywords locally.`);
+             continue;
+          }
+
+          posts.push({
             id: `reddit-${postData.id}`,
             platform: 'REDDIT',
             externalPostId: postData.id,
@@ -383,16 +443,22 @@ export class BatchCollectionService {
             authorUsername: postData.author,
             postedAt,
             source: source.identifier,
-            detectionMode: 'KEYWORD',
-            keywordMatch: query
+            detectionMode,
+            keywordMatch: verifiedKeywordMatch || (isQueryPresent ? query : undefined),
+            competitorMatch: verifiedCompetitorMatch
           });
+          queryMatches++;
+        }
+        
+        if (queryMatches > 0) {
+          logger.info(`[DEEP-LOG] [REDDIT] Query "${query}" yielded ${queryMatches} valid potential leads.`);
         }
 
-        // Rate limiting - reduced to 500ms to prevent job stalls
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Rate limiting: Relax to ~2.5 seconds between requests (critical for unauthenticated limits)
+        await new Promise(resolve => setTimeout(resolve, 2500));
 
       } catch (error: any) {
-        logger.warn({ error, query: query.substring(0, 50) }, 'Reddit query search failed');
+        logger.warn(`[DEEP-LOG] [REDDIT] Query "${query}" error: ${error.message}`);
       }
     }
 
@@ -520,15 +586,8 @@ export class BatchCollectionService {
           let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'SEMANTIC';
           let keywordMatch: string | undefined;
           let competitorMatch: string | undefined;
-
-          for (const keyword of product.keywords) {
-            if (combinedText.toLowerCase().includes(keyword.keyword.toLowerCase())) {
-              detectionMode = 'KEYWORD';
-              keywordMatch = keyword.keyword;
-              break;
-            }
-          }
-
+          
+          // Check for competitor mentions first (high priority)
           for (const competitor of product.competitors) {
             if (combinedText.toLowerCase().includes(competitor.name.toLowerCase())) {
               detectionMode = 'COMPETITOR';
@@ -536,6 +595,21 @@ export class BatchCollectionService {
               break;
             }
           }
+
+          // Then check for keyword matches
+          if (!competitorMatch) {
+            for (const keyword of product.keywords) {
+              if (combinedText.toLowerCase().includes(keyword.keyword.toLowerCase())) {
+                detectionMode = 'KEYWORD';
+                keywordMatch = keyword.keyword;
+                break;
+              }
+            }
+          }
+
+          // Strict filtering: Skip if no keyword or competitor match found
+          // (This prevents sending unrelated 'stupid things' from HN to the AI)
+          if (!keywordMatch && !competitorMatch) continue;
 
           posts.push({
             id: `hn-${story.id}`,
@@ -567,19 +641,30 @@ export class BatchCollectionService {
   /**
    * Basic filtering to remove obvious noise before AI analysis
    */
-  private static passesBasicFilters(text: string, _product: ProductWithDetails): boolean {
+  private static passesBasicFilters(text: string, product: ProductWithDetails): boolean {
+    return this.passesBasicFiltersWithReason(text, product).passed;
+  }
+
+  /**
+   * Detailed filtering with reason for deep logging
+   */
+  private static passesBasicFiltersWithReason(text: string, product: ProductWithDetails): { passed: boolean; reason?: string } {
     const lower = text.toLowerCase();
 
     // Minimum content length
-    if (text.trim().length < 50) return false;
+    if (text.trim().length < 50) {
+      return { passed: false, reason: 'Content too short (< 50 chars)' };
+    }
 
     // Bot detection
-    if (lower.includes('bot')) return false;
+    if (lower.includes('bot')) {
+      return { passed: false, reason: 'Potential bot detected (contains "bot")' };
+    }
 
     // Negative keywords
-    for (const negKeyword of _product.negativeKeywords) {
+    for (const negKeyword of product.negativeKeywords) {
       if (lower.includes(negKeyword.keyword.toLowerCase())) {
-        return false;
+        return { passed: false, reason: `Negative keyword match: "${negKeyword.keyword}"` };
       }
     }
 
@@ -592,10 +677,12 @@ export class BatchCollectionService {
     ];
 
     for (const reject of hardRejects) {
-      if (lower.includes(reject)) return false;
+      if (lower.includes(reject)) {
+        return { passed: false, reason: `Hard-reject phrase: "${reject}"` };
+      }
     }
 
-    return true;
+    return { passed: true };
   }
 
   /**

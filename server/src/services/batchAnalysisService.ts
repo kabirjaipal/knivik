@@ -28,12 +28,12 @@ export interface CollectedPost {
 export interface ProductAnalysisResult {
   productId: string;
   productName: string;
-  bestLead: {
+  leads: Array<{
     post: CollectedPost;
     intentLevel: IntentLevel;
     intentScore: number;
     reasoning: string;
-  } | null;
+  }>;
   analysisSummary: string;
 }
 
@@ -109,11 +109,12 @@ export const analyzeUserPostsBatch = async (
   }));
 
   const prompt = `
-You are an elite B2B lead qualification specialist. Your task is to analyze ${totalPosts} collected posts across ${collectedPostsByProduct.length} products and identify the SINGLE BEST lead for each product.
+You are an elite B2B lead qualification specialist. Your task is to analyze ${totalPosts} collected posts across ${collectedPostsByProduct.length} products and identify ALL high-quality leads for each product.
 
 PRODUCTS TO ANALYZE:
 ${productsContext.map((ctx, i) => `
-PRODUCT ${i + 1}: "${ctx.productName}"
+PRODUCT ${i + 1} (Product ID: ${ctx.productId})
+Name: "${ctx.productName}"
 Description: ${ctx.productDescription}
 Target Keywords: ${ctx.keywords.join(', ')}
 Competitors: ${ctx.competitors.join(', ')}
@@ -121,7 +122,7 @@ Posts to analyze: ${ctx.postCount}
 
 POSTS:
 ${ctx.posts.map((post, j) => `
-Post ${j + 1}:
+Post ID: ${post.id}
 Platform: ${post.platform}
 Source: ${post.source}
 Title: "${post.title}"
@@ -141,23 +142,25 @@ ANALYSIS CRITERIA:
 5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (high priority)
 
 SELECTION RULES:
-- Choose ONLY 1 best lead per product (or none if no quality leads exist)
-- Prioritize posts with explicit buying signals for the specific product category
-- Score 85+ for explicit buying intent, 70+ for strong research intent
-- Provide detailed reasoning for your selection
+- Choose ANY post that meets the criteria. You may select multiple leads if they are all good.
+- Prioritize posts with explicit buying signals for the specific product category.
+- Score 85+ for explicit buying intent, 70+ for strong research intent, and 50+ for pain-point discussions.
+- Provide detailed reasoning for each selection.
 
 Return your analysis as JSON:
 {
   "results": [
     {
-      "productId": "product_id",
-      "bestLead": {
-        "postId": "post_id",
-        "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
-        "intentScore": number (0-100),
-        "reasoning": "Detailed explanation of why this is the best lead for this specific product"
-      },
-      "analysisSummary": "Brief summary of analysis for this product"
+      "productId": "The exact Product ID from the prompt",
+      "qualifiedLeads": [
+        {
+          "postId": "The exact 'Post ID' string provided in the prompt for this post (without prefix)",
+          "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
+          "intentScore": number (50-100),
+          "reasoning": "Detailed explanation of why this is a good lead."
+        }
+      ],
+      "analysisSummary": "Brief summary of why you rejected posts or why the chosen leads are valid. Be highly specific."
     }
   ],
   "overallSummary": "Summary of the batch analysis"
@@ -184,6 +187,9 @@ Return your analysis as JSON:
     if (!content) {
       throw new Error('No content returned from batch analysis');
     }
+    
+    // DEBUG: Print exactly what JSON structure the AI returned
+    logger.info(`[AI-DEBUG] RAW JSON: ${content}`);
 
     const parsed = JSON.parse(content);
     const elapsed = Date.now() - startTime;
@@ -208,36 +214,48 @@ Return your analysis as JSON:
     for (const productCtx of productsContext) {
       const aiResult = parsed.results.find((r: any) => r.productId === productCtx.productId);
       
-      if (aiResult?.bestLead) {
-        // Find original post from collectedPostsByProduct, not from productsContext
+      if (aiResult?.qualifiedLeads && Array.isArray(aiResult.qualifiedLeads) && aiResult.qualifiedLeads.length > 0) {
+        // Collect all qualified leads for this product
         const originalProductData = collectedPostsByProduct.find(p => p.product.id === productCtx.productId);
-        const originalPost = originalProductData?.posts.find(p => p.id === aiResult.bestLead.postId);
-        if (originalPost) {
-          results.push({
-            productId: productCtx.productId,
-            productName: productCtx.productName,
-            bestLead: {
+        const validLeads = [];
+        
+        for (const aiLead of aiResult.qualifiedLeads) {
+          const rawId = String(aiLead.postId).trim();
+          const originalPost = originalProductData?.posts.find(p => 
+            p.id === rawId || 
+            p.id.endsWith(rawId) || 
+            rawId.includes(p.id)
+          );
+          
+          if (originalPost) {
+            validLeads.push({
               post: originalPost,
-              intentLevel: aiResult.bestLead.intentLevel as IntentLevel,
-              intentScore: Math.min(Math.max(aiResult.bestLead.intentScore || 0, 0), 100),
-              reasoning: aiResult.bestLead.reasoning || 'No reasoning provided'
-            },
-            analysisSummary: aiResult.analysisSummary || 'Analysis completed'
-          });
-          leadsFound++;
+              intentLevel: aiLead.intentLevel as IntentLevel,
+              intentScore: Math.min(Math.max(aiLead.intentScore || 0, 0), 100),
+              reasoning: aiLead.reasoning || 'No reasoning provided'
+            });
+            leadsFound++;
+          }
         }
+        
+        results.push({
+          productId: productCtx.productId,
+          productName: productCtx.productName,
+          leads: validLeads,
+          analysisSummary: aiResult.analysisSummary || 'Analysis completed'
+        });
       } else {
         // No quality lead found for this product
         results.push({
           productId: productCtx.productId,
           productName: productCtx.productName,
-          bestLead: null,
-          analysisSummary: aiResult?.analysisSummary || 'No quality leads found'
+          leads: [],
+          analysisSummary: aiResult?.analysisSummary || parsed.overallSummary || 'No quality leads found (AI returned empty results)'
         });
       }
     }
 
-    logger.info(`[ANALYSIS] Complete: ${leadsFound}/${collectedPostsByProduct.length} products have leads (score: ${results.filter(r => r.bestLead).map(r => r.bestLead?.intentScore).join(', ') || 'none'})`);
+    logger.info(`[ANALYSIS] Complete: ${leadsFound}/${collectedPostsByProduct.length} products have leads (found ${leadsFound} total valid leads)`);
 
     return {
       userId,
@@ -260,7 +278,7 @@ Return your analysis as JSON:
       results: collectedPostsByProduct.map(({ product }) => ({
         productId: product.id,
         productName: product.name,
-        bestLead: null,
+        leads: [],
         analysisSummary: 'Analysis failed due to AI error'
       })),
       totalPostsAnalyzed: totalPosts,

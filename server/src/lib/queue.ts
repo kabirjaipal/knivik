@@ -1,25 +1,18 @@
 /**
- * Queue module with automatic Redis → in-memory fallback.
- *
- * Strategy:
- *   1. If REDIS_URL is set, attempt to create BullMQ queues backed by Redis.
- *   2. If Redis is unavailable (boot-time or runtime error), log a prominent
- *      console warning and switch every queue to a lightweight in-memory
- *      implementation that uses an async event-emitter pattern.
- *   3. Callers interact only with the `IQueue` interface and never need to know
- *      which transport is active.
+ * Pipeline Queue module with automatic Redis → in-memory fallback.
+ * 
+ * This module consolidates all background work (Scraping, Enrichment, Alerts)
+ * into a single unified pipeline to reduce Redis overhead and complexity.
  */
 
-import { Queue as BullQueue, ConnectionOptions } from 'bullmq';
+import { Queue as BullQueue, ConnectionOptions, Job } from 'bullmq';
 import config from './config.js';
 import logger from './logger.js';
 
 // ---------------------------------------------------------------------------
-// Shared queue names
+// Shared queue name
 // ---------------------------------------------------------------------------
-export const SCRAPER_QUEUE_NAME = 'scraper-jobs';
-export const ALERT_QUEUE_NAME = 'alert-jobs';
-export const ENRICHMENT_QUEUE_NAME = 'enrichment-jobs';
+export const PIPELINE_QUEUE_NAME = 'pipeline-jobs';
 
 // ---------------------------------------------------------------------------
 // In-memory queue fallback
@@ -36,6 +29,8 @@ interface InMemoryJob {
 
 export class InMemoryQueue {
   private readonly queue: InMemoryJob[] = [];
+  private readonly activeJobs = new Map<string, InMemoryJob>();
+  private readonly finishedJobs = new Map<string, InMemoryJob>();
   private handlers: InMemoryJobHandler[] = [];
   private processing = false;
   readonly name: string;
@@ -57,7 +52,10 @@ export class InMemoryQueue {
   }
 
   async getJob(id: string): Promise<InMemoryJob | undefined> {
-    return this.queue.find(job => job.id === id);
+    // Check queue, then active, then finished
+    return this.queue.find(job => job.id === id) 
+      || this.activeJobs.get(id) 
+      || this.finishedJobs.get(id);
   }
 
   /** BullMQ-compatible no-ops so callers can use the same API. */
@@ -67,6 +65,8 @@ export class InMemoryQueue {
     while (this.queue.length > 0) {
       const job = this.queue.shift();
       if (!job) break;
+      
+      this.activeJobs.set(job.id, job);
       for (const handler of this.handlers) {
         try {
           await handler(job.data);
@@ -75,6 +75,8 @@ export class InMemoryQueue {
         }
       }
       job.finishedOn = Date.now();
+      this.finishedJobs.set(job.id, job);
+      this.activeJobs.delete(job.id);
     }
     this.processing = false;
   }
@@ -147,16 +149,14 @@ function createQueue(name: string): AnyQueue {
 }
 
 // ---------------------------------------------------------------------------
-// Exported queue instances
+// Exported queue instance
 // ---------------------------------------------------------------------------
-export const scraperQueue = createQueue(SCRAPER_QUEUE_NAME);
-export const alertQueue = createQueue(ALERT_QUEUE_NAME);
-export const enrichmentQueue = createQueue(ENRICHMENT_QUEUE_NAME);
+export const pipelineQueue = createQueue(PIPELINE_QUEUE_NAME);
 
 // ---------------------------------------------------------------------------
 // Determine which mode is active and log once at boot
 // ---------------------------------------------------------------------------
-if (scraperQueue instanceof InMemoryQueue) {
+if (pipelineQueue instanceof InMemoryQueue) {
   console.warn('\n⚠️  [QUEUE] Running in IN-MEMORY queue mode. Jobs will NOT survive restarts.\n');
   logger.warn('[QUEUE] All queues are running in in-memory mode (no Redis).');
 } else {

@@ -4,7 +4,8 @@ import { IntentLevel, LeadStatus } from '@prisma/client';
 import { BatchCollectionService } from './batchCollectionService.js';
 import { analyzeUserPostsBatch } from './batchAnalysisService.js';
 import { emitToUser } from '../lib/socket.js';
-import { alertQueue, enrichmentQueue } from '../lib/queue.js';
+import { enrichLead } from './enrichmentService.js';
+import { sendLeadAlert } from './alertService.js';
 
 /**
  * Main Batch Processing Service
@@ -15,6 +16,109 @@ import { alertQueue, enrichmentQueue } from '../lib/queue.js';
  * 3. Save only the best lead per product
  */
 export class BatchProcessingService {
+
+  /**
+   * Process a single product - collect posts and analyze in batch
+   */
+  static async processProduct(productId: string): Promise<{
+    success: boolean;
+    postsCollected: number;
+    leadsGenerated: number;
+    processingTime: number;
+    error?: string;
+  }> {
+    const startTime = Date.now();
+    
+    try {
+      // Get the product with its settings
+      const product = await db.client.product.findUnique({
+        where: { id: productId, isActive: true },
+        include: {
+          keywords: { where: { isActive: true } },
+          sources: { where: { isActive: true } },
+          negativeKeywords: true,
+          competitors: true,
+        },
+      });
+
+      if (!product) {
+        throw new Error('Product not found or inactive');
+      }
+
+      const userId = product.userId;
+      logger.info(`[BATCH] Starting pipeline for product "${product.name}" (User: ${userId})`);
+
+      // Step 1: Collect posts for this product
+      const sourceBreakdown: Record<string, number> = {};
+      const posts = await BatchCollectionService.collectProductPosts(product, sourceBreakdown);
+      
+      if (posts.length === 0) {
+        logger.info(`[BATCH] No posts collected for product "${product.name}"`);
+        return {
+          success: true,
+          postsCollected: 0,
+          leadsGenerated: 0,
+          processingTime: Date.now() - startTime,
+        };
+      }
+
+      // Step 2: Analyze in batch (using our batch analyzer for just this 1 product)
+      const analysisInput = [{
+        product: {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          keywords: product.keywords,
+          competitors: product.competitors,
+        },
+        posts
+      }];
+
+      logger.info(`[DEEP-LOG] [AI-STAGE] Starting AI analysis for product "${product.name}" with ${posts.length} candidate posts.`);
+      const analysisResult = await analyzeUserPostsBatch(userId, analysisInput);
+
+      // Step 3: Save results
+      let leadsGenerated = 0;
+      for (const result of analysisResult.results) {
+        if (result.leads.length > 0) {
+          for (const lead of result.leads) {
+            logger.info(`[DEEP-LOG] [AI-STAGE] AI found a high-quality lead for "${product.name}"! Score: ${lead.intentScore}`);
+            // Still using saveBestLead function name, but we pass each lead independently
+            const saved = await this.saveBestLead({ ...lead, product }, userId);
+            if (saved) leadsGenerated++;
+          }
+        }
+      }
+
+      if (leadsGenerated === 0) {
+        // Find the summary to explain WHY the AI rejected these posts
+        const summary = analysisResult.results[0]?.analysisSummary || "No reasoning provided by AI.";
+        logger.info(`[DEEP-LOG] [AI-STAGE] AI finished analysis for "${product.name}" but did not find any lead meeting the quality threshold.`);
+        logger.info(`[DEEP-LOG] [AI-STAGE] 🧠 AI Reasoning for Rejection: "${summary}"`);
+      }
+
+      // Finalize
+      const processingTime = Date.now() - startTime;
+      logger.info(`[BATCH] Product "${product.name}" complete: ${posts.length} posts → ${leadsGenerated} lead in ${processingTime}ms`);
+
+      return {
+        success: true,
+        postsCollected: posts.length,
+        leadsGenerated,
+        processingTime,
+      };
+
+    } catch (error: any) {
+      logger.error({ error, productId }, 'Product processing failed');
+      return {
+        success: false,
+        postsCollected: 0,
+        leadsGenerated: 0,
+        processingTime: Date.now() - startTime,
+        error: error.message,
+      };
+    }
+  }
 
   /**
    * Process a single user - collect posts and analyze in batch
@@ -62,11 +166,18 @@ export class BatchProcessingService {
       let leadsGenerated = 0;
       
       for (const result of analysisResult.results) {
-        if (result.bestLead) {
-          const saved = await this.saveBestLead(result.bestLead, userId);
-          if (saved) {
-            leadsGenerated++;
-            logger.info(`[BATCH] Saved high-quality lead for product: ${result.productName}`);
+        if (result.leads.length > 0) {
+          // Find the matching product from our collection input
+          const matchingInput = analysisInput.find(input => input.product.id === result.productId);
+          const product = matchingInput?.product;
+
+          // Save each qualified lead found
+          for (const lead of result.leads) {
+            const saved = await this.saveBestLead({ ...lead, product }, userId);
+            if (saved) {
+              leadsGenerated++;
+              logger.info(`[BATCH] Saved high-quality lead for product: ${result.productName} (Score: ${lead.intentScore})`);
+            }
           }
         } else {
           logger.info(`[BATCH] No quality lead found for product: ${result.productName}`);
@@ -174,16 +285,14 @@ export class BatchProcessingService {
         product: { name: bestLead.productName }
       });
 
-      // Trigger enrichment and alerts
+      // Integrated Pipeline: Run enrichment and alerts immediately in the same process
       if (post.authorUsername) {
-        enrichmentQueue.add('enrich', { 
-          leadId: newLead.id, 
-          username: post.authorUsername, 
-          platform: post.platform 
-        });
+        // Run in background (don't wait for enrichment to continue scan)
+        enrichLead(newLead.id, post.authorUsername, post.platform as any).catch(() => {});
       }
       
-      alertQueue.add('alert', { leadId: newLead.id });
+      // Fire alert (don't wait)
+      sendLeadAlert(newLead.id).catch(() => {});
 
       return true;
 

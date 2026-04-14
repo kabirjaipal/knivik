@@ -136,18 +136,18 @@ YOUR TASK:
 Generate 15-20 search queries that will find people expressing buying intent for this type of product.
 
 QUERY STRATEGY:
-1. Find implicit pain points (not just "alternative to X", but "drowning in support tickets", "can't keep up with emails")
-2. Alternative phrasings ("automate customer replies", "reduce response time", "support automation")
-3. High-intent combinations ("looking to reduce support overhead", "need help with customer service")
-4. Competitor frustration ("Zendesk too expensive", "tired of Intercom pricing", "moving away from Freshdesk")
-5. Problem-aware prospects ("support team overwhelmed", "too many tickets", "customer service bottleneck")
+1. Find implicit pain points using short keywords (e.g., "drowning support tickets", "overwhelmed emails")
+2. Alternative phrasings (e.g., "automate customer replies", "support automation tool")
+3. High-intent combinations (e.g., "reduce support overhead", "help customer service")
+4. Competitor frustration (e.g., "Zendesk expensive", "Intercom pricing", "Freshdesk alternatives")
+5. Problem-aware prospects (e.g., "support team overwhelmed", "too many tickets")
 
 REQUIREMENTS:
-- Each query should be 2-6 words
-- Focus on forum-style language (casual, problem-focused)
-- Include specific competitor names when relevant
-- Mix of explicit ("zendesk alternative") and implicit ("automate support")
-- Prioritize high-buying-intent phrases over generic keywords
+- Each query must be SHORT and punchy: 2-4 words maximum.
+- Do NOT use full conversational sentences. Use keyword-style phrasing optimized for Reddit/forum search bars.
+- Include specific competitor names when relevant.
+- Mix explicit ("zendesk alternative") and implicit ("automate support").
+- Prioritize high-buying-intent phrases over generic keywords.
 
 Return ONLY a JSON array of strings:
 [

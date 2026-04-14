@@ -1,25 +1,39 @@
 import { db } from '../src/lib/db.js';
 import bcrypt from 'bcryptjs';
-import { Queue } from 'bullmq';
-import Redis from 'ioredis';
+import RedisClient from 'ioredis';
 import { SearchQueryService } from '../src/services/searchQueryService.js';
+import { PIPELINE_QUEUE_NAME } from '../src/lib/queue.js';
 
-// Get the pre-configured PrismaClient instance which has the adapter injected
+// Get the pre-configured PrismaClient instance
 const prisma = db.client;
 
-// Redis connection for clearing queues
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const redisUrl = process.env.REDIS_URL;
 
-// BullMQ queue names
-const SCRAPER_QUEUE_NAME = 'scraper-jobs';
-const ALERT_QUEUE_NAME = 'alert-jobs';
-const ENRICHMENT_QUEUE_NAME = 'enrichment-jobs';
+// Explicitly type the redis variable to fix the "implicitly has type any" error
+let redis: RedisClient | null = null;
+
+if (redisUrl) {
+  try {
+    redis = new RedisClient(redisUrl, {
+      maxRetriesPerRequest: 0, // Fail fast during seeding if Redis is unreachable
+      connectTimeout: 5000,
+    });
+    // Prevent the seed process from crashing if Redis connection fails
+    redis.on('error', (err) => {
+      // Only log if it's not a connection refused (which we expect if Redis is down)
+      if (!err.message.includes('ECONNREFUSED')) {
+        console.warn('📡 Redis connection error:', err.message);
+      }
+    });
+  } catch (err) {
+    console.warn('⚠️ Redis initialization failed, skipping queue cleanup.');
+  }
+}
 
 async function main() {
   console.log('🌱 Starting database seeding...');
 
   // 1. Clear ALL existing tables
-  // We use a transaction to ensure we clear everything before seeding
   console.log('🧹 Cleaning database...');
   await prisma.$transaction([
     prisma.alertLog.deleteMany({}),
@@ -43,44 +57,31 @@ async function main() {
     prisma.llmModel.deleteMany({}),
   ]);
 
-  // 2. Clear BullMQ queues in Redis
-  console.log('🧹 Clearing BullMQ queues...');
-  try {
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':id');
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':wait');
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':active');
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':completed');
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':failed');
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':delayed');
-    await redis.del('bull:' + SCRAPER_QUEUE_NAME + ':events');
-
-    await redis.del('bull:' + ALERT_QUEUE_NAME + ':id');
-    await redis.del('bull:' + ALERT_QUEUE_NAME + ':wait');
-    await redis.del('bull:' + ALERT_QUEUE_NAME + ':active');
-    await redis.del('bull:' + ALERT_QUEUE_NAME + ':completed');
-    await redis.del('bull:' + ALERT_QUEUE_NAME + ':failed');
-    await redis.del('bull:' + ALERT_QUEUE_NAME + ':delayed');
-
-    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':id');
-    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':wait');
-    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':active');
-    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':completed');
-    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':failed');
-    await redis.del('bull:' + ENRICHMENT_QUEUE_NAME + ':delayed');
-
-    console.log('✅ All BullMQ queues cleared');
-  } catch (err) {
-    console.warn('⚠️ Could not clear BullMQ queues:', err);
+  // 2. Clear BullMQ queues in Redis (Optional - only if Redis is available)
+  if (redis) {
+    console.log('🧹 Clearing BullMQ queues...');
+    try {
+      // Find and delete all keys related to our unified pipeline
+      const keys = await redis.keys(`bull:${PIPELINE_QUEUE_NAME}:*`);
+      if (keys.length > 0) {
+        await redis.del(...keys);
+        console.log(`✅ Cleared ${keys.length} background job keys`);
+      } else {
+        console.log('✅ No background jobs to clear');
+      }
+    } catch (err: any) {
+      console.warn('⚠️ Could not clear BullMQ queues (Redis unreachable):', err.message);
+    }
+  } else {
+    console.log('⏭️ Skipping Redis cleanup (Redis disabled)');
   }
 
   // Hash passwords for demo users
-  const hashedPassword = await bcrypt.hash('password123', 12);
   const hashedAdminPassword = await bcrypt.hash('admin123', 12);
 
   console.log('👥 Creating demo users...');
 
   // Admin user
-  // Admin user - Set to FREE by default to test upgrade flow
   const admin = await prisma.user.create({
     data: {
       email: 'kabir@knivik.com',
@@ -93,8 +94,9 @@ async function main() {
       lastScanStatus: null,
     },
   });
+
   // SDR user
-  const sdr = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: 'nakul@knivik.com',
       username: 'nakul',
@@ -106,7 +108,7 @@ async function main() {
   });
 
   // Growth user
-  const growth = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: 'nikhil@knivik.com',
       username: 'nikhil_hacker',
@@ -244,8 +246,6 @@ async function main() {
 
   console.log('\n Demo Login Credentials (All Passwords: admin123):');
   console.log('1. Admin: kabir@knivik.com');
-  console.log('2. SDR:   sdr@knivik.com');
-  console.log('3. Growth: growth@knivik.com');
   console.log('--------------------------------------------');
 
   console.log('\n🚀 Ready to test awesome engines with IP protection!');
@@ -258,5 +258,7 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await redis.disconnect();
+    if (redis) {
+      await redis.quit(); // Use quit() instead of disconnect() for cleaner exit
+    }
   });

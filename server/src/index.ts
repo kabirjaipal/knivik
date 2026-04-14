@@ -14,7 +14,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 import { createServer } from 'http';
 import { initSocket } from './lib/socket.js';
-import { scraperQueue } from './lib/queue.js';
+import { pipelineQueue } from './lib/queue.js';
 import { startWorkers, stopWorkers } from './workers/index.js';
 
 declare global {
@@ -132,18 +132,18 @@ async function startServer() {
       // Clear ALL jobs from previous runs to prevent immediate scanning
       try {
         // Drain waiting jobs
-        await scraperQueue.drain();
+        await pipelineQueue.drain();
         logger.info('🧹 Stale scraper jobs drained from queue.');
         
         // Clean up active, completed, and failed jobs
-        await scraperQueue.clean(0, 0, 'active');
-        await scraperQueue.clean(0, 0, 'completed');
-        await scraperQueue.clean(0, 0, 'failed');
-        await scraperQueue.clean(0, 0, 'delayed');
+        await pipelineQueue.clean(0, 0, 'active');
+        await pipelineQueue.clean(0, 0, 'completed');
+        await pipelineQueue.clean(0, 0, 'failed');
+        await pipelineQueue.clean(0, 0, 'delayed');
         
         logger.info('🧹 All scraper job states cleaned from queue.');
       } catch (err) {
-        logger.warn({ err }, 'Failed to clean scraper queue on startup');
+        logger.warn({ err }, 'Failed to clean pipeline queue on startup');
       }
       
       // Small delay before starting workers to ensure cleanup is complete
@@ -158,25 +158,25 @@ async function startServer() {
     const runScraperDispatcher = async () => {
       try {
         logger.info(`🛰 Dispatching scraper jobs to the queue...`);
-        const activeUsers = await db.client.user.findMany({
-          where: { products: { some: { isActive: true } } },
-          select: { id: true }
+        const activeProducts = await db.client.product.findMany({
+          where: { isActive: true },
+          select: { id: true, userId: true }
         });
 
         const jobIds: string[] = [];
-        for (const user of activeUsers) {
-          const jobId = `scrape-${user.id}`;
-          await scraperQueue.add('scrape-user', { userId: user.id }, {
+        for (const product of activeProducts) {
+          const jobId = `scrape-product-${product.id}`;
+          await pipelineQueue.add('scrape-product', { userId: product.userId, productId: product.id }, {
             jobId,
             removeOnComplete: true,
           });
           jobIds.push(jobId);
         }
-        logger.info(`✅ Dispatched jobs for ${activeUsers.length} users, waiting for completion...`);
+        logger.info(`✅ Dispatched jobs for ${activeProducts.length} products, waiting for completion...`);
 
         // Wait for all jobs to complete
         await waitForJobsToComplete(jobIds);
-        logger.info(`✅ All ${activeUsers.length} jobs completed`);
+        logger.info(`✅ All ${activeProducts.length} jobs completed`);
       } catch (err) {
         logger.error({ err }, 'Error in scraper dispatcher');
       }
@@ -188,7 +188,7 @@ async function startServer() {
       const startTime = Date.now();
 
       while (Date.now() - startTime < maxWaitTime) {
-        const jobs = await Promise.all(jobIds.map(id => scraperQueue.getJob(id)));
+        const jobs = await Promise.all(jobIds.map(id => pipelineQueue.getJob(id)));
         const allCompleted = jobs.every(job => !job || job.finishedOn);
         
         if (allCompleted) {
