@@ -71,8 +71,16 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
 
 export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.['token'] || req.headers.authorization?.split(' ')[1];
+    const token = req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
     if (!token) return next();
+
+    // Verify JWT integrity before touching the DB (defence-in-depth)
+    try {
+      jwt.verify(token, config.JWT_SECRET);
+    } catch {
+      // Token is malformed or expired — treat as unauthenticated, don't block
+      return next();
+    }
 
     const session = await db.client.session.findUnique({
       where: { sessionToken: token },
@@ -85,10 +93,10 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
             role: true,
             plan: true,
             createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
+            updatedAt: true,
+          },
+        },
+      },
     });
 
     if (session && session.expiresAt > new Date()) {

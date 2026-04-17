@@ -8,16 +8,37 @@ import { config } from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { sendEmail } from '../lib/mailer.js';
 import { z } from 'zod';
+import cache from '../lib/cache.js';
+
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+
+/** Session duration shared across login, Google OAuth, and the JWT. */
+const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/** TTL (seconds) for server-side OAuth state entries — matches the 15-minute window. */
+const OAUTH_STATE_TTL_SECONDS = 15 * 60;
+
+// ─────────────────────────────────────────────
+// VALIDATION SCHEMAS
+// ─────────────────────────────────────────────
 
 const registerSchema = z.object({
   email: z.string().email(),
-  username: z.string().min(3).max(30),
+  // Usernames: alphanumeric + underscores + hyphens only. Prevents injection / path weirdness.
+  username: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username may only contain letters, numbers, underscores, and hyphens'),
   password: z.string().min(8),
 });
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
+  // Keep password validation minimal on login — never expose what the rules are on failure.
+  password: z.string().min(1),
 });
 
 const forgotPasswordSchema = z.object({
@@ -26,9 +47,54 @@ const forgotPasswordSchema = z.object({
 
 const resetPasswordSchema = z.object({
   email: z.string().email(),
-  token: z.string(),
+  token: z.string().min(1),
   newPassword: z.string().min(8),
 });
+
+const verifyEmailSchema = z.object({
+  email: z.string().email(),
+  token: z.string().min(1),
+});
+
+// ─────────────────────────────────────────────
+// SHARED HELPERS
+// ─────────────────────────────────────────────
+
+/** Cookie options used consistently across all auth flows. */
+const buildCookieOptions = () => ({
+  httpOnly: true,
+  secure: config.NODE_ENV === 'production',
+  sameSite: (config.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
+  path: '/',
+});
+
+/**
+ * Creates a server-side session + issues the JWT cookie.
+ * Single source of truth for all login flows (email/password and OAuth).
+ */
+const issueSession = async (
+  res: Response,
+  userId: string,
+): Promise<void> => {
+  const token = jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: '7d' });
+
+  await db.client.session.create({
+    data: {
+      userId,
+      sessionToken: token,
+      expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
+    },
+  });
+
+  res.cookie('token', token, {
+    ...buildCookieOptions(),
+    maxAge: SESSION_DURATION_MS,
+  });
+};
+
+// ─────────────────────────────────────────────
+// REGISTER
+// ─────────────────────────────────────────────
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -40,9 +106,12 @@ export const register = async (req: Request, res: Response) => {
 
     const { email, username, password } = parsed.data;
 
+    // Normalise email to avoid duplicate accounts from case differences
+    const normalisedEmail = email.toLowerCase().trim();
+
     // Check if user exists
     const existingUser = await db.client.user.findFirst({
-      where: { OR: [{ email }, { username }] }
+      where: { OR: [{ email: normalisedEmail }, { username }] },
     });
 
     if (existingUser) {
@@ -50,19 +119,17 @@ export const register = async (req: Request, res: Response) => {
       return;
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
 
-    // Create user
     const user = await db.client.user.create({
       data: {
-        email,
+        email: normalisedEmail,
         username,
         password: hashedPassword,
-      }
+      },
     });
 
-    // Create a VERIFY_EMAIL OtpCode natively
+    // Generate and store a hashed email-verification token
     const verifyToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = await bcrypt.hash(verifyToken, config.BCRYPT_ROUNDS);
 
@@ -72,14 +139,14 @@ export const register = async (req: Request, res: Response) => {
         email: user.email,
         code: hashedToken,
         type: 'VERIFY_EMAIL',
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-      }
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      },
     });
 
-    // Send Verification Email
     const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+
     const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-w-[600px] margin: auto; padding: 20px;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
         <h2 style="color: #0f172a;">Welcome to ${config.PROJECT_NAME}!</h2>
         <p>Please confirm your email address so you can log into your dashboard.</p>
         <br/>
@@ -89,7 +156,11 @@ export const register = async (req: Request, res: Response) => {
     `;
 
     await sendEmail(user.email, `Verify Your ${config.PROJECT_NAME} Account`, htmlTemplate);
-    logger.info(`🚨 DEV VERIFY LINK: ${verifyUrl}`);
+
+    // Only log verify links in non-production environments
+    if (config.NODE_ENV !== 'production') {
+      logger.info(`🚨 DEV VERIFY LINK: ${verifyUrl}`);
+    }
 
     res.status(201).json({
       success: true,
@@ -100,73 +171,60 @@ export const register = async (req: Request, res: Response) => {
         username: user.username,
         role: user.role,
         isScanning: user.isScanning,
-        lastScanStatus: user.lastScanStatus
-      }
+        lastScanStatus: user.lastScanStatus,
+      },
     });
-    return;
   } catch (error) {
     logger.error({ error }, 'Registration error');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
+// ─────────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────────
+
 export const login = async (req: Request, res: Response) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      res.status(400).json({ error: 'Invalid input parameters', details: parsed.error.issues });
-      return;
-    }
-
-    const { email, password } = parsed.data;
-
-    // Find the user
-    const user = await db.client.user.findUnique({
-      where: { email }
-    });
-
-    if (!user || !user.password) {
+      // Generic error — do not leak which field is wrong (email enumeration)
       res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
-    // Explicit Verification Block
-    if (!user.emailVerified) {
-      res.status(403).json({ error: 'Please verify your email address before logging in.', requiresVerification: true });
+    const { email, password } = parsed.data;
+    const normalisedEmail = email.toLowerCase().trim();
+
+    const user = await db.client.user.findUnique({ where: { email: normalisedEmail } });
+
+    // Guard: user must exist and have a password (i.e. is not OAuth-only)
+    if (!user || !user.password) {
+      // Constant-time check to prevent timing attacks that reveal whether an
+      // email exists in the DB (run a throwaway bcrypt compare regardless).
+      await bcrypt.compare(password, '$2b$12$invalidhashpadding000000000000000000000000000000000000000');
+      res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
-    // Validate password
+    // Validate password before checking email verification so we don't leak
+    // whether an unverified account exists via the different error message.
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
-    // Create token
-    const token = jwt.sign(
-      { userId: user.id },
-      config.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Block unverified accounts AFTER password check to avoid user enumeration
+    if (!user.emailVerified) {
+      res.status(403).json({
+        error: 'Please verify your email address before logging in.',
+        requiresVerification: true,
+      });
+      return;
+    }
 
-    // Create server-side session
-    await db.client.session.create({
-      data: {
-        userId: user.id,
-        sessionToken: token,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    });
-
-    // Set HTTP-only cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: config.NODE_ENV === 'production',
-      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/'
-    });
+    await issueSession(res, user.id);
 
     res.status(200).json({
       success: true,
@@ -176,8 +234,8 @@ export const login = async (req: Request, res: Response) => {
         username: user.username,
         role: user.role,
         isScanning: user.isScanning,
-        lastScanStatus: user.lastScanStatus
-      }
+        lastScanStatus: user.lastScanStatus,
+      },
     });
   } catch (error) {
     logger.error({ error }, 'Login error');
@@ -185,23 +243,20 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// LOGOUT
+// ─────────────────────────────────────────────
+
 export const logout = async (req: Request, res: Response) => {
   try {
-    const token = req.cookies?.['token'] || req.headers.authorization?.split(' ')[1];
-    
+    const token =
+      req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
+
     if (token) {
-      // Remove server-side session tracking
-      await db.client.session.deleteMany({
-        where: { sessionToken: token }
-      });
+      await db.client.session.deleteMany({ where: { sessionToken: token } });
     }
 
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: config.NODE_ENV === 'production',
-      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/'
-    });
+    res.clearCookie('token', buildCookieOptions());
     res.status(200).json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     logger.error({ error }, 'Logout error');
@@ -209,20 +264,35 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// FORGOT PASSWORD
+// ─────────────────────────────────────────────
+
 export const forgotPassword = async (req: Request, res: Response) => {
+  // Normalise the success message outside the try so both branches return the
+  // same shape — prevents email enumeration via response-time differences.
+  const successResponse = {
+    success: true,
+    message: 'If an account exists, a reset link was sent.',
+  };
+
   try {
     const parsed = forgotPasswordSchema.safeParse(req.body);
-    if (!parsed.success) { res.status(400).json({ error: 'Invalid email' }); return; }
-
-    const { email } = parsed.data;
-    const user = await db.client.user.findUnique({ where: { email } });
-    if (!user) {
-      // Return success anyway to prevent email enumeration attacks
-      res.status(200).json({ success: true, message: 'If an account exists, a reset link was sent.' });
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid email' });
       return;
     }
 
-    // Generate token and hash it
+    const { email } = parsed.data;
+    const normalisedEmail = email.toLowerCase().trim();
+
+    const user = await db.client.user.findUnique({ where: { email: normalisedEmail } });
+    if (!user) {
+      // Always return 200 to prevent email enumeration attacks
+      res.status(200).json(successResponse);
+      return;
+    }
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = await bcrypt.hash(resetToken, config.BCRYPT_ROUNDS);
 
@@ -232,15 +302,14 @@ export const forgotPassword = async (req: Request, res: Response) => {
         email: user.email,
         code: hashedToken,
         type: 'RESET_PASSWORD',
-        expiresAt: new Date(Date.now() + 20 * 60 * 1000) // 20 minutes
-      }
+        expiresAt: new Date(Date.now() + 20 * 60 * 1000), // 20 minutes
+      },
     });
 
-    // Send the email via Nodemailer
     const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
-    
+
     const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-w-[600px] margin: auto; padding: 20px;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
         <h2 style="color: #0f172a;">Password Reset Request</h2>
         <p>You requested to reset your password for ${config.PROJECT_NAME}. Please click the button below to choose a new password. This link will expire in 20 minutes.</p>
         <br/>
@@ -252,57 +321,76 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     await sendEmail(user.email, `Reset your ${config.PROJECT_NAME} Password`, htmlTemplate);
 
-    // For local dev, we will log it so we can easily copy-paste
-    logger.info(`🚨 DEV PASSWORD RESET LINK: ${resetUrl}`);
+    if (config.NODE_ENV !== 'production') {
+      logger.info(`🚨 DEV PASSWORD RESET LINK: ${resetUrl}`);
+    }
 
-    res.status(200).json({ success: true, message: 'If an account exists, a reset link was sent.' });
+    res.status(200).json(successResponse);
   } catch (error) {
     logger.error({ error }, 'Forgot password error');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
+// ─────────────────────────────────────────────
+// RESET PASSWORD
+// ─────────────────────────────────────────────
+
 export const resetPassword = async (req: Request, res: Response) => {
   try {
     const parsed = resetPasswordSchema.safeParse(req.body);
-    if (!parsed.success) { res.status(400).json({ error: 'Invalid input' }); return; }
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid input' });
+      return;
+    }
 
     const { email, token, newPassword } = parsed.data;
+    const normalisedEmail = email.toLowerCase().trim();
 
-    // Find unused OTP codes for this email
     const otpCodes = await db.client.otpCode.findMany({
       where: {
-        email,
+        email: normalisedEmail,
         type: 'RESET_PASSWORD',
         usedAt: null,
-        expiresAt: { gt: new Date() } // not expired
-      }
+        expiresAt: { gt: new Date() },
+      },
     });
 
     if (otpCodes.length === 0) {
-       res.status(400).json({ error: 'Token is invalid or expired' }); return;
+      res.status(400).json({ error: 'Token is invalid or expired' });
+      return;
     }
 
     let matchingOtp = null;
     for (const otp of otpCodes) {
-      const isValid = await bcrypt.compare(token, otp.code);
-      if (isValid) matchingOtp = otp;
+      if (await bcrypt.compare(token, otp.code)) {
+        matchingOtp = otp;
+        break; // Stop on first match — no need to check the rest
+      }
     }
 
-    if (!matchingOtp) { res.status(400).json({ error: 'Token is invalid or expired' }); return; }
+    if (!matchingOtp) {
+      res.status(400).json({ error: 'Token is invalid or expired' });
+      return;
+    }
 
-    // Mark as used
+    // Mark token as used first (prevents a race-condition replay attack)
     await db.client.otpCode.update({
       where: { id: matchingOtp.id },
-      data: { usedAt: new Date() }
+      data: { usedAt: new Date() },
     });
 
-    // Update password
     const hashedPassword = await bcrypt.hash(newPassword, config.BCRYPT_ROUNDS);
+
     await db.client.user.update({
-      where: { email },
-      data: { password: hashedPassword }
+      where: { email: normalisedEmail },
+      data: { password: hashedPassword },
     });
+
+    // Invalidate ALL existing sessions for the user on password reset for security.
+    if (matchingOtp.userId) {
+      await db.client.session.deleteMany({ where: { userId: matchingOtp.userId } });
+    }
 
     res.status(200).json({ success: true, message: 'Password reset successfully' });
   } catch (error) {
@@ -311,47 +399,57 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-const verifyEmailSchema = z.object({
-  email: z.string().email(),
-  token: z.string()
-});
+// ─────────────────────────────────────────────
+// VERIFY EMAIL
+// ─────────────────────────────────────────────
 
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const parsed = verifyEmailSchema.safeParse(req.body);
-    if (!parsed.success) { res.status(400).json({ error: 'Invalid parameters' }); return; }
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid parameters' });
+      return;
+    }
 
     const { email, token } = parsed.data;
+    const normalisedEmail = email.toLowerCase().trim();
 
     const otpCodes = await db.client.otpCode.findMany({
       where: {
-        email,
+        email: normalisedEmail,
         type: 'VERIFY_EMAIL',
         usedAt: null,
-        expiresAt: { gt: new Date() }
-      }
+        expiresAt: { gt: new Date() },
+      },
     });
 
     if (otpCodes.length === 0) {
-      res.status(400).json({ error: 'Verification link is invalid or expired' }); return;
+      res.status(400).json({ error: 'Verification link is invalid or expired' });
+      return;
     }
 
     let matchingOtp = null;
     for (const otp of otpCodes) {
-      if (await bcrypt.compare(token, otp.code)) matchingOtp = otp;
+      if (await bcrypt.compare(token, otp.code)) {
+        matchingOtp = otp;
+        break;
+      }
     }
 
-    if (!matchingOtp) { res.status(400).json({ error: 'Verification link is invalid or expired' }); return; }
+    if (!matchingOtp) {
+      res.status(400).json({ error: 'Verification link is invalid or expired' });
+      return;
+    }
 
-    // Mark verified
-    await db.client.user.update({
-      where: { email },
-      data: { emailVerified: new Date() }
-    });
-
+    // Mark token as used before updating the user (prevents replay attacks)
     await db.client.otpCode.update({
       where: { id: matchingOtp.id },
-      data: { usedAt: new Date() }
+      data: { usedAt: new Date() },
+    });
+
+    await db.client.user.update({
+      where: { email: normalisedEmail },
+      data: { emailVerified: new Date() },
     });
 
     res.status(200).json({ success: true, message: 'Email fully verified! You can now log in.' });
@@ -361,59 +459,65 @@ export const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// GET ME
+// ─────────────────────────────────────────────
+
 export const getMe = async (req: Request, res: Response) => {
-  // @ts-ignore req.user is populated by authMiddleware
-  const user = req.user;
-  res.status(200).json({ success: true, user });
+  // req.user is populated by requireAuth middleware
+  res.status(200).json({ success: true, user: req.user });
 };
 
 // ─────────────────────────────────────────────
 // GOOGLE OAUTH FLOW
 // ─────────────────────────────────────────────
-export const googleAuthUrl = (_req: Request, res: Response) => {
+
+export const googleAuthUrl = async (_req: Request, res: Response) => {
   if (!config.GOOGLE_CLIENT_ID || !config.GOOGLE_CLIENT_SECRET) {
     res.status(500).json({ error: 'Google OAuth not configured on this server.' });
     return;
   }
 
-  // Generate a cryptographically secure state for CSRF protection
+  // Generate a cryptographically secure state token for CSRF protection.
   const state = crypto.randomBytes(32).toString('hex');
-  
-  // Store state in a secure, short-lived cookie
-  res.cookie('oauth_state', state, {
-    httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 15 * 60 * 1000, // 15 minutes
-    path: '/'
-  });
 
-  const client = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, config.GOOGLE_REDIRECT_URI);
-  
+  // Persist the state server-side so the callback can validate it without
+  // relying on cookies. Cross-origin redirect chains (Vercel → Render →
+  // Google → Render) caused SameSite cookie stripping, which broke the
+  // previous cookie-based validation.
+  await cache.set(`oauth_state:${state}`, true, OAUTH_STATE_TTL_SECONDS);
+
+  const client = new OAuth2Client(
+    config.GOOGLE_CLIENT_ID,
+    config.GOOGLE_CLIENT_SECRET,
+    config.GOOGLE_REDIRECT_URI,
+  );
+
   const authUrl = client.generateAuthUrl({
     access_type: 'offline',
     scope: ['email', 'profile'],
-    state: state // Pass state to Google
+    state,
   });
-  
+
   res.redirect(authUrl);
 };
 
 export const googleCallback = async (req: Request, res: Response) => {
-  const code = req.query?.['code'] as string;
-  const returnedState = req.query?.['state'] as string;
-  const storedState = req.cookies?.['oauth_state'];
+  const code = req.query?.['code'] as string | undefined;
+  const returnedState = req.query?.['state'] as string | undefined;
 
-  // Clear state cookie immediately
-  res.clearCookie('oauth_state', {
-    httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/'
-  });
+  // Validate state server-side (CSRF protection — no cookie dependency).
+  const stateKey = `oauth_state:${returnedState}`;
+  const isValidState = returnedState
+    ? await cache.get<boolean>(stateKey)
+    : undefined;
 
-  // 1. Validate State (CSRF Protection)
-  if (!returnedState || !storedState || returnedState !== storedState) {
+  // Consume the state immediately to prevent replay attacks.
+  if (returnedState) {
+    await cache.del(stateKey);
+  }
+
+  if (!isValidState) {
     logger.warn('🚨 Potential CSRF attack detected in Google OAuth callback');
     res.redirect(`${config.FRONTEND_URL}/login?error=Invalid+state+parameter`);
     return;
@@ -425,69 +529,73 @@ export const googleCallback = async (req: Request, res: Response) => {
   }
 
   try {
-    const client = new OAuth2Client(config.GOOGLE_CLIENT_ID, config.GOOGLE_CLIENT_SECRET, config.GOOGLE_REDIRECT_URI);
+    const client = new OAuth2Client(
+      config.GOOGLE_CLIENT_ID,
+      config.GOOGLE_CLIENT_SECRET,
+      config.GOOGLE_REDIRECT_URI,
+    );
+
     const { tokens } = await client.getToken(code);
+
+    if (!tokens.id_token) {
+      throw new Error('No id_token returned from Google');
+    }
+
     const ticket = await client.verifyIdToken({
-      idToken: tokens.id_token || "",
-      audience: config.GOOGLE_CLIENT_ID || ""
+      idToken: tokens.id_token,
+      audience: config.GOOGLE_CLIENT_ID ?? '',
     });
 
     const payload = ticket.getPayload();
-    if (!payload || !payload.email || !payload.sub) throw new Error("Invalid payload returned from Google");
-    
-    const googleEmail = payload.email as string;
-    const googleSub = payload.sub as string;
+    if (!payload?.email || !payload.sub) {
+      throw new Error('Invalid payload returned from Google');
+    }
 
-    // 1. Find or create user
+    const googleEmail = payload.email.toLowerCase().trim();
+    const googleSub = payload.sub;
+
+    // Find or create the user record.
     let user = await db.client.user.findUnique({ where: { email: googleEmail } });
 
     if (!user) {
       user = await db.client.user.create({
         data: {
           email: googleEmail,
-          emailVerified: new Date(), // Auto-verify OAuth emails natively!
-          username: (googleEmail.split('@')[0] || 'user') + Math.floor(Math.random() * 10000), // Secure fallback name
-        }
+          emailVerified: new Date(), // OAuth emails are pre-verified by Google.
+          username:
+            (googleEmail.split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_-]/g, '') +
+            Math.floor(Math.random() * 10000),
+        },
+      });
+    } else if (!user.emailVerified) {
+      // Edge-case: user registered with email/password but never verified,
+      // then logs in with Google. Auto-verify their email since Google confirms it.
+      await db.client.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
       });
     }
 
-    // 2. Bind OAuth account record (Upsert enforces uniqueness of provider+account combination)
+    // Bind the OAuth account record (upsert enforces uniqueness per provider+account).
     await db.client.oAuthAccount.upsert({
-      where: { 
-        provider_providerAccountId: { 
-          provider: 'GOOGLE', 
-          providerAccountId: googleSub 
-        } 
+      where: {
+        provider_providerAccountId: {
+          provider: 'GOOGLE',
+          providerAccountId: googleSub,
+        },
       },
       update: {},
       create: {
         userId: user.id,
         provider: 'GOOGLE',
         providerAccountId: googleSub,
-      }
+      },
     });
 
-    // 3. Force-login the user inside our native DB System exactly as standard logins work
-    const token = jwt.sign({ userId: user.id }, config.JWT_SECRET, { expiresIn: '7d' });
+    // Issue a session JWT identical to the standard login flow.
+    await issueSession(res, user.id);
 
-    await db.client.session.create({
-      data: {
-        userId: user.id,
-        sessionToken: token,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: config.NODE_ENV === 'production',
-      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
-
-    // 4. Return them straight to the glorious dashboard
     res.redirect(`${config.FRONTEND_URL}/dashboard`);
-
   } catch (error) {
     logger.error({ error }, 'Google OAuth Error');
     res.redirect(`${config.FRONTEND_URL}/login?error=Google+Authentication+Failed`);
