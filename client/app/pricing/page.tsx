@@ -126,7 +126,6 @@ export default function PricingPage() {
               className={`text-sm font-semibold flex items-center gap-2 transition-colors ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
             >
               Yearly
-              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">2 Months Free</span>
             </button>
           </div>
         </div>

@@ -34,11 +34,9 @@ export const PLANS = {
     },
     monthly: { 
       priceId: process.env['PADDLE_STARTER_MONTHLY_PRICE_ID'] || "pri_starter_monthly",
-      price: 25,
     },
     yearly: { 
       priceId: process.env['PADDLE_STARTER_YEARLY_PRICE_ID'] || "pri_starter_yearly",
-      price: 250, // 2 months free
     },
   },
   PRO: {
@@ -60,11 +58,9 @@ export const PLANS = {
     },
     monthly: { 
       priceId: process.env['PADDLE_PRO_MONTHLY_PRICE_ID'] || "pri_pro_monthly",
-      price: 69,
     },
     yearly: { 
       priceId: process.env['PADDLE_PRO_YEARLY_PRICE_ID'] || "pri_pro_yearly",
-      price: 690, // 2 months free
     },
   },
 } as const;
