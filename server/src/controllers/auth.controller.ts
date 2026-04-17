@@ -71,7 +71,7 @@ const buildCookieOptions = () => ({
  * Creates a server-side session + issues the JWT cookie.
  * Single source of truth for all login flows (email/password and OAuth).
  */
-const issueSession = async (res: Response, userId: string): Promise<void> => {
+const issueSession = async (res: Response, userId: string): Promise<string> => {
   const token = jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: '7d' });
 
   await db.client.session.create({
@@ -86,6 +86,8 @@ const issueSession = async (res: Response, userId: string): Promise<void> => {
     ...buildCookieOptions(),
     maxAge: SESSION_DURATION_MS,
   });
+
+  return token;
 };
 
 // ─────────────────────────────────────────────
@@ -590,9 +592,10 @@ export const googleCallback = async (req: Request, res: Response) => {
     });
 
     // Issue a session JWT identical to the standard login flow.
-    await issueSession(res, user.id);
+    const token = await issueSession(res, user.id);
 
-    res.redirect(`${config.FRONTEND_URL}/dashboard`);
+    // Redirect to the frontend callback so it can set the cookie in a first-party context
+    res.redirect(`${config.FRONTEND_URL}/auth/callback?token=${token}`);
   } catch (error) {
     logger.error({ error }, 'Google OAuth Error');
     res.redirect(`${config.FRONTEND_URL}/login?error=Google+Authentication+Failed`);
