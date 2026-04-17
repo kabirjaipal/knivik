@@ -474,32 +474,39 @@ export default function DashboardPage() {
                 subColor: 'text-primary' 
               },
             ].map((m, i) => (
-              <Card key={i} className={`shadow-lg border-border/40 overflow-hidden group relative ${m.highlight ? 'bg-primary/5 border-primary/30' : 'bg-card hover:border-primary/40 transition-colors'}`}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className={`text-xs font-bold uppercase tracking-widest ${m.highlight ? 'text-primary' : 'text-muted-foreground'}`}>{m.label}</CardTitle>
-                  <m.icon className={`h-4 w-4 ${m.highlight ? 'text-primary' : 'text-muted-foreground'}`} />
+              <Card key={i} className={`shadow-lg border-border/40 overflow-hidden group relative transition-all duration-300 hover:shadow-primary/5 ${m.highlight ? 'bg-primary/5 border-primary/30' : 'bg-card hover:border-primary/40'}`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 bg-linear-to-br from-muted/10 to-transparent">
+                  <CardTitle className={`text-[10px] font-black uppercase tracking-widest ${m.highlight ? 'text-primary' : 'text-muted-foreground'}`}>{m.label}</CardTitle>
+                  <m.icon className={`h-4 w-4 ${m.highlight ? 'text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]' : 'text-muted-foreground'}`} />
                 </CardHeader>
-                <CardContent>
-                  <div className={`text-4xl font-black ${m.highlight ? 'text-primary' : ''}`}>{m.value}</div>
-                  <p className={`text-xs font-medium mt-1.5 ${m.subColor}`}>{m.sub}</p>
+                <CardContent className="pt-4">
+                  <div className={`text-3xl font-black tracking-tight ${m.highlight ? 'text-primary' : ''}`}>{m.value}</div>
+                  <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 ${m.subColor}`}>{m.sub}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
-
-          {/* Lead stream */}
-          <Card className="border-border/50 shadow-xl bg-card overflow-hidden rounded-2xl">
-            <CardHeader className="border-b border-border/40 bg-muted/10 pb-5">
-              <CardTitle className="text-xl font-bold flex items-center">
-                <Radar className="mr-2.5 text-primary h-5 w-5" /> Live Detection Stream
-              </CardTitle>
-              <CardDescription className="text-sm mt-1">
-                Keyword matches, semantic finds, and competitor signals — all in one place.
-              </CardDescription>
-            </CardHeader>
+ 
+           {/* Lead stream */}
+           <Card className="border-border/50 shadow-2xl bg-card overflow-hidden rounded-2xl">
+             <CardHeader className="border-b border-border/50 pb-6">
+               <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                   <Radar className="text-primary h-5 w-5" />
+                 </div>
+                 <div>
+                   <CardTitle className="text-2xl font-black tracking-tight flex items-center">
+                     Live Detection Stream
+                   </CardTitle>
+                   <CardDescription className="text-xs font-medium text-muted-foreground/60 mt-0.5 uppercase tracking-wider">
+                     Keyword matches, semantic finds, and competitor signals monitored 24/7.
+                   </CardDescription>
+                 </div>
+               </div>
+             </CardHeader>
 
             {/* Tabs */}
-            <div className="flex gap-0 border-b border-border/40 overflow-x-auto">
+            <div className="flex gap-0 border-b border-border/40">
               {TABS.map(tab => (
                 <button key={tab.key}
                   onClick={() => setActiveTab(tab.key)}

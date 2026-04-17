@@ -117,8 +117,12 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Auto-generate strategy for Onboarding Users who submit empty configs
-    if (data.keywords.length === 0 && data.sources.length === 0 && data.name) {
+    // Auto-generate strategy for users who submit empty or minimal configs (only global HN)
+    const hasNoKeywords = data.keywords.length === 0;
+    const hasOnlyGlobalSources = data.sources.length === 0 || 
+      (data.sources.length === 1 && data.sources[0]?.platform === Platform.HACKERNEWS && data.sources[0]?.identifier === 'global');
+
+    if (hasNoKeywords && hasOnlyGlobalSources && data.name) {
       try {
         const strategy = await generateProductStrategy(data.name, data.description || '', userId);
         if (strategy) {

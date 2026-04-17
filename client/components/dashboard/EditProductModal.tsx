@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import { X, Zap, Loader2 } from "lucide-react"
 
 interface Product {
   id: string
@@ -45,7 +45,42 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
     customPersona: product.aiConfig?.customPersona || "",
   })
   const [loading, setLoading] = useState(false)
+  const [isAiLoading, setIsAiLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const handleAiSuggest = async () => {
+    if (!formData.name || !formData.description) return
+    setIsAiLoading(true)
+    setError(null)
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(`${apiUrl}/products/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        cache: "no-store",
+        body: JSON.stringify({ name: formData.name, description: formData.description }),
+      })
+
+      if (!res.ok) throw new Error("AI analysis failed")
+      const data = await res.json()
+      const strategy = data.strategy
+
+      setFormData({
+        ...formData,
+        keywords: strategy.keywords.join(", "),
+        negativeKeywords: strategy.negativeKeywords.join(", "),
+        competitors: strategy.competitors.join(", "),
+        redditSources: strategy.subreddits.join(", "),
+        twitterSources: strategy.twitterHandles.map((h: string) => h.replace("@", "")).join(", "),
+      })
+    } catch (err: any) {
+      setError("AI Suggestion failed. Please fill manually.")
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,6 +93,7 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        cache: "no-store",
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
@@ -95,12 +131,23 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
         }),
       })
 
-      if (!res.ok) throw new Error("Failed to update product")
+      if (!res.ok) {
+        let errorMessage = 'Failed to update product';
+        try {
+          const errData = await res.json();
+          errorMessage = errData.error || errorMessage;
+        } catch (parseErr) {
+          errorMessage = res.statusText || errorMessage;
+        }
+        setError(errorMessage);
+        setLoading(false);
+        return; // Exit early
+      }
 
       onUpdate()
       onClose()
     } catch (e: any) {
-      setError(e.message)
+      setError("A network error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -109,12 +156,17 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto border-border shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-card/95 backdrop-blur-xl">
+        <CardHeader className="pb-4 border-b border-border/40 bg-gradient-to-br from-muted/20 via-transparent to-transparent">
           <div className="flex justify-between items-center">
-            <CardTitle>Edit Product</CardTitle>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Zap className="w-4 h-4 text-primary" />
+              </div>
+              <CardTitle className="text-foreground text-lg font-black tracking-tight">Edit Product</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose} className="rounded-xl hover:bg-muted/80">
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -128,44 +180,57 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
             )}
 
             <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Product Name</label>
+                  <input
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
+                    placeholder="e.g. Acme CRM"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Website</label>
+                  <input
+                    type="url"
+                    value={formData.websiteUrl}
+                    onChange={(e) =>
+                      setFormData({ ...formData, websiteUrl: e.target.value })
+                    }
+                    className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
+                    placeholder="https://example.com"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <label className="block text-sm font-medium">Product Name</label>
-                <input
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium">Description</label>
+                  <button
+                    type="button"
+                    disabled={!formData.name || !formData.description || isAiLoading}
+                    onClick={handleAiSuggest}
+                    className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 fill-current" />}
+                    Magic AI Suggest
+                  </button>
+                </div>
+                <textarea
                   required
-                  value={formData.name}
+                  value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({ ...formData, description: e.target.value })
                   }
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
-                  placeholder="e.g. Acme CRM"
+                  className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary h-[104px] resize-none"
+                  placeholder="We help freelancers track sales..."
                 />
               </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium">Website</label>
-                <input
-                  type="url"
-                  value={formData.websiteUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, websiteUrl: e.target.value })
-                  }
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
-                  placeholder="https://example.com"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Description</label>
-              <textarea
-                required
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full border border-input bg-background rounded-lg px-3 py-2 focus:outline-none focus:border-primary h-20 resize-none"
-                placeholder="We help freelancers track sales..."
-              />
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
@@ -174,7 +239,6 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
                   Keywords (comma separated)
                 </label>
                 <input
-                  required
                   value={formData.keywords}
                   onChange={(e) =>
                     setFormData({ ...formData, keywords: e.target.value })
@@ -274,10 +338,10 @@ export function EditProductModal({ product, isOpen, onClose, onUpdate }: EditPro
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || isAiLoading}>
                 {loading ? "Updating..." : "Update Product"}
               </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={loading || isAiLoading}>
                 Cancel
               </Button>
             </div>
