@@ -8,7 +8,6 @@ import { config } from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { sendEmail } from '../lib/mailer.js';
 import { z } from 'zod';
-import cache from '../lib/cache.js';
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -16,9 +15,6 @@ import cache from '../lib/cache.js';
 
 /** Session duration shared across login, Google OAuth, and the JWT. */
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-/** TTL (seconds) for server-side OAuth state entries — matches the 15-minute window. */
-const OAUTH_STATE_TTL_SECONDS = 15 * 60;
 
 // ─────────────────────────────────────────────
 // VALIDATION SCHEMAS
@@ -31,7 +27,10 @@ const registerSchema = z.object({
     .string()
     .min(3)
     .max(30)
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Username may only contain letters, numbers, underscores, and hyphens'),
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      'Username may only contain letters, numbers, underscores, and hyphens'
+    ),
   password: z.string().min(8),
 });
 
@@ -72,10 +71,7 @@ const buildCookieOptions = () => ({
  * Creates a server-side session + issues the JWT cookie.
  * Single source of truth for all login flows (email/password and OAuth).
  */
-const issueSession = async (
-  res: Response,
-  userId: string,
-): Promise<void> => {
+const issueSession = async (res: Response, userId: string): Promise<void> => {
   const token = jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: '7d' });
 
   await db.client.session.create({
@@ -202,7 +198,10 @@ export const login = async (req: Request, res: Response) => {
     if (!user || !user.password) {
       // Constant-time check to prevent timing attacks that reveal whether an
       // email exists in the DB (run a throwaway bcrypt compare regardless).
-      await bcrypt.compare(password, '$2b$12$invalidhashpadding000000000000000000000000000000000000000');
+      await bcrypt.compare(
+        password,
+        '$2b$12$invalidhashpadding000000000000000000000000000000000000000'
+      );
       res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
@@ -249,8 +248,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    const token =
-      req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
+    const token = req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
 
     if (token) {
       await db.client.session.deleteMany({ where: { sessionToken: token } });
@@ -478,19 +476,15 @@ export const googleAuthUrl = async (_req: Request, res: Response) => {
     return;
   }
 
-  // Generate a cryptographically secure state token for CSRF protection.
-  const state = crypto.randomBytes(32).toString('hex');
-
-  // Persist the state server-side so the callback can validate it without
-  // relying on cookies. Cross-origin redirect chains (Vercel → Render →
-  // Google → Render) caused SameSite cookie stripping, which broke the
-  // previous cookie-based validation.
-  await cache.set(`oauth_state:${state}`, true, OAUTH_STATE_TTL_SECONDS);
+  // Generate a stateless JWT for the state parameter (CSRF protection).
+  // This avoids relying on cookies (which get stripped in cross-origin redirect chains)
+  // or memory cache (which fails in serverless environments like Vercel).
+  const state = jwt.sign({ purpose: 'google_oauth' }, config.JWT_SECRET, { expiresIn: '15m' });
 
   const client = new OAuth2Client(
     config.GOOGLE_CLIENT_ID,
     config.GOOGLE_CLIENT_SECRET,
-    config.GOOGLE_REDIRECT_URI,
+    config.GOOGLE_REDIRECT_URI
   );
 
   const authUrl = client.generateAuthUrl({
@@ -506,15 +500,18 @@ export const googleCallback = async (req: Request, res: Response) => {
   const code = req.query?.['code'] as string | undefined;
   const returnedState = req.query?.['state'] as string | undefined;
 
-  // Validate state server-side (CSRF protection — no cookie dependency).
-  const stateKey = `oauth_state:${returnedState}`;
-  const isValidState = returnedState
-    ? await cache.get<boolean>(stateKey)
-    : undefined;
-
-  // Consume the state immediately to prevent replay attacks.
+  // Validate the JWT state (CSRF protection — no cookie or cache dependency).
+  let isValidState = false;
   if (returnedState) {
-    await cache.del(stateKey);
+    try {
+      const decoded = jwt.verify(returnedState, config.JWT_SECRET) as any;
+      if (decoded && decoded.purpose === 'google_oauth') {
+        isValidState = true;
+      }
+    } catch (err) {
+      logger.warn({ err }, 'OAuth state JWT verification failed');
+      isValidState = false;
+    }
   }
 
   if (!isValidState) {
@@ -532,7 +529,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     const client = new OAuth2Client(
       config.GOOGLE_CLIENT_ID,
       config.GOOGLE_CLIENT_SECRET,
-      config.GOOGLE_REDIRECT_URI,
+      config.GOOGLE_REDIRECT_URI
     );
 
     const { tokens } = await client.getToken(code);
