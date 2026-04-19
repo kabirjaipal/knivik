@@ -23,8 +23,8 @@ const paddle = new Paddle(config.PADDLE_API_KEY || '', {
  */
 router.post('/paddle', async (req, res, next) => {
   try {
-    const signature = req.headers['x-paddle-signature'] as string || '';
-    const rawBody = JSON.stringify(req.body); // Express.json() is used, but Paddle SDK might need raw body for verification if not handled by SDK
+    const signature = req.headers['paddle-signature'] as string || '';
+    const rawBody = req.rawBody || JSON.stringify(req.body);
     
     // In production, we MUST verify the signature
     if (config.PADDLE_WEBHOOK_SECRET) {
@@ -60,6 +60,7 @@ router.post('/paddle', async (req, res, next) => {
 });
 
 async function processPaddleEvent(eventType: EventName, payload: any) {
+  console.log('Paddle webhook:', eventType);
   switch (eventType) {
     case 'subscription.created':
     case 'subscription.updated':
@@ -82,12 +83,14 @@ async function processPaddleEvent(eventType: EventName, payload: any) {
 async function handleSubscriptionCreatedOrUpdated(payload: any) {
   const {
     id: paddleSubscriptionId,
-    customer_id: paddleCustomerId,
+    customerId: paddleCustomerId,
     items,
     status,
-    current_billing_period: { ends_at } = {},
-    custom_data,
+    currentBillingPeriod,
+    customData,
   } = payload;
+
+  const endsAt = currentBillingPeriod?.endsAt;
 
   // Get price ID from first item
   const priceId = items?.[0]?.price?.id;
@@ -103,8 +106,8 @@ async function handleSubscriptionCreatedOrUpdated(payload: any) {
 
   const { plan, billingCycle } = planMapping;
 
-  // Find user by paddleCustomerId or custom_data.userId
-  let userId = custom_data?.userId || custom_data?.user_id;
+  // Find user by customData.userId
+  let userId = customData?.userId || customData?.user_id;
   
   if (!userId && paddleCustomerId) {
     const user = await db.client.user.findFirst({
@@ -116,18 +119,24 @@ async function handleSubscriptionCreatedOrUpdated(payload: any) {
   }
 
   if (!userId) {
-    throw new Error('Could not determine user for subscription');
+    throw new Error(`Could not determine user for subscription. Metadata: ${JSON.stringify(customData)}`);
   }
 
   // Update user
-  await updateUserPlan(
-    userId,
-    plan,
-    status,
-    billingCycle,
-    ends_at ? new Date(ends_at) : null,
-    paddleCustomerId
-  );
+  if (status === 'canceled' || status === 'past_due') {
+    // If subscription is canceled or past due, we downgrade the user
+    await downgradeToFree(userId);
+  } else {
+    // Otherwise, update/confirm their premium plan
+    await updateUserPlan(
+      userId,
+      plan,
+      status,
+      billingCycle,
+      endsAt ? new Date(endsAt) : null,
+      paddleCustomerId
+    );
+  }
 
   // Upsert subscription record
   await upsertSubscription(
@@ -137,7 +146,7 @@ async function handleSubscriptionCreatedOrUpdated(payload: any) {
     plan,
     billingCycle,
     status,
-    ends_at ? new Date(ends_at) : null
+    endsAt ? new Date(endsAt) : null
   );
 
   logger.info({ userId, plan, status }, 'Subscription processed');
@@ -146,7 +155,7 @@ async function handleSubscriptionCreatedOrUpdated(payload: any) {
 async function handleSubscriptionCanceled(payload: any) {
   const {
     id: paddleSubscriptionId,
-    customer_id: paddleCustomerId,
+    customerId: paddleCustomerId,
   } = payload;
 
   // Find user
@@ -179,14 +188,16 @@ async function handleSubscriptionCanceled(payload: any) {
 async function handleTransactionCompleted(payload: any) {
   const {
     id: paddlePaymentId,
-    customer_id: paddleCustomerId,
-    details: { totals: { total: amount } = { total: '0' } } = {},
-    currency_code: currency,
-    custom_data,
+    customerId: paddleCustomerId,
+    details,
+    currencyCode: currency,
+    customData,
   } = payload;
 
+  const amount = details?.totals?.total || '0';
+
   // Find user
-  let userId = custom_data?.userId;
+  let userId = customData?.userId || customData?.user_id;
   
   if (!userId && paddleCustomerId) {
     const user = await db.client.user.findFirst({
@@ -198,7 +209,7 @@ async function handleTransactionCompleted(payload: any) {
   }
 
   if (!userId) {
-    logger.warn({ paddlePaymentId }, 'Could not determine user for payment');
+    logger.warn({ paddlePaymentId, customData }, 'Could not determine user for payment');
     return;
   }
 
@@ -206,8 +217,8 @@ async function handleTransactionCompleted(payload: any) {
   await recordPayment(
     userId,
     paddlePaymentId,
-    Math.round(parseFloat(amount)), // Paddle already sends in cents/smallest unit
-    currency,
+    Math.round(parseFloat(amount)), 
+    currency || 'USD',
     'completed'
   );
 

@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, CreditCard, AlertCircle, Check, Sparkles, ExternalLink } from "lucide-react";
+import { Loader2, CreditCard, AlertCircle, Check, Sparkles, ExternalLink, PartyPopper } from "lucide-react";
 import { FormatPrice, PlanBadge } from "@/components/billing/PricingUtils";
 
 interface BillingInfo {
@@ -62,29 +62,18 @@ export default function BillingPage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [livePrices, setLivePrices] = useState<any[]>([]);
+  const searchParams = useSearchParams();
+  const showSuccess = searchParams.get("status") === "success";
 
   useEffect(() => {
-    // Fetch live prices
+    // Fetch live prices once on mount
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/prices`)
       .then(r => r.json())
       .then(d => {
         if (d.success) setLivePrices(d.data);
       })
       .catch(err => console.error("Failed to load prices", err));
-
-    // Small delay to let auth context initialize
-    const timer = setTimeout(() => {
-      if (!user) {
-        router.push("/login");
-        setIsInitializing(false);
-      } else {
-        setIsInitializing(false);
-        fetchBillingInfo();
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [user, router]);
+  }, []);
 
   const fetchBillingInfo = async () => {
     try {
@@ -96,13 +85,44 @@ export default function BillingPage() {
         const data = await response.json();
         setBillingInfo(data.data);
         setPayments(data.data.payments || []);
+        return data.data;
       }
     } catch (error) {
       console.error("Failed to fetch billing info:", error);
     } finally {
       setIsLoadingBilling(false);
     }
+    return null;
   };
+
+  useEffect(() => {
+    // Auth and billing info check
+    if (isInitializing) {
+      const timer = setTimeout(async () => {
+        if (!user) {
+          router.push("/login");
+          setIsInitializing(false);
+        } else {
+          setIsInitializing(false);
+          const info = await fetchBillingInfo();
+          
+          // POLLING LOGIC: If we just paid but plan is still FREE, poll for the webhook
+          if (showSuccess && info?.plan === 'FREE') {
+            let attempts = 0;
+            const pollInterval = setInterval(async () => {
+              attempts++;
+              const updatedInfo = await fetchBillingInfo();
+              if (updatedInfo?.plan !== 'FREE' || attempts >= 10) {
+                clearInterval(pollInterval);
+              }
+            }, 2000);
+            return () => clearInterval(pollInterval);
+          }
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, router, isInitializing, showSuccess]);
 
   const handleOpenCustomerPortal = async () => {
     if (isRedirecting) return;
@@ -204,6 +224,38 @@ export default function BillingPage() {
           </Badge>
         )}
       </div>
+
+      {showSuccess && (
+        <div className="bg-success/10 border border-success/30 rounded-xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center shrink-0">
+            {currentPlan === 'FREE' ? (
+              <Loader2 className="h-5 w-5 text-success animate-spin" />
+            ) : (
+              <PartyPopper className="h-5 w-5 text-success" />
+            )}
+          </div>
+          <div>
+            <h3 className="font-bold text-success">
+              {currentPlan === 'FREE' ? 'Verifying your payment...' : 'Payment Successful!'}
+            </h3>
+            <p className="text-sm text-success/80">
+              {currentPlan === 'FREE' 
+                ? "We've received your payment. It usually takes a few seconds to update your account..." 
+                : "Your plan has been upgraded and your premium features are now active. Thank you for choosing Knivik!"}
+            </p>
+          </div>
+          {currentPlan !== 'FREE' && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="ml-auto text-success hover:bg-success/10"
+              onClick={() => router.replace("/dashboard/billing")}
+            >
+              Dismiss
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">

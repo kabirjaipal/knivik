@@ -31,7 +31,6 @@ const configSchema = z.object({
   WORKER_COUNT: z.coerce.number().default(os.cpus().length),
   TRUST_PROXY: envBool(true),
   REQUEST_BODY_LIMIT: z.string().default('1mb'),
-  // Redis (optional — used for BullMQ queues when present)
   REDIS_URL: z.string().optional(),
   // DB request logging controls
   LOG_REQUESTS_TO_DB: envBool(false),

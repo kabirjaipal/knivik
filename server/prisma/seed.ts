@@ -1,33 +1,8 @@
 import { db } from '../src/lib/db.js';
 import bcrypt from 'bcryptjs';
-import RedisClient from 'ioredis';
-import { PIPELINE_QUEUE_NAME } from '../src/lib/queue.js';
 
 // Get the pre-configured PrismaClient instance
 const prisma = db.client;
-
-const redisUrl = process.env.REDIS_URL;
-
-// Explicitly type the redis variable to fix the "implicitly has type any" error
-let redis: RedisClient | null = null;
-
-if (redisUrl) {
-  try {
-    redis = new RedisClient(redisUrl, {
-      maxRetriesPerRequest: 0, // Fail fast during seeding if Redis is unreachable
-      connectTimeout: 5000,
-    });
-    // Prevent the seed process from crashing if Redis connection fails
-    redis.on('error', (err) => {
-      // Only log if it's not a connection refused (which we expect if Redis is down)
-      if (!err.message.includes('ECONNREFUSED')) {
-        console.warn('📡 Redis connection error:', err.message);
-      }
-    });
-  } catch (err) {
-    console.warn('⚠️ Redis initialization failed, skipping queue cleanup.');
-  }
-}
 
 async function main() {
   console.log('🌱 Starting database seeding...');
@@ -58,25 +33,6 @@ async function main() {
     prisma.llmModel.deleteMany({}),
   ]);
 
-  // 2. Clear BullMQ queues in Redis (Optional - only if Redis is available)
-  if (redis) {
-    console.log('🧹 Clearing BullMQ queues...');
-    try {
-      // Find and delete all keys related to our unified pipeline
-      const keys = await redis.keys(`bull:${PIPELINE_QUEUE_NAME}:*`);
-      if (keys.length > 0) {
-        await redis.del(...keys);
-        console.log(`✅ Cleared ${keys.length} background job keys`);
-      } else {
-        console.log('✅ No background jobs to clear');
-      }
-    } catch (err: any) {
-      console.warn('⚠️ Could not clear BullMQ queues (Redis unreachable):', err.message);
-    }
-  } else {
-    console.log('⏭️ Skipping Redis cleanup (Redis disabled)');
-  }
-
   // Hash passwords using bcryptjs (matches server/src/lib/auth.ts)
   const hashedPassword = await bcrypt.hash('admin123', 12);
 
@@ -90,7 +46,7 @@ async function main() {
       username: 'kabir',
       password: hashedPassword,
       role: 'admin',
-      plan: 'PRO',
+      plan: 'FREE',
       emailVerified: true,
       isScanning: false,
       lastScanStatus: null,
@@ -219,7 +175,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    if (redis) {
-      await redis.quit(); // Use quit() instead of disconnect() for cleaner exit
-    }
   });

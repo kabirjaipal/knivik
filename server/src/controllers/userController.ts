@@ -181,19 +181,29 @@ export const getBillingInfo = asyncHandler(async (req: AuthenticatedRequest, res
     return;
   }
 
-  const [payments, subscription] = await Promise.all([
+  // Fetch fresh user data from DB to ensure plan updates are reflected immediately
+  const [payments, subscription, freshUser] = await Promise.all([
     getPaymentHistory(req.user.id),
     getActiveSubscription(req.user.id),
+    UserService.getUserById(req.user.id, req.requestId)
   ]);
+
+  if (!freshUser) {
+     res.status(404).json({
+       success: false,
+       error: { status: 404, code: 'NOT_FOUND', message: 'User not found' },
+     });
+     return;
+  }
 
   res.status(200).json({
     success: true,
     data: {
-      plan: req.user.plan,
-      subscriptionStatus: req.user.subscriptionStatus || (req.user.plan === 'FREE' ? 'active' : null),
-      billingCycle: req.user.billingCycle,
-      currentPeriodEnd: req.user.currentPeriodEnd,
-      paddleCustomerId: req.user.paddleCustomerId,
+      plan: freshUser.plan,
+      subscriptionStatus: freshUser.subscriptionStatus || (freshUser.plan === 'FREE' ? 'inactive' : 'active'),
+      billingCycle: freshUser.billingCycle,
+      currentPeriodEnd: freshUser.currentPeriodEnd,
+      paddleCustomerId: freshUser.paddleCustomerId,
       subscription,
       payments,
     },
@@ -202,17 +212,28 @@ export const getBillingInfo = asyncHandler(async (req: AuthenticatedRequest, res
 });
 
 export const createCustomerPortal = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user?.paddleCustomerId) {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: { status: 401, code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    });
+    return;
+  }
+
+  // Fetch fresh user data to get the latest paddleCustomerId from DB
+  const freshUser = await UserService.getUserById(req.user.id, req.requestId);
+
+  if (!freshUser?.paddleCustomerId) {
     res.status(400).json({
       success: false,
-      error: { status: 400, code: 'BAD_REQUEST', message: 'No active subscription found' },
+      error: { status: 400, code: 'BAD_REQUEST', message: 'No active subscription found in our records' },
     });
     return;
   }
 
   try {
     // Generate an authenticated customer portal session via Paddle SDK
-    const session = await paddle.customerPortalSessions.create(req.user.paddleCustomerId, []);
+    const session = await paddle.customerPortalSessions.create(freshUser.paddleCustomerId, []);
     const portalUrl = session.urls.general.overview;
     
     res.status(200).json({

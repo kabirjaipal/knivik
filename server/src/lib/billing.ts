@@ -104,15 +104,21 @@ export async function updateUserPlan(
  */
 export async function downgradeToFree(userId: string): Promise<void> {
   try {
-    await db.client.user.update({
-      where: { id: userId },
-      data: {
-        plan: UserPlan.FREE,
-        subscriptionStatus: null,
-        billingCycle: null,
-        currentPeriodEnd: null,
-      },
-    });
+    await db.client.$transaction([
+      db.client.user.update({
+        where: { id: userId },
+        data: {
+          plan: UserPlan.FREE,
+          subscriptionStatus: null,
+          billingCycle: null,
+          currentPeriodEnd: null,
+        },
+      }),
+      db.client.subscription.updateMany({
+        where: { userId, status: { in: ['active', 'trialing', 'past_due'] } },
+        data: { status: 'canceled' }
+      })
+    ]);
     logger.info({ userId }, "User downgraded to Free");
   } catch (error) {
     logger.error({ error, userId }, "Failed to downgrade user");

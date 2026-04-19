@@ -22,6 +22,7 @@ declare global {
   namespace Express {
     interface Request {
       requestId: string;
+      rawBody?: string;
       user?: {
         id: string;
         email: string;
@@ -58,7 +59,6 @@ app.use(cors({
 }));
 
 // Rate limiting — always memory-based.
-// Redis is reserved for caching and background queues.
 const rateLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
   max: config.RATE_LIMIT_MAX_REQUESTS,
@@ -82,7 +82,12 @@ app.use('/api/auth', authRoutes);
 
 // Basic middleware (only for non-Better-Auth routes)
 app.use(compression());
-app.use(express.json({ limit: config.REQUEST_BODY_LIMIT }));
+app.use(express.json({ 
+  limit: config.REQUEST_BODY_LIMIT,
+  verify: (req: any, _res, buf) => {
+    (req as any).rawBody = buf.toString('utf8');
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
