@@ -13,7 +13,7 @@ const basicAuthSchema = z.object({
 
 export const basicAuth = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader?.startsWith('Basic ')) {
     res.status(401).json({
       success: false,
@@ -31,7 +31,7 @@ export const basicAuth = (req: Request, res: Response, next: NextFunction): void
   try {
     const credentials = Buffer.from(authHeader.split(' ')[1] || '', 'base64').toString();
     const [username, password] = credentials.split(':');
-    
+
     const validation = basicAuthSchema.safeParse({ username, password });
     if (!validation.success) {
       throw new Error('Invalid credentials format');
@@ -56,9 +56,13 @@ export const basicAuth = (req: Request, res: Response, next: NextFunction): void
   }
 };
 
-export const jwtAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+export const jwtAuth = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader?.startsWith('Bearer ')) {
     res.status(401).json({
       success: false,
@@ -78,9 +82,9 @@ export const jwtAuth = async (req: AuthenticatedRequest, res: Response, next: Ne
     if (!token) {
       throw new Error('No token provided');
     }
-    
-    const decoded = jwt.verify(token, config.JWT_SECRET) as { userId: string };
-    
+
+    const decoded = jwt.verify(token, config.BETTER_AUTH_SECRET) as { userId: string };
+
     const user = await db.client.user.findUnique({
       where: { id: decoded.userId },
       select: {
@@ -146,5 +150,5 @@ export const comparePassword = async (password: string, hash: string): Promise<b
 };
 
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ userId }, config.BETTER_AUTH_SECRET, { expiresIn: '7d' });
 };

@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
   - DATABASE_URL=postgresql://postgres:password@pgbouncer:6432/express_template
-      - JWT_SECRET=production-jwt-secret-change-me
+      - BETTER_AUTH_SECRET=production-jwt-secret-change-me
       - BCRYPT_ROUNDS=12
       - BASIC_AUTH_USERNAME=admin
       - BASIC_AUTH_PASSWORD=secure-admin-password

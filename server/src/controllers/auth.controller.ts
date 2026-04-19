@@ -72,7 +72,7 @@ const buildCookieOptions = () => ({
  * Single source of truth for all login flows (email/password and OAuth).
  */
 const issueSession = async (res: Response, userId: string): Promise<string> => {
-  const token = jwt.sign({ userId }, config.JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ userId }, config.BETTER_AUTH_SECRET, { expiresIn: '7d' });
 
   await db.client.session.create({
     data: {
@@ -481,7 +481,9 @@ export const googleAuthUrl = async (_req: Request, res: Response) => {
   // Generate a stateless JWT for the state parameter (CSRF protection).
   // This avoids relying on cookies (which get stripped in cross-origin redirect chains)
   // or memory cache (which fails in serverless environments like Vercel).
-  const state = jwt.sign({ purpose: 'google_oauth' }, config.JWT_SECRET, { expiresIn: '15m' });
+  const state = jwt.sign({ purpose: 'google_oauth' }, config.BETTER_AUTH_SECRET, {
+    expiresIn: '15m',
+  });
 
   const client = new OAuth2Client(
     config.GOOGLE_CLIENT_ID,
@@ -506,7 +508,7 @@ export const googleCallback = async (req: Request, res: Response) => {
   let isValidState = false;
   if (returnedState) {
     try {
-      const decoded = jwt.verify(returnedState, config.JWT_SECRET) as any;
+      const decoded = jwt.verify(returnedState, config.BETTER_AUTH_SECRET) as any;
       if (decoded && decoded.purpose === 'google_oauth') {
         isValidState = true;
       }

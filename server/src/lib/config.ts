@@ -15,7 +15,7 @@ const configSchema = z.object({
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string(),
-  JWT_SECRET: z.string(),
+  BETTER_AUTH_SECRET: z.string(),
   BCRYPT_ROUNDS: z.coerce.number().default(12),
   BASIC_AUTH_USERNAME: z.string().optional(),
   BASIC_AUTH_PASSWORD: z.string().optional(),
