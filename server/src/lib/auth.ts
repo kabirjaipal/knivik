@@ -8,7 +8,9 @@ import { config } from "./config.js";
 export const auth: any = betterAuth({
   database: prismaAdapter(db.client, { provider: "postgresql" }),
   secret: config.BETTER_AUTH_SECRET,
-  baseURL: config.BETTER_AUTH_URL ? `${config.BETTER_AUTH_URL}/api/auth` : `http://localhost:${config.PORT}/api/auth`,
+  baseURL: config.BETTER_AUTH_URL 
+    ? (config.BETTER_AUTH_URL.includes('/api/auth') ? config.BETTER_AUTH_URL : `${config.BETTER_AUTH_URL}/api/auth`)
+    : `http://localhost:${config.PORT}/api/auth`,
 
   plugins: [
     username()
