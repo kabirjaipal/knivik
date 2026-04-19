@@ -184,43 +184,60 @@ export default function AnalyticsPage() {
           </h2>
         </div>
         
-        <div className={`grid md:grid-cols-2 gap-6 relative ${!data.isAdvancedAnalyticsEnabled ? 'overflow-hidden' : ''}`}>
-          {!data.isAdvancedAnalyticsEnabled && (
-            <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[6px] flex flex-col items-center justify-center rounded-xl border border-border">
-              <Lock className="w-8 h-8 text-muted-foreground mb-3" />
-              <p className="text-lg font-bold">Unlock Advanced ROI</p>
-              <p className="text-sm text-muted-foreground mb-4">Upgrade to see estimated pipeline value and conversion metrics.</p>
-              <a href="/dashboard/billing" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium text-sm">Upgrade Plan</a>
-            </div>
-          )}
-          
-          <Card className="border shadow-none bg-card">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <BadgeDollarSign className="w-4 h-4 text-primary" /> Estimated Pipeline Value
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-foreground">${(data.estimatedPipelineValue || 0).toLocaleString()}</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Based on an average estimated value of $250 per CONVERTED lead.</p>
-            </CardContent>
-          </Card>
+        <div className="grid md:grid-cols-2 gap-6">
+          {!data.isAdvancedAnalyticsEnabled ? (
+            <Card className="border shadow-none bg-card md:col-span-2">
+              <CardContent className="p-12">
+                <div className="flex flex-col items-center text-center space-y-6">
+                  <div className="p-4 bg-primary/10 rounded-2xl">
+                    <Lock className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold">Advanced ROI Analytics</h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      Upgrade to Starter or Pro to unlock estimated pipeline value and lead conversion metrics.
+                    </p>
+                  </div>
+                  <a
+                    href="/dashboard/billing"
+                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
+                  >
+                    Upgrade Plan
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <Card className="border shadow-none bg-card">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BadgeDollarSign className="w-4 h-4 text-primary" /> Estimated Pipeline Value
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-black text-foreground">${(data.estimatedPipelineValue || 0).toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Based on an average estimated value of $250 per CONVERTED lead.</p>
+                </CardContent>
+              </Card>
 
-          <Card className="border shadow-none bg-card">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Percent className="w-4 h-4 text-primary" /> Lead Conversion Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-foreground">{data.leadConversionRate || 0}%</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Percentage of all scanned leads that changed to CONVERTED status.</p>
-            </CardContent>
-          </Card>
+              <Card className="border shadow-none bg-card">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Percent className="w-4 h-4 text-primary" /> Lead Conversion Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-black text-foreground">{data.leadConversionRate || 0}%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Percentage of all scanned leads that changed to CONVERTED status.</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </div>
 

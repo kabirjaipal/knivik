@@ -31,7 +31,7 @@ const configSchema = z.object({
   WORKER_COUNT: z.coerce.number().default(os.cpus().length),
   TRUST_PROXY: envBool(true),
   REQUEST_BODY_LIMIT: z.string().default('1mb'),
-  // Redis (optional — when absent, caching uses LRU memory and queues run in-process)
+  // Redis (optional — used for BullMQ queues when present)
   REDIS_URL: z.string().optional(),
   // DB request logging controls
   LOG_REQUESTS_TO_DB: envBool(false),
@@ -52,9 +52,6 @@ const configSchema = z.object({
   // OpenAI / Groq controls
   GROQ_API_KEY: z.string().min(1),
   GROQ_BASE_URL: z.string().default('https://api.groq.com/openai/v1'),
-  // Cache controls
-  ENABLE_CACHE: envBool(true),
-  CACHE_TTL_SECONDS: z.coerce.number().default(60),
   // Scraper controls
   SCRAPER_INTERVAL_MS: z.coerce.number().default(3600000), // Default 1 hour
   PROJECT_NAME: z.string().default('Knivik'),

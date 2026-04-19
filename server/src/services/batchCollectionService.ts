@@ -182,8 +182,8 @@ export class BatchCollectionService {
     // Remove duplicates and apply final filtering
     const uniquePosts = this.deduplicateAndFilter(allPosts, product);
     
-    // Limit to top 25 posts per product to control AI token usage (was 50)
-    return uniquePosts.slice(0, 25);
+    // Limit to top 40 posts per product for more AI analysis opportunities
+    return uniquePosts.slice(0, 40);
   }
 
   /**
@@ -206,7 +206,10 @@ export class BatchCollectionService {
         const hnPosts = await this.collectFromHackerNews(product, source, oneMonthAgo);
         posts.push(...hnPosts);
         break;
-      // Add other platforms as needed
+      case Platform.TWITTER:
+        const twitterPosts = await this.collectFromTwitter(product, source, oneMonthAgo);
+        posts.push(...twitterPosts);
+        break;
       default:
         logger.warn(`[BATCH] Unsupported platform: ${source.platform}`);
     }
@@ -330,9 +333,9 @@ export class BatchCollectionService {
     }
 
     // To respect Reddit's strict 10 requests/minute unauthenticated limit, we randomly pick
-    // just 3 queries per cycle. Since the job runs repeatedly, all queries will eventually be covered.
+    // 5 queries per cycle for better coverage. Since the job runs repeatedly, all queries will eventually be covered.
     const shuffledQueries = [...searchQueries].sort(() => 0.5 - Math.random());
-    const cycleQueries = shuffledQueries.slice(0, 3);
+    const cycleQueries = shuffledQueries.slice(0, 5);
     
     // Strategy 1: Advanced query-based collection
     for (const query of cycleQueries) { 
@@ -346,14 +349,91 @@ export class BatchCollectionService {
         logger.info(`[DEEP-LOG] [REDDIT] Searching: "${query}" | URL: ${url}`);
 
         const response = await fetch(url, {
-          headers: { 'User-Agent': this.getRandomUserAgent() },
+          headers: {
+            'User-Agent': this.getRandomUserAgent(),
+            'Accept': 'application/json',
+          },
           signal: AbortSignal.timeout(10000)
         });
 
         if (response.status === 429) {
           logger.warn(`[DEEP-LOG] [REDDIT] 🚨 Rate limit hit (429)! Reddit restricts to 10 req/minute. Sleeping for 30s...`);
           await new Promise(resolve => setTimeout(resolve, 30000));
-          continue; // Skip this query, move to the next after resting
+          continue;
+        }
+
+        if (response.status === 404) {
+          logger.warn(`[DEEP-LOG] [REDDIT] Subreddit not found (404): ${subreddit}. Trying global search fallback...`);
+          // Fallback to global search with same query
+          try {
+            const globalUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=15&type=link,comment`;
+            const globalResponse = await fetch(globalUrl, {
+              headers: {
+                'User-Agent': this.getRandomUserAgent(),
+                'Accept': 'application/json',
+              },
+              signal: AbortSignal.timeout(10000)
+            });
+            if (globalResponse.ok) {
+              const globalData = (await globalResponse.json()) as any;
+              const globalChildren = globalData?.data?.children;
+              if (Array.isArray(globalChildren) && globalChildren.length > 0) {
+                logger.info(`[DEEP-LOG] [REDDIT] Global search fallback succeeded for: "${query}"`);
+                // Process global results (simplified - reuse same logic below)
+                for (const child of globalChildren) {
+                  const postData = child.data;
+                  if (!postData?.id) continue;
+                  const postedAt = new Date(postData.created_utc * 1000);
+                  if (postedAt < oneMonthAgo) continue;
+                  const title = postData.title || (postData.link_title ? `Comment on: ${postData.link_title}` : '');
+                  const content = postData.body || postData.selftext || '';
+                  const combinedText = `${title} ${content}`;
+                  if (!this.passesBasicFilters(combinedText, product)) continue;
+                  let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'KEYWORD';
+                  let verifiedKeywordMatch: string | undefined;
+                  let verifiedCompetitorMatch: string | undefined;
+                  for (const competitor of product.competitors) {
+                    if (combinedText.toLowerCase().includes(competitor.name.toLowerCase())) {
+                      detectionMode = 'COMPETITOR';
+                      verifiedCompetitorMatch = competitor.name;
+                      break;
+                    }
+                  }
+                  if (!verifiedCompetitorMatch) {
+                    for (const keyword of product.keywords) {
+                      if (combinedText.toLowerCase().includes(keyword.keyword.toLowerCase())) {
+                        detectionMode = 'KEYWORD';
+                        verifiedKeywordMatch = keyword.keyword;
+                        break;
+                      }
+                    }
+                  }
+                  if (!verifiedCompetitorMatch && !verifiedKeywordMatch) {
+                    const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+                    const containsAllQueryWords = queryWords.length > 0 && queryWords.every(w => combinedText.toLowerCase().includes(w));
+                    if (!containsAllQueryWords) continue;
+                  }
+                  posts.push({
+                    id: `reddit-${postData.id}`,
+                    platform: 'REDDIT',
+                    externalPostId: postData.id,
+                    title,
+                    content,
+                    url: `https://reddit.com${postData.permalink}`,
+                    authorUsername: postData.author,
+                    postedAt,
+                    source: 'global',
+                    detectionMode,
+                    keywordMatch: verifiedKeywordMatch,
+                    competitorMatch: verifiedCompetitorMatch
+                  });
+                }
+              }
+            }
+          } catch (fallbackError: any) {
+            logger.debug(`[DEEP-LOG] [REDDIT] Global fallback also failed: ${fallbackError.message}`);
+          }
+          continue;
         }
 
         if (!response.ok) {
@@ -417,20 +497,22 @@ export class BatchCollectionService {
           }
 
           if (!verifiedCompetitorMatch && !verifiedKeywordMatch) {
-            // Do a 'Loose AND' check - verify all significant words in the query exist somewhere in the text
+            // Do a 'Loose AND' check - verify significant words in the query exist in the text
             const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-            const containsAllQueryWords = queryWords.length > 0 && queryWords.every(w => combinedText.toLowerCase().includes(w));
+            const containsQueryWords = queryWords.length > 0 && queryWords.some(w => combinedText.toLowerCase().includes(w));
             
-            if (containsAllQueryWords) {
-              detectionMode = 'KEYWORD';
+            if (containsQueryWords) {
+              detectionMode = 'SEMANTIC'; // Mark as semantic - needs AI verification
               isQueryPresent = true;
             }
           }
 
-          // Reject if Reddit's loose search returned a post that has NONE of our actual target phrases
+          // RELAXED: Allow posts through if they pass basic filters and have some relevance
+          // The AI analysis phase will filter out false positives
           if (!verifiedCompetitorMatch && !verifiedKeywordMatch && !isQueryPresent) {
-             logger.debug(`[DEEP-LOG] [REDDIT] Filter rejected ${postData.id}: Loose Reddit match did not contain query/keywords locally.`);
-             continue;
+             logger.debug(`[DEEP-LOG] [REDDIT] Post ${postData.id}: No strong keyword match, but passing for AI semantic check`);
+             // Still allow through as SEMANTIC detection for AI to evaluate
+             detectionMode = 'SEMANTIC';
           }
 
           posts.push({
@@ -718,6 +800,183 @@ export class BatchCollectionService {
 
       return scoreB - scoreA;
     });
+  }
+
+  /**
+   * Collect posts from Twitter/X using search queries
+   */
+  private static async collectFromTwitter(
+    product: ProductWithDetails,
+    source: any,
+    oneMonthAgo: Date
+  ): Promise<CollectedPost[]> {
+    const posts: CollectedPost[] = [];
+
+    // Generate search queries from product data
+    const queries = this.generateSearchQueries(product);
+    if (queries.length === 0) {
+      logger.warn(`[COLLECTION] No search queries for Twitter scan of "${product.name}"`);
+      return posts;
+    }
+
+    // Pick 3 random queries per cycle for better coverage
+    const shuffledQueries = [...queries].sort(() => 0.5 - Math.random());
+    const cycleQueries = shuffledQueries.slice(0, 3);
+
+    for (const query of cycleQueries) {
+      try {
+        // Use nitter.privacydev.net as a lightweight Twitter alternative (no auth needed)
+        // Multiple nitter instances for fallback if one is down
+        const nitterInstances = ['nitter.privacydev.net', 'nitter.net', 'nitter.cz'];
+        const searchQuery = encodeURIComponent(`${query} (looking for OR recommendation OR alternative)`);
+        const sinceDate = Math.floor(oneMonthAgo.getTime() / 1000);
+        
+        let response: Response | null = null;
+        let lastError: string = '';
+        
+        for (const instance of nitterInstances) {
+          try {
+            const url = `https://${instance}/search?f=tweets&q=${searchQuery}&since=${sinceDate}`;
+            const attempt = await fetch(url, {
+              headers: {
+                'User-Agent': this.getRandomUserAgent(),
+                'Accept': 'text/html',
+              },
+              signal: AbortSignal.timeout(10000)
+            });
+            if (attempt.ok) {
+              response = attempt;
+              break;
+            }
+          } catch (err: any) {
+            lastError = err.message;
+            continue;
+          }
+        }
+        
+        if (!response) {
+          logger.warn(`[DEEP-LOG] [TWITTER] All Nitter instances failed. Last error: ${lastError}`);
+          break; // Skip Twitter for this cycle
+        }
+
+        if (response.status === 429 || response.status === 403) {
+          logger.warn(`[DEEP-LOG] [TWITTER] Rate limited or blocked on Nitter. Consider using TwitterEngine with auth tokens.`);
+          break; // Stop Twitter collection for this cycle
+        }
+
+        if (!response.ok) {
+          logger.warn(`[DEEP-LOG] [TWITTER] Fetch failed (${response.status}) for query: ${query}`);
+          continue;
+        }
+
+        const html = await response.text();
+
+        // Simple regex-based parsing for Nitter HTML structure
+        // Nitter tweet structure: <div class="timeline-item" ...>
+        const tweetMatches = html.match(/<div class="timeline-item"[^>]*>(.*?)<\/div>\s*<\/div>/gs);
+
+        if (!tweetMatches || tweetMatches.length === 0) {
+          logger.debug(`[DEEP-LOG] [TWITTER] No tweets found for query: "${query}"`);
+          continue;
+        }
+
+        for (const tweetHtml of tweetMatches.slice(0, 10)) {
+          try {
+            // Extract tweet ID from link
+            const idMatch = tweetHtml.match(/status\/(\d+)/);
+            const tweetId = idMatch ? idMatch[1] : `tw_${Date.now()}_${Math.random()}`;
+
+            // Extract content
+            const contentMatch = tweetHtml.match(/<div class="tweet-content[^"]*"[^>]*>(.*?)<\/div>/s);
+            const content = contentMatch ? this.stripHtml(contentMatch[1]) : '';
+
+            if (!content || content.length < 30) continue;
+
+            // Extract author
+            const authorMatch = tweetHtml.match(/<a href="\/([^"\/]+)"/);
+            const author = authorMatch ? authorMatch[1] : 'unknown';
+
+            // Extract timestamp
+            const timeMatch = tweetHtml.match(/datetime="([^"]+)"/);
+            const postedAt = timeMatch ? new Date(timeMatch[1]) : new Date();
+            if (postedAt < oneMonthAgo) continue;
+
+            const combinedText = content.toLowerCase();
+
+            // Check for keyword/competitor matches
+            let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'SEMANTIC';
+            let keywordMatch: string | undefined;
+            let competitorMatch: string | undefined;
+
+            for (const competitor of product.competitors) {
+              if (combinedText.includes(competitor.name.toLowerCase())) {
+                detectionMode = 'COMPETITOR';
+                competitorMatch = competitor.name;
+                break;
+              }
+            }
+
+            if (!competitorMatch) {
+              for (const keyword of product.keywords) {
+                if (combinedText.includes(keyword.keyword.toLowerCase())) {
+                  detectionMode = 'KEYWORD';
+                  keywordMatch = keyword.keyword;
+                  break;
+                }
+              }
+            }
+
+            // RELAXED: Allow tweets through even without strong keyword match
+            // The AI analysis phase will filter out false positives
+            if (!keywordMatch && !competitorMatch) {
+              detectionMode = 'SEMANTIC';
+            }
+
+            // Basic filters
+            if (!this.passesBasicFilters(content, product)) continue;
+
+            posts.push({
+              id: `twitter-${tweetId}`,
+              platform: 'TWITTER',
+              externalPostId: tweetId,
+              title: null,
+              content,
+              url: `https://twitter.com/${author}/status/${tweetId}`,
+              authorUsername: author,
+              postedAt,
+              source: source.identifier,
+              detectionMode,
+              ...(keywordMatch && { keywordMatch }),
+              ...(competitorMatch && { competitorMatch })
+            });
+          } catch (_parseError) {
+            continue; // Skip malformed tweets
+          }
+        }
+
+        if (posts.length > 0) {
+          logger.info(`[DEEP-LOG] [TWITTER] Query "${query}" yielded ${posts.length} potential leads`);
+        }
+
+        // Rate limiting delay
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+      } catch (error: any) {
+        logger.warn(`[DEEP-LOG] [TWITTER] Query "${query}" error: ${error.message}`);
+      }
+    }
+
+    return posts;
+  }
+
+  /**
+   * Strip HTML tags from text
+   */
+  private static stripHtml(html: string): string {
+    return html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**

@@ -541,6 +541,108 @@ export interface ProductStrategyResult {
   productHuntCommunities: string[];
 }
 
+/**
+ * Validate subreddit names by checking if they exist on Reddit
+ * Uses Reddit's JSON API to verify subreddit exists
+ */
+async function validateSubreddits(subreddits: string[]): Promise<string[]> {
+  const valid: string[] = [];
+  const maxToCheck = 25; // Check more subreddits to ensure we get at least 10 valid ones
+  
+  for (const sub of subreddits.slice(0, maxToCheck)) {
+    // Stop early if we already have 10 valid subreddits
+    if (valid.length >= 10) break;
+    
+    const cleanSub = sub.toLowerCase().replace(/^r\//, '').replace(/\s+/g, '');
+    if (!cleanSub || cleanSub.length < 2) continue;
+    
+    try {
+      const url = `https://www.reddit.com/r/${cleanSub}/about.json`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Knivik-Validator/1.0 (Product Strategy Validation)',
+          'Accept': 'application/json',
+        },
+        signal: AbortSignal.timeout(3000) // Reduced timeout from 5s to 3s
+      });
+      
+      if (response.ok) {
+        const data = await response.json() as any;
+        // Check if it's a real subreddit with subscribers
+        if (data?.data?.subscribers && data.data.subscribers > 100) {
+          valid.push(cleanSub);
+          logger.debug(`[VALIDATE] Subreddit r/${cleanSub} exists (${data.data.subscribers} subscribers)`);
+        } else if (data?.data) {
+          valid.push(cleanSub); // Exists even if small
+        }
+      } else if (response.status === 404) {
+        logger.debug(`[VALIDATE] Subreddit r/${cleanSub} does not exist (404)`);
+      }
+    } catch (err: any) {
+      logger.debug(`[VALIDATE] Failed to check r/${cleanSub}: ${err.message}`);
+    }
+    
+    // Minimal delay to avoid rate limits - 50ms instead of 300ms
+    await new Promise(r => setTimeout(r, 50));
+  }
+  
+  return valid;
+}
+
+/**
+ * Validate Twitter handles by checking if they exist
+ * Uses Nitter as a lightweight check (no auth needed)
+ */
+async function validateTwitterHandles(handles: string[]): Promise<string[]> {
+  const valid: string[] = [];
+  const nitterInstances = ['nitter.privacydev.net', 'nitter.net', 'nitter.cz'];
+  const maxToCheck = 15; // Check more handles to get at least 6 valid ones
+  
+  for (const handle of handles.slice(0, maxToCheck)) {
+    // Stop early if we already have 6 valid handles
+    if (valid.length >= 6) break;
+    
+    const cleanHandle = handle.replace(/^@/, '').toLowerCase().replace(/\s+/g, '');
+    if (!cleanHandle || cleanHandle.length < 2) continue;
+    
+    let isValid = false;
+    
+    for (const instance of nitterInstances) {
+      try {
+        const url = `https://${instance}/${cleanHandle}`;
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0.36',
+            'Accept': 'text/html',
+          },
+          signal: AbortSignal.timeout(3000), // Reduced from 5s to 3s
+          redirect: 'manual'
+        });
+        
+        // If we get a 200 or redirect (not 404), the user likely exists
+        if (response.status === 200 || response.status === 302 || response.status === 301) {
+          isValid = true;
+          logger.debug(`[VALIDATE] Twitter handle @${cleanHandle} exists`);
+          break;
+        } else if (response.status === 404) {
+          logger.debug(`[VALIDATE] Twitter handle @${cleanHandle} not found on ${instance}`);
+        }
+      } catch (err: any) {
+        continue; // Try next instance
+      }
+    }
+    
+    if (isValid) {
+      valid.push(cleanHandle);
+    }
+    
+    // Minimal delay - 100ms instead of 500ms
+    await new Promise(r => setTimeout(r, 100));
+  }
+  
+  return valid;
+}
+
 export const generateProductStrategy = async (
   name: string,
   description: string,
@@ -616,12 +718,30 @@ Return your strategy strictly as a JSON object:
     });
 
     const parsed = JSON.parse(content);
+    
+    // Validate AI-generated suggestions to ensure they exist
+    const rawSubreddits = Array.isArray(parsed.subreddits) ? parsed.subreddits : [];
+    const rawTwitterHandles = Array.isArray(parsed.twitterHandles) ? parsed.twitterHandles : [];
+    
+    // Validate subreddits and Twitter handles in parallel
+    const [validSubreddits, validTwitterHandles] = await Promise.all([
+      validateSubreddits(rawSubreddits),
+      validateTwitterHandles(rawTwitterHandles)
+    ]);
+    
+    logger.info({ 
+      rawSubreddits: rawSubreddits.length, 
+      validSubreddits: validSubreddits.length,
+      rawTwitter: rawTwitterHandles.length,
+      validTwitter: validTwitterHandles.length 
+    }, 'Validated AI-generated communities');
+
     return {
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
       negativeKeywords: Array.isArray(parsed.negativeKeywords) ? parsed.negativeKeywords : [],
       competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [],
-      subreddits: Array.isArray(parsed.subreddits) ? parsed.subreddits : [],
-      twitterHandles: Array.isArray(parsed.twitterHandles) ? parsed.twitterHandles : [],
+      subreddits: validSubreddits,
+      twitterHandles: validTwitterHandles,
       linkedinSearchFlags: Array.isArray(parsed.linkedinSearchFlags) ? parsed.linkedinSearchFlags : [],
       productHuntCommunities: Array.isArray(parsed.productHuntCommunities) ? parsed.productHuntCommunities : [],
     };

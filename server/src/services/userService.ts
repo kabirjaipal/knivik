@@ -3,7 +3,6 @@ import { db } from '../lib/db.js';
 import { hashPassword, comparePassword, generateToken } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { CreateUserInput, LoginInput, User } from '../types/index.js';
-import cache from '../lib/cache.js';
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -65,12 +64,6 @@ export class UserService {
       },
     });
 
-    // Invalidate relevant caches
-    await Promise.all([
-      cache.del('users:all'),
-      cache.del(`user:${user.id}`),
-    ]);
-
     return user;
   }
 
@@ -112,11 +105,7 @@ export class UserService {
   }
 
   static async getUserById(id: string, _requestId?: string): Promise<User | null> {
-  const cacheKey = `user:${id}`;
-  const cached = await cache.get<User | null>(cacheKey);
-  if (cached !== undefined) return cached;
-
-  const user = await db.client.user.findUnique({
+    return db.client.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -133,17 +122,10 @@ export class UserService {
         updatedAt: true,
       },
     });
-
-  await cache.set(cacheKey, user);
-  return user;
   }
 
   static async getAllUsers(_requestId?: string): Promise<User[]> {
-  const cacheKey = 'users:all';
-  const cached = await cache.get<User[]>(cacheKey);
-  if (cached) return cached;
-
-  const users = await db.client.user.findMany({
+    return db.client.user.findMany({
       select: {
         id: true,
         email: true,
@@ -162,9 +144,6 @@ export class UserService {
         createdAt: 'desc',
       },
     });
-
-  await cache.set(cacheKey, users);
-  return users;
   }
 
   static async deleteUser(id: string, requestId?: string): Promise<void> {
@@ -179,12 +158,6 @@ export class UserService {
     await db.client.user.delete({
       where: { id },
     });
-
-    // Invalidate caches
-    await Promise.all([
-      cache.del('users:all'),
-      cache.del(`user:${id}`),
-    ]);
   }
 
   static async updatePassword(userId: string, currentPassword: string, newPassword: string, requestId?: string): Promise<void> {
@@ -205,7 +178,7 @@ export class UserService {
   }
 
   static async updateProfile(userId: string, input: { username?: string, metadata?: any }, _requestId?: string): Promise<User> {
-    const user = await db.client.user.update({
+    return db.client.user.update({
       where: { id: userId },
       data: {
         ...(input.username && { username: input.username }),
@@ -226,12 +199,5 @@ export class UserService {
         updatedAt: true,
       },
     });
-
-    await Promise.all([
-      cache.del('users:all'),
-      cache.del(`user:${userId}`),
-    ]);
-
-    return user;
   }
 }

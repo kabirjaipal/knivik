@@ -91,12 +91,7 @@ export async function updateUserPlan(
         ...(paddleCustomerId && { paddleCustomerId }),
       },
     });
-    
-    // Invalidate user cache to ensure /me and /billing show new data immediately
-    const cache = (await import("./cache.js")).default;
-    await cache.del(`user:${userId}`);
-    await cache.del('users:all');
-    
+
     logger.info({ userId, plan, subscriptionStatus }, "User plan updated");
   } catch (error) {
     logger.error({ error, userId }, "Failed to update user plan");
