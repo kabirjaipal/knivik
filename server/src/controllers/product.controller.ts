@@ -38,13 +38,14 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
       orderBy: { createdAt: 'desc' },
     });
     
-    // Transform to include searchQueries as array
-    const transformedProducts = products.map(p => ({
-      ...p,
-      searchQueries: (p.searchQueries as string[]) || []
-    }));
+    // Remove searchQueries from response to keep it backend-only
+    const sanitizedProducts = products.map(p => {
+      // @ts-ignore
+      const { searchQueries, ...rest } = p;
+      return rest;
+    });
     
-    res.status(200).json({ success: true, products: transformedProducts });
+    res.status(200).json({ success: true, products: sanitizedProducts });
   } catch (error) {
     logger.error({ error }, 'Get Products error');
     res.status(500).json({ error: 'Internal server error' });
@@ -78,13 +79,11 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Transform to include searchQueries as array
-    const transformedProduct = {
-      ...product,
-      searchQueries: (product.searchQueries as string[]) || []
-    };
+    // Remove searchQueries from response to keep it backend-only
+    // @ts-ignore
+    const { searchQueries, ...sanitizedProduct } = product;
 
-    res.status(200).json({ success: true, product: transformedProduct });
+    res.status(200).json({ success: true, product: sanitizedProduct });
   } catch (error) {
     logger.error({ error }, 'Get Product By ID error');
     res.status(500).json({ error: 'Internal server error' });
@@ -224,7 +223,11 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       }
     });
 
-    res.status(201).json({ success: true, product });
+    // Remove searchQueries from response to keep it backend-only
+    // @ts-ignore
+    const { searchQueries: _, ...sanitizedProduct } = product;
+
+    res.status(201).json({ success: true, product: sanitizedProduct });
   } catch (error) {
     logger.error({ error }, 'Create Product error');
     res.status(500).json({ error: 'Internal server error' });
@@ -324,7 +327,11 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
       }
     });
 
-    res.status(200).json({ success: true, product: updated });
+    // Remove searchQueries from response to keep it backend-only
+    // @ts-ignore
+    const { searchQueries: _, ...sanitizedUpdated } = updated;
+
+    res.status(200).json({ success: true, product: sanitizedUpdated });
   } catch (error) {
     logger.error({ error }, 'Update Product error');
     res.status(500).json({ error: 'Internal server error' });

@@ -1,10 +1,11 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog"
 import {
   Sheet,
@@ -561,12 +562,11 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
   const router = useRouter()
   
   return (
-    <Card className="border-border hover:border-primary/50 group cursor-pointer overflow-hidden"
-      onClick={() => router.push(`/dashboard/products/${product.id}`)}>
+    <Card className="border-border rounded-sm hover:border-primary/50 group cursor-pointer overflow-hidden">
       <CardHeader className="pb-3 border-b border-gray-800">
         <div className="flex justify-between items-start">
           <div className="flex-1 min-w-0">
-            <h3 className="font-black text-base text-foreground group-hover:text-primary transition-colors truncate tracking-tight">
+            <h3 className="font-black text-base text-foreground truncate tracking-tight">
               {product.name}
             </h3>
             <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-2">
@@ -588,7 +588,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         </div>
       </CardHeader>
 
-      <CardContent className="pt-4 space-y-4">
+      <CardContent className="space-y-4">
         <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed font-medium">
           {product.description || "No description provided."}
         </p>
@@ -604,15 +604,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           )}
         </div>
 
-        {/* AI Scan Units */}
-        {product.searchQueries && product.searchQueries.length > 0 && (
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-2.5 py-1.5 rounded-xl w-fit">
-            <Zap className="w-3 h-3 fill-current" />
-            <span>{product.searchQueries.length} Intelligent Scans</span>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-4 border-t border-border/40">
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
           <div className="flex gap-1">
             <button 
               onClick={(e) => { e.stopPropagation(); onEdit(); }} 
@@ -629,9 +621,14 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
-          <span className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
-            Dashboard <ChevronRight className="w-3 h-3" />
-          </span>
+          
+          <Link 
+            href={`/dashboard/products/${product.id}`}
+            className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 transition-all"
+          >
+            View Signal
+            <ChevronRight className="w-3 h-3" />
+          </Link>
         </div>
       </CardContent>
     </Card>

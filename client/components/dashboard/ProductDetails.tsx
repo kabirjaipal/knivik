@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Zap, ExternalLink, Hash, XCircle, Target } from "lucide-react"
+import { Hash, XCircle, Target, Zap } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 interface Product {
   id: string
@@ -13,7 +13,6 @@ interface Product {
   negativeKeywords: Array<{ id: string; keyword: string }>
   competitors: Array<{ id: string; name: string }>
   sources: Array<{ id: string; platform: string; identifier: string }>
-  searchQueries?: string[]
   aiConfig?: any
 }
 
@@ -25,178 +24,91 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const platforms = Array.from(new Set(product.sources.map((s) => s.platform)))
 
   return (
-    <div className="space-y-6">
-      {/* Header Info */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-2xl font-bold text-foreground">{product.name}</h1>
-                {product.isActive ? (
-                  <span className="flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    Active
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border">
-                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full" />
-                    Paused
-                  </span>
-                )}
-              </div>
-              {product.websiteUrl && (
-                <a 
-                  href={product.websiteUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary hover:underline flex items-center gap-1"
-                >
-                  {product.websiteUrl} <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground leading-relaxed">
-            {product.description || "No description provided."}
-          </p>
-        </CardContent>
-      </Card>
+    <div className="space-y-8">
+      {/* Description Section */}
+      <section>
+        <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Description</h2>
+        <p className="text-sm font-medium leading-relaxed text-foreground/80">
+          {product.description || "No description provided."}
+        </p>
+      </section>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {/* Keywords */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Hash className="w-4 h-4 text-primary" />
-              Keywords ({product.keywords.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {product.keywords.map((k) => (
-                <span 
-                  key={k.id} 
-                  className="text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-md"
-                >
-                  {k.keyword}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+            <Hash className="w-3.5 h-3.5" /> Keywords
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {product.keywords.map((k) => (
+              <Badge key={k.id} variant="secondary" className="text-xs py-1 px-3 bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border-none transition-colors">
+                {k.keyword}
+              </Badge>
+            ))}
+          </div>
+        </section>
 
         {/* Negative Keywords */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <XCircle className="w-4 h-4 text-destructive" />
-              Negative Keywords ({product.negativeKeywords.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {product.negativeKeywords.length > 0 ? (
-                product.negativeKeywords.map((k) => (
-                  <span 
-                    key={k.id} 
-                    className="text-sm bg-destructive/10 text-destructive px-3 py-1 rounded-md"
-                  >
-                    {k.keyword}
-                  </span>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No negative keywords</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+            <XCircle className="w-3.5 h-3.5 text-destructive/60" /> Exclusions
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {product.negativeKeywords.length > 0 ? (
+              product.negativeKeywords.map((k) => (
+                <Badge key={k.id} variant="outline" className="text-xs py-1 px-3 text-destructive border-destructive/30 bg-destructive/5 hover:bg-destructive/10 transition-colors">
+                  {k.keyword}
+                </Badge>
+              ))
+            ) : (
+              <p className="text-xs text-muted-foreground/40 italic">No exclusions defined</p>
+            )}
+          </div>
+        </section>
 
         {/* Competitors */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              Competitors ({product.competitors.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {product.competitors.map((c) => (
-                <span 
-                  key={c.id} 
-                  className="text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-md border border-border"
-                >
-                  {c.name}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+            <Target className="w-3.5 h-3.5" /> Competitors
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {product.competitors.length > 0 ? (
+                product.competitors.map((c) => (
+                <Badge key={c.id} variant="secondary" className="text-xs py-1 px-3 bg-secondary/50 text-secondary-foreground border-none">
+                    {c.name}
+                </Badge>
+                ))
+            ) : (
+                <p className="text-xs text-muted-foreground/40 italic">None</p>
+            )}
+          </div>
+        </section>
 
         {/* Platforms */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              Platforms ({platforms.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {platforms.map((p) => (
-                <span 
-                  key={p} 
-                  className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-md"
-                >
-                  {p}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-primary/60" /> Platforms
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {platforms.map((p) => (
+              <Badge key={p} className="text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border-none px-3 py-1">
+                {p}
+              </Badge>
+            ))}
+          </div>
+        </section>
       </div>
 
-      {/* AI Config */}
+      {/* AI Persona */}
       {product.aiConfig?.customPersona && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-primary">
-              <Zap className="w-4 h-4" />
-              Custom AI Persona
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium italic text-muted-foreground">{product.aiConfig.customPersona}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* AI Search Queries */}
-      {product.searchQueries && product.searchQueries.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              AI Search Queries ({product.searchQueries.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {product.searchQueries.map((query, idx) => (
-                <span 
-                  key={idx}
-                  className="text-sm bg-accent text-accent-foreground px-3 py-1 rounded-md border border-border"
-                  title={query}
-                >
-                  {query.length > 40 ? query.substring(0, 40) + "..." : query}
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <section className="bg-primary/[0.03] p-5 rounded-2xl border border-primary/10">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/50 mb-2 flex items-center gap-1.5">
+            <Zap className="w-3 h-3 fill-current" /> AI Persona
+          </h2>
+          <p className="text-[13px] font-medium italic text-foreground/70 leading-relaxed">
+            "{product.aiConfig.customPersona}"
+          </p>
+        </section>
       )}
     </div>
   )

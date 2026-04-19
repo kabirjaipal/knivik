@@ -3,9 +3,8 @@
 import { useAuth } from "@/context/auth-context"
 import { ProductDetails } from "@/components/dashboard/ProductDetails"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
-import { EditProductModal } from "@/components/dashboard/EditProductModal"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit3, Trash2, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, ExternalLink } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 
@@ -19,7 +18,6 @@ interface Product {
   negativeKeywords: Array<{ id: string; keyword: string }>
   competitors: Array<{ id: string; name: string }>
   sources: Array<{ id: string; platform: string; identifier: string }>
-  searchQueries?: string[]
 }
 
 export default function ProductDetailPage() {
@@ -30,7 +28,6 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   useEffect(() => {
     if (user && productId) {
@@ -54,116 +51,96 @@ export default function ProductDetailPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm("Are you sure? This will delete all associated leads.")) return
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/products/${productId}`, {
-        method: "DELETE",
-        credentials: "include",
-      })
-
-      if (!res.ok) throw new Error("Failed to delete product")
-      router.push("/dashboard/products")
-    } catch (e: any) {
-      alert("Failed to delete product: " + e.message)
-    }
-  }
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
+        <Loader2 className="w-6 h-6 animate-spin text-primary/60" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Loading Signal Data...</p>
       </div>
     )
   }
 
   if (!product) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 h-64">
-        <p className="text-muted-foreground font-bold">Product not found</p>
+      <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4">
+        <p className="text-sm font-bold text-muted-foreground">Product not found</p>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => router.push("/dashboard/products")}
+          className="rounded-xl px-4 font-bold text-[10px] uppercase tracking-wider"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Products
+          <ArrowLeft className="w-3 h-3 mr-2" /> Back to Overview
         </Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="">
+      {/* Navigation */}
+      <nav className="mb-4">
         <button 
           onClick={() => router.push("/dashboard/products")}
-          className="hover:text-primary transition-colors flex items-center gap-1 font-medium"
+          className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Products
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> 
+          Back
         </button>
-        <span className="opacity-30">/</span>
-        <span className="text-foreground font-bold tracking-tight truncate max-w-[200px]">{product.name}</span>
-      </div>
+      </nav>
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">{product.name}</h1>
-          <div className="text-sm mt-1.5 flex items-center gap-2">
-            {product.isActive ? (
-              <span className="flex items-center gap-1.5 text-green-500 font-bold uppercase tracking-wider text-[10px]">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                In-flight scanning active
-              </span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-[10px]">
-                <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></span>
-                Scanning standby
-              </span>
-            )}
+      {/* Main Header */}
+      <header className="mb-8 border-b border-border/50 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              {product.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                {product.isActive ? (
+                  <span className="flex items-center gap-1.5 text-green-500 font-bold uppercase tracking-wider text-[9px]">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+                    Live Scanning
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-[9px]">
+                    <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full"></span>
+                    Standby
+                  </span>
+                )}
+              </div>
+              {product.websiteUrl && (
+                <a 
+                  href={product.websiteUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[9px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                >
+                  Visit <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+          </div>
+          
+          <div className="text-[9px] font-mono text-muted-foreground/30 tabular-nums">
+            {product.id}
           </div>
         </div>
+      </header>
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="font-bold gap-2 rounded-xl"
-            onClick={() => setIsEditModalOpen(true)}
-          >
-            <Edit3 className="w-4 h-4" /> Edit Configuration
-          </Button>
-          <Button
-            variant="destructive"
-            className="font-bold gap-2 rounded-xl"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4" /> Purge Product
-          </Button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="grid lg:grid-cols-2 gap-10">
-        {/* Left: Product Details */}
-        <div className="space-y-6">
+      {/* Grid Content */}
+      <div className="grid lg:grid-cols-[350px_1fr] gap-8 xl:gap-12">
+        {/* Left: Product Logic */}
+        <aside className="space-y-8">
           <ProductDetails product={product} />
-        </div>
+        </aside>
 
-        {/* Right: Leads */}
-        <div className="space-y-6">
+        {/* Right: Detected Signals */}
+        <main className="lg:border-l lg:border-border/20 lg:pl-8 xl:pl-12">
           <ProductLeads productId={productId} />
-        </div>
+        </main>
       </div>
-
-      {/* Edit Modal */}
-      <EditProductModal
-        product={product}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onUpdate={fetchProduct}
-      />
     </div>
   )
 }
