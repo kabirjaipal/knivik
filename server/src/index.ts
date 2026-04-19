@@ -12,6 +12,7 @@ import { requestIdMiddleware } from './middleware/requestId.js';
 import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
+import authRoutes from './routes/auth.routes.js';
 import { createServer } from 'http';
 import { initSocket } from './lib/socket.js';
 import { pipelineQueue } from './lib/queue.js';
@@ -69,7 +70,11 @@ const rateLimiter = rateLimit({
 });
 app.use(rateLimiter);
 
-// Basic middleware
+// Mount Better Auth BEFORE express.json() - required by Better Auth docs
+// Better Auth handles its own body parsing
+app.use('/api/auth', authRoutes);
+
+// Basic middleware (only for non-Better-Auth routes)
 app.use(compression());
 app.use(express.json({ limit: config.REQUEST_BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true }));
@@ -80,7 +85,7 @@ app.use(requestIdMiddleware);
 app.use(httpLogger);
 app.use(dbLogger);
 
-// Routes
+// Routes (excluding auth which is already mounted)
 app.use('/', routes);
 
 // Error handling: catch-all 404 handler placed after routes

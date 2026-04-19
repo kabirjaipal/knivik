@@ -123,10 +123,6 @@ export default function ForgotPasswordPage() {
                 Sign in
               </Link>
             </p>
-            <Link href="/" className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors text-xs font-black uppercase tracking-widest opacity-60">
-              <ArrowLeft className="mr-1 h-3 w-3" />
-              Home
-            </Link>
           </CardFooter>
         </Card>
       </div>

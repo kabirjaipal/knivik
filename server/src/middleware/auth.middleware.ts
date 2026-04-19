@@ -1,61 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { db } from '../lib/db.js';
 import { config } from '../lib/config.js';
 import logger from '../lib/logger.js';
+import { auth } from '../lib/auth.js';
+import { fromNodeHeaders } from "better-auth/node";
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.['token'] || req.headers.authorization?.split(' ')[1];
+    // Let Better Auth handle extracting and verifying the session cookie
+    // We use fromNodeHeaders to ensure compatibility between Express and Better Auth
+    const sessionData = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers)
+    });
 
-    if (!token) {
+    if (!sessionData?.session) {
+      logger.warn({ path: req.path }, 'Unauthorized access attempt - No session found');
       res.status(401).json({ error: 'Unauthorized - No token provided' });
       return;
     }
 
-    // Verify JWT integrity
-    jwt.verify(token, config.JWT_SECRET);
-
-    // Verify stateful session exists (prevents revoked tokens from working)
-    const session = await db.client.session.findUnique({
-      where: { sessionToken: token },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            role: true,
-            plan: true,
-            metadata: true,
-            subscriptionStatus: true,
-            billingCycle: true,
-            currentPeriodEnd: true,
-            paddleCustomerId: true,
-            isScanning: true,
-            lastScanStatus: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
-    });
-
-    if (!session || session.expiresAt < new Date()) {
-      res.clearCookie('token', {
-        httpOnly: true,
-        secure: config.NODE_ENV === 'production',
-        sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
-      });
+    if (sessionData.session.expiresAt < new Date()) {
       res.status(401).json({ error: 'Unauthorized - Session expired or invalid' });
       return;
     }
 
     // Attach user payload to request
-    req.user = session.user as any;
+    req.user = sessionData.user as any;
     next();
   } catch (error) {
-    logger.warn({ error }, 'Auth middleware token verification failed');
+    logger.error({ error }, 'Auth middleware token verification failed');
     res.status(401).json({ error: 'Unauthorized - Invalid token' });
     return;
   }
@@ -71,36 +44,12 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
 
 export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
-    if (!token) return next();
-
-    // Verify JWT integrity before touching the DB (defence-in-depth)
-    try {
-      jwt.verify(token, config.JWT_SECRET);
-    } catch {
-      // Token is malformed or expired — treat as unauthenticated, don't block
-      return next();
-    }
-
-    const session = await db.client.session.findUnique({
-      where: { sessionToken: token },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            role: true,
-            plan: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-        },
-      },
+    const sessionData = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers)
     });
 
-    if (session && session.expiresAt > new Date()) {
-      req.user = session.user as any;
+    if (sessionData?.session && sessionData.session.expiresAt > new Date()) {
+      req.user = sessionData.user as any;
     }
     next();
   } catch (error) {

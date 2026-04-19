@@ -12,7 +12,6 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const token = searchParams.get("token")
-    console.log("[AuthCallback] Token present in URL:", !!token)
     
     if (token) {
       // Set the token as a first-party cookie on the frontend domain
@@ -20,14 +19,11 @@ function AuthCallbackContent() {
       const isSecure = window.location.protocol === 'https:' ? 'secure;' : ''
       const cookieStr = `token=${token}; path=/; max-age=604800; ${isSecure} samesite=lax`
       
-      console.log("[AuthCallback] Setting cookie string:", cookieStr)
       document.cookie = cookieStr
       
-      console.log("[AuthCallback] Calling refresh()...")
       // Refresh the auth context and redirect
       refresh()
         .then(() => {
-          console.log("[AuthCallback] Refresh successful, redirecting to /dashboard")
           router.push("/dashboard")
         })
         .catch((err) => {

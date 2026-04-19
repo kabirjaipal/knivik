@@ -1,7 +1,6 @@
 import { db } from '../src/lib/db.js';
 import bcrypt from 'bcryptjs';
 import RedisClient from 'ioredis';
-import { SearchQueryService } from '../src/services/searchQueryService.js';
 import { PIPELINE_QUEUE_NAME } from '../src/lib/queue.js';
 
 // Get the pre-configured PrismaClient instance
@@ -50,6 +49,8 @@ async function main() {
     prisma.usageRecord.deleteMany({}),
     prisma.otpCode.deleteMany({}),
     prisma.session.deleteMany({}),
+    prisma.account.deleteMany({}),
+    prisma.verification.deleteMany({}),
     prisma.oAuthAccount.deleteMany({}),
     prisma.user.deleteMany({}),
     prisma.scrapeCache.deleteMany({}),
@@ -76,110 +77,72 @@ async function main() {
     console.log('⏭️ Skipping Redis cleanup (Redis disabled)');
   }
 
-  // Hash passwords for demo users
-  const hashedAdminPassword = await bcrypt.hash('admin123', 12);
+  // Hash passwords using bcryptjs (matches server/src/lib/auth.ts)
+  const hashedPassword = await bcrypt.hash('admin123', 12);
 
   console.log('👥 Creating demo users...');
 
-  // Admin user
+  // Admin user with Better Auth Account
   const admin = await prisma.user.create({
     data: {
       email: 'kabir@knivik.com',
+      name: 'kabir',
       username: 'kabir',
-      password: hashedAdminPassword,
+      password: hashedPassword,
       role: 'admin',
       plan: 'FREE',
-      emailVerified: new Date(),
+      emailVerified: true,
       isScanning: false,
       lastScanStatus: null,
+      accounts: {
+        create: {
+          providerId: 'credential',
+          accountId: 'kabir@knivik.com',
+          password: hashedPassword,
+        }
+      }
     },
   });
 
-  // SDR user
+  // SDR user with Better Auth Account
   await prisma.user.create({
     data: {
       email: 'nakul@knivik.com',
+      name: 'nakul',
       username: 'nakul',
-      password: hashedAdminPassword,
+      password: hashedPassword,
       role: 'user',
       plan: 'FREE',
-      emailVerified: new Date(),
+      emailVerified: true,
+      accounts: {
+        create: {
+          providerId: 'credential',
+          accountId: 'nakul@knivik.com',
+          password: hashedPassword,
+        }
+      }
     },
   });
 
-  // Growth user
+  // Growth user with Better Auth Account
   await prisma.user.create({
     data: {
       email: 'nikhil@knivik.com',
+      name: 'nikhil_hacker',
       username: 'nikhil_hacker',
-      password: hashedAdminPassword,
+      password: hashedPassword,
       role: 'user',
       plan: 'FREE',
-      emailVerified: new Date(),
+      emailVerified: true,
+      accounts: {
+        create: {
+          providerId: 'credential',
+          accountId: 'nikhil@knivik.com',
+          password: hashedPassword,
+        }
+      }
     },
   });
-
-  console.log('📦 Creating test product...');
-
-  // Single best product for testing: AI Customer Support Chatbot
-  const product = await prisma.product.create({
-    data: {
-      name: 'AI Customer Support Chatbot',
-      description:
-        'Intelligent chatbot platform that learns from your business documentation to provide 24/7 customer support and reduce support tickets. Perfect alternative to expensive helpdesk software.',
-      userId: admin.id,
-      isActive: true,
-      keywords: {
-        create: [
-          { keyword: 'zendesk alternative' },
-          { keyword: 'intercom alternative' },
-          { keyword: 'looking for helpdesk software' },
-          { keyword: 'customer support tool recommendation' },
-          { keyword: 'best chatbot for customer service' },
-          { keyword: 'reduce support tickets' },
-          { keyword: 'automated customer support' },
-          { keyword: 'tired of zendesk' },
-        ],
-      },
-      negativeKeywords: {
-        create: [
-          { keyword: 'hiring' },
-          { keyword: 'career' },
-          { keyword: 'internship' },
-          { keyword: 'tutorial' },
-          { keyword: 'resume' },
-          { keyword: 'course' },
-          { keyword: 'Show HN' },
-          { keyword: 'Look what I built' },
-          { keyword: 'I made this' },
-        ],
-      },
-      sources: {
-        create: [
-          { platform: 'REDDIT', identifier: 'saas' },
-          { platform: 'REDDIT', identifier: 'startups' },
-          { platform: 'REDDIT', identifier: 'webdev' },
-          { platform: 'REDDIT', identifier: 'smallbusiness' },
-          { platform: 'REDDIT', identifier: 'ecommerce' },
-          { platform: 'HACKERNEWS', identifier: 'global' },
-        ],
-      },
-      competitors: {
-        create: [
-          { name: 'Zendesk' },
-          { name: 'Intercom' },
-          { name: 'Drift' },
-          { name: 'Freshdesk' },
-          { name: 'Crisp' },
-        ],
-      },
-    },
-  });
-
-  // Generate search queries for the product
-  console.log('🔍 Generating search queries...');
-  const queries = await SearchQueryService.generateAndSaveQueries(product.id);
-  console.log(`✅ Generated ${queries.length} search queries`);
 
   console.log('🤖 Seeding LLM models and pricing...');
 
@@ -237,15 +200,13 @@ async function main() {
   // Display summary
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📊 Summary:');
-  console.log('👥 Users created: 1 (admin only)');
-  console.log('📦 Products created: 1 (AI Customer Support Chatbot)');
-  console.log('🔍 Keywords: 8 high-intent keywords');
-  console.log('🚫 Negative keywords: 9 filters');
-  console.log('🌐 Sources: 6 targeted subreddits + HN');
-  console.log('⚔️ Competitors: 5 major competitors');
+  console.log('👥 Users created: 3 (1 admin, 2 users)');
+  console.log('📦 Products: Clean start (0 products)');
+  console.log('🤖 LLM Models: 4 models registered');
 
   console.log('\n Demo Login Credentials (All Passwords: admin123):');
   console.log('1. Admin: kabir@knivik.com');
+  console.log('2. User: nakul@knivik.com');
   console.log('--------------------------------------------');
 
   console.log('\n🚀 Ready to test awesome engines with IP protection!');

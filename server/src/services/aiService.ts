@@ -41,19 +41,33 @@ export async function logLlmUsage(params: {
   try {
     // 1. Ensure the pricing model exists in the database (safeguard)
     const rates = MODEL_PRICING[modelId as keyof typeof MODEL_PRICING] || { input: 0, output: 0 };
-    await db.client.llmModel.upsert({
-      where: { id: modelId },
-      update: {}, 
-      create: { 
-        id: modelId, 
-        inputPrice: rates.input, 
-        outputPrice: rates.output,
-        modelOptions: { 
-          source: 'groq', 
-          reasoning_tokens_supported: modelId.includes('llama-3.3') 
-        } 
+    try {
+      // Check if the model already exists first to avoid triggering Prisma's global error logger
+      const existingModel = await db.client.llmModel.findUnique({
+        where: { id: modelId },
+        select: { id: true }
+      });
+
+      if (!existingModel) {
+        await db.client.llmModel.create({
+          data: { 
+            id: modelId, 
+            inputPrice: rates.input, 
+            outputPrice: rates.output,
+            modelOptions: { 
+              source: 'groq', 
+              reasoning_tokens_supported: modelId.includes('llama-3.3') 
+            } 
+          }
+        });
       }
-    });
+    } catch (createError: any) {
+      // In case of a race condition between the check and the create, 
+      // we still catch P2002 but it's much less likely to happen.
+      if (createError.code !== 'P2002') {
+        throw createError;
+      }
+    }
 
     // 2. Log exactly how many tokens were used
     await db.client.llmUsageLog.create({

@@ -77,7 +77,7 @@ const issueSession = async (res: Response, userId: string): Promise<string> => {
   await db.client.session.create({
     data: {
       userId,
-      sessionToken: token,
+      token,
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
     },
   });
@@ -253,7 +253,7 @@ export const logout = async (req: Request, res: Response) => {
     const token = req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
 
     if (token) {
-      await db.client.session.deleteMany({ where: { sessionToken: token } });
+      await db.client.session.deleteMany({ where: { token } });
     }
 
     res.clearCookie('token', buildCookieOptions());
@@ -449,7 +449,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     await db.client.user.update({
       where: { email: normalisedEmail },
-      data: { emailVerified: new Date() },
+      data: { emailVerified: true },
     });
 
     res.status(200).json({ success: true, message: 'Email fully verified! You can now log in.' });
@@ -560,7 +560,7 @@ export const googleCallback = async (req: Request, res: Response) => {
       user = await db.client.user.create({
         data: {
           email: googleEmail,
-          emailVerified: new Date(), // OAuth emails are pre-verified by Google.
+          emailVerified: true, // OAuth emails are pre-verified by Google.
           username:
             (googleEmail.split('@')[0] ?? 'user').replace(/[^a-zA-Z0-9_-]/g, '') +
             Math.floor(Math.random() * 10000),
@@ -571,7 +571,7 @@ export const googleCallback = async (req: Request, res: Response) => {
       // then logs in with Google. Auto-verify their email since Google confirms it.
       await db.client.user.update({
         where: { id: user.id },
-        data: { emailVerified: new Date() },
+        data: { emailVerified: true },
       });
     }
 

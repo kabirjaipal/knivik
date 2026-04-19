@@ -31,7 +31,7 @@ export function Navbar() {
               <Button variant="ghost" className="relative h-9 w-9 rounded-full focus:ring-2 focus:ring-primary focus:outline-none p-0 overflow-hidden group">
                 <Avatar className="h-9 w-9 border-2 border-primary/20 transition-all group-hover:border-primary">
                   <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">
-                    {user.username.slice(0, 2).toUpperCase()}
+                    {(user.username || user.email || 'U').slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
