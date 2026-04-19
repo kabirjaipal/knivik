@@ -44,11 +44,11 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "frame-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com https://buy.paddle.com",
-              "connect-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com"
+              "frame-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com https://buy.paddle.com https://sandbox-buy.paddle.com",
+              "connect-src 'self' https://cdn.paddle.com https://checkout.paddle.com https://sandbox-checkout.paddle.com https://checkout-service.paddle.com https://sandbox-checkout-service.paddle.com"
             ].join("; "),
           },
         ],

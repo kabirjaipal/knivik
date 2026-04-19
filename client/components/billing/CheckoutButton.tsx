@@ -94,9 +94,9 @@ export function CheckoutButton({
         }
 
         if (window.Paddle.Initialize) {
+          window.Paddle.Environment.set(environment as "production" | "sandbox");
           window.Paddle.Initialize({
             token: clientToken,
-            environment: environment as "production" | "sandbox",
             eventCallback: (event: any) => {
               if (event.name === "checkout.completed" || event.name === "checkout.closed") {
                  setIsLoading(false);
@@ -112,7 +112,6 @@ export function CheckoutButton({
     }
 
     return () => {
-      // Cleanup not needed for Paddle.js
     };
   }, [onError]);
 
