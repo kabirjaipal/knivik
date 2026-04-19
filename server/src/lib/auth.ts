@@ -7,7 +7,8 @@ import { config } from "./config.js";
 
 export const auth: any = betterAuth({
   database: prismaAdapter(db.client, { provider: "postgresql" }),
-  baseURL: `http://localhost:3001/api/auth`,
+  secret: config.BETTER_AUTH_SECRET,
+  baseURL: config.BETTER_AUTH_URL ? `${config.BETTER_AUTH_URL}/api/auth` : `http://localhost:${config.PORT}/api/auth`,
 
   plugins: [
     username()
@@ -55,7 +56,7 @@ export const auth: any = betterAuth({
 
   advanced: {
     crossSubDomainCookies: {
-      enabled: config.NODE_ENV === "production",
+      enabled: false,
     },
     defaultCookieAttributes: {
       secure: config.NODE_ENV === "production",

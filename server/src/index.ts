@@ -59,6 +59,7 @@ const rateLimiter = rateLimit({
   max: config.RATE_LIMIT_MAX_REQUESTS,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: {
     success: false,
     error: {
