@@ -154,11 +154,11 @@ export default function BillingPage() {
     const normalizedStatus = (status || "").toLowerCase();
     switch (normalizedStatus) {
       case "active":
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Active</Badge>;
+        return <Badge className="bg-success/10 text-success border-success/20">Active</Badge>;
       case "past_due":
-        return <Badge className="bg-primary/10 text-primary border-primary/20">Past Due</Badge>;
+        return <Badge className="bg-warning/10 text-warning border-warning/20">Past Due</Badge>;
       case "canceled":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Canceled</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Canceled</Badge>;
       default:
         return <Badge variant="secondary">{status || "Inactive"}</Badge>;
     }
@@ -294,7 +294,7 @@ export default function BillingPage() {
                           <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{formatDate(payment.createdAt)}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={`text-[10px] uppercase font-bold ${payment.status === "completed" ? "bg-green-500/5 text-green-600 border-green-500/20" : ""}`}>
+                      <Badge variant="outline" className={`text-[10px] uppercase font-bold ${payment.status === "completed" ? "bg-success/5 text-success border-success/20" : ""}`}>
                         {payment.status}
                       </Badge>
                     </div>

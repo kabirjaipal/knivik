@@ -99,8 +99,8 @@ export default function ProductDetailPage() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 {product.isActive ? (
-                  <span className="flex items-center gap-1.5 text-green-500 font-bold uppercase tracking-wider text-[9px]">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+                  <span className="flex items-center gap-1.5 text-success font-bold uppercase tracking-wider text-[9px]">
+                    <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-success/40"></span>
                     Live Scanning
                   </span>
                 ) : (

@@ -2,21 +2,18 @@ import { XCircle, Clock, TrendingDown } from "lucide-react"
 
 export function Problem() {
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
-      {/* Background Accent */}
-      <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.02),transparent_70%)] blur-[120px] pointer-events-none" />
-
+    <section className="py-16 relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl text-center relative z-10">
-        <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground mb-8 leading-tight">
+        <h2 className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground mb-4 leading-tight">
           You are losing customers <br className="hidden sm:block" /> to competitors right now.
         </h2>
-        <p className="max-w-3xl mx-auto text-lg sm:text-xl text-muted-foreground mb-20 leading-relaxed font-medium">
+        <p className="max-w-3xl mx-auto text-base sm:text-lg text-muted-foreground mb-12 leading-relaxed font-medium">
           Every day, thousands of people across the internet ask for recommendations, complain about their current tools, or look for exact solutions you provide. If you aren't the first to respond, someone else will be.
         </p>
 
         <div className="grid sm:grid-cols-3 gap-12 max-w-5xl mx-auto">
           <div className="flex flex-col items-center group">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/5 text-destructive mb-6 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
+            <div className="flex h-14 w-14 items-center justify-center rounded-sm bg-destructive/5 text-destructive mb-4 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
               <Clock className="h-6 w-6" />
             </div>
             <h3 className="text-2xl font-black tracking-tight mb-4">Wasting Time</h3>
@@ -25,7 +22,7 @@ export function Problem() {
             </p>
           </div>
           <div className="flex flex-col items-center group">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/5 text-destructive mb-6 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
+            <div className="flex h-14 w-14 items-center justify-center rounded-sm bg-destructive/5 text-destructive mb-4 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
               <TrendingDown className="h-6 w-6" />
             </div>
             <h3 className="text-2xl font-black tracking-tight mb-4">Missed Revenue</h3>
@@ -34,7 +31,7 @@ export function Problem() {
             </p>
           </div>
           <div className="flex flex-col items-center group">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/5 text-destructive mb-6 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
+            <div className="flex h-14 w-14 items-center justify-center rounded-sm bg-destructive/5 text-destructive mb-6 shadow-[0_0_20px_rgba(var(--destructive-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
               <XCircle className="h-6 w-6" />
             </div>
             <h3 className="text-2xl font-black tracking-tight mb-4">Cold Outreach</h3>

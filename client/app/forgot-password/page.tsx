@@ -47,18 +47,13 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      {/* Premium Background Glow */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.07),transparent_70%)] blur-[120px]" />
-      </div>
-
-      <div className="relative z-10 w-full max-w-[400px] animate-in fade-in zoom-in-95 duration-500">
-        <Card className="border-border/40 shadow-2xl bg-card/80 backdrop-blur-xl rounded-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-[400px]">
+        <Card className="border-border/60 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] bg-card rounded-md overflow-hidden">
           <CardHeader className="space-y-4 pb-4 pt-6 text-center">
             {/* Logo Section */}
             <div className="flex flex-col items-center">
               <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
                   <Radar className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
@@ -74,7 +69,7 @@ export default function ForgotPasswordPage() {
           
           <CardContent className="pb-4">
             {success ? (
-              <div className="bg-success/5 border border-success/20 rounded-xl p-6 flex flex-col items-center text-center space-y-3 animate-in fade-in zoom-in-95 duration-500">
+              <div className="bg-success/5 border border-success/20 rounded-sm p-6 flex flex-col items-center text-center space-y-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success mb-1">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
@@ -98,17 +93,17 @@ export default function ForgotPasswordPage() {
                     placeholder="name@company.com" 
                     required 
                     disabled={loading}
-                    className="h-11 bg-background/50 border-border/60 focus:ring-primary focus:border-primary rounded-xl transition-all"
+                    className="h-11 bg-background/50 border-border/60 focus:ring-primary focus:border-primary rounded-sm transition-all"
                   />
                 </div>
 
                 {error && (
-                  <div className="text-xs font-bold text-destructive px-3 py-2 bg-destructive/10 rounded-xl border border-destructive/20 animate-in shake duration-300">
+                  <div className="text-xs font-bold text-destructive px-3 py-2 bg-destructive/10 rounded-sm border border-destructive/20">
                     {error}
                   </div>
                 )}
                 
-                <Button type="submit" disabled={loading} className="w-full h-11 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all rounded-xl">
+                <Button type="submit" disabled={loading} className="w-full h-11 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all rounded-sm">
                   {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
                   {loading ? "Sending..." : "Send Reset Link"}
                 </Button>

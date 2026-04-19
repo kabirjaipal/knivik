@@ -54,12 +54,12 @@
 }
 
 :root {
-  /* Background: Pure white for clean trust */
-  --background: hsl(0 0% 100%);
+  /* Background: Soft off-white for reduced eye strain */
+  --background: hsl(210 40% 98%);
   --foreground: hsl(222 47% 4%);
   
-  /* Cards: Subtle slate depth */
-  --card: hsl(210 40% 98%);
+  /* Cards: Pure white to stand out against background */
+  --card: hsl(0 0% 100%);
   --card-foreground: hsl(222 47% 4%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(222 47% 4%);
@@ -96,7 +96,7 @@
   --border: hsl(214 32% 91%);
   --input: hsl(214 32% 91%);
   --ring: hsl(221 83% 53%);
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
   /* Charts: Blue-green cohesive scale */
   --chart-1: hsl(221 83% 53%);
@@ -114,6 +114,10 @@
   --sidebar-accent-foreground: hsl(222 47% 11%);
   --sidebar-border: hsl(214 32% 91%);
   --sidebar-ring: hsl(221 83% 53%);
+
+  /* RGB variants for transparency in raw CSS */
+  --primary-rgb: 37, 99, 235;
+  --destructive-rgb: 239, 68, 68;
 }
 
 .dark {
@@ -176,6 +180,10 @@
   --sidebar-accent-foreground: hsl(210 40% 98%);
   --sidebar-border: hsl(222 47% 18%);
   --sidebar-ring: hsl(217 91% 60%);
+
+  /* RGB variants for transparency in raw CSS */
+  --primary-rgb: 60, 130, 246;
+  --destructive-rgb: 248, 113, 113;
 }
 
 @layer base {

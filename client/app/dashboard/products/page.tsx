@@ -196,7 +196,7 @@ export default function ProductsPage() {
         <SheetContent side="right" className="w-full sm:max-w-lg lg:max-w-2xl xl:w-1/2 xl:max-w-none border-l p-0">
           <SheetHeader className="border-b shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <div className="w-10 h-10 rounded-sm bg-primary/10 flex items-center justify-center border border-primary/20">
                 <Plus className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -263,7 +263,7 @@ export default function ProductsPage() {
         <SheetContent side="right" className="w-full sm:max-w-lg lg:max-w-2xl xl:w-1/2 xl:max-w-none border-l p-0">
           <SheetHeader className="border-b shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <div className="w-10 h-10 rounded-sm bg-primary/10 flex items-center justify-center border border-primary/20">
                 <Edit className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -318,8 +318,8 @@ export default function ProductsPage() {
       {/* Products Grid */}
       <div className="space-y-4">
         {products.length === 0 ? (
-          <div className="flex justify-center flex-col items-center py-24 bg-muted/5 rounded-[40px] border border-dashed border-border/60 animate-in fade-in zoom-in duration-500">
-            <div className="w-20 h-20 rounded-3xl bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner mb-6">
+          <div className="flex justify-center flex-col items-center py-24 bg-muted/5 rounded-md border border-dashed border-border/60">
+            <div className="w-20 h-20 rounded-md bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner mb-6">
               <Radar className="w-10 h-10 text-primary animate-pulse" />
             </div>
             <h3 className="text-2xl font-black text-foreground tracking-tight">No products yet</h3>
@@ -329,7 +329,7 @@ export default function ProductsPage() {
             {!isCreating && (
               <button 
                 onClick={() => setIsCreating(true)}
-                className="mt-8 flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-2xl hover:bg-primary/90 transition-all font-black shadow-2xl active:scale-95 hover:shadow-primary/20"
+                className="mt-8 flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-sm hover:bg-primary/90 transition-all font-black shadow-2xl active:scale-95 hover:shadow-primary/20"
               >
                 <Plus className="w-5 h-5" /> Start Tracking
               </button>
@@ -384,8 +384,8 @@ export default function ProductsPage() {
       {/* Floating Success Toast */}
       {successMessage && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border/50 shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-4 min-w backdrop-blur-xl">
-            <div className="shrink-0 w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border/50 shadow-2xl px-6 py-4 rounded-md flex items-center gap-4 min-w backdrop-blur-xl">
+            <div className="shrink-0 w-10 h-10 rounded-sm bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                <Zap className="w-5 h-5 fill-current text-primary-foreground" />
             </div>
             <div>
@@ -435,7 +435,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
               required 
               value={formData.name} 
               onChange={e => setFormData({...formData, name: e.target.value})} 
-              className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+              className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
               placeholder="e.g. Acme CRM" 
             />
           </div>
@@ -446,7 +446,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
               type="url"
               value={formData.websiteUrl} 
               onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
-              className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+              className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
               placeholder="https://example.com" 
             />
           </div>
@@ -493,7 +493,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
             required 
             value={formData.description} 
             onChange={e => setFormData({...formData, description: e.target.value})} 
-            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-26 resize-none" 
+            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-26 resize-none" 
             placeholder="We help freelancers track sales..." 
           />
         </div>
@@ -559,11 +559,10 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
 
 function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDelete: () => void, onEdit: () => void }) {
   const platforms = Array.from(new Set(product.sources.map((s: any) => s.platform)))
-  const router = useRouter()
   
   return (
-    <Card className="border-border rounded-sm hover:border-primary/50 group cursor-pointer overflow-hidden">
-      <CardHeader className="pb-3 border-b border-gray-800">
+    <Card className="border-border/60 rounded-md hover:border-primary/50 group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
+      <CardHeader className="pb-3 border-b border-border/50">
         <div className="flex justify-between items-start">
           <div className="flex-1 min-w-0">
             <h3 className="font-black text-base text-foreground truncate tracking-tight">
@@ -571,8 +570,8 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
             </h3>
             <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-2">
               {product.isActive ? (
-                <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-green-500">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></div>
+                <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-success">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-success/40"></div>
                   Active
                 </span>
               ) : (
@@ -608,14 +607,14 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           <div className="flex gap-1">
             <button 
               onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+              className="w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
               title="Edit product"
             >
               <Edit className="w-4 h-4" />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+              className="w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
               title="Delete product"
             >
               <Trash2 className="w-4 h-4" />

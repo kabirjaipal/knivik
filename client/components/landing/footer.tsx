@@ -8,16 +8,13 @@ export function Footer() {
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 text-sm">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)]">
               <Radar className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-black tracking-tighter text-lg text-foreground">{PROJECT_NAME}</span>
           </div>
           
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground font-medium">
-            <Link href="#features" className="hover:text-primary transition-colors">Features</Link>
-            <Link href="#pricing" className="hover:text-primary transition-colors">Pricing</Link>
-            <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
             <Link href="/refund-policy" className="hover:text-primary transition-colors">Refunds</Link>

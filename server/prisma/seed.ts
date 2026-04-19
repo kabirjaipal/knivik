@@ -90,7 +90,7 @@ async function main() {
       username: 'kabir',
       password: hashedPassword,
       role: 'admin',
-      plan: 'FREE',
+      plan: 'PRO',
       emailVerified: true,
       isScanning: false,
       lastScanStatus: null,

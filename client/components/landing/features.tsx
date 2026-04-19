@@ -21,24 +21,21 @@ const features = [
 
 export function Features() {
   return (
-    <section id="features" className="py-24 bg-background relative overflow-hidden">
-      {/* Background Accent */}
-      <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.02),transparent_70%)] blur-[120px] pointer-events-none" />
-      
+    <section id="features" className="py-16 relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
-        <div className="text-center mb-24 max-w-3xl mx-auto">
-          <h2 className="text-5xl sm:text-6xl font-black tracking-tighter text-foreground mb-6 leading-tight">
+        <div className="text-center mb-16 max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground mb-4 leading-tight">
             Stop Searching. <br /> Start Finding.
           </h2>
-          <p className="max-w-xl mx-auto text-lg text-muted-foreground font-medium">
+          <p className="max-w-xl mx-auto text-base text-muted-foreground font-medium">
             Knivik turns the entire web into your personal growth funnel. We find the buyers so you can do the building.
           </p>
         </div>
 
-        <div className="grid gap-16 sm:grid-cols-3 max-w-6xl mx-auto">
+        <div className="grid gap-12 sm:grid-cols-3 max-w-6xl mx-auto">
           {features.map((feature, index) => (
             <div key={index} className="flex flex-col items-center group">
-              <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-sm bg-primary/5 text-primary shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] group-hover:scale-110 transition-transform duration-300">
                 {feature.icon}
               </div>
               <h3 className="text-2xl font-black mb-4 tracking-tight">{feature.title}</h3>

@@ -6,6 +6,8 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2, Radar, CheckCircle2, XCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PROJECT_NAME } from "@/lib/constants"
 
 function VerifyEmailLogic() {
   const searchParams = useSearchParams()
@@ -55,37 +57,52 @@ function VerifyEmailLogic() {
   }, [email, token, router])
 
   return (
-    <div className="text-center space-y-6">
+    <div className="text-center">
       {loading ? (
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <h3 className="font-semibold text-lg animate-pulse">Verifying Account...</h3>
-          <p className="text-muted-foreground text-sm">Validating your cryptographic token.</p>
+        <div className="flex flex-col items-center space-y-4 py-4">
+          <div className="relative">
+            <Loader2 className="h-12 w-12 animate-spin text-primary opacity-20" />
+            <div className="absolute inset-0 flex items-center justify-center">
+               <div className="w-2 h-2 bg-primary rounded-full animate-ping" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-black text-lg text-foreground tracking-tight">Verifying Link</h3>
+            <p className="text-muted-foreground text-xs font-medium">Validating your cryptographic security token...</p>
+          </div>
         </div>
       ) : success ? (
-        <div className="bg-success/10 border border-success/30 rounded-lg p-6 flex flex-col items-center space-y-4 shadow-sm">
-          <CheckCircle2 className="h-12 w-12 text-success" />
-          <div>
-            <h3 className="font-bold text-xl text-foreground">Email Verified!</h3>
-            <p className="text-muted-foreground text-sm mt-1">
-              Your account is successfully unlocked. Redirecting you to login...
+        <div className="space-y-6 py-2">
+          <div className="mx-auto w-16 h-16 bg-success/10 rounded-full flex items-center justify-center border border-success/20">
+            <CheckCircle2 className="h-8 w-8 text-success" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="font-black text-xl text-foreground tracking-tight">Email Verified</h3>
+            <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+              Your account is successfully unlocked. <br /> Redirecting you to login...
             </p>
           </div>
-          <Link href="/login" className="w-full">
-            <Button className="w-full font-semibold">Login Manually</Button>
+          <Link href="/login" className="block w-full">
+            <Button className="w-full h-11 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 rounded-sm">
+              Login Manually
+            </Button>
           </Link>
         </div>
       ) : (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 flex flex-col items-center space-y-4 shadow-sm">
-          <XCircle className="h-12 w-12 text-destructive" />
-          <div>
-            <h3 className="font-bold text-xl text-foreground">Verification Failed</h3>
-            <p className="text-muted-foreground text-sm mt-1">
-              {error}
+        <div className="space-y-6 py-2">
+          <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center border border-destructive/20">
+            <XCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="font-black text-xl text-foreground tracking-tight">Verification Failed</h3>
+            <p className="text-muted-foreground text-sm font-medium leading-relaxed">
+              {error || "This link has expired or is invalid."}
             </p>
           </div>
-          <Link href="/login" className="w-full mt-4">
-            <Button variant="outline" className="w-full font-semibold">Return to Login</Button>
+          <Link href="/login" className="block w-full">
+            <Button variant="outline" className="w-full h-11 text-xs font-black uppercase tracking-widest border-border/60 rounded-sm">
+              Return to Sign In
+            </Button>
           </Link>
         </div>
       )}
@@ -95,29 +112,38 @@ function VerifyEmailLogic() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4">
-      <div className="w-full max-w-[420px] bg-background p-8 rounded-xl border border-border/50 shadow-sm relative overflow-hidden">
-        {/* Decorative Radar background element */}
-        <div className="absolute -top-10 -right-10 opacity-5 pointer-events-none">
-          <Radar className="w-48 h-48" />
-        </div>
-
-        <div className="flex justify-center mb-8 relative z-10">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary shadow-md">
-            <Radar className="h-7 w-7 text-primary-foreground" />
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <Suspense fallback={
-            <div className="flex flex-col items-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground text-sm">Loading secure context...</p>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      <div className="relative z-10 w-full max-w-[420px]">
+        <Card className="border-border/60 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] bg-card rounded-md overflow-hidden">
+          <CardHeader className="space-y-4 pb-3 pt-6 text-center">
+            {/* Logo Section */}
+            <div className="flex flex-col items-center">
+              <Link href="/" className="group flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+                  <Radar className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
+              </Link>
             </div>
-          }>
-            <VerifyEmailLogic />
-          </Suspense>
-        </div>
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-black tracking-tight">Email Verification</CardTitle>
+              <CardDescription className="text-sm">
+                Authenticating your access to the workspace.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="pb-8">
+            <Suspense fallback={
+              <div className="flex flex-col items-center space-y-4 py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Securing Context...</p>
+              </div>
+            }>
+              <VerifyEmailLogic />
+            </Suspense>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

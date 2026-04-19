@@ -8,6 +8,8 @@ import { ArrowLeft, Loader2, Radar, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PROJECT_NAME } from "@/lib/constants"
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -81,61 +83,80 @@ function ResetPasswordForm() {
   }
 
   return (
-    <>
-      <div className="space-y-3 text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Set New Password</h1>
-        <p className="text-muted-foreground text-sm">
-          Securing account for <span className="font-semibold text-foreground">{email}</span>.
-        </p>
+    <form onSubmit={handleReset} className="space-y-6">
+      <div className="space-y-3">
+        <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">New Password</Label>
+        <Input 
+          id="password" 
+          type="password" 
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••" 
+          required 
+          disabled={loading}
+          className="h-11 bg-background/50 border-border/60 focus:ring-primary rounded-sm transition-all"
+        />
+        <p className="text-[10px] text-muted-foreground font-medium px-1">Must be at least 8 characters long.</p>
       </div>
-
-      <form onSubmit={handleReset} className="space-y-6">
-        <div className="space-y-3">
-          <Label htmlFor="password" className="text-foreground font-semibold">New Password</Label>
-          <Input 
-            id="password" 
-            type="password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••" 
-            required 
-            disabled={loading}
-            className="h-12 px-4 bg-background border-border/60 focus:ring-primary transition-all"
-          />
-          <p className="text-xs text-muted-foreground mt-1">Must be at least 8 characters long.</p>
+      
+      {error && (
+        <div className="text-xs font-bold text-destructive px-3 py-2 bg-destructive/10 rounded-sm border border-destructive/20">
+          {error}
         </div>
-        
-        {error && (
-          <div className="text-sm font-medium text-destructive mt-2 bg-destructive/10 p-3 rounded-md border border-destructive/20">
-            {error}
-          </div>
-        )}
-        
-        <Button type="submit" disabled={loading} className="w-full h-12 text-base font-semibold shadow-sm mt-4">
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {loading ? "Updating password..." : "Confirm & Update"}
-        </Button>
-      </form>
-    </>
+      )}
+      
+      <Button type="submit" disabled={loading} className="w-full h-11 text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all rounded-sm">
+        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {loading ? "Updating..." : "Update Password"}
+      </Button>
+    </form>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4">
-      <div className="w-full max-w-[400px] space-y-8 bg-background p-8 rounded-xl border border-border/50 shadow-sm">
-        <div className="flex items-center justify-center space-x-2 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Radar className="h-6 w-6 text-primary-foreground" />
-          </div>
-        </div>
-
-        <Suspense fallback={
-          <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        }>
-          <ResetPasswordForm />
-        </Suspense>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
+      <div className="relative z-10 w-full max-w-[400px]">
+        <Card className="border-border/60 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] bg-card rounded-md overflow-hidden">
+          <CardHeader className="space-y-4 pb-4 pt-6 text-center">
+            {/* Logo Section */}
+            <div className="flex flex-col items-center">
+              <Link href="/" className="group flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+                  <Radar className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
+              </Link>
+            </div>
+            
+            <Suspense fallback={<div className="h-20 flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+              <ResetPasswordHeader />
+            </Suspense>
+          </CardHeader>
+          
+          <CardContent className="pb-8">
+            <Suspense fallback={
+              <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+            }>
+              <ResetPasswordForm />
+            </Suspense>
+          </CardContent>
+        </Card>
       </div>
+    </div>
+  )
+}
+
+function ResetPasswordHeader() {
+  const searchParams = useSearchParams()
+  const email = searchParams.get("email")
+  
+  return (
+    <div className="space-y-1">
+      <CardTitle className="text-xl font-black tracking-tight">Set New Password</CardTitle>
+      <CardDescription className="text-sm">
+        Securing account for <span className="font-semibold text-foreground">{email || "your account"}</span>.
+      </CardDescription>
     </div>
   )
 }

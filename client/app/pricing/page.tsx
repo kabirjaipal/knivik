@@ -100,7 +100,7 @@ export default function PricingPage() {
       {/* Hero Section - Tightened */}
       <section className="pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h1 className="text-5xl font-extrabold tracking-tight mb-4">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
             Simple, honest pricing.
           </h1>
           <p className="text-lg text-muted-foreground mb-10">

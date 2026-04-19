@@ -48,28 +48,28 @@ interface Lead {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS: { value: LeadStatus; label: string; color: string }[] = [
-  { value: 'NEW',       label: 'New',       color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
-  { value: 'QUALIFIED', label: 'Qualified', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  { value: 'NEW',       label: 'New',       color: 'bg-muted/50 text-muted-foreground border-border' },
+  { value: 'QUALIFIED', label: 'Qualified', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
   { value: 'SAVED',     label: 'Saved',     color: 'bg-primary/10 text-primary border-primary/20' },
   { value: 'CONTACTED', label: 'Contacted', color: 'bg-primary/10 text-primary border-primary/20' },
-  { value: 'CONVERTED', label: 'Converted 🎉', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-  { value: 'DISMISSED', label: 'Dismissed', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  { value: 'CONVERTED', label: 'Converted 🎉', color: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20' },
+  { value: 'DISMISSED', label: 'Dismissed', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
 ]
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const getIntentColor = (level: string) => {
   switch (level) {
-    case 'BUY_NOW':     return 'bg-red-500/10 text-red-500 border-red-500/20'
+    case 'BUY_NOW':     return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
     case 'COMPARING':   return 'bg-primary/10 text-primary border-primary/20'
-    case 'RESEARCHING': return 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-    default:            return 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+    case 'RESEARCHING': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+    default:            return 'bg-muted text-muted-foreground border-border'
   }
 }
 
 const DetectionBadge = ({ detectedBy }: { detectedBy: DetectedBy }) => {
   if (detectedBy === 'COMPETITOR') return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
       <Flame className="w-3 h-3 fill-current" /> Competitor Alert
     </span>
   )
@@ -79,7 +79,7 @@ const DetectionBadge = ({ detectedBy }: { detectedBy: DetectedBy }) => {
     </span>
   )
   return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-primary/10 text-primary/80 border border-primary/20">
+    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-muted text-muted-foreground border border-border">
       <Tags className="w-3 h-3" /> Keyword Match
     </span>
   )
@@ -176,7 +176,7 @@ const LeadRow = memo(({
 
           {/* AI Reasoning */}
           {lead.metadata?.qualificationReasoning && (
-            <div className="mt-2 p-2 bg-primary/5 rounded-lg border border-primary/10 flex gap-2 items-start">
+            <div className="mt-2 p-2 bg-primary/5 rounded-md border border-primary/10 flex gap-2 items-start">
                <Info className="w-3 h-3 text-primary mt-0.5 shrink-0" />
                <p className="text-[11px] font-medium text-primary/70 leading-normal italic">
                  {lead.metadata.qualificationReasoning}
@@ -207,17 +207,17 @@ const LeadRow = memo(({
         <div className="shrink-0 flex md:flex-col gap-2 w-full md:w-44">
           {/* Engage button */}
           <a href={lead.url} target="_blank" rel="noreferrer"
-            className="flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-primary text-primary-foreground text-sm font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm active:scale-95">
+            className="flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-primary text-primary-foreground text-sm font-bold rounded-sm hover:bg-primary/90 transition-all shadow-sm active:scale-95">
             Engage <ExternalLink className="w-3.5 h-3.5" />
           </a>
 
           {/* Status pill */}
           <div className="relative w-full group/status">
-            <button className={`flex items-center justify-between w-full py-2 px-3 text-xs font-bold rounded-lg border transition-all ${currentStatus.color}`}>
+            <button className={`flex items-center justify-between w-full py-2 px-3 text-xs font-bold rounded-sm border transition-all ${currentStatus.color}`}>
               {currentStatus.label}
               <ChevronDown className="w-3 h-3 ml-1" />
             </button>
-            <div className="absolute z-20 top-full mt-1 left-0 right-0 bg-card border border-border rounded-lg shadow-xl overflow-hidden hidden group-hover/status:block">
+            <div className="absolute z-20 top-full mt-1 left-0 right-0 bg-card border border-border rounded-md shadow-xl overflow-hidden hidden group-hover/status:block">
               {STATUS_OPTIONS.map(opt => (
                 <button key={opt.value}
                   onClick={() => onStatusChange(lead.id, opt.value)}
@@ -231,7 +231,7 @@ const LeadRow = memo(({
           {/* Draft Reply + Notes row */}
           <div className="flex gap-1.5 w-full">
             <button onClick={() => onDraftReply(lead.id)} disabled={draftingLeadId === lead.id}
-              className="flex items-center justify-center gap-1.5 flex-1 py-2 px-3 bg-secondary text-secondary-foreground text-xs font-bold rounded-lg hover:bg-secondary/80 border border-border transition-all active:scale-95 disabled:opacity-50">
+              className="flex items-center justify-center gap-1.5 flex-1 py-2 px-3 bg-secondary text-secondary-foreground text-xs font-bold rounded-sm hover:bg-secondary/80 border border-border transition-all active:scale-95 disabled:opacity-50">
               {draftingLeadId === lead.id ? (
                 <div className="w-3 h-3 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
               ) : draftedReply ? (
@@ -243,13 +243,13 @@ const LeadRow = memo(({
 
             {draftedReply && (
               <button onClick={() => onToggleExpand(lead.id)} title="View Draft"
-                className="p-2 bg-secondary text-secondary-foreground rounded-lg border border-border hover:bg-secondary/80 transition-all active:scale-95">
+                className="p-2 bg-secondary text-secondary-foreground rounded-sm border border-border hover:bg-secondary/80 transition-all active:scale-95">
                 <MessageSquareText className="w-3.5 h-3.5" />
               </button>
             )}
 
             <button onClick={() => setShowNotes(v => !v)} title="Notes"
-              className={`p-2 rounded-lg border transition-all active:scale-95 ${showNotes ? 'bg-primary/10 text-primary border-primary/30' : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'}`}>
+              className={`p-2 rounded-sm border transition-all active:scale-95 ${showNotes ? 'bg-primary/10 text-primary border-primary/30' : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'}`}>
               <FileText className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -259,14 +259,14 @@ const LeadRow = memo(({
              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mr-1">Quality:</span>
              <button 
               onClick={() => onFeedbackChange(lead.id, lead.feedback === 1 ? 0 : 1)}
-              className={`p-1.5 rounded-md border transition-all active:scale-90 ${lead.feedback === 1 ? 'bg-green-500/20 text-green-500 border-green-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
+              className={`p-1.5 rounded-sm border transition-all active:scale-90 ${lead.feedback === 1 ? 'bg-green-500/20 text-green-500 border-green-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
               title="Good Lead"
              >
                 <ThumbsUp className="w-3 h-3" />
              </button>
              <button 
               onClick={() => onFeedbackChange(lead.id, lead.feedback === -1 ? 0 : -1)}
-              className={`p-1.5 rounded-md border transition-all active:scale-90 ${lead.feedback === -1 ? 'bg-red-500/20 text-red-500 border-red-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
+              className={`p-1.5 rounded-sm border transition-all active:scale-90 ${lead.feedback === -1 ? 'bg-red-500/20 text-red-500 border-red-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
               title="Bad Lead"
              >
                 <ThumbsDown className="w-3 h-3" />
@@ -283,7 +283,7 @@ const LeadRow = memo(({
             <Zap className="w-3 h-3" /> AI Draft
           </h4>
           <textarea readOnly
-            className="w-full h-28 text-sm text-foreground bg-muted/5 border border-border rounded-lg p-3 outline-none resize-none focus:border-primary/50 transition-colors"
+            className="w-full h-28 text-sm text-foreground bg-muted/5 border border-border rounded-sm p-3 outline-none resize-none focus:border-primary/50 transition-colors"
             value={draftedReply}
           />
         </div>
@@ -293,7 +293,7 @@ const LeadRow = memo(({
       {showNotes && (
         <div className="border-t border-border/40 px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-200">
           <textarea
-            className="w-full h-20 text-sm text-foreground bg-muted/5 border border-border rounded-lg p-3 outline-none resize-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground/50"
+            className="w-full h-20 text-sm text-foreground bg-muted/5 border border-border rounded-sm p-3 outline-none resize-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground/50"
             placeholder="Add internal notes about this lead..."
             value={localNotes}
             onChange={e => setLocalNotes(e.target.value)}
@@ -444,10 +444,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05),transparent_70%)] blur-[80px]" />
-      </div>
-
       <div className="relative z-10 w-full">
           {/* Header */}
           <div className="mb-10">
@@ -488,10 +484,10 @@ export default function DashboardPage() {
           </div>
  
            {/* Lead stream */}
-           <Card className="border-border/50 shadow-2xl bg-card overflow-hidden rounded-2xl">
+           <Card className="border-border/50 shadow-2xl bg-card overflow-hidden rounded-md">
              <CardHeader className="border-b border-border/50 pb-6">
                <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                 <div className="w-10 h-10 rounded-sm bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
                    <Radar className="text-primary h-5 w-5" />
                  </div>
                  <div>
