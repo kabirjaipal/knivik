@@ -45,6 +45,11 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', config.TRUST_PROXY);
 
+// Health check for Render/Cloud
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Security middleware
 app.use((helmet as any)());
 app.use(cors({
