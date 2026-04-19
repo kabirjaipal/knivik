@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/context/auth-context";
+import { PROJECT_NAME, PROJECT_DESCRIPTION } from "@/lib/constants";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,7 +19,6 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
 });
-import { PROJECT_NAME, PROJECT_DESCRIPTION } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: `${PROJECT_NAME} | ${PROJECT_DESCRIPTION}`,
@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

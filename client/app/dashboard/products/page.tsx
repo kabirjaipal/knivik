@@ -6,6 +6,16 @@ import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit } from "lucide
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function ProductsPage() {
   const { user } = useAuth()
@@ -166,206 +176,143 @@ export default function ProductsPage() {
           <p className="text-muted-foreground mt-1">Configure what the engines should look for</p>
         </div>
         
-        <button 
-          onClick={() => setIsCreating(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-        >
+        <Button size={"default"} onClick={() => setIsCreating(true)}>
           <Plus className="w-4 h-4" /> New Product
-        </button>
+        </Button>
       </div>
 
-      {/* Create/Edit Form */}
-      {isCreating && (
-        <Card className="mb-8 border-border overflow-hidden shadow-2xl bg-card/30 backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-500">
-          <CardHeader className="pb-4 border-b border-border/40">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <Plus className="w-4 h-4 text-primary" />
-                </div>
-                <CardTitle className="text-foreground text-lg font-black tracking-tight">{editingProductId ? "Edit Product" : "New Product"}</CardTitle>
+      {/* Create Sheet */}
+      <Sheet open={isCreating} onOpenChange={(open) => {
+        // Only update state when sheet is closing
+        if (!open) {
+          setIsCreating(false);
+          setFormData({ 
+            name: "", description: "", websiteUrl: "", keywords: "", 
+            negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+          });
+        }
+      }}>
+        <SheetContent side="right" className="w-full sm:max-w-lg lg:max-w-2xl xl:w-1/2 xl:max-w-none border-l p-0">
+          <SheetHeader className="border-b shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Plus className="w-5 h-5 text-primary" />
               </div>
-              <button 
-                onClick={() => { 
-                  setIsCreating(false); 
-                  setEditingProductId(null); 
-                  setFormData({ 
-                    name: "", description: "", websiteUrl: "", keywords: "", 
-                    negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
-                  }); 
-                }} 
-                className="text-muted-foreground hover:text-foreground transition-all p-2 rounded-xl hover:bg-muted/80 border border-transparent hover:border-border"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div>
+                <SheetTitle className="text-xl font-black tracking-tight">New Product</SheetTitle>
+                <SheetDescription className="text-muted-foreground">
+                  Create a new product to track
+                </SheetDescription>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <form onSubmit={handleCreateProduct} className="space-y-4">
-              {formError && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">
-                  {formError}
-                </div>
-              )}
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            <div className="p-6">
+              <ProductForm 
+                formData={formData}
+                setFormData={setFormData}
+                formError={formError}
+                isSubmitting={isSubmitting}
+                isAiLoading={isAiLoading}
+                formId="create-product-form"
+                onSubmit={handleCreateProduct}
+              />
+            </div>
+          </ScrollArea>
+          <SheetFooter className="border-t p-4 gap-2 flex-row justify-end">
+            <Button 
+              type="button"
+              size={"default"}
+              variant="outline"
+              disabled={isSubmitting || isAiLoading}
+              onClick={() => {
+                setIsCreating(false);
+                setFormData({ 
+                  name: "", description: "", websiteUrl: "", keywords: "", 
+                  negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+                });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              size={"default"}
+              form="create-product-form"
+              disabled={isSubmitting || isAiLoading}
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Create Product
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-foreground">Product Name</label>
-                    <input 
-                      required 
-                      value={formData.name} 
-                      onChange={e => setFormData({...formData, name: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                      placeholder="e.g. Acme CRM" 
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-foreground">Website</label>
-                    <input 
-                      type="url"
-                      value={formData.websiteUrl} 
-                      onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
-                      className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                      placeholder="https://example.com" 
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="block text-sm font-medium text-foreground">Description</label>
-                    <button
-                      type="button"
-                      disabled={!formData.name || !formData.description || isAiLoading || isSubmitting}
-                      onClick={async () => {
-                        try {
-                          setIsAiLoading(true);
-                          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-                          const res = await fetch(`${apiUrl}/products/analyze`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({ name: formData.name, description: formData.description })
-                          });
-                          if (!res.ok) throw new Error('AI analysis failed');
-                          const data = await res.json();
-                          const strategy = data.strategy;
-                          
-                          setFormData({
-                            ...formData,
-                            keywords: strategy.keywords.join(', '),
-                            negativeKeywords: strategy.negativeKeywords.join(', '),
-                            competitors: strategy.competitors.join(', '),
-                            redditSources: strategy.subreddits.join(', '),
-                            twitterSources: strategy.twitterHandles.map((h: string) => h.replace('@', '')).join(', '),
-                          });
-                        } catch (err: any) {
-                          setFormError("AI Suggestion failed. Please fill manually.");
-                        } finally {
-                          setIsAiLoading(false);
-                        }
-                      }}
-                      className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 fill-current" />}
-                      Magic AI Suggest
-                    </button>
-                  </div>
-                  <textarea 
-                    required 
-                    value={formData.description} 
-                    onChange={e => setFormData({...formData, description: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-[104px] resize-none" 
-                    placeholder="We help freelancers track sales..." 
-                  />
-                </div>
+      {/* Edit Sheet */}
+      <Sheet open={!!editingProductId} onOpenChange={(open) => {
+        // Only update state when sheet is closing (not when opening)
+        if (!open) {
+          setEditingProductId(null);
+          setFormData({ 
+            name: "", description: "", websiteUrl: "", keywords: "", 
+            negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+          });
+        }
+      }}>
+        <SheetContent side="right" className="w-full sm:max-w-lg lg:max-w-2xl xl:w-1/2 xl:max-w-none border-l p-0">
+          <SheetHeader className="border-b shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Edit className="w-5 h-5 text-primary" />
               </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-foreground">Keywords (comma separated)</label>
-                  <input 
-                    value={formData.keywords} 
-                    onChange={e => setFormData({...formData, keywords: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                    placeholder="CRM, customer software, sales tool" 
-                  />
-                </div>
+              <div>
+                <SheetTitle className="text-xl font-black tracking-tight">Edit Product</SheetTitle>
+                <SheetDescription className="text-muted-foreground">
+                  Update your product configuration
+                </SheetDescription>
+              </div>
+            </div>
+          </SheetHeader>
+          <ScrollArea className="flex-1">
+            <div className="p-6">
+              <ProductForm 
+                formData={formData}
+                setFormData={setFormData}
+                formError={formError}
+                isSubmitting={isSubmitting}
+                isAiLoading={isAiLoading}
+                formId="edit-product-form"
+                onSubmit={handleCreateProduct}
+              />
+            </div>
+          </ScrollArea>
+          <SheetFooter className="border-t p-4 gap-2 flex-row justify-end">
+            <Button 
+              type="button"
+              variant="outline"
+              disabled={isSubmitting || isAiLoading}
+              onClick={() => {
+                setEditingProductId(null);
+                setFormData({ 
+                  name: "", description: "", websiteUrl: "", keywords: "", 
+                  negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+                });
                 
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-foreground">Negative Keywords (comma separated)</label>
-                  <input 
-                    value={formData.negativeKeywords} 
-                    onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                    placeholder="free, open source, cheap" 
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-foreground">Subreddits (comma separated)</label>
-                  <input 
-                    value={formData.redditSources} 
-                    onChange={e => setFormData({...formData, redditSources: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                    placeholder="startups, saas, entrepreneurship" 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-foreground">Twitter Sources (comma separated)</label>
-                  <input 
-                    value={formData.twitterSources} 
-                    onChange={e => setFormData({...formData, twitterSources: e.target.value})} 
-                    className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                    placeholder="global" 
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-foreground">Competitors (comma separated)</label>
-                <input 
-                  value={formData.competitors} 
-                  onChange={e => setFormData({...formData, competitors: e.target.value})} 
-                  className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-                  placeholder="competitor1, competitor2" 
-                />
-              </div>
-
-              <div className="flex gap-2 pt-4 border-t border-border">
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting || isAiLoading}
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm font-bold text-sm disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  {editingProductId ? (isSubmitting ? "Updating..." : "Update Product") : (isSubmitting ? "Creating..." : "Create Product")}
-                </button>
-                <button 
-                  type="button" 
-                  disabled={isSubmitting || isAiLoading}
-                  onClick={() => { 
-                    setIsCreating(false); 
-                    setEditingProductId(null); 
-                    setFormData({ 
-                      name: "", description: "", websiteUrl: "", keywords: "", 
-                      negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
-                    }); 
-                  }} 
-                  className="border border-input bg-background hover:bg-muted px-4 py-2 rounded-lg transition-colors text-sm disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              form="edit-product-form"
+              disabled={isSubmitting || isAiLoading}
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Update Product
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* Products Grid */}
       <div className="space-y-4">
@@ -405,8 +352,6 @@ export default function ProductsPage() {
                     redditSources: product.sources.filter((s: any) => s.platform === 'REDDIT').map((s: any) => s.identifier).join(", "),
                     twitterSources: product.sources.filter((s: any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(", "),
                   })
-                  setIsCreating(true)
-                  window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
                 onDelete={() => {
                   setProductToDelete(product)
@@ -437,8 +382,8 @@ export default function ProductsPage() {
 
       {/* Floating Success Toast */}
       {successMessage && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border/50 shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-4 min-w-[300px] backdrop-blur-xl">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border/50 shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-4 min-w backdrop-blur-xl">
             <div className="shrink-0 w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
                <Zap className="w-5 h-5 fill-current text-primary-foreground" />
             </div>
@@ -453,14 +398,172 @@ export default function ProductsPage() {
   )
 }
 
+interface ProductFormProps {
+  formData: {
+    name: string;
+    description: string;
+    websiteUrl: string;
+    keywords: string;
+    negativeKeywords: string;
+    competitors: string;
+    redditSources: string;
+    twitterSources: string;
+  };
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formError: string | null;
+  isSubmitting: boolean;
+  isAiLoading: boolean;
+  formId: string;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoading, formId, onSubmit }: ProductFormProps) {
+  return (
+    <form id={formId} onSubmit={onSubmit} className="space-y-4">
+      {formError && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">
+          {formError}
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Product Name</label>
+            <input 
+              required 
+              value={formData.name} 
+              onChange={e => setFormData({...formData, name: e.target.value})} 
+              className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+              placeholder="e.g. Acme CRM" 
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Website</label>
+            <input 
+              type="url"
+              value={formData.websiteUrl} 
+              onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
+              className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+              placeholder="https://example.com" 
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="block text-sm font-medium text-foreground">Description</label>
+            <button
+              type="button"
+              disabled={!formData.name || !formData.description || isAiLoading || isSubmitting}
+              onClick={async () => {
+                try {
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+                  const res = await fetch(`${apiUrl}/products/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name: formData.name, description: formData.description })
+                  });
+                  if (!res.ok) throw new Error('AI analysis failed');
+                  const data = await res.json();
+                  const strategy = data.strategy;
+                  
+                  setFormData({
+                    ...formData,
+                    keywords: strategy.keywords.join(', '),
+                    negativeKeywords: strategy.negativeKeywords.join(', '),
+                    competitors: strategy.competitors.join(', '),
+                    redditSources: strategy.subreddits.join(', '),
+                    twitterSources: strategy.twitterHandles.map((h: string) => h.replace('@', '')).join(', '),
+                  });
+                } catch (err: any) {
+                  // Error handled silently
+                }
+              }}
+              className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 fill-current" />}
+              Magic AI Suggest
+            </button>
+          </div>
+          <textarea 
+            required 
+            value={formData.description} 
+            onChange={e => setFormData({...formData, description: e.target.value})} 
+            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-26 resize-none" 
+            placeholder="We help freelancers track sales..." 
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">Keywords (comma separated)</label>
+          <input 
+            value={formData.keywords} 
+            onChange={e => setFormData({...formData, keywords: e.target.value})} 
+            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            placeholder="CRM, customer software, sales tool" 
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">Negative Keywords (comma separated)</label>
+          <input 
+            value={formData.negativeKeywords} 
+            onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} 
+            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            placeholder="free, open source, cheap" 
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">Subreddits (comma separated)</label>
+          <input 
+            value={formData.redditSources} 
+            onChange={e => setFormData({...formData, redditSources: e.target.value})} 
+            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            placeholder="startups, saas, entrepreneurship" 
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">Twitter Sources (comma separated)</label>
+          <input 
+            value={formData.twitterSources} 
+            onChange={e => setFormData({...formData, twitterSources: e.target.value})} 
+            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            placeholder="global" 
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-foreground">Competitors (comma separated)</label>
+        <input 
+          value={formData.competitors} 
+          onChange={e => setFormData({...formData, competitors: e.target.value})} 
+          className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+          placeholder="competitor1, competitor2" 
+        />
+      </div>
+
+    </form>
+  );
+}
+
 function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDelete: () => void, onEdit: () => void }) {
   const platforms = Array.from(new Set(product.sources.map((s: any) => s.platform)))
   const router = useRouter()
   
   return (
-    <Card className="border-border hover:shadow-2xl transition-all duration-500 hover:border-primary/50 group cursor-pointer overflow-hidden bg-card/40 backdrop-blur-sm"
+    <Card className="border-border hover:border-primary/50 group cursor-pointer overflow-hidden"
       onClick={() => router.push(`/dashboard/products/${product.id}`)}>
-      <CardHeader className="pb-3 border-b border-border/40 bg-muted/5 group-hover:bg-primary/5 transition-colors">
+      <CardHeader className="pb-3 border-b border-gray-800">
         <div className="flex justify-between items-start">
           <div className="flex-1 min-w-0">
             <h3 className="font-black text-base text-foreground group-hover:text-primary transition-colors truncate tracking-tight">
