@@ -82,13 +82,13 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      <div className="relative z-10 w-full max-w-[400px]">
-        <Card className="border-border/60 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] bg-card rounded-md overflow-hidden">
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="border-border/60 shadow-2xl bg-card rounded-md overflow-hidden">
           <CardHeader className="space-y-4 pb-3 pt-6 text-center">
             {/* Logo Section */}
             <div className="flex flex-col items-center">
               <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-md">
                   <Radar className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
@@ -175,7 +175,7 @@ export default function RegisterPage() {
                 
                 <div className="relative py-1">
                   <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
-                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+                  <div className="relative flex justify-center text-xs uppercase font-black tracking-widest">
                     <span className="bg-card px-2 text-muted-foreground/60">Or</span>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
             </p>
             
             <div className="flex flex-col items-center gap-2">
-              <p className="text-[10px] text-muted-foreground/60 text-center px-10 leading-relaxed">
+              <p className="text-xs text-muted-foreground/60 text-center px-10 leading-relaxed">
                 By signing up, you agree to our{" "}
                 <Link href="/terms" className="underline hover:text-primary transition-colors">Terms</Link>{" "}
                 &{" "}

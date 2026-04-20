@@ -72,7 +72,7 @@ export default function AdminUsagePage() {
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-black text-foreground">${model.cost.toFixed(4)}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase font-bold">{model.tokens} tokens</div>
+                  <div className="text-xs text-muted-foreground uppercase font-bold">{model.tokens} tokens</div>
                 </div>
               </div>
             ))}
@@ -90,15 +90,15 @@ export default function AdminUsagePage() {
             {usage?.recentLogs.map((log) => (
               <div key={log.id} className="flex items-center justify-between text-sm py-2 border-b border-border/20 last:border-0">
                 <div className="flex items-center gap-3">
-                  <Badge variant={log.status === 'success' ? 'secondary' : 'destructive'} className="text-[10px] h-5 px-1.5 uppercase font-bold">
+                  <Badge variant={log.status === 'success' ? 'secondary' : 'destructive'} className="text-xs h-5 px-1.5 uppercase font-bold">
                     {log.status}
                   </Badge>
                   <div className="flex flex-col">
                     <span className="font-bold text-foreground">{log.action}</span>
-                    <span className="text-[10px] text-muted-foreground">{new Date(log.createdAt).toLocaleTimeString()} — {log.model}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleTimeString()} — {log.model}</span>
                   </div>
                 </div>
-                <div className="text-right font-mono text-[11px] text-foreground font-bold">
+                <div className="text-right font-mono text-xs text-foreground font-bold">
                   +${log.cost.toFixed(6)}
                 </div>
               </div>

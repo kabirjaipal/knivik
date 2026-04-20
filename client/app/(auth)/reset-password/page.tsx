@@ -96,7 +96,7 @@ function ResetPasswordForm() {
           disabled={loading}
           className="h-11 bg-background/50 border-border/60 focus:ring-primary rounded-sm transition-all"
         />
-        <p className="text-[10px] text-muted-foreground font-medium px-1">Must be at least 8 characters long.</p>
+        <p className="text-xs text-muted-foreground font-medium px-1">Must be at least 8 characters long.</p>
       </div>
       
       {error && (
@@ -116,13 +116,13 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      <div className="relative z-10 w-full max-w-[400px]">
-        <Card className="border-border/60 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] bg-card rounded-md overflow-hidden">
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="border-border/60 shadow-2xl bg-card rounded-md overflow-hidden">
           <CardHeader className="space-y-4 pb-4 pt-6 text-center">
             {/* Logo Section */}
             <div className="flex flex-col items-center">
               <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-md">
                   <Radar className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>

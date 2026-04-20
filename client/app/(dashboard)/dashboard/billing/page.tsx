@@ -278,11 +278,11 @@ export default function BillingPage() {
                   {billingInfo?.subscriptionStatus === "active" && (
                     <div className="flex items-center gap-6 pt-2 border-t border-border/40">
                        <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Next Billing</span>
+                          <span className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Next Billing</span>
                           <span className="text-sm font-medium">{formatDate(billingInfo?.currentPeriodEnd)}</span>
                        </div>
                        <div className="flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Price</span>
+                          <span className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Price</span>
                           <span className="text-sm font-medium">
                             ${currentPlan !== "FREE" ? getDynamicPrice(currentPlan as "STARTER" | "PRO", billingInfo?.billingCycle as "monthly" | "yearly" || "monthly") : 0}/{billingInfo?.billingCycle === 'yearly' ? 'yr' : 'mo'}
                           </span>
@@ -343,10 +343,10 @@ export default function BillingPage() {
                         </div>
                         <div>
                           <p className="text-sm font-bold">{formatAmount(payment.amount, payment.currency)}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{formatDate(payment.createdAt)}</p>
+                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{formatDate(payment.createdAt)}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={`text-[10px] uppercase font-bold ${payment.status === "completed" ? "bg-success/5 text-success border-success/20" : ""}`}>
+                      <Badge variant="outline" className={`text-xs uppercase font-bold ${payment.status === "completed" ? "bg-success/5 text-success border-success/20" : ""}`}>
                         {payment.status}
                       </Badge>
                     </div>
@@ -369,13 +369,13 @@ export default function BillingPage() {
                   <div className="flex items-center gap-3 bg-muted/50 p-1 rounded-full border border-border/40">
                     <button
                       onClick={() => setBillingCycle("monthly")}
-                      className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                      className={`text-xs uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
                     >
                       Monthly
                     </button>
                     <button
                       onClick={() => setBillingCycle("yearly")}
-                      className={`text-[10px] uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "yearly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                      className={`text-xs uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "yearly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
                     >
                       Yearly
                     </button>
@@ -389,7 +389,7 @@ export default function BillingPage() {
                       <div className="flex items-center justify-between mb-2">
                          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Starter</span>
                          {currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle && (
-                           <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">Current</Badge>
+                           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">Current</Badge>
                          )}
                       </div>
                       <FormatPrice 
@@ -403,7 +403,7 @@ export default function BillingPage() {
                           email={user?.email || ""}
                           userId={user?.id || ""}
                           planName="Starter"
-                          className="w-full h-8 text-[11px] font-bold"
+                          className="w-full h-8 text-xs font-bold"
                           onSuccess={() => fetchBillingInfo()}
                         >
                           Switch to Starter
@@ -416,7 +416,7 @@ export default function BillingPage() {
                       <div className="flex items-center justify-between mb-2">
                          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pro</span>
                          {currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle && (
-                           <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">Current</Badge>
+                           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">Current</Badge>
                          )}
                       </div>
                       <FormatPrice 
@@ -431,7 +431,7 @@ export default function BillingPage() {
                           userId={user?.id || ""}
                           planName="Pro"
                           variant="default"
-                          className="w-full h-8 text-[11px] font-bold shadow-lg shadow-primary/10"
+                          className="w-full h-8 text-xs font-bold shadow-lg shadow-primary/10"
                           onSuccess={() => fetchBillingInfo()}
                         >
                           Upgrade to Pro
@@ -440,7 +440,7 @@ export default function BillingPage() {
                    </div>
                 </div>
                 {billingCycle === "yearly" && (
-                  <p className="text-[10px] text-center text-primary font-bold bg-primary/5 py-1.5 rounded-lg border border-primary/10">
+                  <p className="text-xs text-center text-primary font-bold bg-primary/5 py-1.5 rounded-lg border border-primary/10">
                     ⚡ RECOMMENDED: You save roughly $138/year with the Pro Yearly plan
                   </p>
                 )}

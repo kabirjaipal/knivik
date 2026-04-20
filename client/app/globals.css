@@ -54,136 +54,132 @@
 }
 
 :root {
-  /* Background: Soft off-white for reduced eye strain */
+  /* Background: Soft Slate for a premium interface feel */
   --background: hsl(210 40% 98%);
-  --foreground: hsl(222 47% 4%);
+  --foreground: hsl(222 47% 11%);
   
-  /* Cards: Pure white to stand out against background */
+  /* Cards: Subtle contrast with the background */
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222 47% 4%);
+  --card-foreground: hsl(222 47% 11%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 4%);
+  --popover-foreground: hsl(222 47% 11%);
   
-  /* Primary: Royal Blue - trust, stability, B2B professional */
-  --primary: hsl(221 83% 53%);
+  /* Primary: Modern Electric Indigo for actions */
+  --primary: hsl(246 80% 60%);
   --primary-foreground: hsl(210 40% 98%);
   
-  /* Secondary: Soft Slate - neutral, calm */
-  --secondary: hsl(210 40% 96%);
+  /* Secondary: Clean Slate Gray */
+  --secondary: hsl(210 40% 94%);
   --secondary-foreground: hsl(222 47% 11%);
   
-  /* Muted: Refined slate for secondary text */
+  /* Muted: De-emphasized UI elements */
   --muted: hsl(210 40% 96%);
   --muted-foreground: hsl(215 16% 47%);
   
-  /* Accent: Subtle blue tint */
+  /* Accent: Subtle highlights */
   --accent: hsl(210 40% 96%);
-  --accent-foreground: hsl(222 47% 11%);
+  --accent-foreground: hsl(246 80% 60%);
   
-  /* Success: Professional green */
+  /* Status Colors: Refined professional tones */
   --success: hsl(142 76% 36%);
   --success-foreground: hsl(0 0% 100%);
-  
-  /* Warning: Muted amber - not aggressive */
   --warning: hsl(38 92% 50%);
-  --warning-foreground: hsl(48 96% 89%);
+  --warning-foreground: hsl(48 96% 12%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 98%);
   
-  /* Destructive: Professional red */
-  --destructive: hsl(0 72% 51%);
-  --destructive-foreground: hsl(0 0% 100%);
-  
-  /* Borders: Subtle slate */
+  /* Borders & Inputs: Refined Slate lines */
   --border: hsl(214 32% 91%);
   --input: hsl(214 32% 91%);
-  --ring: hsl(221 83% 53%);
-  --radius: 0.5rem;
+  --ring: hsl(246 80% 60%);
+  --radius: 0.75rem;
 
-  /* Charts: Blue-green cohesive scale */
-  --chart-1: hsl(221 83% 53%);
-  --chart-2: hsl(142 76% 36%);
-  --chart-3: hsl(199 89% 48%);
-  --chart-4: hsl(215 25% 40%);
-  --chart-5: hsl(38 92% 50%);
+  /* Charts: Cohesive Indigo/Slate scale */
+  --chart-1: hsl(246 80% 60%);
+  --chart-2: hsl(215 25% 27%);
+  --chart-3: hsl(217 32% 45%);
+  --chart-4: hsl(215 16% 65%);
+  --chart-5: hsl(213 27% 84%);
   
-  /* Sidebar: Coordinated with main */
-  --sidebar: hsl(210 40% 98%);
-  --sidebar-foreground: hsl(215 16% 47%);
-  --sidebar-primary: hsl(221 83% 53%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
+  /* Sidebar: Modern and integrated */
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(222 47% 25%);
+  --sidebar-primary: hsl(246 80% 60%);
+  --sidebar-primary-foreground: hsl(210 40% 98%);
   --sidebar-accent: hsl(210 40% 96%);
-  --sidebar-accent-foreground: hsl(222 47% 11%);
+  --sidebar-accent-foreground: hsl(246 80% 60%);
   --sidebar-border: hsl(214 32% 91%);
-  --sidebar-ring: hsl(221 83% 53%);
+  --sidebar-ring: hsl(246 80% 60%);
 
-  /* RGB variants for transparency in raw CSS */
-  --primary-rgb: 37, 99, 235;
+  /* RGB variants for transparency */
+  --primary-rgb: 99, 102, 241;
   --destructive-rgb: 239, 68, 68;
 }
 
 .dark {
-  /* Background: Deep Navy - softer than pure black, premium feel */
-  --background: hsl(222 47% 11%);
+  /* Background: Rich Midnight Black for depth */
+  --background: hsl(222 47% 4%);
   --foreground: hsl(210 40% 98%);
   
-  /* Cards: Elevated slate surface */
-  --card: hsl(222 47% 15%);
+  /* Cards: Slightly elevated Slate */
+  --card: hsl(222 47% 7%);
   --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222 47% 11%);
+  --popover: hsl(222 47% 4%);
   --popover-foreground: hsl(210 40% 98%);
   
-  /* Primary: Electric Blue - brighter for dark visibility */
-  --primary: hsl(217 91% 60%);
-  --primary-foreground: hsl(222 47% 11%);
+  /* Primary: Glowing Indigo */
+  --primary: hsl(246 80% 60%);
+  --primary-foreground: hsl(210 40% 98%);
   
-  /* Secondary: Dark slate surface */
-  --secondary: hsl(222 47% 18%);
+  /* Secondary: Dark Slate Surface */
+  --secondary: hsl(217 32% 14%);
   --secondary-foreground: hsl(210 40% 98%);
   
-  /* Muted: Accessible dark mode text */
-  --muted: hsl(222 47% 18%);
+  /* Muted: Accessible dark neutral */
+  --muted: hsl(217 32% 14%);
   --muted-foreground: hsl(215 20% 65%);
   
-  /* Accent: Coordinated dark surface */
-  --accent: hsl(222 47% 18%);
+  /* Accent: Primary-tinted highlights */
+  --accent: hsl(217 32% 14%);
   --accent-foreground: hsl(210 40% 98%);
   
-  /* Success: Brighter green for dark */
-  --success: hsl(142 71% 45%);
-  --success-foreground: hsl(222 47% 11%);
+  /* Success: Deep Emerald */
+  --success: hsl(142 70% 45%);
+  --success-foreground: hsl(144 61% 9%);
   
-  /* Warning: Amber remains visible */
-  --warning: hsl(48 96% 89%);
-  --warning-foreground: hsl(38 92% 50%);
+  /* Warning: Balanced Amber */
+  --warning: hsl(48 96% 53%);
+  --warning-foreground: hsl(26 83% 14%);
   
-  /* Destructive: Muted red for dark */
+  /* Destructive: Deep Crimson */
   --destructive: hsl(0 63% 31%);
-  --destructive-foreground: hsl(210 40% 98%);
+  --destructive-foreground: hsl(0 0% 98%);
   
-  /* Borders: Subtle dark dividers */
-  --border: hsl(222 47% 18%);
-  --input: hsl(222 47% 18%);
-  --ring: hsl(217 91% 60%);
+  /* Borders & Inputs: Deep Slate Dividers */
+  --border: hsl(217 32% 17%);
+  --input: hsl(217 32% 17%);
+  --ring: hsl(246 80% 60%);
 
-  /* Charts: Coordinated dark palette */
-  --chart-1: hsl(217 91% 60%);
-  --chart-2: hsl(142 71% 45%);
-  --chart-3: hsl(199 89% 48%);
-  --chart-4: hsl(215 25% 55%);
-  --chart-5: hsl(38 92% 50%);
+  /* Charts: Vibrant scale */
+  --chart-1: hsl(246 80% 60%);
+  --chart-2: hsl(215 20% 65%);
+  --chart-3: hsl(217 32% 45%);
+  --chart-4: hsl(217 32% 30%);
+  --chart-5: hsl(222 47% 15%);
 
-  /* Sidebar: Matches dark theme */
-  --sidebar: hsl(222 47% 11%);
+  /* Sidebar: Consistent with deep background */
+  --sidebar: hsl(222 47% 4%);
   --sidebar-foreground: hsl(215 20% 65%);
-  --sidebar-primary: hsl(217 91% 60%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(222 47% 18%);
+  --sidebar-primary: hsl(246 80% 60%);
+  --sidebar-primary-foreground: hsl(210 40% 98%);
+  --sidebar-accent: hsl(217 32% 12%);
   --sidebar-accent-foreground: hsl(210 40% 98%);
-  --sidebar-border: hsl(222 47% 18%);
-  --sidebar-ring: hsl(217 91% 60%);
+  --sidebar-border: hsl(217 32% 17%);
+  --sidebar-ring: hsl(246 80% 60%);
 
-  /* RGB variants for transparency in raw CSS */
-  --primary-rgb: 60, 130, 246;
-  --destructive-rgb: 248, 113, 113;
+  /* RGB variants for transparency */
+  --primary-rgb: 99, 102, 241;
+  --destructive-rgb: 239, 68, 68;
 }
 
 @layer base {
@@ -191,12 +187,57 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-500 ease-in-out selection:bg-primary/20 selection:text-primary;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(var(--primary-rgb), 0.03) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(var(--primary-rgb), 0.03) 0, transparent 50%);
+    background-attachment: fixed;
   }
+
+  /* Premium Grain Effect */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3守%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+  
+  .dark body::before {
+    opacity: 0.04;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading tracking-tight;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/10 rounded-full hover:bg-muted-foreground/20 transition-colors;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-background/60 backdrop-blur-md border border-border/50;
+  }
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-lg border border-white/10;
   }
 }

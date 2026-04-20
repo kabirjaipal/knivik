@@ -49,37 +49,37 @@ interface Lead {
 
 const STATUS_OPTIONS: { value: LeadStatus; label: string; color: string }[] = [
   { value: 'NEW',       label: 'New',       color: 'bg-muted/50 text-muted-foreground border-border' },
-  { value: 'QUALIFIED', label: 'Qualified', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
+  { value: 'QUALIFIED', label: 'Qualified', color: 'bg-primary/10 text-primary border-primary/20' },
   { value: 'SAVED',     label: 'Saved',     color: 'bg-primary/10 text-primary border-primary/20' },
   { value: 'CONTACTED', label: 'Contacted', color: 'bg-primary/10 text-primary border-primary/20' },
-  { value: 'CONVERTED', label: 'Converted 🎉', color: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20' },
-  { value: 'DISMISSED', label: 'Dismissed', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
+  { value: 'CONVERTED', label: 'Converted 🎉', color: 'bg-success/10 text-success border-success/20' },
+  { value: 'DISMISSED', label: 'Dismissed', color: 'bg-destructive/10 text-destructive border-destructive/20' },
 ]
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const getIntentColor = (level: string) => {
   switch (level) {
-    case 'BUY_NOW':     return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+    case 'BUY_NOW':     return 'bg-destructive/10 text-destructive border-destructive/20'
     case 'COMPARING':   return 'bg-primary/10 text-primary border-primary/20'
-    case 'RESEARCHING': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+    case 'RESEARCHING': return 'bg-primary/10 text-primary border-primary/20'
     default:            return 'bg-muted text-muted-foreground border-border'
   }
 }
 
 const DetectionBadge = ({ detectedBy }: { detectedBy: DetectedBy }) => {
   if (detectedBy === 'COMPETITOR') return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+    <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-destructive/15 text-destructive border border-destructive/30 shadow-sm">
       <Flame className="w-3 h-3 fill-current" /> Competitor Alert
     </span>
   )
   if (detectedBy === 'SEMANTIC') return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-primary/15 text-primary border border-primary/30 shadow-[0_0_10px_rgba(139,92,246,0.1)]">
+    <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-primary/15 text-primary border border-primary/30 shadow-sm">
       <Brain className="w-3 h-3" /> Semantic Find
     </span>
   )
   return (
-    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-muted text-muted-foreground border border-border">
+    <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-muted text-muted-foreground border border-border">
       <Tags className="w-3 h-3" /> Keyword Match
     </span>
   )
@@ -141,10 +141,10 @@ const LeadRow = memo(({
     <div className="group relative border-b border-border/40 last:border-0">
       {/* Competitor Alert hot-border */}
       {lead.detectedBy === 'COMPETITOR' && (
-        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-red-500 to-orange-500" />
+        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-destructive to-warning" />
       )}
       {lead.detectedBy === 'SEMANTIC' && (
-        <div className="absolute left-0 top-0 w-0.5 h-full bg-linear-to-b from-primary to-primary" />
+        <div className="absolute left-0 top-0 w-0.5 h-full bg-primary" />
       )}
 
       <div className="p-5 pl-6 md:p-6 md:pl-7 hover:bg-muted/10 transition-colors flex flex-col md:flex-row gap-5 items-start">
@@ -155,7 +155,7 @@ const LeadRow = memo(({
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
               {lead.platform}
             </span>
-            <span className={`text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full border ${getIntentColor(lead.intentLevel)}`}>
+            <span className={`text-xs uppercase font-bold tracking-widest px-2 py-0.5 rounded-full border ${getIntentColor(lead.intentLevel)}`}>
               {lead.intentLevel.replace('_', ' ')}
             </span>
             <span className="text-xs font-semibold px-2 py-0.5 bg-primary/10 text-primary rounded-md">
@@ -178,7 +178,7 @@ const LeadRow = memo(({
           {lead.metadata?.qualificationReasoning && (
             <div className="mt-2 p-2 bg-primary/5 rounded-md border border-primary/10 flex gap-2 items-start">
                <Info className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-               <p className="text-[11px] font-medium text-primary/70 leading-normal italic">
+               <p className="text-xs font-medium text-primary/70 leading-normal italic">
                  {lead.metadata.qualificationReasoning}
                </p>
             </div>
@@ -256,17 +256,17 @@ const LeadRow = memo(({
 
           {/* Feedback section */}
           <div className="flex items-center justify-between md:justify-start gap-2 mt-1 px-1">
-             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mr-1">Quality:</span>
+             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mr-1">Quality:</span>
              <button 
               onClick={() => onFeedbackChange(lead.id, lead.feedback === 1 ? 0 : 1)}
-              className={`p-1.5 rounded-sm border transition-all active:scale-90 ${lead.feedback === 1 ? 'bg-green-500/20 text-green-500 border-green-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
+              className={`p-1.5 rounded-sm border transition-all active:scale-90 ${lead.feedback === 1 ? 'bg-success/20 text-success border-success/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
               title="Good Lead"
              >
                 <ThumbsUp className="w-3 h-3" />
              </button>
              <button 
               onClick={() => onFeedbackChange(lead.id, lead.feedback === -1 ? 0 : -1)}
-              className={`p-1.5 rounded-sm border transition-all active:scale-90 ${lead.feedback === -1 ? 'bg-red-500/20 text-red-500 border-red-500/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
+              className={`p-1.5 rounded-sm border transition-all active:scale-90 ${lead.feedback === -1 ? 'bg-destructive/20 text-destructive border-destructive/40' : 'text-muted-foreground border-transparent hover:bg-muted'}`}
               title="Bad Lead"
              >
                 <ThumbsDown className="w-3 h-3" />
@@ -460,7 +460,7 @@ export default function DashboardPage() {
             {[
               { label: 'Total Leads', value: totalLeads, icon: Activity, sub: 'Live tracking', subColor: 'text-primary' },
               { label: 'High-Intent', value: highIntentLeads, icon: Radar, sub: 'Score ≥ 80', subColor: 'text-primary', highlight: true },
-              { label: 'Competitor Alerts', value: competitorLeads, icon: Flame, sub: 'High-poach leads', subColor: 'text-red-400' },
+              { label: 'Competitor Alerts', value: competitorLeads, icon: Flame, sub: 'High-poach leads', subColor: 'text-destructive' },
               { label: 'Last 24h', value: recentSignals, icon: Clock, sub: 'New signals', subColor: 'text-muted-foreground' },
               { 
                 label: 'AI Usage (USD)', 
@@ -472,12 +472,12 @@ export default function DashboardPage() {
             ].map((m, i) => (
               <Card key={i} className={`shadow-lg border-border/40 overflow-hidden group relative transition-all duration-300 hover:shadow-primary/5 ${m.highlight ? 'bg-primary/5 border-primary/30' : 'bg-card hover:border-primary/40'}`}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2 bg-linear-to-br from-muted/10 to-transparent">
-                  <CardTitle className={`text-[10px] font-black uppercase tracking-widest ${m.highlight ? 'text-primary' : 'text-muted-foreground'}`}>{m.label}</CardTitle>
+                  <CardTitle className={`text-xs font-black uppercase tracking-widest ${m.highlight ? 'text-primary' : 'text-muted-foreground'}`}>{m.label}</CardTitle>
                   <m.icon className={`h-4 w-4 ${m.highlight ? 'text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]' : 'text-muted-foreground'}`} />
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className={`text-3xl font-black tracking-tight ${m.highlight ? 'text-primary' : ''}`}>{m.value}</div>
-                  <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 ${m.subColor}`}>{m.sub}</p>
+                  <p className={`text-xs font-bold uppercase tracking-widest mt-2 ${m.subColor}`}>{m.sub}</p>
                 </CardContent>
               </Card>
             ))}
@@ -511,7 +511,7 @@ export default function DashboardPage() {
                       ? 'border-primary text-primary'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}>
-                  {tab.label} {tab.count > 0 && <span className="ml-1 bg-muted px-1.5 py-0.5 rounded-full text-[10px]">{tab.count}</span>}
+                  {tab.label} {tab.count > 0 && <span className="ml-1 bg-muted px-1.5 py-0.5 rounded-full text-xs">{tab.count}</span>}
                 </button>
               ))}
             </div>

@@ -70,8 +70,8 @@ export default function AdminUsersPage() {
                 <TableCell className="font-medium">{user._count.products}</TableCell>
                 <TableCell>
                   {user.isScanning ? (
-                    <span className="text-xs text-green-500 font-bold flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Active
+                    <span className="text-xs text-success font-bold flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" /> Active
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">Idle</span>

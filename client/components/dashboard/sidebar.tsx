@@ -76,7 +76,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/95 px-6 backdrop-blur-xl shadow-sm">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md">
             <Radar className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-black tracking-tighter text-xl text-foreground">{PROJECT_NAME}</span>
@@ -104,7 +104,7 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Logo Container */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] shrink-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shrink-0">
               <Radar className="h-5 w-5 text-primary-foreground" />
             </div>
             {!isCollapsed && (
@@ -173,14 +173,14 @@ export function Sidebar({ className }: SidebarProps) {
           <div className={cn("flex items-center justify-between gap-4 px-2", isCollapsed && "flex-col")}>
             <div className="flex items-center gap-3 min-w-0">
                <Avatar className="h-8 w-8 border border-border shadow-sm">
-                  <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">
+                  <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase">
                     {user?.username?.slice(0, 2) || "U"}
                   </AvatarFallback>
                </Avatar>
                {!isCollapsed && (
                  <div className="flex flex-col min-w-0">
                     <span className="text-xs font-bold truncate">{user?.username}</span>
-                    <span className="text-[10px] text-muted-foreground truncate">{user?.email}</span>
+                    <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
                  </div>
                )}
             </div>

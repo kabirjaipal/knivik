@@ -236,7 +236,7 @@ export default function SettingsPage() {
                       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address</Label>
                       <div className="px-4 py-3 bg-muted/50 rounded-xl border border-border/50 font-medium text-muted-foreground flex justify-between items-center">
                         {user?.email}
-                        <div className="flex items-center gap-1.5 px-1 text-[10px] text-success font-bold uppercase">
+                        <div className="flex items-center gap-1.5 px-1 text-xs text-success font-bold uppercase">
                           <ShieldCheck className="w-3 h-3" /> Verified
                         </div>
                       </div>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                         onChange={e => setAlertSettings({...alertSettings, minIntentScore: parseInt(e.target.value)})}
                         className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                       />
-                      <div className="flex justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-widest px-1">
+                      <div className="flex justify-between text-xs text-muted-foreground font-bold uppercase tracking-widest px-1">
                         <span>Low (Noisy)</span>
                         <span>High (Precise)</span>
                       </div>
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <Zap className="w-4 h-4 text-primary" />
-                          <label className="text-sm font-bold text-foreground">Premium Webhooks <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">PRO ONLY</span></label>
+                          <label className="text-sm font-bold text-foreground">Premium Webhooks <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">PRO ONLY</span></label>
                         </div>
                         {user?.plan === 'PRO' ? (
                           <label className="relative inline-flex items-center cursor-pointer">
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                                 onClick={() => setAlertSettings({...alertSettings, webhookType: id})}
                                 className={`px-3 py-2.5 border rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all ${alertSettings.webhookType === id ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20' : 'bg-muted/30 hover:bg-muted/60 hover:text-foreground text-muted-foreground border-border/50'}`}>
                                 <Icon className={`w-4 h-4 shrink-0 ${alertSettings.webhookType === id ? 'opacity-100' : 'opacity-70'}`} />
-                                <span className="text-[11px] font-bold tracking-wider uppercase">{name}</span>
+                                <span className="text-xs font-bold tracking-wider uppercase">{name}</span>
                               </div>
                             ))}
                           </div>
@@ -453,7 +453,7 @@ export default function SettingsPage() {
                             onChange={e => setAlertSettings({...alertSettings, slackWebhook: e.target.value})}
                             className="font-mono text-sm bg-background border-border/60"
                           />
-                          <p className="text-[11px] text-muted-foreground px-1">
+                          <p className="text-xs text-muted-foreground px-1">
                             {alertSettings.webhookType === 'SLACK' && "We'll send Slack-formatted markdown with intent metrics directly into a channel."}
                             {alertSettings.webhookType === 'DISCORD' && "We'll hit your Discord webhook with rich formatted Embeds."}
                             {alertSettings.webhookType === 'ZAPIER' && "We'll shoot structured JSON data directly into your Zapier Catch Hook."}
@@ -468,7 +468,7 @@ export default function SettingsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Mail className="w-4 h-4 text-primary" />
-                          <label className="text-sm font-bold text-foreground">Email Deliveries <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">STARTER / PRO</span></label>
+                          <label className="text-sm font-bold text-foreground">Email Deliveries <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">STARTER / PRO</span></label>
                         </div>
                         {user?.plan !== 'FREE' ? (
                           <label className="relative inline-flex items-center cursor-pointer">
@@ -488,7 +488,7 @@ export default function SettingsPage() {
                           onChange={e => setAlertSettings({...alertSettings, emailTarget: e.target.value})}
                           className="font-mono text-sm bg-background border-border/60"
                         />
-                        <p className="text-[11px] text-muted-foreground px-1">
+                        <p className="text-xs text-muted-foreground px-1">
                           Leave blank to automatically deliver to your primary account email.
                         </p>
                       </div>

@@ -133,12 +133,12 @@ export default function AnalyticsPage() {
         
         <div className="flex items-center gap-4 bg-muted/40 p-4 rounded-2xl border border-border/50">
           <div className="text-right">
-            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Scanned Context</p>
+            <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Scanned Context</p>
             <p className="text-lg font-black text-foreground">{(data.conversationsScanned || 0).toLocaleString()}</p>
           </div>
           <div className="h-10 w-px bg-border/50" />
           <div className="text-right">
-            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Total Leads Found</p>
+            <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Total Leads Found</p>
             <p className="text-lg font-black text-primary">{(data.totalLeads || 0).toLocaleString()}</p>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                  <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground mb-1">{stat.label}</p>
                   <h3 className="text-2xl font-black text-foreground">{stat.value}</h3>
                 </div>
                 <div className={`p-3 rounded-xl ${stat.color}`}>
@@ -177,7 +177,7 @@ export default function AnalyticsPage() {
           <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
             Advanced ROI Analytics
             {!data.isAdvancedAnalyticsEnabled && (
-              <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
                 <Lock className="w-3 h-3" /> Starter / Pro
               </span>
             )}
@@ -267,12 +267,12 @@ export default function AnalyticsPage() {
                       animate={{ height }}
                       className="w-full max-w-[40px] rounded-t-lg bg-linear-to-t from-primary/80 to-primary group-hover:from-primary transition-all duration-500 relative"
                     >
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-border">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-border">
                         {day.count}
                       </div>
                     </motion.div>
                   </div>
-                  <span className="text-[10px] font-bold text-muted-foreground/60 group-hover:text-foreground transition-colors uppercase tracking-wider">
+                  <span className="text-xs font-bold text-muted-foreground/60 group-hover:text-foreground transition-colors uppercase tracking-wider">
                     {dateLabel}
                   </span>
                 </div>
@@ -297,7 +297,7 @@ export default function AnalyticsPage() {
                 
                 return (
                   <div key={i} className="space-y-1.5">
-                    <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
                       <span className="text-muted-foreground">{item.label}</span>
                       <span className="text-foreground">{item.count}</span>
                     </div>
@@ -331,7 +331,7 @@ export default function AnalyticsPage() {
                 
                 return (
                   <div key={i} className="space-y-1.5">
-                    <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
+                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
                       <span className="text-muted-foreground">{item.label}</span>
                       <span className="text-foreground">{item.count}</span>
                     </div>
@@ -379,11 +379,11 @@ export default function AnalyticsPage() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-1">Input Tokens</p>
+                  <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground mb-1">Input Tokens</p>
                   <p className="text-xl font-black text-foreground">{llmUsage?.totals.inputTokens.toLocaleString() || 0}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-1">Output Tokens</p>
+                  <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground mb-1">Output Tokens</p>
                   <p className="text-xl font-black text-foreground">{llmUsage?.totals.outputTokens.toLocaleString() || 0}</p>
                 </div>
               </div>
@@ -395,7 +395,7 @@ export default function AnalyticsPage() {
                     const percentage = (item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100
                     return (
                       <div key={i} className="space-y-1.5">
-                        <div className="flex justify-between text-[11px] font-bold uppercase tracking-wider">
+                        <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
                           <span className="text-muted-foreground">{item.action.replace('_', ' ')}</span>
                           <span className="text-foreground">{Math.round(percentage)}%</span>
                         </div>
@@ -441,12 +441,12 @@ export default function AnalyticsPage() {
                       </div>
                       <div>
                         <p className="text-xs font-black text-foreground tracking-tight">{model.modelId}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{model.requestCount} Requests</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{model.requestCount} Requests</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-black text-foreground">${model.estimatedCost.toFixed(4)}</p>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Model Cost</p>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Model Cost</p>
                     </div>
                   </div>
                 ))}

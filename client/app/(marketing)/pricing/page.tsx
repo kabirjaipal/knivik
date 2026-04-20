@@ -140,7 +140,7 @@ export default function PricingPage() {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold">{PLANS.FREE.name}</CardTitle>
-                  {user?.plan === "FREE" && <Badge className="text-[10px] uppercase font-bold tracking-tighter">Current</Badge>}
+                  {user?.plan === "FREE" && <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge>}
                 </div>
                 <div className="mt-2">
                   <span className="text-3xl font-extrabold">$0</span>
@@ -169,7 +169,7 @@ export default function PricingPage() {
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold">{PLANS.STARTER.name}</CardTitle>
-                  {user?.plan === "STARTER" && <Badge className="text-[10px] uppercase font-bold tracking-tighter">Current</Badge>}
+                  {user?.plan === "STARTER" && <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge>}
                 </div>
                 <div className="mt-2 flex items-center min-h-[44px]">
                   {isLoadingPrices ? (
@@ -222,7 +222,7 @@ export default function PricingPage() {
                     {PLANS.PRO.name}
                     <Sparkles className="h-4 w-4 text-primary fill-primary/20" />
                   </CardTitle>
-                  {user?.plan === "PRO" ? <Badge className="text-[10px] uppercase font-bold tracking-tighter">Current</Badge> : <Badge variant="secondary" className="text-[10px] uppercase font-bold bg-primary/10 text-primary">Popular</Badge>}
+                  {user?.plan === "PRO" ? <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge> : <Badge variant="secondary" className="text-xs uppercase font-bold bg-primary/10 text-primary">Popular</Badge>}
                 </div>
                 <div className="mt-2 flex items-center min-h-[44px]">
                   {isLoadingPrices ? (

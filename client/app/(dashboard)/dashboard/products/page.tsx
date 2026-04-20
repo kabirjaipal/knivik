@@ -318,22 +318,12 @@ export default function ProductsPage() {
       {/* Products Grid */}
       <div className="space-y-4">
         {products.length === 0 ? (
-          <div className="flex justify-center flex-col items-center py-24 bg-muted/5 rounded-md border border-dashed border-border/60">
-            <div className="w-20 h-20 rounded-md bg-primary/5 flex items-center justify-center border border-primary/10 shadow-inner mb-6">
-              <Radar className="w-10 h-10 text-primary animate-pulse" />
-            </div>
-            <h3 className="text-2xl font-black text-foreground tracking-tight">No products yet</h3>
-            <p className="text-muted-foreground mt-2 text-base max-w-sm text-center font-medium leading-relaxed">
-              Create your first product to start finding high-intent buyers on Social Media.
+          <div className="flex justify-center flex-col items-center py-32 bg-muted/5 rounded-xl border border-dashed border-border/40">
+            <Radar className="w-12 h-12 text-muted-foreground/20 mb-4" />
+            <h3 className="text-xl font-bold text-foreground">No products found</h3>
+            <p className="text-muted-foreground mt-1 text-sm text-center max-w-xs">
+              Click the "New Product" button above to start tracking social signals.
             </p>
-            {!isCreating && (
-              <button 
-                onClick={() => setIsCreating(true)}
-                className="mt-8 flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-sm hover:bg-primary/90 transition-all font-black shadow-2xl active:scale-95 hover:shadow-primary/20"
-              >
-                <Plus className="w-5 h-5" /> Start Tracking
-              </button>
-            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -483,7 +473,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
                   // Error handled silently
                 }
               }}
-              className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 fill-current" />}
               Magic AI Suggest
@@ -568,7 +558,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
             <h3 className="font-black text-base text-foreground truncate tracking-tight">
               {product.name}
             </h3>
-            <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-2">
+            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
               {product.isActive ? (
                 <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-success">
                   <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-success/40"></div>
@@ -594,12 +584,12 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         
         <div className="flex flex-wrap gap-1.5">
           {product.keywords.slice(0, 3).map((k: any) => (
-            <span key={k.id} className="text-[9px] font-black uppercase tracking-widest bg-muted border border-border/40 px-2 py-0.5 rounded text-muted-foreground truncate max-w-[100px]">
+            <span key={k.id} className="text-xs font-black uppercase tracking-widest bg-muted border border-border/40 px-2 py-0.5 rounded text-muted-foreground truncate max-w-[100px]">
               {k.keyword}
             </span>
           ))}
           {product.keywords.length > 3 && (
-            <span className="text-[9px] font-black text-muted-foreground/50 self-center">+{product.keywords.length - 3}</span>
+            <span className="text-xs font-black text-muted-foreground/50 self-center">+{product.keywords.length - 3}</span>
           )}
         </div>
 
@@ -623,7 +613,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           
           <Link 
             href={`/dashboard/products/${product.id}`}
-            className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 transition-all"
+            className="text-xs font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 transition-all"
           >
             View Signal
             <ChevronRight className="w-3 h-3" />

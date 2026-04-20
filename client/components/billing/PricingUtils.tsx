@@ -48,19 +48,19 @@ export function PlanBadge({ plan, className = "" }: { plan: string; className?: 
   switch (normalizedPlan) {
     case "PRO":
       return (
-        <Badge className={`bg-primary text-primary-foreground border-none font-bold tracking-tighter uppercase text-[10px] px-2 py-0.5 ${className}`}>
+        <Badge className={`bg-primary text-primary-foreground border-none font-bold tracking-tighter uppercase text-xs px-2 py-0.5 ${className}`}>
           Pro
         </Badge>
       );
     case "STARTER":
       return (
-        <Badge variant="outline" className={`border-primary/30 text-primary font-bold tracking-tighter uppercase text-[10px] px-2 py-0.5 ${className}`}>
+        <Badge variant="outline" className={`border-primary/30 text-primary font-bold tracking-tighter uppercase text-xs px-2 py-0.5 ${className}`}>
           Starter
         </Badge>
       );
     default:
       return (
-        <Badge variant="secondary" className={`font-bold tracking-tighter uppercase text-[10px] px-2 py-0.5 ${className}`}>
+        <Badge variant="secondary" className={`font-bold tracking-tighter uppercase text-xs px-2 py-0.5 ${className}`}>
           Free
         </Badge>
       );

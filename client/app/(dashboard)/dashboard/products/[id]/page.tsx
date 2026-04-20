@@ -55,7 +55,7 @@ export default function ProductDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-primary/60" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Loading Signal Data...</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Loading Signal Data...</p>
       </div>
     )
   }
@@ -68,7 +68,7 @@ export default function ProductDetailPage() {
           variant="outline"
           size="sm"
           onClick={() => router.push("/dashboard/products")}
-          className="rounded-xl px-4 font-bold text-[10px] uppercase tracking-wider"
+          className="rounded-xl px-4 font-bold text-xs uppercase tracking-wider"
         >
           <ArrowLeft className="w-3 h-3 mr-2" /> Back to Overview
         </Button>
@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
       <nav className="mb-4">
         <button 
           onClick={() => router.push("/dashboard/products")}
-          className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
+          className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> 
           Back
@@ -99,12 +99,12 @@ export default function ProductDetailPage() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 {product.isActive ? (
-                  <span className="flex items-center gap-1.5 text-success font-bold uppercase tracking-wider text-[9px]">
+                  <span className="flex items-center gap-1.5 text-success font-bold uppercase tracking-wider text-xs">
                     <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-success/40"></span>
                     Live Scanning
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-[9px]">
+                  <span className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-xs">
                     <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full"></span>
                     Standby
                   </span>
@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
                   href={product.websiteUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[9px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                  className="text-xs font-bold uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
                 >
                   Visit <ExternalLink className="w-3 h-3" />
                 </a>
@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
           
-          <div className="text-[9px] font-mono text-muted-foreground/30 tabular-nums">
+          <div className="text-xs font-mono text-muted-foreground/30 tabular-nums">
             {product.id}
           </div>
         </div>

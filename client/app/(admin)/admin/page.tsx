@@ -51,11 +51,11 @@ export default function AdminPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {[
-          { label: 'Total Users', value: stats?.userCount, icon: Users, color: 'text-blue-500' },
+          { label: 'Total Users', value: stats?.userCount, icon: Users, color: 'text-primary' },
           { label: 'Total Products', value: stats?.productCount, icon: LayoutDashboard, color: 'text-primary' },
           { label: 'Total Leads', value: stats?.leadCount, icon: Radar, color: 'text-primary' },
           { label: 'Leads Found Today', value: stats?.leadsToday, icon: Zap, color: 'text-primary' },
-          { label: 'Active Scans', value: stats?.activeScans, icon: Activity, color: 'text-red-500' },
+          { label: 'Active Scans', value: stats?.activeScans, icon: Activity, color: 'text-destructive' },
         ].map((m, i) => (
           <Card key={i} className="bg-card/50 border-border/40">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -76,7 +76,7 @@ export default function AdminPage() {
             <Activity className="w-4 h-4 text-primary" />
             Social Engine Health (Real-time)
           </CardTitle>
-          <div className="text-[10px] font-bold text-muted-foreground">Gateway Heartbeat Active</div>
+          <div className="text-xs font-bold text-muted-foreground">Gateway Heartbeat Active</div>
         </CardHeader>
         <CardContent className="p-0 bg-transparent">
           <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-border/40">
@@ -86,7 +86,7 @@ export default function AdminPage() {
               { name: 'Twitter/X', status: 'Checking...' },
             ]).map((s, i) => (
               <div key={i} className="p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-muted/20 transition-colors">
-                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground/80">
+                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/80">
                   {s.name}
                 </span>
                 <div className={`flex items-center gap-2.5 text-sm font-bold ${
@@ -97,7 +97,7 @@ export default function AdminPage() {
                   }`} />
                   {s.status}
                 </div>
-                {s.latency && <span className="text-[11px] font-bold text-muted-foreground/50 tracking-wide font-mono">{s.latency}</span>}
+                {s.latency && <span className="text-xs font-bold text-muted-foreground/50 tracking-wide font-mono">{s.latency}</span>}
               </div>
             ))}
           </div>

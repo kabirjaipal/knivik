@@ -27,7 +27,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     <div className="space-y-8">
       {/* Description Section */}
       <section>
-        <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Description</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">Description</h2>
         <p className="text-sm font-medium leading-relaxed text-foreground/80">
           {product.description || "No description provided."}
         </p>
@@ -36,7 +36,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="space-y-6">
         {/* Keywords */}
         <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
             <Hash className="w-3.5 h-3.5" /> Keywords
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -50,7 +50,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* Negative Keywords */}
         <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
             <XCircle className="w-3.5 h-3.5 text-destructive/60" /> Exclusions
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -68,7 +68,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* Competitors */}
         <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5" /> Competitors
           </h2>
           <div className="flex flex-wrap gap-2">
@@ -86,12 +86,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* Platforms */}
         <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 text-primary/60" /> Platforms
           </h2>
           <div className="flex flex-wrap gap-2">
             {platforms.map((p) => (
-              <Badge key={p} className="text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border-none px-3 py-1">
+              <Badge key={p} className="text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border-none px-3 py-1">
                 {p}
               </Badge>
             ))}
@@ -102,10 +102,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       {/* AI Persona */}
       {product.aiConfig?.customPersona && (
         <section className="bg-primary/[0.03] p-5 rounded-2xl border border-primary/10">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-primary/50 mb-2 flex items-center gap-1.5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-2 flex items-center gap-1.5">
             <Zap className="w-3 h-3 fill-current" /> AI Persona
           </h2>
-          <p className="text-[13px] font-medium italic text-foreground/70 leading-relaxed">
+          <p className="text-sm font-medium italic text-foreground/70 leading-relaxed">
             "{product.aiConfig.customPersona}"
           </p>
         </section>
