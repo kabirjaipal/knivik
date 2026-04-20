@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
+import { useBilling } from "@/context/billing-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,26 +11,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, CreditCard, AlertCircle, Check, Sparkles, ExternalLink, PartyPopper } from "lucide-react";
 import { FormatPrice, PlanBadge } from "@/components/billing/PricingUtils";
-
-interface BillingInfo {
-  plan: string;
-  subscriptionStatus: string | null;
-  billingCycle: string | null;
-  currentPeriodEnd: string | null;
-  paddleCustomerId: string | null;
-  subscription?: {
-    paddleCustomerId: string | null;
-    status: string | null;
-  };
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  createdAt: string;
-}
 
 const PLANS = {
   FREE: {
@@ -51,78 +32,44 @@ const PLANS = {
     features: ["Unlimited product tracking", "Unlimited leads per month", "Reddit, HN & Twitter alerts", "Instant real-time monitoring", "Custom AI persona for replies", "Advanced ROI analytics", "Standard & Premium Webhook support", "Priority support"],
   },
 };
-
 export default function BillingPage() {
   const { user } = useAuth();
+  const { billingData, isLoading: isLoadingBilling, refreshBilling } = useBilling();
   const router = useRouter();
   const [isInitializing, setIsInitializing] = useState(true);
-  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [isLoadingBilling, setIsLoadingBilling] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [livePrices, setLivePrices] = useState<any[]>([]);
   const searchParams = useSearchParams();
   const showSuccess = searchParams.get("status") === "success";
 
-  useEffect(() => {
-    // Fetch live prices once on mount
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/prices`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) setLivePrices(d.data);
-      })
-      .catch(err => console.error("Failed to load prices", err));
-  }, []);
-
-  const fetchBillingInfo = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/billing`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setBillingInfo(data.data);
-        setPayments(data.data.payments || []);
-        return data.data;
-      }
-    } catch (error) {
-      console.error("Failed to fetch billing info:", error);
-    } finally {
-      setIsLoadingBilling(false);
-    }
-    return null;
-  };
+  const livePrices = billingData?.prices || [];
+  const payments = billingData?.payments || [];
+  const billingInfo = billingData?.user;
 
   useEffect(() => {
-    // Auth and billing info check
-    if (isInitializing) {
-      const timer = setTimeout(async () => {
-        if (!user) {
-          router.push("/login");
-          setIsInitializing(false);
-        } else {
-          setIsInitializing(false);
-          const info = await fetchBillingInfo();
-          
-          // POLLING LOGIC: If we just paid but plan is still FREE, poll for the webhook
-          if (showSuccess && info?.plan === 'FREE') {
-            let attempts = 0;
-            const pollInterval = setInterval(async () => {
-              attempts++;
-              const updatedInfo = await fetchBillingInfo();
-              if (updatedInfo?.plan !== 'FREE' || attempts >= 10) {
-                clearInterval(pollInterval);
-              }
-            }, 2000);
-            return () => clearInterval(pollInterval);
-          }
+    const init = async () => {
+      if (!user) {
+        router.push("/login");
+      } else {
+        setIsInitializing(false);
+        
+        // POLLING LOGIC: If we just paid but plan is still FREE, poll for the webhook
+        if (showSuccess && billingData?.user?.plan === 'FREE') {
+          let attempts = 0;
+          const pollInterval = setInterval(async () => {
+            attempts++;
+            await refreshBilling();
+            if (billingData?.user?.plan !== 'FREE' || attempts >= 10) {
+              clearInterval(pollInterval);
+            }
+          }, 2000);
+          return () => clearInterval(pollInterval);
         }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [user, router, isInitializing, showSuccess]);
+      }
+    };
+
+    init();
+  }, [user, router, showSuccess, billingData?.user?.plan, refreshBilling]);
 
   const handleOpenCustomerPortal = async () => {
     if (isRedirecting) return;
@@ -291,7 +238,7 @@ export default function BillingPage() {
                   )}
                 </div>
 
-                {currentPlan !== "FREE" && (billingInfo?.paddleCustomerId || billingInfo?.subscription?.paddleCustomerId) ? (
+                {currentPlan !== "FREE" && (billingInfo?.paddleCustomerId || billingData?.subscription?.paddleCustomerId) ? (
                   <Button 
                     variant="outline" 
                     className="h-9 text-xs font-bold gap-2 min-w-[150px]" 
@@ -356,97 +303,105 @@ export default function BillingPage() {
             </CardContent>
           </Card>
 
-          {/* Upgrade/Change Plan - Only show if not on Pro Yearly */}
-          {currentPlan !== "FREE" && (
-            <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-bold">Change your plan</CardTitle>
-                    <CardDescription>Upgrade to yearly to save more or switch tiers</CardDescription>
-                  </div>
-                  {/* Compact Toggle */}
-                  <div className="flex items-center gap-3 bg-muted/50 p-1 rounded-full border border-border/40">
-                    <button
-                      onClick={() => setBillingCycle("monthly")}
-                      className={`text-xs uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      onClick={() => setBillingCycle("yearly")}
-                      className={`text-xs uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "yearly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                    >
-                      Yearly
-                    </button>
-                  </div>
+          {/* Upgrade/Change Plan - Available for everyone to allow seamless scaling */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold">
+                    {currentPlan === "FREE" ? "Ready to grow?" : "Change your plan"}
+                  </CardTitle>
+                  <CardDescription>
+                    {currentPlan === "FREE" ? "Choose a plan that fits your scale" : "Upgrade to yearly or switch your current tier"}
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                   {/* Starter Option */}
-                   <div className={`p-4 rounded-xl border transition-all ${currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50"}`}>
-                      <div className="flex items-center justify-between mb-2">
-                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Starter</span>
-                         {currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle && (
-                           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">Current</Badge>
-                         )}
-                      </div>
-                      <FormatPrice 
-                        amount={getDynamicPrice("STARTER", billingCycle)} 
-                        billingCycle={billingCycle} 
-                        className="mb-4"
-                      />
-                      {!(currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle) && (
-                        <CheckoutButton
-                          priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_STARTER_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_STARTER_YEARLY_PRICE_ID!}
-                          email={user?.email || ""}
-                          userId={user?.id || ""}
-                          planName="Starter"
-                          className="w-full h-8 text-xs font-bold"
-                          onSuccess={() => fetchBillingInfo()}
-                        >
-                          Switch to Starter
-                        </CheckoutButton>
-                      )}
-                   </div>
+                {/* Compact Toggle */}
+                <div className="flex items-center gap-3 bg-muted/50 p-1 rounded-full border border-border/40">
+                  <button
+                    onClick={() => setBillingCycle("monthly")}
+                    className={`text-xs uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBillingCycle("yearly")}
+                    className={`text-xs uppercase font-bold px-3 py-1 rounded-full transition-all ${billingCycle === "yearly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                  >
+                    Yearly
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 {/* Starter Option */}
+                 <div className={`p-4 rounded-xl border transition-all ${currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50"}`}>
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Starter</span>
+                       {currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle && (
+                         <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">Current</Badge>
+                       )}
+                    </div>
+                    <FormatPrice 
+                      amount={getDynamicPrice("STARTER", billingCycle)} 
+                      billingCycle={billingCycle} 
+                      className="mb-4"
+                    />
+                    {currentPlan === "STARTER" && billingInfo?.billingCycle === billingCycle ? (
+                      <Button disabled className="w-full h-8 text-xs font-bold opacity-50">Active Plan</Button>
+                    ) : (
+                      <CheckoutButton
+                        priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_STARTER_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_STARTER_YEARLY_PRICE_ID!}
+                        email={user?.email || ""}
+                        userId={user?.id || ""}
+                        subscriptionId={billingData?.paddleSubscriptionId}
+                        planName="Starter"
+                        className="w-full h-8 text-xs font-bold"
+                        onSuccess={() => refreshBilling()}
+                      >
+                        {currentPlan === "PRO" ? "Switch to Starter" : "Buy Starter"}
+                      </CheckoutButton>
+                    )}
+                 </div>
 
-                   {/* Pro Option */}
-                   <div className={`p-4 rounded-xl border transition-all ${currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50 ring-1 ring-primary/20"}`}>
-                      <div className="flex items-center justify-between mb-2">
-                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pro</span>
-                         {currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle && (
-                           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">Current</Badge>
-                         )}
-                      </div>
-                      <FormatPrice 
-                        amount={getDynamicPrice("PRO", billingCycle)} 
-                        billingCycle={billingCycle} 
-                        className="mb-4"
-                      />
-                      {!(currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle) && (
-                        <CheckoutButton
-                          priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID!}
-                          email={user?.email || ""}
-                          userId={user?.id || ""}
-                          planName="Pro"
-                          variant="default"
-                          className="w-full h-8 text-xs font-bold shadow-lg shadow-primary/10"
-                          onSuccess={() => fetchBillingInfo()}
-                        >
-                          Upgrade to Pro
-                        </CheckoutButton>
-                      )}
-                   </div>
-                </div>
-                {billingCycle === "yearly" && (
-                  <p className="text-xs text-center text-primary font-bold bg-primary/5 py-1.5 rounded-lg border border-primary/10">
-                    ⚡ RECOMMENDED: You save roughly $138/year with the Pro Yearly plan
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                 {/* Pro Option */}
+                 <div className={`p-4 rounded-xl border transition-all ${currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle ? "bg-primary/5 border-primary/30" : "bg-muted/20 border-border/50 ring-1 ring-primary/20"}`}>
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pro</span>
+                       {currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle && (
+                         <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">Current</Badge>
+                       )}
+                    </div>
+                    <FormatPrice 
+                      amount={getDynamicPrice("PRO", billingCycle)} 
+                      billingCycle={billingCycle} 
+                      className="mb-4"
+                    />
+                    {currentPlan === "PRO" && billingInfo?.billingCycle === billingCycle ? (
+                      <Button disabled className="w-full h-8 text-xs font-bold opacity-50">Active Plan</Button>
+                    ) : (
+                      <CheckoutButton
+                        priceId={billingCycle === "monthly" ? process.env.NEXT_PUBLIC_PADDLE_PRO_MONTHLY_PRICE_ID! : process.env.NEXT_PUBLIC_PADDLE_PRO_YEARLY_PRICE_ID!}
+                        email={user?.email || ""}
+                        userId={user?.id || ""}
+                        subscriptionId={billingData?.paddleSubscriptionId}
+                        planName="Pro"
+                        variant="default"
+                        className="w-full h-8 text-xs font-bold shadow-lg shadow-primary/10"
+                        onSuccess={() => refreshBilling()}
+                      >
+                        {currentPlan === "STARTER" ? "Upgrade to Pro" : "Go Pro"}
+                      </CheckoutButton>
+                    )}
+                 </div>
+              </div>
+              {currentPlan !== "FREE" && (
+                <p className="text-[11px] text-center text-muted-foreground mt-4 bg-muted/30 py-2 rounded-lg border border-dashed border-border/60">
+                  ⚡ Note: Plan changes are handled securely via Paddle. Your current plan's unused credit will be automatically applied to the new plan.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <aside className="space-y-6">

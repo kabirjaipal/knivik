@@ -1,12 +1,13 @@
 "use client";
 
+import { useAuth } from "@/context/auth-context";
+import { useBilling } from "@/context/billing-context";
+import { useState, useEffect } from "react";
+import { Check, Sparkles, Zap, Shield, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/landing/navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/context/auth-context";
-import { useState, useEffect } from "react";
-import { Check, Sparkles, Zap, Shield, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 
@@ -63,19 +64,11 @@ const PLANS = {
 
 export default function PricingPage() {
   const { user } = useAuth();
+  const { billingData, isLoading: isLoadingPrices, refreshBilling } = useBilling();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [livePrices, setLivePrices] = useState<any[]>([]);
-  const [isLoadingPrices, setIsLoadingPrices] = useState(true);
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/prices`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) setLivePrices(d.data);
-      })
-      .catch(err => console.error("Failed to load live prices", err))
-      .finally(() => setIsLoadingPrices(false));
-  }, []);
+  const livePrices = billingData?.prices || [];
+  const currentPlan = (billingData?.user?.plan || user?.plan || "FREE").toUpperCase();
 
   const getPrice = (planKey: keyof typeof PLANS, cycle: 'monthly' | 'yearly') => {
     if (planKey === "FREE") return 0;
@@ -136,11 +129,11 @@ export default function PricingPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-3 gap-8">
             {/* Free Plan */}
-            <Card className={`flex flex-col border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-primary/30 ${user?.plan === "FREE" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
+            <Card className={`flex flex-col border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-primary/30 ${currentPlan === "FREE" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold">{PLANS.FREE.name}</CardTitle>
-                  {user?.plan === "FREE" && <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge>}
+                  {currentPlan === "FREE" && <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge>}
                 </div>
                 <div className="mt-2">
                   <span className="text-3xl font-extrabold">$0</span>
@@ -157,19 +150,19 @@ export default function PricingPage() {
                   ))}
                 </ul>
                 <Link href={user ? "/dashboard" : "/register"} className="w-full">
-                  <Button variant={user?.plan === "FREE" ? "secondary" : "outline"} className="w-full h-10 font-bold" disabled={user?.plan === "FREE"}>
-                    {user?.plan === "FREE" ? "Active" : "Start Free"}
+                  <Button variant={currentPlan === "FREE" ? "secondary" : "outline"} className="w-full h-10 font-bold" disabled={currentPlan === "FREE"}>
+                    {currentPlan === "FREE" ? "Active" : "Start Free"}
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
             {/* Starter Plan */}
-            <Card className={`flex flex-col border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-primary/30 ${user?.plan === "STARTER" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
+            <Card className={`flex flex-col border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-primary/30 ${currentPlan === "STARTER" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold">{PLANS.STARTER.name}</CardTitle>
-                  {user?.plan === "STARTER" && <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge>}
+                  {currentPlan === "STARTER" && <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge>}
                 </div>
                 <div className="mt-2 flex items-center min-h-[44px]">
                   {isLoadingPrices ? (
@@ -203,26 +196,26 @@ export default function PricingPage() {
                   userId={user?.id || ""}
                   planName="Starter"
                   className="w-full h-10 font-bold"
-                  disabled={user?.plan === "STARTER"}
+                  disabled={user?.plan !== "FREE"}
                   onSuccess={() => {
                     alert("Subscribed to Starter!");
                   }}
                   onError={(error) => alert(error.message)}
                 >
-                  {user?.plan === "STARTER" ? "Active" : "Buy Starter"}
+                  {currentPlan === "STARTER" ? "Active" : (user?.plan !== "FREE" ? "Manage Plan" : "Buy Starter")}
                 </CheckoutButton>
               </CardContent>
             </Card>
 
             {/* Pro Plan */}
-            <Card className={`flex flex-col border-primary/20 bg-primary/5 backdrop-blur-sm transition-all hover:border-primary/40 ${user?.plan === "PRO" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
+            <Card className={`flex flex-col border-primary/20 bg-primary/5 backdrop-blur-sm transition-all hover:border-primary/40 ${currentPlan === "PRO" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
                     {PLANS.PRO.name}
                     <Sparkles className="h-4 w-4 text-primary fill-primary/20" />
                   </CardTitle>
-                  {user?.plan === "PRO" ? <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge> : <Badge variant="secondary" className="text-xs uppercase font-bold bg-primary/10 text-primary">Popular</Badge>}
+                  {currentPlan === "PRO" ? <Badge className="text-xs uppercase font-bold tracking-tighter">Current</Badge> : <Badge variant="secondary" className="text-xs uppercase font-bold bg-primary/10 text-primary">Popular</Badge>}
                 </div>
                 <div className="mt-2 flex items-center min-h-[44px]">
                   {isLoadingPrices ? (
@@ -256,16 +249,13 @@ export default function PricingPage() {
                   userId={user?.id || ""}
                   planName="Pro"
                   className="w-full h-10 font-bold shadow-lg shadow-primary/10"
-                  disabled={user?.plan === "PRO"}
+                  disabled={user?.plan !== "FREE"}
                   onSuccess={() => {
                     alert("Subscribed to Pro!");
                   }}
                   onError={(error) => alert(error.message)}
                 >
-                  {user?.plan === "PRO" 
-                    ? "Active" 
-                    : (user && user.plan === "STARTER" ? "Upgrade" : "Go Pro")
-                  }
+                  {currentPlan === "PRO" ? "Active" : (user?.plan !== "FREE" ? "Manage Plan" : "Go Pro")}
                 </CheckoutButton>
               </CardContent>
             </Card>

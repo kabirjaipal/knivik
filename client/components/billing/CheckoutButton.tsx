@@ -10,6 +10,7 @@ interface CheckoutButtonProps {
   email: string;
   userId: string;
   planName: string;
+  subscriptionId?: string | null;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   className?: string;
   disabled?: boolean;
@@ -25,6 +26,7 @@ declare global {
         open: (config: {
           items: Array<{ priceId: string; quantity?: number }>;
           customer?: { email: string };
+          subscriptionId?: string;
           customData?: Record<string, string>;
           settings?: {
             displayMode?: "overlay" | "inline";
@@ -54,6 +56,7 @@ export function CheckoutButton({
   email,
   userId,
   planName,
+  subscriptionId,
   variant = "default",
   className = "",
   disabled = false,
@@ -133,6 +136,7 @@ export function CheckoutButton({
       window.Paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
         customer: { email },
+        ...(subscriptionId && { subscriptionId }),
         customData: { userId },
         settings: {
           displayMode: "overlay",

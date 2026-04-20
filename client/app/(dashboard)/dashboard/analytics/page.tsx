@@ -19,7 +19,7 @@ import {
   BadgeDollarSign,
   Percent
 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { motion } from "framer-motion"
 
 interface MetricData {
@@ -61,20 +61,15 @@ interface LlmUsageData {
 }
 
 export default function AnalyticsPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [llmUsage, setLlmUsage] = useState<LlmUsageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasFetchedAnalytics = useRef(false)
+  const lastFetchedUserId = useRef<string | null>(null)
 
-  useEffect(() => {
-    if (user) {
-      Promise.all([fetchAnalytics(), fetchLlmUsage()])
-        .finally(() => setLoading(false))
-    }
-  }, [user])
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
       const res = await fetch(`${apiUrl}/analytics`, { credentials: 'include' })
@@ -84,9 +79,9 @@ export default function AnalyticsPage() {
     } catch (err: any) {
       setError(err.message)
     }
-  }
+  }, [])
 
-  const fetchLlmUsage = async () => {
+  const fetchLlmUsage = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
       const res = await fetch(`${apiUrl}/analytics/llm`, { credentials: 'include' })
@@ -96,7 +91,21 @@ export default function AnalyticsPage() {
     } catch (err: any) {
       console.error(err.message)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (authLoading || !user) return
+    
+    // Only fetch if identity actually changed or we've never fetched
+    if (hasFetchedAnalytics.current && lastFetchedUserId.current === user.id) return
+    
+    hasFetchedAnalytics.current = true
+    lastFetchedUserId.current = user.id
+
+    setLoading(true)
+    Promise.all([fetchAnalytics(), fetchLlmUsage()])
+      .finally(() => setLoading(false))
+  }, [user, authLoading, fetchAnalytics, fetchLlmUsage])
 
   if (loading) {
     return (

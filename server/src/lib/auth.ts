@@ -75,33 +75,34 @@ export const auth: any = betterAuth({
   },
 
   callbacks: {
-    async session(session: any) {
-      if (session.user) {
-        const userData = await db.client.user.findUnique({
-          where: { id: session.user.id },
-          select: {
-            role: true,
-            plan: true,
-            subscriptionStatus: true,
-            paddleCustomerId: true,
-            isScanning: true,
-            lastScanStatus: true,
-          },
-        });
+    async session({ session, user }: any) {
+      const userData = await db.client.user.findUnique({
+        where: { id: user.id },
+        select: {
+          role: true,
+          plan: true,
+          subscriptionStatus: true,
+          paddleCustomerId: true,
+          isScanning: true,
+          lastScanStatus: true,
+        },
+      });
 
-        if (userData) {
-          session.user = {
-            ...session.user,
+      if (userData) {
+        return {
+          session,
+          user: {
+            ...user,
             role: userData.role,
             plan: userData.plan,
             subscriptionStatus: userData.subscriptionStatus,
             paddleCustomerId: userData.paddleCustomerId,
             isScanning: userData.isScanning,
             lastScanStatus: userData.lastScanStatus,
-          };
-        }
+          },
+        };
       }
-      return session;
+      return { session, user };
     },
   },
 });

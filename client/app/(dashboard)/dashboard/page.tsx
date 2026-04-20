@@ -7,7 +7,7 @@ import {
   RotateCw, Linkedin, Twitter, Github, FileText, ChevronDown, Brain, Flame, Tags,
   ThumbsUp, ThumbsDown, Info
 } from "lucide-react"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { io, Socket } from "socket.io-client"
 import React, { memo } from "react"
@@ -312,7 +312,7 @@ LeadRow.displayName = "LeadRow"
 type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -323,6 +323,8 @@ export default function DashboardPage() {
   const router = useRouter()
   const [socket, setSocket] = useState<Socket | null>(null)
   const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, estimatedCost: number, requestCount: number } } | null>(null)
+  const hasFetchedDashboard = useRef(false)
+  const lastFetchedUserId = useRef<string | null>(null)
 
   const fetchLlmUsage = useCallback(async () => {
     try {
@@ -352,7 +354,13 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!user) return
+    if (authLoading || !user) return
+    
+    // Only fetch if we haven't fetched for this user yet
+    if (hasFetchedDashboard.current && lastFetchedUserId.current === user.id) return
+    
+    hasFetchedDashboard.current = true
+    lastFetchedUserId.current = user.id
 
     fetchLeads()
     fetchLlmUsage()
@@ -367,7 +375,7 @@ export default function DashboardPage() {
 
     setSocket(newSocket)
     return () => { newSocket.disconnect() }
-  }, [user, fetchLlmUsage, fetchLeads])
+  }, [user, authLoading, fetchLlmUsage, fetchLeads])
 
   const handleDraftReply = async (leadId: string) => {
     setDraftingLeadId(leadId)

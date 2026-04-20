@@ -15,6 +15,7 @@ export function Footer() {
           </div>
           
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground font-medium">
+            <Link href="/pricing" className="hover:text-primary transition-colors">Pricing</Link>
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
             <Link href="/refund-policy" className="hover:text-primary transition-colors">Refunds</Link>

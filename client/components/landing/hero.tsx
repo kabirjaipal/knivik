@@ -34,10 +34,15 @@ export function Hero() {
             We scan the entire internet in real-time to surface high-intent buyers talking about your niche right now. No noise, just demand.
           </p>
           
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href={user ? "/dashboard" : "/register"}>
-              <Button size="lg" className="h-13 px-10 text-sm font-black uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all hover:scale-105 rounded-sm">
+              <Button size="lg" className="h-13 px-10 text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all hover:scale-105 rounded-sm w-full sm:w-auto">
                 {user ? "Go to Dashboard" : "Get Started Free"}
+              </Button>
+            </Link>
+            <Link href="/pricing">
+              <Button variant="outline-primary" size="lg" className="h-13 px-10 text-xs font-black uppercase tracking-widest transition-all rounded-sm w-full sm:w-auto">
+                View Pricing
               </Button>
             </Link>
           </div>

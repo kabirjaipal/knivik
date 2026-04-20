@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog"
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function ProductsPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isAiLoading, setIsAiLoading] = useState(false)
@@ -31,6 +31,8 @@ export default function ProductsPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
+  const hasFetchedProducts = useRef(false)
+  const lastFetchedUserId = useRef<string | null>(null)
 
   // Auto-hide success message
   useEffect(() => {
@@ -54,13 +56,7 @@ export default function ProductsPage() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    if (user) {
-      fetchProducts()
-    }
-  }, [user])
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/products`, { 
@@ -75,7 +71,19 @@ export default function ProductsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (authLoading || !user) return
+    
+    // Only fetch if identity actually changed or we've never fetched
+    if (hasFetchedProducts.current && lastFetchedUserId.current === user.id) return
+    
+    hasFetchedProducts.current = true
+    lastFetchedUserId.current = user.id
+
+    fetchProducts()
+  }, [user, authLoading, fetchProducts])
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault()

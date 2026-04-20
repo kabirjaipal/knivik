@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasInitialFetch, setHasInitialFetch] = React.useState(false);
 
   const { data: session, isPending, error, refetch } = useSession()
+  console.log("Session : ", JSON.stringify(session,null,2))
 
   React.useEffect(() => {
     setIsClientLoaded(true);
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: extendedUser.id,
       email: extendedUser.email,
       name: extendedUser.name,
-      username: extendedUser.username || extendedUser.email?.split('@')[0],
+      username: extendedUser.username,
       image: extendedUser.image ?? undefined,
       role: extendedUser.role || 'user',
       plan: extendedUser.plan || 'FREE',

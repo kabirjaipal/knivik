@@ -24,12 +24,14 @@ import { Button } from "@/components/ui/button"
 import { useState, useEffect, useMemo } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Sparkles } from "lucide-react"
+import { useBilling } from "@/context/billing-context"
+import { LucideIcon } from "lucide-react"
 
 interface SidebarProps {
   className?: string
 }
-
-import { LucideIcon } from "lucide-react"
 
 interface NavLink {
   href: string
@@ -40,9 +42,12 @@ interface NavLink {
 
 export function Sidebar({ className }: SidebarProps) {
   const { user, logout } = useAuth()
+  const { billingData } = useBilling()
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const currentPlan = billingData?.user?.plan?.toUpperCase() || user?.plan?.toUpperCase() || 'FREE'
 
   const isAtAdmin = pathname.startsWith('/admin')
 
@@ -179,8 +184,24 @@ export function Sidebar({ className }: SidebarProps) {
                </Avatar>
                {!isCollapsed && (
                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold truncate">{user?.username}</span>
-                    <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold truncate">{user?.username}</span>
+                      {currentPlan === 'PRO' ? (
+                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20 gap-0.5">
+                          <Sparkles className="h-2 w-2" />
+                          Pro
+                        </Badge>
+                      ) : currentPlan === 'STARTER' ? (
+                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
+                          Starter
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-muted text-muted-foreground border-border/50">
+                          Free
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground truncate">{user?.email}</span>
                  </div>
                )}
             </div>

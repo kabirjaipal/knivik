@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/context/auth-context";
+import { BillingProvider } from "@/context/billing-context";
 import { PROJECT_NAME, PROJECT_DESCRIPTION } from "@/lib/constants";
 
 const inter = Inter({
@@ -39,7 +40,9 @@ export default function RootLayout({
           enableSystem
         >
           <AuthProvider>
-            {children}
+            <BillingProvider>
+              {children}
+            </BillingProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

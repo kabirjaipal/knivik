@@ -172,43 +172,82 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
 });
 
 // Billing endpoints
-export const getBillingInfo = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  if (!req.user) {
-    res.status(401).json({
-      success: false,
-      error: { status: 401, code: 'UNAUTHORIZED', message: 'Not authenticated' },
+export const getBillingHub = asyncHandler(async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  const requestId = (req as any).requestId;
+
+  try {
+    // 1. Always fetch prices (it's public)
+    const priceIter = await paddle.prices.list({ status: ['active'] });
+    let prices = [];
+    for await (const price of priceIter) {
+      prices.push({
+        id: price.id,
+        productId: price.productId,
+        name: price.name,
+        amount: parseInt(price.unitPrice.amount, 10),
+        currency: price.unitPrice.currencyCode,
+        billingCycle: price.billingCycle,
+      });
+    }
+
+    // 2. If not logged in, return early with just prices
+    if (!userId) {
+      res.status(200).json({
+        success: true,
+        data: {
+          user: null,
+          subscription: null,
+          payments: [],
+          prices,
+        },
+        requestId,
+      });
+      return;
+    }
+
+    // 3. If logged in, fetch user-specific billing data
+    const [payments, subscription, freshUser] = await Promise.all([
+      getPaymentHistory(userId),
+      getActiveSubscription(userId),
+      UserService.getUserById(userId, requestId),
+    ]);
+
+    if (!freshUser) {
+      res.status(404).json({
+        success: false,
+        error: { status: 404, code: 'NOT_FOUND', message: 'User not found' },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          id: freshUser.id,
+          email: freshUser.email,
+          username: freshUser.username,
+          plan: freshUser.plan,
+          subscriptionStatus: freshUser.subscriptionStatus || (freshUser.plan === 'FREE' ? 'inactive' : 'active'),
+          billingCycle: freshUser.billingCycle,
+          currentPeriodEnd: freshUser.currentPeriodEnd,
+          paddleCustomerId: freshUser.paddleCustomerId,
+        },
+        subscription,
+        paddleSubscriptionId: subscription?.paddleSubscriptionId,
+        payments,
+        prices,
+      },
+      requestId,
     });
-    return;
+  } catch (error: any) {
+    logger.error({ error, userId }, 'Failed to fetch billing hub data');
+    res.status(500).json({
+      success: false,
+      error: { status: 500, code: 'INTERNAL_ERROR', message: 'Failed to retrieve billing data' },
+    });
   }
-
-  // Fetch fresh user data from DB to ensure plan updates are reflected immediately
-  const [payments, subscription, freshUser] = await Promise.all([
-    getPaymentHistory(req.user.id),
-    getActiveSubscription(req.user.id),
-    UserService.getUserById(req.user.id, req.requestId)
-  ]);
-
-  if (!freshUser) {
-     res.status(404).json({
-       success: false,
-       error: { status: 404, code: 'NOT_FOUND', message: 'User not found' },
-     });
-     return;
-  }
-
-  res.status(200).json({
-    success: true,
-    data: {
-      plan: freshUser.plan,
-      subscriptionStatus: freshUser.subscriptionStatus || (freshUser.plan === 'FREE' ? 'inactive' : 'active'),
-      billingCycle: freshUser.billingCycle,
-      currentPeriodEnd: freshUser.currentPeriodEnd,
-      paddleCustomerId: freshUser.paddleCustomerId,
-      subscription,
-      payments,
-    },
-    requestId: req.requestId,
-  });
 });
 
 export const createCustomerPortal = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -250,38 +289,6 @@ export const createCustomerPortal = asyncHandler(async (req: AuthenticatedReques
         code: 'PADDLE_ERROR', 
         message: error.message || 'Failed to generate billing session. Please try again later.' 
       },
-    });
-  }
-});
-
-export const getPrices = asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const prices = await paddle.prices.list({
-      status: ['active'],
-    });
-    
-    let result = [];
-    for await (const price of prices) {
-      result.push({
-        id: price.id,
-        productId: price.productId,
-        name: price.name,
-        amount: parseInt(price.unitPrice.amount, 10),
-        currency: price.unitPrice.currencyCode,
-        billingCycle: price.billingCycle,
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: result,
-      requestId: req.requestId,
-    });
-  } catch (error: any) {
-    logger.error({ error }, 'Failed to fetch prices from Paddle');
-    res.status(500).json({
-      success: false,
-      error: { status: 500, code: 'INTERNAL_ERROR', message: 'Failed to retrieve pricing data' },
     });
   }
 });

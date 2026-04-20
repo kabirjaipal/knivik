@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { User, Lock, Save, AlertCircle, CheckCircle2, Loader2, ShieldCheck, Slack, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 
 export default function SettingsPage() {
-  const { user, refresh } = useAuth()
+  const { user, loading: authLoading, refresh } = useAuth()
   const [activeTab, setActiveTab] = useState<"profile" | "alerts">("profile")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -18,6 +18,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  const hasFetchedAlerts = useRef(false)
+  const lastFetchedUserId = useRef<string | null>(null)
 
   // Profile State
   const [profileData, setProfileData] = useState({
@@ -44,18 +47,7 @@ export default function SettingsPage() {
     minIntentScore: 70
   })
 
-  useEffect(() => {
-    if (user) {
-      setProfileData({
-        username: user.username || "",
-        fullName: user.metadata?.fullName || "",
-        company: user.metadata?.company || ""
-      })
-      fetchAlertSettings()
-    }
-  }, [user])
-
-  const fetchAlertSettings = async () => {
+  const fetchAlertSettings = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/alerts`, { credentials: 'include' })
@@ -77,7 +69,26 @@ export default function SettingsPage() {
     } finally {
       setLoadingSettings(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (authLoading || !user) return
+    
+    // Sync profile data from user object
+    setProfileData({
+      username: user.username || "",
+      fullName: user.metadata?.fullName || "",
+      company: user.metadata?.company || ""
+    })
+
+    // Only fetch alerts if identity actually changed or we've never fetched
+    if (hasFetchedAlerts.current && lastFetchedUserId.current === user.id) return
+    
+    hasFetchedAlerts.current = true
+    lastFetchedUserId.current = user.id
+
+    fetchAlertSettings()
+  }, [user, authLoading, fetchAlertSettings])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -23,7 +23,10 @@ export function Navbar() {
           </Link>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
+          <Link href="/pricing" className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors hidden md:inline-block">
+            Pricing
+          </Link>
           <ThemeToggle />
           
           {!loading && user ? (
