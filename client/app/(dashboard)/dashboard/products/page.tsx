@@ -50,8 +50,6 @@ export default function ProductsPage() {
     keywords: "",
     negativeKeywords: "",
     competitors: "",
-    redditSources: "",
-    twitterSources: "",
   })
 
   const router = useRouter()
@@ -107,11 +105,7 @@ export default function ProductsPage() {
           keywords: formData.keywords.split(',').map(k => k.trim()).filter(k => k),
           negativeKeywords: formData.negativeKeywords.split(',').map(k => k.trim()).filter(k => k),
           competitors: formData.competitors.split(',').map(c => c.trim()).filter(c => c),
-          sources: [
-            ...formData.redditSources.split(',').map(r => r.trim()).filter(r => r).map(r => ({ platform: 'REDDIT', identifier: r })),
-            ...formData.twitterSources.split(',').map(t => t.trim()).filter(t => t).map(t => ({ platform: 'TWITTER', identifier: t })),
-            { platform: 'HACKERNEWS', identifier: 'global' }
-          ],
+          sources: [], // Server auto-generates from AI based on plan
         })
       });
 
@@ -132,7 +126,7 @@ export default function ProductsPage() {
       const actionLabel = editingProductId ? "Product updated" : "Product created";
       setFormData({
         name: "", description: "", websiteUrl: "", keywords: "",
-        negativeKeywords: "", competitors: "", redditSources: "", twitterSources: ""
+        negativeKeywords: "", competitors: "",
       })
       setIsCreating(false)
       setEditingProductId(null)
@@ -197,7 +191,7 @@ export default function ProductsPage() {
           setIsCreating(false);
           setFormData({ 
             name: "", description: "", websiteUrl: "", keywords: "", 
-            negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+            negativeKeywords: "", competitors: "",
           });
         }
       }}>
@@ -223,6 +217,7 @@ export default function ProductsPage() {
                 formError={formError}
                 isSubmitting={isSubmitting}
                 isAiLoading={isAiLoading}
+                setIsAiLoading={setIsAiLoading}
                 formId="create-product-form"
                 onSubmit={handleCreateProduct}
               />
@@ -238,7 +233,7 @@ export default function ProductsPage() {
                 setIsCreating(false);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", keywords: "", 
-                  negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+                  negativeKeywords: "", competitors: "" 
                 });
               }}
             >
@@ -264,7 +259,7 @@ export default function ProductsPage() {
           setEditingProductId(null);
           setFormData({ 
             name: "", description: "", websiteUrl: "", keywords: "", 
-            negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+            negativeKeywords: "", competitors: "" 
           });
         }
       }}>
@@ -290,6 +285,7 @@ export default function ProductsPage() {
                 formError={formError}
                 isSubmitting={isSubmitting}
                 isAiLoading={isAiLoading}
+                setIsAiLoading={setIsAiLoading}
                 formId="edit-product-form"
                 onSubmit={handleCreateProduct}
               />
@@ -304,7 +300,7 @@ export default function ProductsPage() {
                 setEditingProductId(null);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", keywords: "", 
-                  negativeKeywords: "", competitors: "", redditSources: "", twitterSources: "" 
+                  negativeKeywords: "", competitors: "" 
                 });
                 
               }}
@@ -348,8 +344,6 @@ export default function ProductsPage() {
                     keywords: product.keywords.map((k: any) => k.keyword).join(", "),
                     negativeKeywords: product.negativeKeywords.map((k: any) => k.keyword).join(", "),
                     competitors: product.competitors.map((c: any) => c.name).join(", "),
-                    redditSources: product.sources.filter((s: any) => s.platform === 'REDDIT').map((s: any) => s.identifier).join(", "),
-                    twitterSources: product.sources.filter((s: any) => s.platform === 'TWITTER').map((s: any) => s.identifier).join(", "),
                   })
                 }}
                 onDelete={() => {
@@ -405,18 +399,17 @@ interface ProductFormProps {
     keywords: string;
     negativeKeywords: string;
     competitors: string;
-    redditSources: string;
-    twitterSources: string;
   };
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   formError: string | null;
   isSubmitting: boolean;
   isAiLoading: boolean;
+  setIsAiLoading: React.Dispatch<React.SetStateAction<boolean>>;
   formId: string;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoading, formId, onSubmit }: ProductFormProps) {
+function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoading, setIsAiLoading, formId, onSubmit }: ProductFormProps) {
   return (
     <form id={formId} onSubmit={onSubmit} className="space-y-4">
       {formError && (
@@ -457,6 +450,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
               type="button"
               disabled={!formData.name || !formData.description || isAiLoading || isSubmitting}
               onClick={async () => {
+                setIsAiLoading(true)
                 try {
                   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
                   const res = await fetch(`${apiUrl}/products/analyze`, {
@@ -474,11 +468,11 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
                     keywords: strategy.keywords.join(', '),
                     negativeKeywords: strategy.negativeKeywords.join(', '),
                     competitors: strategy.competitors.join(', '),
-                    redditSources: strategy.subreddits.join(', '),
-                    twitterSources: strategy.twitterHandles.map((h: string) => h.replace('@', '')).join(', '),
                   });
                 } catch (err: any) {
                   // Error handled silently
+                } finally {
+                  setIsAiLoading(false)
                 }
               }}
               className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
@@ -491,7 +485,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
             required 
             value={formData.description} 
             onChange={e => setFormData({...formData, description: e.target.value})} 
-            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-26 resize-none" 
+            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-24 resize-none" 
             placeholder="We help freelancers track sales..." 
           />
         </div>
@@ -519,28 +513,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Subreddits (comma separated)</label>
-          <input 
-            value={formData.redditSources} 
-            onChange={e => setFormData({...formData, redditSources: e.target.value})} 
-            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-            placeholder="startups, saas, entrepreneurship" 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Twitter Sources (comma separated)</label>
-          <input 
-            value={formData.twitterSources} 
-            onChange={e => setFormData({...formData, twitterSources: e.target.value})} 
-            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-            placeholder="global" 
-          />
-        </div>
-      </div>
-
+      {/* Competitors */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-foreground">Competitors (comma separated)</label>
         <input 
@@ -556,8 +529,6 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
 }
 
 function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDelete: () => void, onEdit: () => void }) {
-  const platforms = Array.from(new Set(product.sources.map((s: any) => s.platform)))
-  
   return (
     <Card className="border-border/60 rounded-md hover:border-primary/50 group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
       <CardHeader className="pb-3 border-b border-border/50">
@@ -578,8 +549,6 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
                   Paused
                 </span>
               )}
-              <span className="opacity-30">•</span>
-              <span className="font-bold">{platforms.length} Platforms</span>
             </div>
           </div>
         </div>

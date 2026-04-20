@@ -182,8 +182,8 @@ export class BatchCollectionService {
     // Remove duplicates and apply final filtering
     const uniquePosts = this.deduplicateAndFilter(allPosts, product);
     
-    // Limit to top 40 posts per product for more AI analysis opportunities
-    return uniquePosts.slice(0, 40);
+    // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
+    return uniquePosts.slice(0, 25);
   }
 
   /**
@@ -203,7 +203,7 @@ export class BatchCollectionService {
         posts.push(...redditPosts);
         break;
       case Platform.HACKERNEWS:
-        const hnPosts = await this.collectFromHackerNews(product, source, oneMonthAgo);
+        const hnPosts = await this.collectFromHackerNews(product, source, oneMonthAgo, searchQueries);
         posts.push(...hnPosts);
         break;
       case Platform.TWITTER:
@@ -324,8 +324,10 @@ export class BatchCollectionService {
     searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
-    const isGlobal = source.identifier.toLowerCase() === 'global';
-    const subreddit = source.identifier.startsWith('r/') ? source.identifier.substring(2) : source.identifier;
+    
+    // ALWAYS use global Reddit search for broader coverage
+    // Subreddit-specific search is too limiting - we want to find leads anywhere on Reddit
+    const isGlobal = true;
 
     if (searchQueries.length === 0) {
       logger.warn(`[COLLECTION] No search queries available for Reddit scan of "${product.name}"`);
@@ -342,9 +344,8 @@ export class BatchCollectionService {
       try {
         const searchQuery = query;
 
-        const url = isGlobal
-          ? `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=15&type=link,comment`
-          : `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(searchQuery)}&restrict_sr=1&sort=new&limit=15&type=link,comment`;
+        // Always search globally across all of Reddit for maximum lead discovery
+        const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=15&type=link,comment`;
 
         logger.info(`[DEEP-LOG] [REDDIT] Searching: "${query}" | URL: ${url}`);
 
@@ -363,7 +364,7 @@ export class BatchCollectionService {
         }
 
         if (response.status === 404) {
-          logger.warn(`[DEEP-LOG] [REDDIT] Subreddit not found (404): ${subreddit}. Trying global search fallback...`);
+          logger.warn(`[DEEP-LOG] [REDDIT] Search endpoint not found (404). Retrying...`);
           // Fallback to global search with same query
           try {
             const globalUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=15&type=link,comment`;
@@ -546,9 +547,8 @@ export class BatchCollectionService {
 
     // Strategy 2: Recent posts collection (for semantic/competitor detection)
     try {
-      const recentUrl = isGlobal
-        ? `https://www.reddit.com/new.json?limit=50`
-        : `https://www.reddit.com/r/${subreddit}/new.json?limit=50`;
+      // Always use global Reddit feed for broader discovery
+      const recentUrl = `https://www.reddit.com/new.json?limit=50`;
 
       const response = await fetch(recentUrl, {
         headers: { 'User-Agent': this.getRandomUserAgent() },
@@ -627,23 +627,116 @@ export class BatchCollectionService {
 
   /**
    * Collect posts from HackerNews
+   * Uses Algolia search API for keyword-based discovery + Firebase for recent stories
    */
   private static async collectFromHackerNews(
     product: ProductWithDetails,
     _source: any,
-    oneMonthAgo: Date
+    oneMonthAgo: Date,
+    searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
+    const processedIds = new Set<string>(); // Track processed posts to avoid duplicates
 
+    // Strategy 1: Search via Algolia for keyword-based results
+    if (searchQueries.length > 0) {
+      // Use top 3 queries to avoid hitting Algolia limits
+      const priorityQueries = searchQueries.slice(0, 3);
+      
+      for (const query of priorityQueries) {
+        try {
+          const algoliaUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=(story,comment)&hitsPerPage=20`;
+          
+          logger.info(`[DEEP-LOG] [HACKERNEWS] Searching Algolia: "${query}"`);
+          
+          const response = await fetch(algoliaUrl, { 
+            headers: { 'Accept': 'application/json' },
+            signal: AbortSignal.timeout(10000) 
+          });
+          
+          if (!response.ok) {
+            logger.warn(`[DEEP-LOG] [HACKERNEWS] Algolia search failed: ${response.status}`);
+            continue;
+          }
+
+          const data = await response.json() as any;
+          const hits = data?.hits || [];
+
+          for (const hit of hits) {
+            const storyId = hit.objectID;
+            if (processedIds.has(storyId)) continue; // Skip duplicates
+            
+            const postedAt = hit.created_at_i ? new Date(hit.created_at_i * 1000) : new Date();
+            if (postedAt < oneMonthAgo) continue;
+
+            const title = hit.title || hit.story_title || '';
+            const content = hit.story_text || hit.comment_text || '';
+            const combinedText = `${title} ${content}`;
+
+            if (!this.passesBasicFilters(combinedText, product)) continue;
+
+            // Check for matches
+            let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'SEMANTIC';
+            let keywordMatch: string | undefined;
+            let competitorMatch: string | undefined;
+            
+            for (const competitor of product.competitors) {
+              if (combinedText.toLowerCase().includes(competitor.name.toLowerCase())) {
+                detectionMode = 'COMPETITOR';
+                competitorMatch = competitor.name;
+                break;
+              }
+            }
+
+            if (!competitorMatch) {
+              for (const keyword of product.keywords) {
+                if (combinedText.toLowerCase().includes(keyword.keyword.toLowerCase())) {
+                  detectionMode = 'KEYWORD';
+                  keywordMatch = keyword.keyword;
+                  break;
+                }
+              }
+            }
+
+            processedIds.add(storyId);
+            posts.push({
+              id: `hn-${storyId}`,
+              platform: 'HACKERNEWS',
+              externalPostId: storyId,
+              title,
+              content,
+              url: hit.url || `https://news.ycombinator.com/item?id=${storyId}`,
+              authorUsername: hit.author || 'unknown',
+              postedAt,
+              source: 'global',
+              detectionMode,
+              ...(keywordMatch && { keywordMatch }),
+              ...(competitorMatch && { competitorMatch })
+            });
+          }
+
+          if (hits.length > 0) {
+            logger.info(`[DEEP-LOG] [HACKERNEWS] Query "${query}" found ${hits.length} results`);
+          }
+
+          // Rate limiting: be nice to Algolia
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+        } catch (error: any) {
+          logger.warn(`[DEEP-LOG] [HACKERNEWS] Algolia search error for "${query}": ${error.message}`);
+        }
+      }
+    }
+
+    // Strategy 2: Also fetch recent stories from Firebase API
     try {
-      // Get recent stories
       const storiesUrl = 'https://hacker-news.firebaseio.com/v0/newstories.json';
       const response = await fetch(storiesUrl, { signal: AbortSignal.timeout(10000) });
       
       if (!response.ok) return posts;
 
       const storyIds = (await response.json()) as number[];
-      const recentStoryIds = storyIds.slice(0, 50); // Limit to recent 50 (reduced from 100)
+      const recentStoryIds = storyIds.slice(0, 30); // Reduced to 30 to save time
 
       for (const storyId of recentStoryIds) {
         try {
@@ -654,6 +747,9 @@ export class BatchCollectionService {
 
           const story = (await storyResponse.json()) as any;
           if (!story || !story.id || !story.title) continue;
+
+          const storyIdStr = story.id.toString();
+          if (processedIds.has(storyIdStr)) continue; // Skip duplicates from Algolia
 
           const postedAt = new Date(story.time * 1000);
           if (postedAt < oneMonthAgo) continue;
@@ -693,13 +789,14 @@ export class BatchCollectionService {
           // (This prevents sending unrelated 'stupid things' from HN to the AI)
           if (!keywordMatch && !competitorMatch) continue;
 
+          processedIds.add(storyIdStr);
           posts.push({
-            id: `hn-${story.id}`,
+            id: `hn-${storyIdStr}`,
             platform: 'HACKERNEWS',
-            externalPostId: story.id.toString(),
+            externalPostId: storyIdStr,
             title,
             content: text,
-            url: story.url || `https://news.ycombinator.com/item?id=${story.id}`,
+            url: story.url || `https://news.ycombinator.com/item?id=${storyIdStr}`,
             authorUsername: story.by,
             postedAt,
             source: 'global',
@@ -717,6 +814,7 @@ export class BatchCollectionService {
       logger.warn({ error }, 'HackerNews collection failed');
     }
 
+    logger.info(`[COLLECTION] [HACKERNEWS] Total posts collected: ${posts.length}`);
     return posts;
   }
 

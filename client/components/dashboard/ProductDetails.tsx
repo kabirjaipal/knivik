@@ -21,8 +21,6 @@ interface ProductDetailsProps {
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
-  const platforms = Array.from(new Set(product.sources.map((s) => s.platform)))
-
   return (
     <div className="space-y-8">
       {/* Description Section */}
@@ -81,20 +79,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             ) : (
                 <p className="text-xs text-muted-foreground/40 italic">None</p>
             )}
-          </div>
-        </section>
-
-        {/* Platforms */}
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-primary/60" /> Platforms
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {platforms.map((p) => (
-              <Badge key={p} className="text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary hover:bg-primary/20 border-none px-3 py-1">
-                {p}
-              </Badge>
-            ))}
           </div>
         </section>
       </div>

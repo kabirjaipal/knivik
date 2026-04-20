@@ -98,7 +98,7 @@ export const analyzeUserPostsBatch = async (
       platform: post.platform,
       source: post.source,
       title: post.title,
-      content: post.content.substring(0, 500), // Limit content length (reduced from 1000)
+      content: post.content.substring(0, 350), // Limit content length (was 1000, then 500, now 350 for token limit)
       author: post.authorUsername,
       postedAt: post.postedAt?.toISOString(),
       detectionMode: post.detectionMode,
