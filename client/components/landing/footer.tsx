@@ -4,7 +4,7 @@ import { PROJECT_NAME } from "@/lib/constants"
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-background py-10">
+    <footer className="border-t border-border/40 bg-background py-4">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 text-sm">
           <div className="flex items-center gap-2.5">

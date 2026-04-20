@@ -18,13 +18,6 @@ export function isFree(user: User): boolean {
 }
 
 /**
- * Check if user is on Starter plan
- */
-export function isStarter(user: User): boolean {
-  return user.plan === UserPlan.STARTER;
-}
-
-/**
  * Check if user is on Pro plan
  */
 export function isPro(user: User): boolean {
@@ -42,7 +35,7 @@ export function hasActiveSubscription(user: User): boolean {
  * Check if user can access premium features
  */
 export function canAccessPremium(user: User): boolean {
-  return user.plan === UserPlan.STARTER || user.plan === UserPlan.PRO;
+  return user.plan === UserPlan.PRO;
 }
 
 /**

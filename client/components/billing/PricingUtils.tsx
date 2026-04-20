@@ -52,12 +52,6 @@ export function PlanBadge({ plan, className = "" }: { plan: string; className?: 
           Pro
         </Badge>
       );
-    case "STARTER":
-      return (
-        <Badge variant="outline" className={`border-primary/30 text-primary font-bold tracking-tighter uppercase text-xs px-2 py-0.5 ${className}`}>
-          Starter
-        </Badge>
-      );
     default:
       return (
         <Badge variant="secondary" className={`font-bold tracking-tighter uppercase text-xs px-2 py-0.5 ${className}`}>

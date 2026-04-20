@@ -62,6 +62,8 @@ const configSchema = z.object({
   PADDLE_CLIENT_TOKEN: z.string().optional(),
   PADDLE_WEBHOOK_SECRET: z.string().optional(),
   PADDLE_ENVIRONMENT: z.enum(['production', 'sandbox']).default('sandbox'),
+  PADDLE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
+  PADDLE_PRO_YEARLY_PRICE_ID: z.string().optional(),
 });
 
 const configResult = configSchema.safeParse(process.env);

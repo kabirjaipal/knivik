@@ -10,6 +10,7 @@ interface CheckoutButtonProps {
   email: string;
   userId: string;
   planName: string;
+  paddleCustomerId?: string | null;
   subscriptionId?: string | null;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   className?: string;
@@ -24,8 +25,9 @@ declare global {
     Paddle?: {
       Checkout: {
         open: (config: {
-          items: Array<{ priceId: string; quantity?: number }>;
-          customer?: { email: string };
+          items?: Array<{ priceId: string; quantity?: number }>;
+          transactionId?: string;
+          customer?: { email?: string; id?: string };
           subscriptionId?: string;
           customData?: Record<string, string>;
           settings?: {
@@ -56,6 +58,7 @@ export function CheckoutButton({
   email,
   userId,
   planName,
+  paddleCustomerId,
   subscriptionId,
   variant = "default",
   className = "",
@@ -118,7 +121,7 @@ export function CheckoutButton({
     };
   }, [onError]);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!userId || !email) {
       const returnUrl = encodeURIComponent(window.location.pathname);
       router.push(`/login?redirect=${returnUrl}`);
@@ -131,12 +134,13 @@ export function CheckoutButton({
     }
 
     setIsLoading(true);
+    onError?.(new Error("")); // Clear previous errors
 
     try {
       window.Paddle.Checkout.open({
         items: [{ priceId, quantity: 1 }],
-        customer: { email },
-        ...(subscriptionId && { subscriptionId }),
+        customer: paddleCustomerId ? { id: paddleCustomerId } : { email },
+        ...(subscriptionId && { subscriptionId: subscriptionId }),
         customData: { userId },
         settings: {
           displayMode: "overlay",
@@ -146,9 +150,11 @@ export function CheckoutButton({
       });
     } catch (error) {
       setIsLoading(false);
+      console.error("Checkout initialization failed:", error);
       onError?.(error instanceof Error ? error : new Error("Checkout failed"));
     }
   };
+
 
   return (
     <Button

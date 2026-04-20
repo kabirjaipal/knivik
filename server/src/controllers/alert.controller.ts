@@ -50,19 +50,13 @@ export const updateAlertSettings = async (req: Request, res: Response): Promise<
 
     const data = parsed.data;
 
-    // Plan check for Premium Features (Slack/Webhooks -> PRO only)
+    // Plan check for Alerts (Email/Slack/Webhooks -> Capability Based)
     const user = await db.client.user.findUnique({ where: { id: userId } });
-    if (data.slackEnabled || data.slackWebhook) {
-      if (!user || user.plan !== 'PRO') {
-        res.status(403).json({ error: 'Webhooks are only available on the Pro plan.' });
-        return;
-      }
-    }
-
-    // Plan check for Email Alerts -> STARTER/PRO only
-    if (data.emailEnabled) {
-      if (!user || user.plan === 'FREE') {
-        res.status(403).json({ error: 'Email Deliveries are only available on Starter or Pro plans.' });
+    const { hasCapability } = await import('../lib/plans.js');
+    
+    if (data.emailEnabled || data.slackEnabled || data.slackWebhook) {
+      if (!user || !hasCapability(user.plan as any, 'canAccessAlerts')) {
+        res.status(403).json({ error: 'Automated alerts (Email/Slack/Discord) are only available on premium plans.' });
         return;
       }
     }

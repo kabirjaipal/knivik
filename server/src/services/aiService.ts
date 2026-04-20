@@ -4,24 +4,16 @@ import { IntentLevel } from '@prisma/client';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
 
-// Centralized model registry
+// Centralized model registry (Optimized for 2026 Profitability)
 const MODELS = {
-  FAST: 'llama-3.1-8b-instant',      // Fast and cheap ($0.05/$0.08)
-  LITE: 'llama-3.1-8b-instant',      // Using stable 8B as preview is deprecated
-  MID: 'llama-3.3-70b-versatile',      // Balanced reasoning power
-  VERSATILE: 'llama-3.3-70b-versatile', // Premier 2026 Meta model
-  REASONER: 'deepseek-r1-distill-llama-70b', // Best-in-class reasoning
-  POACHER: 'llama-3.3-70b-versatile', // High reasoning for competitor signal
-  SCANNER: 'llama-3.3-70b-versatile',    // Better than 8B for semantic matching
+  LITE: 'llama-3.1-8b-instant',      // Ultra-cheap scoring ($0.05)
+  VERSATILE: 'llama-3.3-70b-versatile', // High-reasoning replies ($0.59)
 };
 
-// Pricing per 1M tokens (USD) - Updated 2026 Rates
+// Pricing per 1M tokens (USD) - Groq 2026 Rates
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  [MODELS.FAST]: { input: 0.05, output: 0.08 },
   [MODELS.LITE]: { input: 0.05, output: 0.08 },
-  [MODELS.MID]: { input: 0.59, output: 0.79 },
   [MODELS.VERSATILE]: { input: 0.59, output: 0.79 },
-  [MODELS.REASONER]: { input: 0.69, output: 0.99 },
 };
 
 export async function logLlmUsage(params: {
@@ -162,7 +154,7 @@ Return your analysis strictly as a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.VERSATILE, 
+      model: MODELS.LITE, 
       messages: [
         { 
           role: 'system', 
@@ -196,7 +188,7 @@ Return your analysis strictly as a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'analyze_intent',
-        model: MODELS.VERSATILE,
+        model: MODELS.LITE,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -362,7 +354,7 @@ Return ONLY a JSON object:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.POACHER,
+      model: MODELS.VERSATILE,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -377,7 +369,7 @@ Return ONLY a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'detect_competitor',
-        model: MODELS.POACHER,
+        model: MODELS.VERSATILE,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -399,7 +391,7 @@ Return ONLY a JSON object:
     setImmediate(() => {
       logLlmUsage({
         action: 'detect_competitor',
-        model: MODELS.POACHER,
+        model: MODELS.VERSATILE,
         userId,
         productId,
         inputTokens: 0,
@@ -470,7 +462,7 @@ Return a JSON object with a single key "results", containing an array:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.SCANNER,
+      model: MODELS.VERSATILE,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -485,7 +477,7 @@ Return a JSON object with a single key "results", containing an array:
     setImmediate(() => {
       logLlmUsage({
         action: 'semantic_scan',
-        model: MODELS.SCANNER,
+        model: MODELS.VERSATILE,
         userId,
         productId,
         inputTokens: usage?.prompt_tokens || 0,
@@ -509,7 +501,7 @@ Return a JSON object with a single key "results", containing an array:
     setImmediate(() => {
       logLlmUsage({
         action: 'semantic_scan',
-        model: MODELS.SCANNER,
+        model: MODELS.VERSATILE,
         userId,
         productId,
         inputTokens: 0,

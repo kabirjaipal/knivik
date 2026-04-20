@@ -26,26 +26,35 @@ router.post('/paddle', async (req, res, next) => {
     const signature = req.headers['paddle-signature'] as string || '';
     const rawBody = req.rawBody || JSON.stringify(req.body);
     
-    // In production, we MUST verify the signature
+    // In production, we MUST verify the signature. 
+    // In sandbox/development, it's also highly recommended.
     if (config.PADDLE_WEBHOOK_SECRET) {
       try {
         const event = await paddle.webhooks.unmarshal(rawBody, config.PADDLE_WEBHOOK_SECRET, signature);
         if (!event) {
-          throw new Error('Invalid webhook signature');
+          logger.error({ signature }, 'Paddle webhook unmarshal returned null (invalid signature)');
+          res.status(401).json({ success: false, error: 'Invalid signature' });
+          return;
         }
         
         const eventType = event.eventType;
         const payload = event.data;
         
-        logger.info({ eventType }, 'Received verified Paddle webhook');
+        logger.info({ eventType, eventId: event.eventId }, 'Received verified Paddle webhook');
         await processPaddleEvent(eventType as any, payload);
-      } catch (err) {
-        logger.error({ err, signature }, 'Paddle signature verification failed');
+      } catch (err: any) {
+        logger.error({ err: err.message, signature }, 'Paddle signature verification failed');
         res.status(401).json({ success: false, error: 'Invalid signature' });
         return;
       }
     } else {
-      // In development/test if secret is missing, skip verification (NOT recommended for prod)
+      // Security warning: Only allow unverified webhooks in development if explicitly configured
+      if (config.NODE_ENV === 'production') {
+        logger.error('CRITICAL: Paddle webhook received in PRODUCTION without PADDLE_WEBHOOK_SECRET');
+        res.status(500).json({ success: false, error: 'Internal configuration error' });
+        return;
+      }
+
       const eventType = req.body.event_type;
       const payload = req.body.data;
       logger.warn({ eventType }, 'Processing UNVERIFIED Paddle webhook (PADDLE_WEBHOOK_SECRET missing)');

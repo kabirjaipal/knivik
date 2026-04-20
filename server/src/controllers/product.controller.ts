@@ -171,9 +171,16 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       }
     }
 
-    // Deduplicate sources to prevent P2002 unique constraint error
-    // Filter narrows optional Zod type to required type for the Map
+    // Deduplicate sources and check for plan-restricted platforms
     const uniqueSourcesMap = new Map<string, { platform: Platform; identifier: string }>();
+    const hasTwitter = data.sources.some(s => s.platform === Platform.TWITTER);
+    const { hasCapability } = await import('../lib/plans.js');
+    
+    if (hasTwitter && (!user || !hasCapability(user.plan as any, 'canAccessTwitter'))) {
+      res.status(403).json({ error: 'Twitter (X) tracking is only available on premium plans.' });
+      return;
+    }
+
     data.sources
       .filter((s): s is { platform: Platform; identifier: string } => !!s.platform && !!s.identifier)
       .forEach(s => {
@@ -258,14 +265,22 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const data = parsed.data;
 
     const user = await db.client.user.findUnique({ where: { id: userId } });
-    if (data.aiConfig?.['customPersona'] && (!user || user.plan === 'FREE')) {
-      // Strip out the custom persona if they are on the free plan, fail silently
+    const { hasCapability: hasCap } = await import('../lib/plans.js');
+    
+    if (data.aiConfig?.['customPersona'] && (!user || !hasCap(user.plan as any, 'canAccessCustomPersonas'))) {
+      // Strip out the custom persona if they don't have the capability, fail silently
       delete data.aiConfig['customPersona'];
     }
 
-    // Deduplicate sources to prevent P2002 unique constraint error
-    // Filter narrows optional Zod type to required type for the Map
+    // Deduplicate sources and check for plan-restricted platforms
     const uniqueSourcesMap = new Map<string, { platform: Platform; identifier: string }>();
+    const hasTwitter = data.sources.some(s => s.platform === Platform.TWITTER);
+    
+    if (hasTwitter && (!user || !hasCap(user.plan as any, 'canAccessTwitter'))) {
+      res.status(403).json({ error: 'Twitter (X) tracking is only available on premium plans.' });
+      return;
+    }
+
     data.sources
       .filter((s): s is { platform: Platform; identifier: string } => !!s.platform && !!s.identifier)
       .forEach(s => {

@@ -22,6 +22,17 @@ export const enrichLead = async (
   platform: Platform
 ): Promise<void> => {
   try {
+    // Check owner's plan capability
+    const lead = await db.client.lead.findUnique({
+      where: { id: leadId },
+      include: { product: { include: { user: true } } }
+    });
+
+    const { hasCapability } = await import('../lib/plans.js');
+    if (!lead || !hasCapability(lead.product.user.plan as any, 'canAccessEnrichment')) {
+      return; // Enrichment is a restricted capability
+    }
+
     const result = await discoverProfiles(username, platform);
     if (!result || (Object.keys(result).length === 0)) return;
 

@@ -344,6 +344,14 @@ export abstract class BaseScraperEngine {
     reasoning?: string
   ): Promise<boolean> {
     try {
+      const { checkLeadQuota, incrementLeadUsage } = await import('../lib/plans.js');
+      const user = await db.client.user.findUnique({ where: { id: product.userId } });
+      
+      if (!user || !(await checkLeadQuota(user.id, user.plan as any))) {
+        logger.warn({ userId: product.userId, productId: product.id }, 'Lead limit reached. Skipping save.');
+        return false;
+      }
+
       const newLead = await db.client.lead.create({
         data: {
           productId: product.id,
@@ -360,6 +368,9 @@ export abstract class BaseScraperEngine {
           ...(reasoning ? { metadata: { qualificationReasoning: reasoning } } : {}),
         },
       });
+
+      // Increment usage
+      await incrementLeadUsage(user.id);
 
       logger.info(
         `[${this.platform}] New ${detectedBy} lead saved for ${product.name} (Score: ${intentScore})`

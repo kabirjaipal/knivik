@@ -191,10 +191,6 @@ export function Sidebar({ className }: SidebarProps) {
                           <Sparkles className="h-2 w-2" />
                           Pro
                         </Badge>
-                      ) : currentPlan === 'STARTER' ? (
-                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
-                          Starter
-                        </Badge>
                       ) : (
                         <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-muted text-muted-foreground border-border/50">
                           Free
