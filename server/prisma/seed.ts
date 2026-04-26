@@ -5,6 +5,14 @@ import bcrypt from 'bcryptjs';
 const prisma = db.client;
 
 async function main() {
+  // --- PRODUCTION SAFETY GUARD ---
+  if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== 'true') {
+    console.error('❌ ERROR: Seeding is blocked in production to prevent data loss.');
+    console.error('If you REALLY want to seed and WIPE your production data, set FORCE_SEED=true');
+    process.exit(1);
+  }
+  // -------------------------------
+
   console.log('🌱 Starting database seeding...');
 
   // 1. Clear ALL existing tables

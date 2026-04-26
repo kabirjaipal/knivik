@@ -5,10 +5,10 @@ import { db } from "./db.js";
 export const PLANS = {
   FREE: { 
     name: "Free",
-    description: "Get started with basic lead detection",
+    description: "Get started with basic monitoring",
     features: [
-      "1 Product",
-      "50 leads per month",
+      "1 Monitoring Topic",
+      "50 signals per month",
       "Reddit & HackerNews scanning",
       "Basic intent detection",
       "Dashboard access only",
@@ -28,15 +28,15 @@ export const PLANS = {
   },
   PRO: {
     name: "Pro",
-    description: "Everything you need to scale your lead generation",
+    description: "Everything you need to scale your market monitoring",
     features: [
-      "Track up to 5 Products",
-      "1,000 High-Intent leads / mo",
+      "Monitor up to 5 Topics",
+      "1,000 High-Intent signals / mo",
       "Reddit, HN & Twitter (X)",
       "Advanced AI Intent Scoring",
-      "Custom AI Personas for replies",
+      "Custom AI Insight Models",
       "Email, Slack & Discord alerts",
-      "Full lead enrichment",
+      "Full context enrichment",
       "24/7 Priority support",
     ],
     limits: {
