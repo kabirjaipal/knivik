@@ -1,4 +1,10 @@
 import { PROJECT_NAME } from "@/lib/constants"
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: `Read the terms of service for ${PROJECT_NAME}. Understand your rights and responsibilities when using our AI social intelligence platform.`,
+};
 
 export default function TermsPage() {
   return (

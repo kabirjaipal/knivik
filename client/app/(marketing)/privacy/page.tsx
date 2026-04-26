@@ -1,6 +1,10 @@
-"use client"
-
 import { PROJECT_NAME, SUPPORT_EMAIL } from "@/lib/constants"
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: `Learn how ${PROJECT_NAME} collects, uses, and protects your data. We are committed to maintaining your privacy and transparency in our AI operations.`,
+};
 
 export default function PrivacyPage() {
   return (

@@ -19,6 +19,7 @@ export function Footer() {
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
             <Link href="/refund-policy" className="hover:text-primary transition-colors">Refunds</Link>
+            <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
           </nav>
 
           <p className="text-muted-foreground/60 text-xs">

@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [hasInitialFetch, setHasInitialFetch] = React.useState(false);
 
   const { data: session, isPending, error, refetch } = useSession()
-  console.log("Session : ", JSON.stringify(session,null,2))
 
   React.useEffect(() => {
     setIsClientLoaded(true);

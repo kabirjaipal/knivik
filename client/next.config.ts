@@ -43,14 +43,15 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.paddle.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
               "frame-src 'self' https://checkout.paddle.com https://sandbox-checkout.paddle.com https://buy.paddle.com https://sandbox-buy.paddle.com",
-              "connect-src 'self' https://cdn.paddle.com https://checkout.paddle.com https://sandbox-checkout.paddle.com https://checkout-service.paddle.com https://sandbox-checkout-service.paddle.com"
+              "connect-src 'self' https://cdn.paddle.com https://checkout.paddle.com https://sandbox-checkout.paddle.com https://checkout-service.paddle.com https://sandbox-checkout-service.paddle.com https://va.vercel-scripts.com"
             ].join("; "),
           },
+
         ],
       },
     ];

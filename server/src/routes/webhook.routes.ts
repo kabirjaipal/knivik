@@ -69,7 +69,6 @@ router.post('/paddle', async (req, res, next) => {
 });
 
 async function processPaddleEvent(eventType: EventName, payload: any) {
-  console.log('Paddle webhook:', eventType);
   switch (eventType) {
     case 'subscription.created':
     case 'subscription.updated':

@@ -1,4 +1,10 @@
-import { SUPPORT_EMAIL } from "@/lib/constants"
+import { SUPPORT_EMAIL, PROJECT_NAME } from "@/lib/constants"
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Refund Policy",
+  description: `Understand the refund policy for ${PROJECT_NAME}. We strive for customer satisfaction and transparency in our billing.`,
+};
 
 export default function RefundPolicy() {
   return (
