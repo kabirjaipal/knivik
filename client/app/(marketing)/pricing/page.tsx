@@ -46,7 +46,7 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="text-base text-muted-foreground mb-7 max-w-xl mx-auto">
-            One plan for all your high-intent lead generation needs.
+            One plan for all your real-time social intelligence needs.
           </p>
 
           {/* Billing Toggle */}

@@ -4,18 +4,18 @@ import { Search, BrainCircuit, MessageSquareText, Globe, Zap, Target } from "luc
 const features = [
   {
     icon: <Globe className="h-6 w-6" />,
-    title: "Omni-Channel Scanning",
-    description: "Our autonomous system scans the entire internet 24/7. We monitor thousands of real-time conversations across forums, social webs, and communities to find people talking about exactly what you solve."
+    title: "Global Monitoring",
+    description: "Our autonomous system monitors the public web 24/7. We track thousands of real-time conversations across forums and social platforms to keep you informed about what's happening in your niche."
   },
   {
     icon: <Target className="h-6 w-6" />,
-    title: "High-Intent Discovery",
-    description: "Every signal is passed through our intent-engine. It filters out the noise and casual chat, only delivering people who show clear buying signals and are ready to be engaged."
+    title: "Intent Intelligence",
+    description: "Every signal is analyzed for intent and sentiment. We filter out the noise to surface relevant discussions, questions, and trends that matter to your business strategy."
   },
   {
     icon: <Zap className="h-6 w-6" />,
-    title: "Instant Growth Alerts",
-    description: "Get notified the second a potential customer surfaces. We provide auto-drafted outreach messages based on your product features, so you can lock in leads before anyone else does."
+    title: "Real-time Insights",
+    description: "Get notified the second a relevant conversation surfaces. Our AI analyzes the context so you can understand market needs and sentiment in real-time."
   }
 ]
 
@@ -25,10 +25,10 @@ export function Features() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-black tracking-tighter text-foreground mb-4 leading-tight">
-            Stop Searching. <br /> Start Finding.
+            Know your market. <br /> Master the web.
           </h2>
           <p className="max-w-xl mx-auto text-base text-muted-foreground font-medium">
-            Knivik turns the entire web into your personal growth funnel. We find the buyers so you can do the building.
+            Knivik turns the vast public web into actionable market intelligence. We find the signal so you can make informed decisions.
           </p>
         </div>
 

@@ -20,18 +20,18 @@ export function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-primary mb-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <Sparkles className="h-3 w-3 mr-2" />
-            Autonomous Growth Discovery
+            Autonomous Social Intelligence
           </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tighter text-foreground mb-4 leading-[0.9]">
-            Find Your Next <br className="hidden sm:block" />
+            Listen to the <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-linear-to-b from-primary to-primary/60">
-              100 Customers.
+              Web's Signal.
             </span>
           </h1>
           
           <p className="mx-auto max-w-2xl text-sm sm:text-lg text-muted-foreground mb-8 leading-relaxed font-medium">
-            We scan the entire internet in real-time to surface high-intent buyers talking about your niche right now. No noise, just demand.
+            Monitor thousands of real-time conversations across global communities. We use AI to surface deep market insights and intent signals from the noise of the public web.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
