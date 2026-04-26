@@ -188,6 +188,11 @@ export default function PricingPage() {
             </Card>
           </div>
         </div>
+        <div className="max-w-4xl mx-auto mt-12 text-center">
+          <p className="text-xs text-muted-foreground/60 font-medium">
+            Our order process is conducted by our online reseller & Merchant of Record, Paddle.com, who also handles all customer service inquiries and returns.
+          </p>
+        </div>
       </section>
 
     </>

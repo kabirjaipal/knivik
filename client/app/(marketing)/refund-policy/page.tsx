@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from "@/lib/constants"
+
 export default function RefundPolicy() {
   return (
     <main className="container mx-auto px-4 py-20 max-w-3xl">
@@ -5,35 +7,32 @@ export default function RefundPolicy() {
       
       <div className="prose prose-invert space-y-6 text-muted-foreground">
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">1. Monthly Subscriptions</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">1. Refund Eligibility</h2>
           <p>
-            We want you to be 100% satisfied with Knivik. If you are not satisfied with your monthly subscription, you may request a full refund within **7 days** of your initial purchase. After 7 days, your subscription is non-refundable.
+            We offer a <strong>7-day money-back guarantee</strong> for your initial purchase. If you are not satisfied with the service for any reason, you may request a full refund within 7 days of your first subscription payment.
+          </p>
+          <p className="mt-4">
+            Please note that as we incur immediate costs for AI processing (OpenAI tokens) and data retrieval, we reserve the right to decline refund requests if a significant number of leads have already been processed or exported during the 7-day window.
           </p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">2. Yearly Subscriptions</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">2. How to Request</h2>
           <p>
-            Yearly subscriptions are eligible for a full refund within **14 days** of purchase. Because of the significant discount offered on yearly plans, we cannot offer partial refunds for the remaining months if you decide to cancel later in the year.
+            To request a refund, please contact us at <strong>{SUPPORT_EMAIL}</strong>. Please include your account email and a brief reason for the request.
           </p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">3. Lead Quality Disclaimer</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">3. Cancellations</h2>
           <p>
-            Knivik uses advanced AI to detect leads. While we strive for 100% accuracy, lead quality is subjective and dependent on platform activity. Refunds will not be issued based on the "volume" of leads found, as this depends on the keywords and markets you choose to track.
+            You can cancel your subscription at any time directly from your dashboard. Your access will remain active until the end of your current billing period.
           </p>
         </section>
 
-        <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">4. How to Request</h2>
-          <p>
-            To request a refund, please email us at **support@knivik.io** with your account email and reason for the request. We typically process refunds within 3-5 business days.
-          </p>
-        </section>
-
-        <section className="pt-8 border-t border-border/40 text-sm">
-          <p>Last updated: March 24, 2026</p>
+        <section className="pt-8 border-t border-border/40 text-xs">
+          <p>Our order process is conducted by our online reseller & Merchant of Record, Paddle.com, who also handles all customer service inquiries and returns.</p>
+          <p className="mt-2">Last updated: April 26, 2026</p>
         </section>
       </div>
     </main>

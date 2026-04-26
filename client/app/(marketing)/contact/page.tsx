@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/landing/navbar"
 import { Footer } from "@/components/landing/footer"
 import { Mail, MessageCircle, Twitter, Github } from "lucide-react"
+import { SUPPORT_EMAIL } from "@/lib/constants"
 
 export default function Contact() {
   return (
@@ -17,8 +18,8 @@ export default function Contact() {
             <Mail className="w-10 h-10 text-primary mb-6" />
             <h2 className="text-2xl font-bold mb-2">Email Support</h2>
             <p className="text-muted-foreground mb-6">Best for account issues and technical support. We aim to reply within 24 hours.</p>
-            <a href="mailto:support@knivik.io" className="text-primary font-bold hover:underline">
-              support@knivik.io →
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary font-bold hover:underline">
+              {SUPPORT_EMAIL} →
             </a>
           </div>
 

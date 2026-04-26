@@ -6,7 +6,7 @@ export default function TermsPage() {
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="space-y-4 text-center">
           <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">Terms of Service</h1>
-          <p className="text-muted-foreground text-lg">Last Updated: March 21, 2026</p>
+          <p className="text-muted-foreground text-lg">Last Updated: April 26, 2026</p>
         </div>
 
         <div className="prose prose-slate dark:prose-invert max-w-none space-y-10 leading-relaxed text-muted-foreground">
@@ -53,7 +53,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">7. Changes</h2>
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">7. Payments and Billing</h2>
+            <p>
+              Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders. Paddle handles all customer service inquiries and returns. By placing an order, you agree to Paddle's Terms of Service and Privacy Policy.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">8. Changes</h2>
             <p>
               We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide at least 30 days' notice prior to any new terms taking effect.
             </p>
