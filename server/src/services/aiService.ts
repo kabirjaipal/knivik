@@ -545,8 +545,10 @@ async function validateSubreddits(subreddits: string[]): Promise<string[]> {
     // Stop early if we already have 10 valid subreddits
     if (valid.length >= 10) break;
     
-    const cleanSub = sub.toLowerCase().replace(/^r\//, '').replace(/\s+/g, '');
+    // Strict alphanumeric sanitization to prevent path traversal or SSRF via malicious handles
+    const cleanSub = sub.toLowerCase().replace(/^r\//, '').replace(/[^a-z0-9_]/g, '');
     if (!cleanSub || cleanSub.length < 2) continue;
+
     
     try {
       const url = `https://www.reddit.com/r/${cleanSub}/about.json`;
@@ -594,8 +596,10 @@ async function validateTwitterHandles(handles: string[]): Promise<string[]> {
     // Stop early if we already have 6 valid handles
     if (valid.length >= 6) break;
     
-    const cleanHandle = handle.replace(/^@/, '').toLowerCase().replace(/\s+/g, '');
+    // Strict alphanumeric sanitization for Twitter handles
+    const cleanHandle = handle.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!cleanHandle || cleanHandle.length < 2) continue;
+
     
     let isValid = false;
     

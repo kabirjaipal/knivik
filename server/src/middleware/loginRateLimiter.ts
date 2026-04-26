@@ -13,6 +13,21 @@ export const loginLimiter = rateLimit({
 });
 
 /**
+ * Strict limiter for AI generation endpoints to prevent budget abuse.
+ * (3 requests / 10 minutes per IP).
+ */
+export const aiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'AI analysis limit reached. Please wait 10 minutes before trying again.',
+  },
+});
+
+/**
  * Moderate limiter for password-reset and email-verification endpoints.
  * These trigger emails / bcrypt work, so we keep them well-throttled.
  */
@@ -38,3 +53,4 @@ export const registerLimiter = rateLimit({
     error: 'Too many registration attempts. Please try again in 15 minutes.',
   },
 });
+
