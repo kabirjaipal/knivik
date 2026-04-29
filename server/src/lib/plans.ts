@@ -132,18 +132,6 @@ export function getPlanPriceId(plan: UserPlan, billingCycle: "monthly" | "yearly
 }
 
 export function getPlanFromPriceId(priceId: string): { plan: UserPlan; billingCycle: "monthly" | "yearly" } | null {
-  // Legacy Starter Mapping (Mapping old Starter users to PRO to prevent errors)
-  const legacyStarterIds = [
-    "pri_starter_monthly",
-    "pri_starter_yearly"
-  ];
-
-  if (legacyStarterIds.includes(priceId)) {
-    return { 
-      plan: UserPlan.PRO, 
-      billingCycle: priceId.includes('yearly') ? "yearly" : "monthly" 
-    };
-  }
 
   for (const [planKey, planConfig] of Object.entries(PLANS)) {
     if (planKey === "FREE") continue;
