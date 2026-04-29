@@ -479,7 +479,7 @@ export default function SettingsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Mail className="w-4 h-4 text-primary" />
-                          <label className="text-sm font-bold text-foreground">Email Deliveries <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">STARTER / PRO</span></label>
+                          <label className="text-sm font-bold text-foreground">Email Deliveries <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">PRO ONLY</span></label>
                         </div>
                         {user?.plan !== 'FREE' ? (
                           <label className="relative inline-flex items-center cursor-pointer">

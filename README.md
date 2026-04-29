@@ -457,29 +457,22 @@ Score: 91
 
 # Step 9 — Pricing
 
-Starter
+Free (Forever)
 
 ```
-$29/month
+$0
 1 product
-100 leads
+50 leads
 ```
 
 Pro
 
 ```
-$79/month
+$49/month (or custom)
 5 products
 1000 leads
 ```
 
-Agency
-
-```
-$199/month
-20 products
-unlimited leads
-```
 
 ---
 

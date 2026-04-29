@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
             Advanced ROI Analytics
             {!data.isAdvancedAnalyticsEnabled && (
               <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Starter / Pro
+                <Lock className="w-3 h-3" /> Pro
               </span>
             )}
           </h2>
@@ -204,7 +204,7 @@ export default function AnalyticsPage() {
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold">Advanced ROI Analytics</h3>
                     <p className="text-sm text-muted-foreground max-w-md">
-                      Upgrade to Starter or Pro to unlock estimated pipeline value and lead conversion metrics.
+                      Upgrade to Pro to unlock estimated pipeline value and lead conversion metrics.
                     </p>
                   </div>
                   <a
