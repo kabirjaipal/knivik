@@ -32,7 +32,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@paddle/paddle-node-sdk": "^3.6.1",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "argon2": "^0.44.0",

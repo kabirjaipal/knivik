@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface CheckoutButtonProps {
-  priceId: string;
+  variantId: string;
   email: string;
   userId: string;
   planName: string;
-  paddleCustomerId?: string | null;
-  subscriptionId?: string | null;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   className?: string;
   disabled?: boolean;
@@ -22,44 +20,22 @@ interface CheckoutButtonProps {
 
 declare global {
   interface Window {
-    Paddle?: {
-      Checkout: {
-        open: (config: {
-          items?: Array<{ priceId: string; quantity?: number }>;
-          transactionId?: string;
-          customer?: { email?: string; id?: string };
-          subscriptionId?: string;
-          customData?: Record<string, string>;
-          settings?: {
-            displayMode?: "overlay" | "inline";
-            theme?: "light" | "dark";
-            successUrl?: string;
-          };
-          successCallback?: (data: any) => void;
-          closeCallback?: () => void;
-        }) => void;
-        close: () => void;
+    createLemonSqueezy?: () => void;
+    LemonSqueezy?: {
+      Url: {
+        Open: (url: string) => void;
+        Close: () => void;
       };
-      Initialize: (config: {
-        token: string;
-        environment?: string;
-        eventCallback?: (event: any) => void;
-      }) => void;
-      Environment: {
-        set: (env: "production" | "sandbox") => void;
-      };
-      Setup: (config: { token: string }) => void;
+      Setup: (config: { eventHandler: (event: any) => void }) => void;
     };
   }
 }
 
 export function CheckoutButton({
-  priceId,
+  variantId,
   email,
   userId,
   planName,
-  paddleCustomerId,
-  subscriptionId,
   variant = "default",
   className = "",
   disabled = false,
@@ -69,57 +45,33 @@ export function CheckoutButton({
 }: CheckoutButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [isPaddleReady, setIsPaddleReady] = useState(false);
+
+  // Initialize Lemon Squeezy once
+  const initLS = useCallback(() => {
+    if (window.createLemonSqueezy) {
+      window.createLemonSqueezy();
+    }
+    
+    if (window.LemonSqueezy) {
+      window.LemonSqueezy.Setup({
+        eventHandler: (event: any) => {
+          if (event.event === "Checkout.Success") {
+            onSuccess?.();
+          }
+          if (event.event === "Checkout.Closed") {
+            setIsLoading(false);
+          }
+        },
+      });
+      return true;
+    }
+    return false;
+  }, [onSuccess]);
 
   useEffect(() => {
-    // Load Paddle.js if not already loaded
-    if (!window.Paddle) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.paddle.com/paddle/v2/paddle.js";
-      script.async = true;
-      script.onload = () => {
-        initializePaddle();
-      };
-      script.onerror = () => {
-        console.error("Failed to load Paddle.js");
-        onError?.(new Error("Failed to load Paddle.js"));
-      };
-      document.body.appendChild(script);
-    } else {
-      initializePaddle();
-    }
-
-    function initializePaddle() {
-      if (window.Paddle) {
-        const clientToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
-        const environment = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || "sandbox";
-
-        if (!clientToken) {
-          console.error("NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is not set");
-          return;
-        }
-
-        if (window.Paddle.Initialize) {
-          window.Paddle.Environment.set(environment as "production" | "sandbox");
-          window.Paddle.Initialize({
-            token: clientToken,
-            eventCallback: (event: any) => {
-              if (event.name === "checkout.completed" || event.name === "checkout.closed") {
-                 setIsLoading(false);
-              }
-            }
-          });
-        } else {
-          window.Paddle.Environment.set(environment as "production" | "sandbox");
-          window.Paddle.Setup({ token: clientToken });
-        }
-        setIsPaddleReady(true);
-      }
-    }
-
-    return () => {
-    };
-  }, [onError]);
+    // Attempt initialization on mount
+    initLS();
+  }, [initLS]);
 
   const handleCheckout = async () => {
     if (!userId || !email) {
@@ -128,45 +80,54 @@ export function CheckoutButton({
       return;
     }
 
-    if (!window.Paddle) {
-      onError?.(new Error("Paddle is not initialized"));
-      return;
-    }
-
     setIsLoading(true);
-    onError?.(new Error("")); // Clear previous errors
 
     try {
-      window.Paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customer: paddleCustomerId ? { id: paddleCustomerId } : { email },
-        ...(subscriptionId && { subscriptionId: subscriptionId }),
-        customData: { userId },
-        settings: {
-          displayMode: "overlay",
-          theme: "light",
-          successUrl: `${window.location.origin}/dashboard/billing?status=success`
-        }
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${apiUrl}/billing/create-checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          variantId,
+          email,
+        }),
       });
-    } catch (error) {
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create checkout");
+      }
+
+      // Ensure LS is initialized before opening
+      initLS();
+
+      if (window.LemonSqueezy) {
+        window.LemonSqueezy.Url.Open(data.checkoutUrl);
+      } else {
+        // Fallback to direct redirect if overlay script fails
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (error: any) {
       setIsLoading(false);
-      console.error("Checkout initialization failed:", error);
-      onError?.(error instanceof Error ? error : new Error("Checkout failed"));
+      console.error("Checkout failed:", error);
+      onError?.(error instanceof Error ? error : new Error("Payment failed"));
     }
   };
-
 
   return (
     <Button
       variant={variant}
       className={className}
       onClick={handleCheckout}
-      disabled={isLoading || !isPaddleReady || disabled}
+      disabled={isLoading || disabled}
     >
       {isLoading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Loading...
+          Processing...
         </>
       ) : (
         children || `Subscribe to ${planName}`

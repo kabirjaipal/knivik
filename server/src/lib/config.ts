@@ -57,13 +57,12 @@ const configSchema = z.object({
   // Queue configuration
   ENABLE_QUEUE: envBool(true),
   SCRAPER_CONCURRENCY: z.coerce.number().default(5),
-  // Paddle configuration
-  PADDLE_API_KEY: z.string().optional(),
-  PADDLE_CLIENT_TOKEN: z.string().optional(),
-  PADDLE_WEBHOOK_SECRET: z.string().optional(),
-  PADDLE_ENVIRONMENT: z.enum(['production', 'sandbox']).default('sandbox'),
-  PADDLE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
-  PADDLE_PRO_YEARLY_PRICE_ID: z.string().optional(),
+  // Lemon Squeezy configuration
+  LEMON_SQUEEZY_API_KEY: z.string().optional(),
+  LEMON_SQUEEZY_WEBHOOK_SECRET: z.string().optional(),
+  LEMON_SQUEEZY_STORE_ID: z.string().optional(),
+  LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID: z.string().optional(),
+  LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID: z.string().optional(),
 });
 
 const configResult = configSchema.safeParse(process.env);

@@ -54,7 +54,7 @@ export default function BillingPage() {
     setIsRedirecting(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/portal`, {
-        method: "POST",
+        method: "GET",
         credentials: "include",
       });
       if (response.ok) {
@@ -156,7 +156,7 @@ export default function BillingPage() {
               <div className="flex items-center justify-between gap-4">
                 <p className="text-4xl font-black tracking-tighter">{planConfig.name}</p>
                 {isProPlan ? (
-                  (billingInfo?.paddleCustomerId || billingData?.subscription?.paddleCustomerId) && (
+                  (billingInfo?.lemonSqueezyCustomerId || billingData?.user?.lemonSqueezyCustomerId) && (
                     <Button variant="outline" className="font-bold gap-2 shrink-0"
                       onClick={handleOpenCustomerPortal} disabled={isRedirecting}>
                       {isRedirecting

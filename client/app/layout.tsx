@@ -130,6 +130,7 @@ export default function RootLayout({
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />
+        <script src="https://assets.lemonsqueezy.com/lemon.js" defer />
       </body>
     </html>
   );

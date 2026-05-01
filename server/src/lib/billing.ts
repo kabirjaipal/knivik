@@ -1,6 +1,50 @@
+import { listVariants, lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
 import { UserPlan, type User } from "@prisma/client";
 import { db } from "./db.js";
+import config from "./config.js";
 import logger from "./logger.js";
+
+// Initialize Lemon Squeezy
+lemonSqueezySetup({
+  apiKey: config.LEMON_SQUEEZY_API_KEY || '',
+});
+
+/**
+ * Get prices from Lemon Squeezy variants
+ */
+export async function getPrices() {
+  try {
+    const storeId = config.LEMON_SQUEEZY_STORE_ID;
+    if (!storeId) {
+      logger.warn("LEMON_SQUEEZY_STORE_ID not configured, returning empty prices");
+      return [];
+    }
+
+    logger.info({ storeId }, "Fetching prices for store");
+    const { data, error } = await listVariants();
+
+    if (error) {
+      logger.error({ error }, "Failed to fetch prices from Lemon Squeezy");
+      return [];
+    }
+
+    logger.info({ variantCount: data?.data?.length }, "Fetched variants from Lemon Squeezy");
+
+    // Map Lemon Squeezy variants to the format expected by the frontend
+    return (data?.data || []).map((variant: any) => ({
+      id: variant.id,
+      productId: variant.attributes.product_id,
+      name: variant.attributes.name,
+      amount: variant.attributes.price,
+      currency: "USD", // Lemon Squeezy price is in cents/units, attributes.price is amount
+      interval: variant.attributes.interval,
+      intervalCount: variant.attributes.interval_count,
+    }));
+  } catch (error) {
+    logger.error({ error }, "Error in getPrices");
+    return [];
+  }
+}
 
 /**
  * Get user's effective plan
@@ -18,31 +62,33 @@ export function isFree(user: User): boolean {
 }
 
 /**
- * Check if user is on Pro plan
+ * Check if user is on Pro plan and it is active
  */
 export function isPro(user: User): boolean {
-  return user.plan === UserPlan.PRO;
+  return user.plan === UserPlan.PRO && (user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing');
 }
 
 /**
  * Check if user has an active subscription
  */
 export function hasActiveSubscription(user: User): boolean {
-  return user.subscriptionStatus === "active" && user.currentPeriodEnd !== null && user.currentPeriodEnd > new Date();
+  return (user.subscriptionStatus === "active" || user.subscriptionStatus === "trialing") && 
+         user.currentPeriodEnd !== null && 
+         user.currentPeriodEnd > new Date();
 }
 
 /**
  * Check if user can access premium features
  */
 export function canAccessPremium(user: User): boolean {
-  return user.plan === UserPlan.PRO;
+  return isPro(user);
 }
 
 /**
  * Check if user can access Pro-only features
  */
 export function canAccessProFeatures(user: User): boolean {
-  return user.plan === UserPlan.PRO;
+  return isPro(user);
 }
 
 /**
@@ -71,17 +117,48 @@ export async function updateUserPlan(
   subscriptionStatus: string,
   billingCycle: string | null,
   currentPeriodEnd: Date | null,
-  paddleCustomerId?: string
+  lemonSqueezySubscriptionId?: string,
+  lemonSqueezyCustomerId?: string
 ): Promise<void> {
+  let targetPlan = plan;
+  const isActive = subscriptionStatus === "active" || subscriptionStatus === "trialing";
+
+  // If subscription is not active, check if user has ANY OTHER active subscription
+  if (!isActive) {
+    const otherActive = await db.client.subscription.findFirst({
+      where: {
+        userId,
+        status: { in: ['active', 'trialing'] },
+        ...(lemonSqueezySubscriptionId && {
+          NOT: { lemonSqueezySubscriptionId }
+        })
+      }
+    });
+
+    if (!otherActive) {
+      targetPlan = UserPlan.FREE;
+    } else {
+      // Keep them as PRO because they have another active sub
+      targetPlan = UserPlan.PRO;
+    }
+  }
+
   try {
+    // Check if user exists first to prevent Prisma crash
+    const user = await db.client.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      logger.warn({ userId }, 'Cannot update plan: User not found in database');
+      return;
+    }
+
     await db.client.user.update({
       where: { id: userId },
       data: {
-        plan,
+        plan: targetPlan,
         subscriptionStatus,
         billingCycle,
         currentPeriodEnd,
-        ...(paddleCustomerId && { paddleCustomerId }),
+        ...(lemonSqueezyCustomerId && { lemonSqueezyCustomerId }),
       },
     });
 
@@ -124,24 +201,28 @@ export async function downgradeToFree(userId: string): Promise<void> {
  */
 export async function recordPayment(
   userId: string,
-  paddlePaymentId: string,
+  lemonSqueezyPaymentId: string,
   amount: number,
   currency: string,
   status: string
 ): Promise<void> {
   try {
-    await db.client.payment.create({
-      data: {
+    await db.client.payment.upsert({
+      where: { lemonSqueezyPaymentId },
+      create: {
         userId,
-        paddlePaymentId,
+        lemonSqueezyPaymentId,
         amount,
         currency,
         status,
       },
+      update: {
+        status,
+      },
     });
-    logger.info({ userId, paddlePaymentId, amount, currency }, "Payment recorded");
+    logger.info({ userId, lemonSqueezyPaymentId, amount, currency }, "Payment recorded");
   } catch (error) {
-    logger.error({ error, userId, paddlePaymentId }, "Failed to record payment");
+    logger.error({ error, userId, lemonSqueezyPaymentId }, "Failed to record payment");
     throw error;
   }
 }
@@ -151,8 +232,8 @@ export async function recordPayment(
  */
 export async function upsertSubscription(
   userId: string,
-  paddleSubscriptionId: string,
-  paddleCustomerId: string,
+  lemonSqueezySubscriptionId: string,
+  lemonSqueezyCustomerId: string,
   plan: UserPlan,
   billingCycle: string,
   status: string,
@@ -160,11 +241,11 @@ export async function upsertSubscription(
 ): Promise<void> {
   try {
     await db.client.subscription.upsert({
-      where: { paddleSubscriptionId },
+      where: { lemonSqueezySubscriptionId },
       create: {
         userId,
-        paddleSubscriptionId,
-        paddleCustomerId,
+        lemonSqueezySubscriptionId,
+        lemonSqueezyCustomerId,
         plan,
         billingCycle,
         status,
@@ -177,9 +258,9 @@ export async function upsertSubscription(
         currentPeriodEnd,
       },
     });
-    logger.info({ userId, paddleSubscriptionId, status }, "Subscription upserted");
+    logger.info({ userId, lemonSqueezySubscriptionId, status }, "Subscription upserted");
   } catch (error) {
-    logger.error({ error, userId, paddleSubscriptionId }, "Failed to upsert subscription");
+    logger.error({ error, userId, lemonSqueezySubscriptionId }, "Failed to upsert subscription");
     throw error;
   }
 }

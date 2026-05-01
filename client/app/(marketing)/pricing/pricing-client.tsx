@@ -25,8 +25,8 @@ export default function PricingClient() {
     const plan = PLANS[planKey];
     if (!("monthly" in plan)) return 0;
 
-    const priceId = (plan as any)[cycle].priceId;
-    const livePrice = livePrices.find(p => p.id === priceId);
+    const variantId = (plan as any)[cycle].variantId;
+    const livePrice = livePrices.find(p => String(p.id) === String(variantId));
     
     if (livePrice) return livePrice.amount / 100;
     return "--";
@@ -154,19 +154,18 @@ export default function PricingClient() {
                   ))}
                 </ul>
                 <CheckoutButton
-                  priceId={
+                  variantId={
                     billingCycle === "monthly"
-                      ? PLANS.PRO.monthly.priceId
-                      : PLANS.PRO.yearly.priceId
+                      ? PLANS.PRO.monthly.variantId
+                      : PLANS.PRO.yearly.variantId
                   }
                   email={user?.email || ""}
                   userId={user?.id || ""}
-                  subscriptionId={billingData?.paddleSubscriptionId}
                   planName="Pro"
                   className="w-full h-11 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-primary-foreground border-none"
-                  disabled={user?.plan !== "FREE"}
+                  disabled={currentPlan !== "FREE"}
                   onSuccess={() => {
-                    alert("Subscribed to Pro!");
+                    console.log("Payment success!");
                   }}
                   onError={(error) => alert(error.message)}
                 >
@@ -178,7 +177,7 @@ export default function PricingClient() {
         </div>
         <div className="max-w-4xl mx-auto mt-12 text-center">
           <p className="text-xs text-muted-foreground/60 font-medium">
-            Our order process is conducted by our online reseller & Merchant of Record, Paddle.com, who also handles all customer service inquiries and returns.
+            Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns.
           </p>
         </div>
       </section>

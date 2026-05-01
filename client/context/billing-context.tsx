@@ -11,13 +11,13 @@ interface BillingUser {
   subscriptionStatus: string;
   billingCycle: string | null;
   currentPeriodEnd: string | null;
-  paddleCustomerId: string | null;
+  lemonSqueezyCustomerId: string | null;
 }
 
 interface BillingHubData {
   user: BillingUser;
   subscription: any;
-  paddleSubscriptionId?: string | null;
+  lemonSqueezySubscriptionId?: string | null;
   payments: any[];
   prices: any[];
 }

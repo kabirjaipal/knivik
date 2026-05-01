@@ -21,7 +21,7 @@ model User {
   metadata           Json?
   lastScanStatus     String?
   isScanning         Boolean?       @default(false)
-  paddleCustomerId   String?        @unique
+  lemonSqueezyCustomerId String?        @unique
   subscriptionStatus String?
   billingCycle       String?
   currentPeriodEnd   DateTime?
@@ -384,31 +384,31 @@ model LlmUsageLog {
 }
 
 model Subscription {
-  id                   String    @id @default(cuid())
-  userId               String
-  paddleSubscriptionId String    @unique
-  paddleCustomerId     String
-  plan                 UserPlan
-  billingCycle         String
-  status               String
-  currentPeriodEnd     DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                         String    @id @default(cuid())
+  userId                     String
+  lemonSqueezySubscriptionId String    @unique
+  lemonSqueezyCustomerId     String
+  plan                       UserPlan
+  billingCycle               String
+  status                     String
+  currentPeriodEnd           DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+  user                       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("ir_subscriptions")
 }
 
 model Payment {
-  id              String   @id @default(cuid())
-  userId          String
-  paddlePaymentId String   @unique
-  amount          Int
-  currency        String
-  status          String
-  createdAt       DateTime @default(now())
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String   @id @default(cuid())
+  userId                String
+  lemonSqueezyPaymentId String   @unique
+  amount                Int
+  currency              String
+  status                String
+  createdAt             DateTime @default(now())
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("ir_payments")

@@ -44,10 +44,10 @@ export const PLANS = {
       leadsPerMonth: 1000,
     },
     monthly: { 
-      priceId: config.PADDLE_PRO_MONTHLY_PRICE_ID || "pri_pro_monthly",
+      variantId: config.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID || "var_pro_monthly",
     },
     yearly: { 
-      priceId: config.PADDLE_PRO_YEARLY_PRICE_ID || "pri_pro_yearly",
+      variantId: config.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID || "var_pro_yearly",
     },
     capabilities: {
       canAccessTwitter: true,
@@ -124,22 +124,21 @@ export async function incrementLeadUsage(userId: string): Promise<void> {
   });
 }
 
-export function getPlanPriceId(plan: UserPlan, billingCycle: "monthly" | "yearly"): string | null {
+export function getPlanVariantId(plan: UserPlan, billingCycle: "monthly" | "yearly"): string | null {
   if (plan === UserPlan.FREE) return null;
   const planConfig = PLANS[plan as PlanKey];
   if (!planConfig || !(billingCycle in planConfig)) return null;
-  return (planConfig as any)[billingCycle].priceId;
+  return (planConfig as any)[billingCycle].variantId;
 }
 
-export function getPlanFromPriceId(priceId: string): { plan: UserPlan; billingCycle: "monthly" | "yearly" } | null {
-
+export function getPlanFromVariantId(variantId: string): { plan: UserPlan; billingCycle: "monthly" | "yearly" } | null {
   for (const [planKey, planConfig] of Object.entries(PLANS)) {
     if (planKey === "FREE") continue;
     const config = planConfig as any;
-    if (config.monthly?.priceId === priceId) {
+    if (config.monthly?.variantId === variantId) {
       return { plan: UserPlan[planKey as PlanKey], billingCycle: "monthly" };
     }
-    if (config.yearly?.priceId === priceId) {
+    if (config.yearly?.variantId === variantId) {
       return { plan: UserPlan[planKey as PlanKey], billingCycle: "yearly" };
     }
   }

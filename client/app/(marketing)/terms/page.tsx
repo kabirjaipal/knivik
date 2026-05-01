@@ -61,7 +61,7 @@ export default function TermsPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">7. Payments and Billing</h2>
             <p>
-              Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders. Paddle handles all customer service inquiries and returns. By placing an order, you agree to Paddle's Terms of Service and Privacy Policy.
+              Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns. By placing an order, you agree to Lemon Squeezy's Terms of Service and Privacy Policy.
             </p>
           </section>
 

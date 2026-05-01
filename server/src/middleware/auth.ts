@@ -96,7 +96,7 @@ export const jwtAuth = async (
         subscriptionStatus: true,
         billingCycle: true,
         currentPeriodEnd: true,
-        paddleCustomerId: true,
+        lemonSqueezyCustomerId: true,
         createdAt: true,
         updatedAt: true,
       },

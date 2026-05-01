@@ -37,7 +37,7 @@ export default function RefundPolicy() {
         </section>
 
         <section className="pt-8 border-t border-border/40 text-xs">
-          <p>Our order process is conducted by our online reseller & Merchant of Record, Paddle.com, who also handles all customer service inquiries and returns.</p>
+          <p>Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns.</p>
           <p className="mt-2">Last updated: April 26, 2026</p>
         </section>
       </div>

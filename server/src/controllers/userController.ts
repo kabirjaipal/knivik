@@ -2,9 +2,8 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/userService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import type { AuthenticatedRequest } from '../types/index.js';
-import { getPaymentHistory, getActiveSubscription } from '../lib/billing.js';
+import { getPaymentHistory, getActiveSubscription, getPrices } from '../lib/billing.js';
 import logger from '../lib/logger.js';
-import paddle from '../lib/paddle.js';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await UserService.createUser(req.body, req.requestId);
@@ -172,41 +171,30 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
 });
 
 // Billing endpoints
-export const getBillingHub = asyncHandler(async (req: Request, res: Response) => {
-  const userId = (req as any).user?.id;
-  const requestId = (req as any).requestId;
+export const getBillingHub = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user?.id;
+  const requestId = req.requestId;
+
+  // Fetch prices for all users (even guests/unauthenticated if needed)
+  const prices = await getPrices();
+
+  // 1. If not logged in, return basic info
+  if (!userId) {
+    res.status(200).json({
+      success: true,
+      data: {
+        user: null,
+        subscription: null,
+        payments: [],
+        prices,
+      },
+      requestId,
+    });
+    return;
+  }
 
   try {
-    // 1. Always fetch prices (it's public)
-    const priceIter = await paddle.prices.list({ status: ['active'] });
-    let prices = [];
-    for await (const price of priceIter) {
-      prices.push({
-        id: price.id,
-        productId: price.productId,
-        name: price.name,
-        amount: parseInt(price.unitPrice.amount, 10),
-        currency: price.unitPrice.currencyCode,
-        billingCycle: price.billingCycle,
-      });
-    }
-
-    // 2. If not logged in, return early with just prices
-    if (!userId) {
-      res.status(200).json({
-        success: true,
-        data: {
-          user: null,
-          subscription: null,
-          payments: [],
-          prices,
-        },
-        requestId,
-      });
-      return;
-    }
-
-    // 3. If logged in, fetch user-specific billing data
+    // 2. Fetch user-specific billing data
     const [payments, subscription, freshUser] = await Promise.all([
       getPaymentHistory(userId),
       getActiveSubscription(userId),
@@ -232,10 +220,10 @@ export const getBillingHub = asyncHandler(async (req: Request, res: Response) =>
           subscriptionStatus: freshUser.subscriptionStatus || (freshUser.plan === 'FREE' ? 'inactive' : 'active'),
           billingCycle: freshUser.billingCycle,
           currentPeriodEnd: freshUser.currentPeriodEnd,
-          paddleCustomerId: freshUser.paddleCustomerId,
+          lemonSqueezyCustomerId: freshUser.lemonSqueezyCustomerId,
         },
         subscription,
-        paddleSubscriptionId: subscription?.paddleSubscriptionId,
+        lemonSqueezySubscriptionId: subscription?.lemonSqueezySubscriptionId,
         payments,
         prices,
       },
@@ -250,7 +238,11 @@ export const getBillingHub = asyncHandler(async (req: Request, res: Response) =>
   }
 });
 
-export const createCustomerPortal = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+/**
+ * Redirect to Lemon Squeezy Customer Portal
+ * Lemon Squeezy provides a hosted portal for users to manage their own subscriptions.
+ */
+export const getCustomerPortalUrl = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   if (!req.user) {
     res.status(401).json({
       success: false,
@@ -259,37 +251,14 @@ export const createCustomerPortal = asyncHandler(async (req: AuthenticatedReques
     return;
   }
 
-  // Fetch fresh user data to get the latest paddleCustomerId from DB
-  const freshUser = await UserService.getUserById(req.user.id, req.requestId);
-
-  if (!freshUser?.paddleCustomerId) {
-    res.status(400).json({
-      success: false,
-      error: { status: 400, code: 'BAD_REQUEST', message: 'No active subscription found in our records' },
-    });
-    return;
-  }
-
-  try {
-    // Generate an authenticated customer portal session via Paddle SDK
-    const session = await paddle.customerPortalSessions.create(freshUser.paddleCustomerId, []);
-    const portalUrl = session.urls.general.overview;
-    
-    res.status(200).json({
-      success: true,
-      data: { url: portalUrl },
-      requestId: req.requestId,
-    });
-  } catch (error: any) {
-    logger.error({ error, userId: req.user.id }, 'Failed to create customer portal session');
-    res.status(error.status || 500).json({
-      success: false,
-      error: { 
-        status: error.status || 500, 
-        code: 'PADDLE_ERROR', 
-        message: error.message || 'Failed to generate billing session. Please try again later.' 
-      },
-    });
-  }
+  // Lemon Squeezy customer portal is a fixed URL (managed in their dashboard)
+  // We can return a generic link or a specific one if managed via API.
+  // For now, we return the base portal URL or instructions.
+  const portalUrl = "https://app.lemonsqueezy.com/my-orders"; 
+  
+  res.status(200).json({
+    success: true,
+    data: { url: portalUrl },
+    requestId: req.requestId,
+  });
 });
-

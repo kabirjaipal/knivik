@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { Paddle, EventName } from '@paddle/paddle-node-sdk';
+import crypto from 'crypto';
 import { db } from '../lib/db.js';
 import config from '../lib/config.js';
 import logger from '../lib/logger.js';
@@ -9,228 +9,191 @@ import {
   recordPayment, 
   upsertSubscription 
 } from '../lib/billing.js';
-import { getPlanFromPriceId } from '../lib/plans.js';
+import { getPlanFromVariantId } from '../lib/plans.js';
 
 const router = Router();
 
-const paddle = new Paddle(config.PADDLE_API_KEY || '', {
-  environment: (config.PADDLE_ENVIRONMENT === 'production' ? 'production' : 'sandbox') as any,
-});
-
 /**
- * POST /api/webhooks/paddle
- * Handle Paddle webhook events
+ * POST /api/webhooks/lemonsqueezy
+ * Handle Lemon Squeezy webhook events
  */
-router.post('/paddle', async (req, res, next) => {
+router.post('/lemonsqueezy', async (req: any, res: any, next) => {
+  logger.info('🔔 Webhook request received at /api/webhooks/lemonsqueezy');
   try {
-    const signature = req.headers['paddle-signature'] as string || '';
+    const signature = req.headers['x-signature'] as string || '';
     const rawBody = req.rawBody || JSON.stringify(req.body);
-    
-    // In production, we MUST verify the signature. 
-    // In sandbox/development, it's also highly recommended.
-    if (config.PADDLE_WEBHOOK_SECRET) {
-      try {
-        const event = await paddle.webhooks.unmarshal(rawBody, config.PADDLE_WEBHOOK_SECRET, signature);
-        if (!event) {
-          logger.error({ signature }, 'Paddle webhook unmarshal returned null (invalid signature)');
-          res.status(401).json({ success: false, error: 'Invalid signature' });
-          return;
-        }
-        
-        const eventType = event.eventType;
-        const payload = event.data;
-        
-        logger.info({ eventType, eventId: event.eventId }, 'Received verified Paddle webhook');
-        await processPaddleEvent(eventType as any, payload);
-      } catch (err: any) {
-        logger.error({ err: err.message, signature }, 'Paddle signature verification failed');
+    const secret = config.LEMON_SQUEEZY_WEBHOOK_SECRET || '';
+
+    // Verify signature
+    if (secret) {
+      const hmac = crypto.createHmac('sha256', secret);
+      const digest = Buffer.from(hmac.update(rawBody).digest('hex'), 'utf8');
+      const signatureBuffer = Buffer.from(signature, 'utf8');
+
+      if (digest.length !== signatureBuffer.length || !crypto.timingSafeEqual(digest, signatureBuffer)) {
+        logger.error({ signature }, 'Lemon Squeezy signature verification failed');
         res.status(401).json({ success: false, error: 'Invalid signature' });
         return;
       }
-    } else {
-      // Security warning: Only allow unverified webhooks in development if explicitly configured
-      if (config.NODE_ENV === 'production') {
-        logger.error('CRITICAL: Paddle webhook received in PRODUCTION without PADDLE_WEBHOOK_SECRET');
-        res.status(500).json({ success: false, error: 'Internal configuration error' });
-        return;
-      }
-
-      const eventType = req.body.event_type;
-      const payload = req.body.data;
-      logger.warn({ eventType }, 'Processing UNVERIFIED Paddle webhook (PADDLE_WEBHOOK_SECRET missing)');
-      await processPaddleEvent(eventType, payload);
+    } else if (config.NODE_ENV === 'production') {
+      logger.error('CRITICAL: Lemon Squeezy webhook received in PRODUCTION without LEMON_SQUEEZY_WEBHOOK_SECRET');
+      res.status(500).json({ success: false, error: 'Internal configuration error' });
+      return;
     }
+
+    const payload = JSON.parse(rawBody);
+    const eventName = payload.meta.event_name;
+    const data = payload.data;
+
+    logger.info({ eventName, id: data.id }, 'Received verified Lemon Squeezy webhook');
+
+    await processLemonSqueezyEvent(eventName, data, payload.meta);
 
     res.json({ success: true });
   } catch (error: any) {
-    logger.error({ error }, 'Paddle webhook processing failed');
+    logger.error({ error: error.message }, 'Lemon Squeezy webhook processing failed');
     next(error);
   }
 });
 
-async function processPaddleEvent(eventType: EventName, payload: any) {
-  switch (eventType) {
-    case 'subscription.created':
-    case 'subscription.updated':
-      await handleSubscriptionCreatedOrUpdated(payload);
+async function processLemonSqueezyEvent(eventName: string, data: any, meta: any) {
+  switch (eventName) {
+    case 'subscription_created':
+    case 'subscription_updated':
+      await handleSubscriptionEvent(data, meta);
       break;
 
-    case 'subscription.canceled':
-      await handleSubscriptionCanceled(payload);
+    case 'subscription_cancelled':
+    case 'subscription_expired':
+      await handleSubscriptionTerminated(data);
       break;
 
-    case 'transaction.completed':
-      await handleTransactionCompleted(payload);
+    case 'subscription_payment_success':
+      await handleOrderCreated(data, meta);
+      break;
+
+    case 'order_created':
+      // We can log this but we don't need to record a payment here for subscriptions
+      // as subscription_payment_success will handle it.
+      logger.info({ id: data.id }, 'Order created (subscription initial order)');
       break;
 
     default:
-      logger.info({ eventType }, 'Unhandled Paddle event type');
+      logger.info({ eventName }, 'Unhandled Lemon Squeezy event type');
   }
 }
 
-async function handleSubscriptionCreatedOrUpdated(payload: any) {
-  const {
-    id: paddleSubscriptionId,
-    customerId: paddleCustomerId,
-    items,
-    status,
-    currentBillingPeriod,
-    customData,
-  } = payload;
+async function handleSubscriptionEvent(data: any, meta: any) {
+  const attributes = data.attributes;
+  const lemonSqueezySubscriptionId = data.id;
+  const lemonSqueezyCustomerId = String(attributes.customer_id);
+  const variantId = String(attributes.variant_id);
+  const status = attributes.status;
+  const renewsAt = attributes.renews_at;
+  const endsAt = attributes.ends_at;
 
-  const endsAt = currentBillingPeriod?.endsAt;
-
-  // Get price ID from first item
-  const priceId = items?.[0]?.price?.id;
-  if (!priceId) {
-    throw new Error('No price ID found in subscription');
-  }
-
-  // Map price ID to plan
-  const planMapping = getPlanFromPriceId(priceId);
+  const planMapping = getPlanFromVariantId(variantId);
   if (!planMapping) {
-    throw new Error(`Unknown price ID: ${priceId}`);
+    logger.error({ variantId }, 'Unknown variant ID in subscription');
+    return;
   }
 
   const { plan, billingCycle } = planMapping;
-
-  // Find user by customData.userId
-  let userId = customData?.userId || customData?.user_id;
-  
-  if (!userId && paddleCustomerId) {
-    const user = await db.client.user.findFirst({
-      where: { paddleCustomerId },
-    });
-    if (user) {
-      userId = user.id;
-    }
-  }
+  // Look in meta.custom_data
+  const userId = meta.custom_data?.user_id || meta.custom_data?.userId;
 
   if (!userId) {
-    throw new Error(`Could not determine user for subscription. Metadata: ${JSON.stringify(customData)}`);
+    logger.error({ lemonSqueezySubscriptionId }, 'No user_id found in webhook meta.custom_data');
+    return;
   }
 
-  // Update user
-  if (status === 'canceled' || status === 'past_due') {
-    // If subscription is canceled or past due, we downgrade the user
-    await downgradeToFree(userId);
-  } else {
-    // Otherwise, update/confirm their premium plan
-    await updateUserPlan(
-      userId,
-      plan,
-      status,
-      billingCycle,
-      endsAt ? new Date(endsAt) : null,
-      paddleCustomerId
-    );
-  }
+  // Use renews_at for the next billing date, fallback to ends_at
+  const nextBillingDate = renewsAt ? new Date(renewsAt) : (endsAt ? new Date(endsAt) : null);
+
+  // Update user plan
+  await updateUserPlan(
+    userId,
+    plan,
+    status,
+    billingCycle,
+    nextBillingDate,
+    lemonSqueezySubscriptionId,
+    lemonSqueezyCustomerId
+  );
 
   // Upsert subscription record
   await upsertSubscription(
     userId,
-    paddleSubscriptionId,
-    paddleCustomerId,
+    lemonSqueezySubscriptionId,
+    lemonSqueezyCustomerId,
     plan,
     billingCycle,
     status,
-    endsAt ? new Date(endsAt) : null
+    nextBillingDate
   );
 
-  logger.info({ userId, plan, status }, 'Subscription processed');
+  logger.info({ userId, plan, status }, 'Subscription event processed');
 }
 
-async function handleSubscriptionCanceled(payload: any) {
-  const {
-    id: paddleSubscriptionId,
-    customerId: paddleCustomerId,
-  } = payload;
+async function handleSubscriptionTerminated(data: any) {
+  const lemonSqueezySubscriptionId = data.id;
 
-  // Find user
-  const user = await db.client.user.findFirst({
-    where: { 
-      OR: [
-        { paddleCustomerId },
-        { subscriptions: { some: { paddleSubscriptionId } } },
-      ],
+  const subscription = await db.client.subscription.findUnique({
+    where: { lemonSqueezySubscriptionId },
+  });
+
+  if (!subscription) {
+    logger.warn({ lemonSqueezySubscriptionId }, 'Subscription not found for termination');
+    return;
+  }
+
+  // Check if user has any OTHER active subscriptions before downgrading
+  const otherActiveSubscription = await db.client.subscription.findFirst({
+    where: {
+      userId: subscription.userId,
+      status: 'active',
+      NOT: { lemonSqueezySubscriptionId },
     },
   });
 
-  if (!user) {
-    logger.warn({ paddleSubscriptionId }, 'User not found for canceled subscription');
-    return;
+  if (!otherActiveSubscription) {
+    await downgradeToFree(subscription.userId);
+    logger.info({ userId: subscription.userId }, 'User downgraded to FREE');
+  } else {
+    logger.info({ userId: subscription.userId }, 'User remains PRO due to another active subscription');
   }
 
-  // Downgrade to Free
-  await downgradeToFree(user.id);
-
-  // Update subscription status
-  await db.client.subscription.updateMany({
-    where: { paddleSubscriptionId },
-    data: { status: 'canceled' },
+  // Update this specific subscription record to match the terminated status
+  await db.client.subscription.update({
+    where: { lemonSqueezySubscriptionId },
+    data: { status: data.attributes.status },
   });
-
-  logger.info({ userId: user.id }, 'User downgraded after cancellation');
 }
 
-async function handleTransactionCompleted(payload: any) {
-  const {
-    id: paddlePaymentId,
-    customerId: paddleCustomerId,
-    details,
-    currencyCode: currency,
-    customData,
-  } = payload;
-
-  const amount = details?.totals?.total || '0';
-
-  // Find user
-  let userId = customData?.userId || customData?.user_id;
-  
-  if (!userId && paddleCustomerId) {
-    const user = await db.client.user.findFirst({
-      where: { paddleCustomerId },
-    });
-    if (user) {
-      userId = user.id;
-    }
-  }
+async function handleOrderCreated(data: any, meta: any) {
+  const attributes = data.attributes;
+  const lemonSqueezyPaymentId = data.id;
+  const lemonSqueezyCustomerId = String(attributes.customer_id);
+  // Look in meta.custom_data
+  const userId = meta.custom_data?.user_id || meta.custom_data?.userId;
+  const amount = attributes.total; // in cents
+  const currency = attributes.currency;
+  const status = attributes.status;
 
   if (!userId) {
-    logger.warn({ paddlePaymentId, customData }, 'Could not determine user for payment');
+    logger.warn({ lemonSqueezyPaymentId }, 'No user_id found in webhook meta.custom_data');
     return;
   }
 
-  // Record payment
   await recordPayment(
     userId,
-    paddlePaymentId,
-    Math.round(parseFloat(amount)), 
-    currency || 'USD',
-    'completed'
+    lemonSqueezyPaymentId,
+    amount,
+    currency,
+    status
   );
 
-  logger.info({ userId, paddlePaymentId, amount, currency }, 'Payment recorded');
+  logger.info({ userId, lemonSqueezyPaymentId, amount }, 'Payment recorded from order');
 }
 
 export default router;
