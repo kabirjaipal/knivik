@@ -13,26 +13,26 @@ export default function RefundPolicy() {
       
       <div className="prose prose-invert space-y-6 text-muted-foreground">
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">1. Refund Eligibility</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">1. All Sales are Final</h2>
           <p>
-            We offer a <strong>7-day money-back guarantee</strong> for your initial purchase. If you are not satisfied with the service for any reason, you may request a full refund within 7 days of your first subscription payment.
+            Due to the immediate, non-recoverable costs associated with our AI processing (OpenAI tokens) and infrastructure usage for real-time social listening, <strong>we do not offer refunds</strong>. 
           </p>
           <p className="mt-4">
-            Please note that as we incur immediate costs for AI processing (OpenAI tokens) and data retrieval, we reserve the right to decline refund requests if a significant number of leads have already been processed or exported during the 7-day window.
+            Once a subscription payment is processed, the transaction is considered final. Please carefully review our features and the Free plan (if available) before committing to a paid subscription.
           </p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">2. How to Request</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">2. Cancellations</h2>
           <p>
-            To request a refund, please contact us at <strong>{SUPPORT_EMAIL}</strong>. Please include your account email and a brief reason for the request.
+            You can cancel your subscription at any time directly from your dashboard. Your access will remain active until the end of your current billing period, but you will not be charged for the following billing cycle.
           </p>
         </section>
 
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">3. Cancellations</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">3. Exceptions</h2>
           <p>
-            You can cancel your subscription at any time directly from your dashboard. Your access will remain active until the end of your current billing period.
+            In the rare event of a duplicate charge or technical error originating entirely from our payment processor (Lemon Squeezy), please contact us at <strong>{SUPPORT_EMAIL}</strong> within 7 days of the charge for an adjustment.
           </p>
         </section>
 
