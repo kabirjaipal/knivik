@@ -160,6 +160,7 @@ export default function PricingClient() {
                       : PLANS.PRO.yearly.variantId
                   }
                   email={user?.email || ""}
+                  name={user?.name || user?.username || ""}
                   userId={user?.id || ""}
                   planName="Pro"
                   className="w-full h-11 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-primary-foreground border-none"

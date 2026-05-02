@@ -37,10 +37,14 @@ export default function BillingPage() {
       setIsInitializing(false);
       if (showSuccess && billingData?.user?.plan === "FREE") {
         let attempts = 0;
+        const maxAttempts = 30; // 1 minute (2s * 30)
+        
         const pollInterval = setInterval(async () => {
           attempts++;
           await refreshBilling();
-          if (billingData?.user?.plan !== "FREE" || attempts >= 10) {
+          
+          // Stop if upgraded OR reached max attempts
+          if (billingData?.user?.plan !== "FREE" || attempts >= maxAttempts) {
             clearInterval(pollInterval);
           }
         }, 2000);

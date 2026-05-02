@@ -8,6 +8,7 @@ import { PROJECT_NAME, PROJECT_DESCRIPTION, PROJECT_URL } from "@/lib/constants"
 import { siteConfig } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import LemonSqueezyScript from "@/components/billing/LemonSqueezyScript";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -130,7 +131,7 @@ export default function RootLayout({
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />
-        <script src="https://assets.lemonsqueezy.com/lemon.js" defer />
+        <LemonSqueezyScript />
       </body>
     </html>
   );

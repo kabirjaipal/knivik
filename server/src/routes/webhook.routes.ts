@@ -17,12 +17,25 @@ const router = Router();
  * POST /api/webhooks/lemonsqueezy
  * Handle Lemon Squeezy webhook events
  */
-router.post('/lemonsqueezy', async (req: any, res: any, next) => {
+router.post('/lemonsqueezy', async (req: any, res: any) => {
   logger.info('🔔 Webhook request received at /api/webhooks/lemonsqueezy');
+  
   try {
-    const signature = req.headers['x-signature'] as string || '';
-    const rawBody = req.rawBody || JSON.stringify(req.body);
+    const signature = req.headers['x-signature'] as string;
     const secret = config.LEMON_SQUEEZY_WEBHOOK_SECRET || '';
+    
+    if (!signature) {
+      logger.error('No signature header found');
+      return res.status(401).json({ success: false, error: 'No signature' });
+    }
+
+    // Use the rawBody string captured by the verify function in index.ts
+    const rawBody = req.rawBody;
+    
+    if (!rawBody) {
+      logger.error('No raw body found for signature verification');
+      return res.status(400).json({ success: false, error: 'Missing raw body' });
+    }
 
     // Verify signature
     if (secret) {
@@ -32,27 +45,67 @@ router.post('/lemonsqueezy', async (req: any, res: any, next) => {
 
       if (digest.length !== signatureBuffer.length || !crypto.timingSafeEqual(digest, signatureBuffer)) {
         logger.error({ signature }, 'Lemon Squeezy signature verification failed');
-        res.status(401).json({ success: false, error: 'Invalid signature' });
-        return;
+        return res.status(401).json({ success: false, error: 'Invalid signature' });
       }
     } else if (config.NODE_ENV === 'production') {
       logger.error('CRITICAL: Lemon Squeezy webhook received in PRODUCTION without LEMON_SQUEEZY_WEBHOOK_SECRET');
-      res.status(500).json({ success: false, error: 'Internal configuration error' });
-      return;
+      return res.status(500).json({ success: false, error: 'Internal configuration error' });
     }
 
     const payload = JSON.parse(rawBody);
     const eventName = payload.meta.event_name;
     const data = payload.data;
 
-    logger.info({ eventName, id: data.id }, 'Received verified Lemon Squeezy webhook');
+    // IDEMPOTENCY CHECK: Use signature as unique key for this specific message
+    const existingEvent = await db.client.webhookEvent.findUnique({
+      where: { eventId: signature }
+    });
 
-    await processLemonSqueezyEvent(eventName, data, payload.meta);
+    if (existingEvent) {
+      logger.info({ signature, eventName }, 'Webhook event already processed (idempotent skip)');
+      return res.json({ success: true, message: 'Already processed' });
+    }
 
+    // Record the event as "received"
+    const webhookEvent = await db.client.webhookEvent.create({
+      data: {
+        eventId: signature,
+        eventName,
+        payload: payload,
+        processed: false
+      }
+    });
+
+    logger.info({ eventName, id: data.id, webhookEventId: webhookEvent.id }, 'Received verified Lemon Squeezy webhook');
+
+    // RESPOND EARLY to avoid timeouts
     res.json({ success: true });
+
+    // PROCESS ASYNCHRONOUSLY
+    (async () => {
+      try {
+        await processLemonSqueezyEvent(eventName, data, payload.meta);
+        
+        // Mark as processed
+        await db.client.webhookEvent.update({
+          where: { id: webhookEvent.id },
+          data: { processed: true }
+        });
+        
+        logger.info({ eventName, id: data.id }, 'Successfully processed Lemon Squeezy event');
+      } catch (error: any) {
+        logger.error({ 
+          error: error.message, 
+          eventName, 
+          id: data.id,
+          webhookEventId: webhookEvent.id 
+        }, 'Async processing of Lemon Squeezy event failed');
+      }
+    })();
+
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Lemon Squeezy webhook processing failed');
-    next(error);
+    logger.error({ error: error.message }, 'Lemon Squeezy webhook validation failed');
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 

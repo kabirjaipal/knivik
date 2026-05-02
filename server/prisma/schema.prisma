@@ -414,6 +414,18 @@ model Payment {
   @@map("ir_payments")
 }
 
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  eventName String
+  payload   Json
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ir_webhook_events")
+}
+
 enum UserPlan {
   FREE
   PRO

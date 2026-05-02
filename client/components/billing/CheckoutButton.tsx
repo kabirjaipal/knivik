@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 interface CheckoutButtonProps {
   variantId: string;
   email: string;
+  name?: string;
   userId: string;
   planName: string;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
@@ -34,6 +35,7 @@ declare global {
 export function CheckoutButton({
   variantId,
   email,
+  name,
   userId,
   planName,
   variant = "default",
@@ -45,9 +47,12 @@ export function CheckoutButton({
 }: CheckoutButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isScriptReady, setIsScriptReady] = useState(false);
 
   // Initialize Lemon Squeezy once
   const initLS = useCallback(() => {
+    if (typeof window === "undefined") return false;
+
     if (window.createLemonSqueezy) {
       window.createLemonSqueezy();
     }
@@ -63,14 +68,21 @@ export function CheckoutButton({
           }
         },
       });
+      setIsScriptReady(true);
       return true;
     }
     return false;
   }, [onSuccess]);
 
   useEffect(() => {
-    // Attempt initialization on mount
-    initLS();
+    // Attempt initialization on mount and check periodically if not ready
+    const ready = initLS();
+    if (!ready) {
+      const interval = setInterval(() => {
+        if (initLS()) clearInterval(interval);
+      }, 500);
+      return () => clearInterval(interval);
+    }
   }, [initLS]);
 
   const handleCheckout = async () => {
@@ -84,6 +96,8 @@ export function CheckoutButton({
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) throw new Error("API URL not configured");
+
       const response = await fetch(`${apiUrl}/billing/create-checkout`, {
         method: "POST",
         headers: {
@@ -92,6 +106,7 @@ export function CheckoutButton({
         body: JSON.stringify({
           variantId,
           email,
+          name,
         }),
       });
 
@@ -107,7 +122,7 @@ export function CheckoutButton({
       if (window.LemonSqueezy) {
         window.LemonSqueezy.Url.Open(data.checkoutUrl);
       } else {
-        // Fallback to direct redirect if overlay script fails
+        // Fallback to direct redirect if overlay script fails to load completely
         window.location.href = data.checkoutUrl;
       }
     } catch (error: any) {
