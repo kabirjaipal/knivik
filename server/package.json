@@ -6,18 +6,11 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npx prisma generate && tsc",
-    "start": "node dist/index.js",
+    "start": "npx prisma migrate deploy && node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "start:pm2": "pm2-runtime start ecosystem.config.cjs",
-    "dev:pm2": "pm2 start ecosystem.config.cjs --watch --env development",
     "lint": "eslint src --ext .ts --fix",
     "format": "prettier --write src/**/*.ts",
-    "db:generate": "npx prisma generate",
-    "db:push": "npx prisma db push",
-    "db:migrate": "npx prisma migrate dev",
-    "db:studio": "npx prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:read": "tsx prisma/read-data.ts"
+    "db:seed": "tsx prisma/seed.ts"
   },
   "keywords": [
     "ai",
