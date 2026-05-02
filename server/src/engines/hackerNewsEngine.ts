@@ -45,7 +45,7 @@ export class HackerNewsEngine extends BaseScraperEngine {
    * https://hn.algolia.com/api/v1/search_by_date?query=...&tags=story
    */
   private async searchAlgolia(query: string): Promise<HNPost[]> {
-    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=(story,comment)&hitsPerPage=30`;
+    const url = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=(story,comment)&hitsPerPage=30&typoTolerance=false`;
 
     try {
       const response = await httpClient.get(url, {

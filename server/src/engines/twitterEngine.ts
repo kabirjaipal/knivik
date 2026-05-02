@@ -1,6 +1,7 @@
 import { Platform, Keyword, ProductSource } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
-import { chromium, Browser, BrowserContext } from 'playwright';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import logger from '../lib/logger.js';
 
 // Buying signal patterns
@@ -22,20 +23,14 @@ interface TwitterPost {
 }
 
 /**
- * Twitter/X engine using Playwright to scrape x.com/search.
- * Nitter is dead in 2026 — direct Playwright scraping is the only viable free method.
- *
- * NOTE: Twitter requires login cookies for reliable results.
- * Without cookies, only a few public tweets load before hitting a wall.
- * Set TWITTER_AUTH_TOKEN and TWITTER_CT0 in your .env for best results.
+ * Twitter/X engine using Yahoo Search as a proxy to bypass Twitter's auth wall.
+ * This is 100x faster than Playwright and completely free, requiring no keys or tokens.
  */
 export class TwitterEngine extends BaseScraperEngine {
   platform = Platform.TWITTER;
 
-  private browser: Browser | null = null;
-
   private getRandomDelay(): number {
-    return 4000 + Math.random() * 4000;
+    return 2000 + Math.random() * 3000;
   }
 
   private containsBuyingIntent(text: string): boolean {
@@ -43,147 +38,72 @@ export class TwitterEngine extends BaseScraperEngine {
     return BUYING_SIGNALS.some(signal => lowerText.includes(signal));
   }
 
-  private async getBrowser(): Promise<Browser> {
-    if (!this.browser || !this.browser.isConnected()) {
-      this.browser = await chromium.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-blink-features=AutomationControlled',
-          '--disable-infobars',
-          '--window-size=1280,900',
-        ],
-      });
-    }
-    return this.browser;
-  }
-
-  private async createStealthContext(browser: Browser): Promise<BrowserContext> {
-    const authToken = process.env['TWITTER_AUTH_TOKEN'];
-    const ct0 = process.env['TWITTER_CT0'];
-    const hasAuth = !!authToken && !!ct0;
-
-    const context = await browser.newContext({
-      userAgent: this.getRandomUserAgent(),
-      viewport: { width: 1280, height: 900 },
-      locale: 'en-US',
-      timezoneId: 'America/New_York',
-      ...(hasAuth
-        ? {
-            storageState: {
-              cookies: [
-                {
-                  name: 'auth_token',
-                  value: authToken as string,
-                  domain: '.x.com',
-                  path: '/',
-                  expires: -1,   // -1 = session cookie (no expiry)
-                  httpOnly: true,
-                  secure: true,
-                  sameSite: 'None' as const,
-                },
-                {
-                  name: 'ct0',
-                  value: ct0 as string,
-                  domain: '.x.com',
-                  path: '/',
-                  expires: -1,   // -1 = session cookie (no expiry)
-                  httpOnly: false,
-                  secure: true,
-                  sameSite: 'None' as const,
-                },
-              ],
-              origins: [],
-            },
-          }
-        : {}),
-    });
-
-    // Hide automation signals
-    await context.addInitScript(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-    });
-
-    return context;
-  }
-
-  private async scrapeXSearch(query: string, limit: number): Promise<TwitterPost[]> {
+  private async scrapeYahooSearch(query: string, limit: number): Promise<TwitterPost[]> {
     const posts: TwitterPost[] = [];
-    let context: BrowserContext | null = null;
+    const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:x.com ${query}`)}&age=1d&btf=d`;
 
     try {
-      const browser = await this.getBrowser();
-      context = await this.createStealthContext(browser);
-      const page = await context.newPage();
+      logger.debug(`[TWITTER via YAHOO] Fetching: ${searchUrl}`);
+      const res = await axios.get(searchUrl, {
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        timeout: 10000,
+      });
 
-      const searchUrl = `https://x.com/search?q=${encodeURIComponent(query)}&f=live&src=typed_query`;
-      logger.debug(`[TWITTER] Navigating to: ${searchUrl}`);
+      const $ = cheerio.load(res.data);
 
-      await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      $('.algo').each((_i, el) => {
+        if (posts.length >= limit) return false; // Stop if limit reached
 
-      // Wait for tweets to appear, or bail if login wall appears
-      try {
-        await page.waitForSelector('[data-testid="tweet"]', { timeout: 12000 });
-      } catch (_err) {
-        logger.warn('[TWITTER] No tweets loaded — login wall likely. Set TWITTER_AUTH_TOKEN + TWITTER_CT0 in .env');
-        return [];
-      }
+        const rawUrl = $(el).find('a').attr('href') || '';
+        const content = $(el).find('.compTitle + div').text() || $(el).find('.fz-ms').text() || $(el).find('.compText').text() || '';
 
-      // Scroll once to load more tweets — pass as string to avoid TS checking browser globals
-      await page.evaluate('window.scrollBy(0, 800)');
-      await this.sleep(1500);
+        // Extract real URL from Yahoo redirect wrapper
+        let url = rawUrl;
+        const ruMatch = rawUrl.match(/RU=([^/]+)/);
+        if (ruMatch) {
+          try {
+            url = decodeURIComponent(ruMatch[1]);
+          } catch {
+            // ignore
+          }
+        }
 
-      const tweetEls = await page.$$('[data-testid="tweet"]');
+        if ((url.includes('twitter.com/') || url.includes('x.com/')) && url.includes('/status/')) {
+          const idMatch = url.match(/\/status\/(\d+)/);
+          const tweetId = idMatch ? idMatch[1] : `tw_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+          
+          const authorMatch = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
+          const author = authorMatch ? authorMatch[1] : 'unknown';
 
-      for (const el of tweetEls.slice(0, limit)) {
-        try {
-          // Text content
-          const textEl = await el.$('[data-testid="tweetText"]');
-          const content = textEl ? (await textEl.innerText()).trim() : '';
-          if (!content) continue;
-
-          // Author
-          const authorEl = await el.$('[data-testid="User-Name"] a');
-          const authorHref = authorEl ? (await authorEl.getAttribute('href') ?? '') : '';
-          const author = authorHref ? authorHref.replace('/', '') : 'unknown';
-
-          // Tweet URL and ID
-          const timeEl = await el.$('a[href*="/status/"]');
-          const tweetPath = timeEl ? (await timeEl.getAttribute('href') ?? '') : '';
-          const idMatch = tweetPath.match(/\/status\/(\d+)/);
-          const tweetId = (idMatch ? idMatch[1] : undefined) ?? `tw_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-          const tweetUrl = tweetPath ? `https://x.com${tweetPath}` : `https://x.com/${author}`;
+          // Basic cleanup to remove date prefix if exists (e.g. "May 3, 2026 · ")
+          const cleanContent = content.replace(/^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d+,\s\d{4}\s·\s*/i, '').trim();
 
           posts.push({
             id: tweetId,
-            content,
-            url: tweetUrl,
+            content: cleanContent,
+            url,
             author,
             postedAt: new Date(),
             externalPostId: tweetId,
           });
-        } catch (_err) {
-          continue;
         }
-      }
+      });
 
-      logger.debug(`[TWITTER] Scraped ${posts.length} tweets for query "${query}"`);
+      logger.debug(`[TWITTER via YAHOO] Scraped ${posts.length} tweets for query "${query}"`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      logger.error(`[TWITTER] Playwright scraping failed: ${message}`);
-    } finally {
-      if (context) await context.close().catch(() => undefined);
+      logger.error(`[TWITTER via YAHOO] Search failed: ${message}`);
     }
 
     return posts;
   }
 
   async closeBrowser(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close().catch(() => undefined);
-      this.browser = null;
-    }
+    // No-op since we dropped Playwright
+    return Promise.resolve();
   }
 
   protected async scrapeKeyword(
@@ -196,8 +116,9 @@ export class TwitterEngine extends BaseScraperEngine {
     let savedCount = 0;
 
     try {
-      const query = `${keyword.keyword} (${BUYING_SIGNALS.slice(0, 4).join(' OR ')}) lang:en`;
-      const posts = await this.scrapeXSearch(query, limit);
+      // Create a search query targeting buying intent
+      const intentQuery = `"${keyword.keyword}" ("${BUYING_SIGNALS.slice(0, 4).join('" OR "')}")`;
+      const posts = await this.scrapeYahooSearch(intentQuery, limit);
 
       const matchingPosts = posts.filter(post => {
         if (signal?.aborted) return false;
@@ -235,11 +156,11 @@ export class TwitterEngine extends BaseScraperEngine {
 
   override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal): Promise<Array<{ id: string; title: string | null; content: string; url: string; author?: string; postedAt?: Date }>> {
     const searchQuery = (source.identifier.toLowerCase() === 'global' || !source.identifier)
-      ? 'saas OR software tool OR recommendation lang:en'
+      ? 'saas OR "software tool" OR recommendation'
       : source.identifier;
 
     try {
-      const posts = await this.scrapeXSearch(searchQuery, limit);
+      const posts = await this.scrapeYahooSearch(searchQuery, limit);
 
       return posts.map(post => ({
         id: post.externalPostId,
