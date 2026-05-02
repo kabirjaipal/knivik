@@ -62,6 +62,17 @@ VALIDATION:
 - Sanitize external data.
 - Enforce schema validation (Zod / Joi / equivalent).
 
+DATABASE & MIGRATIONS:
+1. Any schema change ⇒ run `npx prisma migrate dev --name <desc>` immediately
+2. Keep migration history fully synced with DB at all times
+3. Never leave schema changes unapplied
+4. Zero data loss allowed
+5. Never use `--accept-data-loss` or `prisma migrate reset`
+6. After changes ⇒ ensure `npx prisma generate` succeeds
+7. Dev ⇒ `migrate dev`
+8. Production ⇒ `migrate deploy` only
+
+
 CONFIGURATION:
 
 - All environment-specific values must be externalized.
