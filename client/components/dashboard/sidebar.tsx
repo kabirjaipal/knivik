@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  LayoutDashboard
+  LayoutDashboard,
+  Zap
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -60,10 +61,13 @@ export function Sidebar({ className }: SidebarProps) {
   ], [])
 
   const adminLinks: NavLink[] = useMemo(() => [
-    { href: "/admin", label: "System Overview", icon: Radar },
+    { href: "/admin", label: "System Overview", icon: LayoutDashboard },
     { href: "/admin/users", label: "User Directory", icon: Users },
+    { href: "/admin/leads", label: "Global Leads", icon: Zap },
+    { href: "/admin/alerts", label: "Alert Logs", icon: ShieldAlert },
+    { href: "/admin/revenue", label: "Revenue", icon: CreditCard },
+    { href: "/admin/settings", label: "Global Settings", icon: Settings },
     { href: "/admin/usage", label: "LLM Usage", icon: Activity },
-    { href: "/dashboard", label: "Return to App", icon: Radar, accent: true },
   ], [])
 
   const links = useMemo(() => isAtAdmin ? adminLinks : userLinks, [isAtAdmin, adminLinks, userLinks])
@@ -169,6 +173,23 @@ export function Sidebar({ className }: SidebarProps) {
             >
               <ShieldAlert className="h-5 w-5" />
               {!isCollapsed && <span className="text-xs font-black uppercase tracking-widest">Go to Admin</span>}
+            </Link>
+          </div>
+        )}
+
+        {/* App Switcher (If on Admin Dashboard) */}
+        {isAtAdmin && (
+          <div className="px-4 py-2">
+            <Link 
+              href="/dashboard"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group",
+                isCollapsed && "justify-center px-0"
+              )}
+              title={isCollapsed ? "Return to App" : undefined}
+            >
+              <Radar className="h-5 w-5" />
+              {!isCollapsed && <span className="text-xs font-black uppercase tracking-widest">Return to App</span>}
             </Link>
           </div>
         )}

@@ -84,6 +84,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { Toaster } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -125,10 +128,13 @@ export default function RootLayout({
         >
           <AuthProvider>
             <BillingProvider>
-              {children}
+              <TooltipProvider>
+                {children}
+              </TooltipProvider>
             </BillingProvider>
           </AuthProvider>
         </ThemeProvider>
+        <Toaster position="top-right" richColors closeButton />
         <Analytics />
         <SpeedInsights />
         <LemonSqueezyScript />

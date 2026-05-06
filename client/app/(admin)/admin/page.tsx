@@ -71,7 +71,7 @@ export default function AdminPage() {
       
       {/* System Health Breakdown */}
       <Card className="border-border/40 overflow-hidden">
-        <CardHeader className="bg-muted/30 border-b border-border/40 pb-4 flex flex-row items-center justify-between">
+        <CardHeader className="border-b border-border/40 pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
             Social Engine Health (Real-time)

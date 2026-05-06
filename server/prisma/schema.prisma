@@ -284,6 +284,8 @@ model AlertLog {
   alertSettingId String
   leadId         String
   channel        AlertChannel
+  status         String       @default("sent") // "sent", "failed"
+  errorMessage   String?
   sentAt         DateTime     @default(now())
   alertSetting   AlertSetting @relation(fields: [alertSettingId], references: [id], onDelete: Cascade)
   lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -424,6 +426,15 @@ model WebhookEvent {
   updatedAt DateTime @updatedAt
 
   @@map("ir_webhook_events")
+}
+
+model SystemConfig {
+  id        String   @id @default("global")
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("ir_system_config")
 }
 
 enum UserPlan {

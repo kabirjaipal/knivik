@@ -102,16 +102,28 @@ async function sendWebhookAlert(alertSetting: any, lead: any) {
        throw new Error(`Webhook responded with status: ${response.status}`);
     }
     
-    // Log the alert
+    // Log successful alert
     await db.client.alertLog.create({
       data: {
         alertSettingId: lead.product.user.alertSetting.id,
         leadId: lead.id,
         channel: AlertChannel.SLACK,
+        status: 'sent'
       },
     });
   } catch (error: any) {
     logger.error({ error: error.message, url }, 'Webhook alert failed');
+    
+    // Log failed alert
+    await db.client.alertLog.create({
+      data: {
+        alertSettingId: lead.product.user.alertSetting.id,
+        leadId: lead.id,
+        channel: AlertChannel.SLACK,
+        status: 'failed',
+        errorMessage: error.message
+      },
+    });
   }
 }
 
@@ -147,15 +159,27 @@ async function sendEmailAlert(email: string, lead: any) {
       html: body,
     });
 
-    // Create log record
+    // Create success log record
     await db.client.alertLog.create({
       data: {
         alertSettingId: lead.product.user.alertSetting.id,
         leadId: lead.id,
         channel: AlertChannel.EMAIL,
+        status: 'sent'
       },
     });
   } catch (error: any) {
     logger.error({ error: error.message, email }, 'Email alert failed');
+    
+    // Create failure log record
+    await db.client.alertLog.create({
+      data: {
+        alertSettingId: lead.product.user.alertSetting.id,
+        leadId: lead.id,
+        channel: AlertChannel.EMAIL,
+        status: 'failed',
+        errorMessage: error.message
+      },
+    });
   }
 }
