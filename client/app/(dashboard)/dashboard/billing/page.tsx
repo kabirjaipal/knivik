@@ -29,6 +29,7 @@ export default function BillingPage() {
   const currentPlan = (billingInfo?.plan || "FREE").toUpperCase();
   const planConfig = PLANS[currentPlan as keyof typeof PLANS] || PLANS.FREE;
   const isProPlan = currentPlan === "PRO";
+  const subscriptionStatus = billingInfo?.subscriptionStatus || (isProPlan ? "active" : "inactive");
 
   useEffect(() => {
     if (!user) {
@@ -149,9 +150,9 @@ export default function BillingPage() {
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Current Plan</CardTitle>
                 <div className="flex items-center gap-2">
                   <PlanBadge plan={currentPlan} className="text-xs" />
-                  {billingInfo?.subscriptionStatus === "active"
+                  {subscriptionStatus === "active"
                     ? <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">Active</Badge>
-                    : <Badge variant="secondary" className="text-xs">{billingInfo?.subscriptionStatus ?? "Inactive"}</Badge>
+                    : <Badge variant="secondary" className="text-xs">{subscriptionStatus ?? "Inactive"}</Badge>
                   }
                 </div>
               </div>
@@ -160,13 +161,17 @@ export default function BillingPage() {
               <div className="flex items-center justify-between gap-4">
                 <p className="text-4xl font-black tracking-tighter">{planConfig.name}</p>
                 {isProPlan ? (
-                  (billingInfo?.lemonSqueezyCustomerId || billingData?.user?.lemonSqueezyCustomerId) && (
+                  (billingInfo?.lemonSqueezyCustomerId || billingData?.user?.lemonSqueezyCustomerId) ? (
                     <Button variant="outline" className="font-bold gap-2 shrink-0"
                       onClick={handleOpenCustomerPortal} disabled={isRedirecting}>
                       {isRedirecting
                         ? <><Loader2 className="h-4 w-4 animate-spin" /> Redirecting…</>
                         : <><ExternalLink className="h-4 w-4" /> Manage Billing</>
                       }
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="font-bold gap-2 shrink-0" asChild>
+                      <a href="mailto:support@knivik.com">Contact Support</a>
                     </Button>
                   )
                 ) : (
@@ -177,11 +182,11 @@ export default function BillingPage() {
               </div>
 
               {/* Billing details row — only for active subscriptions */}
-              {billingInfo?.subscriptionStatus === "active" && (
+              {subscriptionStatus === "active" && (
                 <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border/40">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Next Billing</p>
-                    <p className="text-sm font-bold mt-0.5">{formatDate(billingInfo?.currentPeriodEnd)}</p>
+                    <p className="text-sm font-bold mt-0.5">{formatDate(billingInfo?.currentPeriodEnd!)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cycle</p>

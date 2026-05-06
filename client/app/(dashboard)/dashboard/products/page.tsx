@@ -47,6 +47,7 @@ export default function ProductsPage() {
     name: "",
     description: "",
     websiteUrl: "",
+    isActive: true,
     keywords: "",
     negativeKeywords: "",
     competitors: "",
@@ -101,7 +102,7 @@ export default function ProductsPage() {
           name: formData.name,
           description: formData.description,
           websiteUrl: formData.websiteUrl,
-          isActive: true,
+          isActive: formData.isActive,
           keywords: formData.keywords.split(',').map(k => k.trim()).filter(k => k),
           negativeKeywords: formData.negativeKeywords.split(',').map(k => k.trim()).filter(k => k),
           competitors: formData.competitors.split(',').map(c => c.trim()).filter(c => c),
@@ -125,7 +126,7 @@ export default function ProductsPage() {
       // Reset form
       const actionLabel = editingProductId ? "Product updated" : "Product created";
       setFormData({
-        name: "", description: "", websiteUrl: "", keywords: "",
+        name: "", description: "", websiteUrl: "", isActive: true, keywords: "",
         negativeKeywords: "", competitors: "",
       })
       setIsCreating(false)
@@ -190,7 +191,7 @@ export default function ProductsPage() {
         if (!open) {
           setIsCreating(false);
           setFormData({ 
-            name: "", description: "", websiteUrl: "", keywords: "", 
+            name: "", description: "", websiteUrl: "", isActive: true, keywords: "", 
             negativeKeywords: "", competitors: "",
           });
         }
@@ -233,7 +234,7 @@ export default function ProductsPage() {
                 setIsCreating(false);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", keywords: "", 
-                  negativeKeywords: "", competitors: "" 
+                  negativeKeywords: "", competitors: "" , isActive: true
                 });
               }}
             >
@@ -258,7 +259,7 @@ export default function ProductsPage() {
         if (!open) {
           setEditingProductId(null);
           setFormData({ 
-            name: "", description: "", websiteUrl: "", keywords: "", 
+            name: "", description: "", websiteUrl: "", isActive: true, keywords: "", 
             negativeKeywords: "", competitors: "" 
           });
         }
@@ -299,7 +300,7 @@ export default function ProductsPage() {
               onClick={() => {
                 setEditingProductId(null);
                 setFormData({ 
-                  name: "", description: "", websiteUrl: "", keywords: "", 
+                  name: "", description: "", websiteUrl: "", isActive: true, keywords: "", 
                   negativeKeywords: "", competitors: "" 
                 });
                 
@@ -341,6 +342,7 @@ export default function ProductsPage() {
                     name: product.name,
                     description: product.description || "",
                     websiteUrl: product.websiteUrl || "",
+                    isActive: product.isActive ?? true,
                     keywords: product.keywords.map((k: any) => k.keyword).join(", "),
                     negativeKeywords: product.negativeKeywords.map((k: any) => k.keyword).join(", "),
                     competitors: product.competitors.map((c: any) => c.name).join(", "),
@@ -396,6 +398,7 @@ interface ProductFormProps {
     name: string;
     description: string;
     websiteUrl: string;
+    isActive: boolean;
     keywords: string;
     negativeKeywords: string;
     competitors: string;
@@ -440,6 +443,27 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
               className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
               placeholder="https://example.com" 
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer group">
+              <div className="relative flex items-center">
+                <input 
+                  type="checkbox" 
+                  checked={formData.isActive}
+                  onChange={e => setFormData({...formData, isActive: e.target.checked})}
+                  className="peer sr-only"
+                />
+                <div className="w-10 h-5 bg-muted rounded-full peer-checked:bg-success transition-colors duration-200 border border-border"></div>
+                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-5 shadow-sm"></div>
+              </div>
+              <span className="group-hover:text-primary transition-colors">
+                Product Active
+              </span>
+            </label>
+            <p className="text-xs text-muted-foreground ml-12">
+              {formData.isActive ? "We will track social signals for this product." : "Tracking is paused for this product."}
+            </p>
           </div>
         </div>
 

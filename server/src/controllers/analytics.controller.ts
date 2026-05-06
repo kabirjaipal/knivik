@@ -22,6 +22,10 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
 
   const productIds = products.map(p => p.id);
 
+  // 7. Advanced ROI Analytics (Pro feature flag) - check this early
+  const user = await db.client.user.findUnique({ where: { id: userId } });
+  const isAdvancedAnalyticsEnabled = user?.plan !== 'FREE';
+
   if (productIds.length === 0) {
     return res.status(200).json({
       success: true,
@@ -30,8 +34,18 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
         intentDistribution: [],
         platformDistribution: [],
         statusDistribution: [],
+        sentimentDistribution: [],
+        peakActivityHours: [],
+        topKeywords: [],
+        leadVelocity: 0,
         totalLeads: 0,
-        conversationsScanned: 0
+        conversationsScanned: 0,
+        averageIntentScore: 0,
+        topProduct: null,
+        activeProductsCount: 0,
+        isAdvancedAnalyticsEnabled,
+        estimatedPipelineValue: 0,
+        leadConversionRate: 0
       }
     });
   }
@@ -111,11 +125,103 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
     where: { productId: { in: productIds } }
   });
 
+  // 6. Conversations scanned (total)
   const conversationsScanned = await db.client.scrapeCache.count();
 
-  // 7. Advanced ROI Analytics (Pro feature)
-  const user = await db.client.user.findUnique({ where: { id: userId } });
-  const isAdvancedAnalyticsEnabled = user?.plan !== 'FREE';
+  // 7. Average Intent Score
+  const avgIntentRaw = await db.client.lead.aggregate({
+    where: { productId: { in: productIds } },
+    _avg: { intentScore: true }
+  });
+  const averageIntentScore = Math.round(avgIntentRaw._avg.intentScore || 0);
+
+  // 8. Top Performing Product
+  const topProductRaw = await db.client.lead.groupBy({
+    by: ['productId'],
+    where: { productId: { in: productIds } },
+    _count: { id: true },
+    orderBy: { _count: { id: 'desc' } },
+    take: 1
+  });
+
+  let topProduct = null;
+  if (topProductRaw.length > 0) {
+    const p = products.find(prod => prod.id === topProductRaw[0].productId);
+    topProduct = {
+      name: p?.name || 'Unknown',
+      count: topProductRaw[0]._count.id
+    };
+  }
+
+  // 9. Peak Activity & Intent Tone (Consolidated Query to fix Prisma groupBy TS bug)
+  const allLeads = await db.client.lead.findMany({
+    where: { productId: { in: productIds } },
+    select: { createdAt: true, intentLevel: true }
+  });
+  
+  // Calculate Peak Activity Hours
+  const hourCounts = new Array(24).fill(0);
+  // Calculate Intent Level Distribution (Buyer Tone)
+  const intentLevelCounts: Record<string, number> = {};
+
+  allLeads.forEach(lead => {
+    // Hour calc
+    const hour = new Date(lead.createdAt).getHours();
+    hourCounts[hour]++;
+
+    // Intent calc
+    const level = lead.intentLevel || 'NEUTRAL';
+    intentLevelCounts[level] = (intentLevelCounts[level] || 0) + 1;
+  });
+
+  const peakActivityHours = hourCounts.map((count, hour) => ({ hour, count }));
+  const sentimentDistribution = Object.entries(intentLevelCounts).map(([label, count]) => ({
+    label: label.replace('_', ' '), // e.g. BUY_NOW -> BUY NOW
+    count
+  }));
+
+  // 11. Top Keywords (simple word frequency)
+  const recentLeads = await db.client.lead.findMany({
+    where: { productId: { in: productIds } },
+    select: { content: true },
+    take: 100,
+    orderBy: { createdAt: 'desc' }
+  });
+  
+  const stopWords = new Set(['the', 'and', 'for', 'with', 'this', 'that', 'your', 'from', 'have', 'what', 'some', 'they']);
+  const wordFreq: Record<string, number> = {};
+  recentLeads.forEach(l => {
+    const words = l.content.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+    words.forEach(w => {
+      if (w.length > 3 && !stopWords.has(w)) {
+        wordFreq[w] = (wordFreq[w] || 0) + 1;
+      }
+    });
+  });
+  const topKeywords = Object.entries(wordFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([word, count]) => ({ label: word, count }));
+
+  // 12. Lead Velocity (Growth Rate)
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  // sevenDaysAgo is already defined at the top of the function
+
+  const leadsLast7 = await db.client.lead.count({
+    where: { productId: { in: productIds }, createdAt: { gte: sevenDaysAgo } }
+  });
+  const leadsPrev7 = await db.client.lead.count({
+    where: { productId: { in: productIds }, createdAt: { gte: fourteenDaysAgo, lt: sevenDaysAgo } }
+  });
+  
+  let leadVelocity = 0;
+  if (leadsPrev7 > 0) {
+    leadVelocity = Math.round(((leadsLast7 - leadsPrev7) / leadsPrev7) * 100);
+  } else if (leadsLast7 > 0) {
+    leadVelocity = 100; // First week growth
+  }
+
   const totalConverted = statusDistRaw.find(s => s.status === 'CONVERTED')?._count.id || 0;
   
   // Default lead value assumption: $250
@@ -129,8 +235,15 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
       intentDistribution,
       platformDistribution,
       statusDistribution,
+      sentimentDistribution,
+      peakActivityHours,
+      topKeywords,
+      leadVelocity,
       totalLeads,
       conversationsScanned,
+      averageIntentScore,
+      topProduct,
+      activeProductsCount: products.length,
       isAdvancedAnalyticsEnabled,
       estimatedPipelineValue,
       leadConversionRate

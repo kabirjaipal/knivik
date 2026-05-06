@@ -1,26 +1,28 @@
+
 "use client"
 
 import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  BarChart3, 
   TrendingUp, 
   Target, 
   Activity, 
-  PieChart, 
-  Calendar,
-  Layers,
-  Sparkles,
   Search,
   Loader2,
   AlertCircle,
   Brain,
   Lock,
   BadgeDollarSign,
-  Percent
+  Percent,
+  Flame,
+  Award,
+  Box,
+  Zap,
+  BarChart3
 } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { motion } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 interface MetricData {
   label: string;
@@ -32,8 +34,15 @@ interface AnalyticsData {
   intentDistribution: MetricData[];
   platformDistribution: MetricData[];
   statusDistribution: MetricData[];
+  sentimentDistribution: MetricData[];
+  peakActivityHours: { hour: number; count: number }[];
+  topKeywords: MetricData[];
+  leadVelocity: number;
   totalLeads: number;
   conversationsScanned: number;
+  averageIntentScore: number;
+  topProduct: { name: string; count: number } | null;
+  activeProductsCount: number;
   isAdvancedAnalyticsEnabled: boolean;
   estimatedPipelineValue: number;
   leadConversionRate: string;
@@ -96,7 +105,6 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (authLoading || !user) return
     
-    // Only fetch if identity actually changed or we've never fetched
     if (hasFetchedAnalytics.current && lastFetchedUserId.current === user.id) return
     
     hasFetchedAnalytics.current = true
@@ -109,367 +117,351 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center h-screen -mt-20">
+        <div className="relative">
+          <Loader2 className="w-12 h-12 animate-spin text-primary/20" />
+          <Loader2 className="w-12 h-12 animate-spin text-primary absolute inset-0 [animation-delay:-0.15s]" />
+        </div>
       </div>
     )
   }
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 h-64">
-        <AlertCircle className="w-12 h-12 text-destructive/50" />
-        <p className="text-lg font-bold text-foreground">Something went wrong</p>
-        <p className="text-muted-foreground">{error || "Could not load analytics data."}</p>
+      <div className="flex flex-col items-center justify-center space-y-6 h-[60vh]">
+        <div className="p-6 rounded-full bg-destructive/5 border border-destructive/10">
+          <AlertCircle className="w-12 h-12 text-destructive" />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-black tracking-tight">Analytics unavailable</h2>
+          <p className="text-sm text-muted-foreground max-w-sm">{error || "We couldn't load your data. Please check your connection."}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // GLOBAL EMPTY STATE: No Products
+  if (data.activeProductsCount === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8 animate-in fade-in duration-700">
+        <div className="relative">
+           <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+           <div className="relative w-24 h-24 bg-card border border-border/50 rounded-3xl flex items-center justify-center shadow-2xl">
+              <BarChart3 className="w-10 h-10 text-primary" />
+           </div>
+        </div>
+        <div className="text-center space-y-3 max-w-md">
+          <h1 className="text-3xl font-black tracking-tighter">Ready to track?</h1>
+          <p className="text-muted-foreground font-medium">Create your first product to start monitoring social mentions and generating AI-powered leads.</p>
+        </div>
+        <a href="/dashboard/products" className="h-11 px-8 rounded-xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2">
+           <Box className="w-4 h-4" /> Create First Product
+        </a>
       </div>
     )
   }
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }} 
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-12"
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }}
+      className="space-y-6 pb-20"
     >
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tight text-foreground flex items-center gap-3">
-            Analytics <BarChart3 className="w-8 h-8 text-primary" />
+      {/* Premium Header - More Compact */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border/40">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[9px]">
+            <Activity className="w-3 h-3" /> Intel Pulse
+          </div>
+          <h1 className="text-3xl font-black tracking-tighter text-foreground leading-none">
+            Analytics<span className="text-primary">.</span>
           </h1>
-          <p className="text-muted-foreground text-lg">Detailed insights into your lead generation pipeline.</p>
+          <p className="text-muted-foreground text-xs font-medium">Monitoring {data.activeProductsCount} products across {data.platformDistribution.length || 0} channels.</p>
         </div>
         
-        <div className="flex items-center gap-4 bg-muted/40 p-4 rounded-2xl border border-border/50">
-          <div className="text-right">
-            <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Scanned Context</p>
-            <p className="text-lg font-black text-foreground">{(data.conversationsScanned || 0).toLocaleString()}</p>
-          </div>
-          <div className="h-10 w-px bg-border/50" />
-          <div className="text-right">
-            <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground">Total Leads Found</p>
-            <p className="text-lg font-black text-primary">{(data.totalLeads || 0).toLocaleString()}</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-8">
+          <SummaryStat label="Status" value="Live" icon={Zap} color="text-amber-500" />
+          <SummaryStat label="Velocity" value={`${data.leadVelocity > 0 ? '+' : ''}${data.leadVelocity}%`} icon={TrendingUp} color={data.leadVelocity >= 0 ? "text-emerald-500" : "text-destructive"} />
+          <SummaryStat label="Scanning" value={data.conversationsScanned.toLocaleString()} icon={Search} />
+          <SummaryStat label="Total Leads" value={data.totalLeads.toLocaleString()} icon={Target} color="text-primary" />
         </div>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid md:grid-cols-4 gap-6">
-        {[
-          { label: "Leads (Total)", value: data.totalLeads, icon: Target, color: "text-primary bg-primary/10" },
-          { label: "Converted", value: data.statusDistribution.find(s => s.label === 'CONVERTED')?.count || 0, icon: Sparkles, color: "text-primary bg-primary/10" },
-          { label: "Scanning Power", value: "24/7", icon: Activity, color: "text-primary bg-primary/10" },
-          { label: "Intent Accuracy", value: "94%", icon: PieChart, color: "text-primary bg-primary/10" },
-        ].map((stat, i) => (
-          <Card key={i} className="border shadow-none bg-card overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground mb-1">{stat.label}</p>
-                  <h3 className="text-2xl font-black text-foreground">{stat.value}</h3>
+      {/* Row 1: Flow & Sentiment */}
+      <div className="grid lg:grid-cols-12 gap-6">
+        {/* Lead Flow - Wide */}
+        <Card className="lg:col-span-8 border-none bg-linear-to-br from-card to-card/50 shadow-xl shadow-black/5 overflow-hidden">
+          <CardHeader className="py-3 px-6 border-b border-border/40">
+             <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-black flex items-center gap-2">
+                  <TrendingUp className="w-3.5 h-3.5 text-primary" /> Lead Volume
+                </CardTitle>
+                <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-md">
+                   <button className="px-2 py-0.5 text-[9px] font-black bg-background shadow-xs rounded-sm">7D</button>
+                   <button className="px-2 py-0.5 text-[9px] font-bold text-muted-foreground">30D</button>
                 </div>
-                <div className={`p-3 rounded-xl ${stat.color}`}>
-                  <stat.icon className="w-6 h-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Advanced ROI Analytics Section */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <BadgeDollarSign className="w-5 h-5 text-primary" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-            Advanced ROI Analytics
-            {!data.isAdvancedAnalyticsEnabled && (
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Pro
-              </span>
-            )}
-          </h2>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          {!data.isAdvancedAnalyticsEnabled ? (
-            <Card className="border shadow-none bg-card md:col-span-2">
-              <CardContent className="p-12">
-                <div className="flex flex-col items-center text-center space-y-6">
-                  <div className="p-4 bg-primary/10 rounded-2xl">
-                    <Lock className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold">Advanced ROI Analytics</h3>
-                    <p className="text-sm text-muted-foreground max-w-md">
-                      Upgrade to Pro to unlock estimated pipeline value and lead conversion metrics.
-                    </p>
-                  </div>
-                  <a
-                    href="/dashboard/billing"
-                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
-                  >
-                    Upgrade Plan
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <Card className="border shadow-none bg-card">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <BadgeDollarSign className="w-4 h-4 text-primary" /> Estimated Pipeline Value
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-end gap-2">
-                    <span className="text-4xl font-black text-foreground">${(data.estimatedPipelineValue || 0).toLocaleString()}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">Based on an average estimated value of $250 per CONVERTED lead.</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border shadow-none bg-card">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Percent className="w-4 h-4 text-primary" /> Lead Conversion Rate
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-end gap-2">
-                    <span className="text-4xl font-black text-foreground">{data.leadConversionRate || 0}%</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">Percentage of all scanned leads that changed to CONVERTED status.</p>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Leads Over Time - Bar Chart Visualization */}
-        <Card className="lg:col-span-2 border shadow-none bg-card">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" /> Lead Volume
-              </CardTitle>
-              <CardDescription>Generated leads over the last 7 days.</CardDescription>
-            </div>
-            <Calendar className="w-5 h-5 text-muted-foreground opacity-30" />
+             </div>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-end gap-2 px-6 pb-8 pt-4">
-            {data.leadsOverTime.map((day, i) => {
-              const maxCount = Math.max(...data.leadsOverTime.map(d => d.count), 1)
-              const height = `${(day.count / maxCount) * 100}%`
-              const dateLabel = new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })
-              
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center group gap-3">
-                  <div className="relative w-full flex items-end justify-center min-h-[40px]">
-                    <motion.div 
-                      initial={{ height: 0 }}
-                      animate={{ height }}
-                      className="w-full max-w-[40px] rounded-t-lg bg-linear-to-t from-primary/80 to-primary group-hover:from-primary transition-all duration-500 relative"
-                    >
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-border">
-                        {day.count}
+          <CardContent className="h-[240px] px-8 pb-8 pt-4 flex items-center justify-center">
+            {data.totalLeads > 0 ? (
+              <div className="flex items-end gap-3 w-full h-full">
+                {data.leadsOverTime.map((day, i) => {
+                  const maxCount = Math.max(...data.leadsOverTime.map(d => d.count), 1)
+                  const height = `${(day.count / maxCount) * 100}%`
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center group gap-2 h-full justify-end">
+                      <div className="relative w-full flex items-end justify-center h-full">
+                        <motion.div 
+                          initial={{ height: 0 }}
+                          animate={{ height }}
+                          transition={{ duration: 1, delay: i * 0.05 }}
+                          className="w-full max-w-[32px] rounded-t-md bg-linear-to-t from-primary/60 to-primary group-hover:brightness-110 transition-all relative"
+                        />
                       </div>
-                    </motion.div>
-                  </div>
-                  <span className="text-xs font-bold text-muted-foreground/60 group-hover:text-foreground transition-colors uppercase tracking-wider">
-                    {dateLabel}
-                  </span>
-                </div>
-              )
-            })}
+                      <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-tighter">
+                        {new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : <EmptyChartPlaceholder message="Awaiting data..." />}
           </CardContent>
         </Card>
 
-        {/* Distribution Charts */}
-        <div className="space-y-8">
-          {/* Intent Level */}
-          <Card className="border shadow-none bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Layers className="w-4 h-4 text-primary" /> Intent Mix
+        {/* Sentiment Mix - Compact */}
+        <Card className="lg:col-span-4 border-none bg-card shadow-xl shadow-black/5">
+           <CardHeader className="py-3 px-6 border-b border-border/40">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <Brain className="w-3.5 h-3.5 text-primary" /> Sentiment Mix
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {data.intentDistribution.map((item, i) => {
-                const total = data.intentDistribution.reduce((acc, curr) => acc + curr.count, 0)
-                const percentage = total > 0 ? (item.count / total) * 100 : 0
-                
-                return (
-                  <div key={i} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                      <span className="text-muted-foreground">{item.label}</span>
-                      <span className="text-foreground">{item.count}</span>
+           </CardHeader>
+           <CardContent className="p-6 space-y-4">
+              {data.sentimentDistribution.length > 0 ? (
+                data.sentimentDistribution.map((item, i) => {
+                  const total = data.sentimentDistribution.reduce((acc, curr) => acc + curr.count, 0)
+                  const percentage = (item.count / total) * 100
+                  const colorMap: Record<string, string> = {
+                    "BUY NOW": "bg-emerald-500",
+                    "RESEARCHING": "bg-primary",
+                    "COMPARING": "bg-amber-400",
+                    "LOW INTENT": "bg-muted-foreground/40",
+                    "NEUTRAL": "bg-slate-400"
+                  }
+                  const displayLabel = item.label.toUpperCase()
+                  return (
+                    <div key={i} className="space-y-1.5">
+                      <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                        <span>{item.label}</span>
+                        <span className="text-muted-foreground">{Math.round(percentage)}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }} animate={{ width: `${percentage}%` }}
+                          className={cn("h-full", colorMap[item.label.toUpperCase()] || "bg-primary")}
+                        />
+                      </div>
                     </div>
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        className="h-full bg-primary"
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-              {data.intentDistribution.length === 0 && (
-                <p className="text-xs text-center text-muted-foreground py-4 italic">No intent data available yet.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Platform Dist */}
-          <Card className="border shadow-none bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Search className="w-4 h-4 text-primary" /> Source Channels
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {data.platformDistribution.map((item, i) => {
-                const total = data.platformDistribution.reduce((acc, curr) => acc + curr.count, 0)
-                const percentage = total > 0 ? (item.count / total) * 100 : 0
-                
-                return (
-                  <div key={i} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                      <span className="text-muted-foreground">{item.label}</span>
-                      <span className="text-foreground">{item.count}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        className="h-full bg-foreground"
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-              {data.platformDistribution.length === 0 && (
-                <p className="text-xs text-center text-muted-foreground py-4 italic">No platform data available yet.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  )
+                })
+              ) : <EmptyListPlaceholder />}
+           </CardContent>
+        </Card>
       </div>
 
-      {/* AI Usage Section */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Brain className="w-5 h-5 text-primary" />
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-foreground">AI Power &amp; Consumption</h2>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Cost & Efficiency */}
-          <Card className="border shadow-none bg-card overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" /> Token Efficiency
+      {/* Row 2: Activity & Keywords */}
+      <div className="grid lg:grid-cols-12 gap-6">
+         {/* Peak Activity - 24h Bar Chart */}
+         <Card className="lg:col-span-7 border-none bg-card shadow-xl shadow-black/5">
+            <CardHeader className="py-3 px-6 border-b border-border/40">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-amber-500" /> Peak Activity (24h)
               </CardTitle>
-              <CardDescription>Real-time calculation of inference costs.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="flex items-end gap-2">
-                <span className="text-5xl font-black text-foreground">${llmUsage?.totals.estimatedCost.toFixed(4) || '0.000'}</span>
-                <span className="text-sm font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Total USD Burned</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground mb-1">Input Tokens</p>
-                  <p className="text-xl font-black text-foreground">{llmUsage?.totals.inputTokens.toLocaleString() || 0}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase font-bold tracking-widest text-muted-foreground mb-1">Output Tokens</p>
-                  <p className="text-xl font-black text-foreground">{llmUsage?.totals.outputTokens.toLocaleString() || 0}</p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border/40">
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Usage by Task</p>
-                <div className="space-y-4">
-                  {llmUsage?.breakdown.map((item, i) => {
-                    const percentage = (item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100
-                    return (
-                      <div key={i} className="space-y-1.5">
-                        <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                          <span className="text-muted-foreground">{item.action.replace('_', ' ')}</span>
-                          <span className="text-foreground">{Math.round(percentage)}%</span>
-                        </div>
-                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+            <CardContent className="h-[180px] p-6 flex items-end gap-1">
+               {data.peakActivityHours.map((h, i) => {
+                  const max = Math.max(...data.peakActivityHours.map(d => d.count), 1)
+                  const height = `${(h.count / max) * 100}%`
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center group h-full justify-end">
+                       <div className="relative w-full flex items-end justify-center h-full">
                           <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${percentage}%` }}
-                            className="h-full bg-primary"
+                            initial={{ height: 0 }} animate={{ height }}
+                            className="w-full rounded-t-sm bg-primary/20 group-hover:bg-primary transition-colors"
                           />
-                        </div>
+                       </div>
+                       {i % 4 === 0 && <span className="text-[7px] font-black text-muted-foreground mt-1">{h.hour}h</span>}
+                    </div>
+                  )
+               })}
+            </CardContent>
+         </Card>
+
+         {/* Trending Topics - Chips */}
+         <Card className="lg:col-span-5 border-none bg-card shadow-xl shadow-black/5">
+            <CardHeader className="py-3 px-6 border-b border-border/40">
+              <CardTitle className="text-sm font-black flex items-center gap-2">
+                <Search className="w-3.5 h-3.5 text-primary" /> Trending Topics
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5">
+               <div className="flex flex-wrap gap-2">
+                  {data.topKeywords.length > 0 ? (
+                    data.topKeywords.map((k, i) => (
+                      <div key={i} className="px-2.5 py-1 rounded-lg bg-muted border border-border/40 text-[10px] font-black flex items-center gap-2 hover:border-primary/40 transition-colors cursor-default">
+                         <span className="text-foreground">{k.label}</span>
+                         <span className="text-primary/60">{k.count}</span>
                       </div>
-                    )
-                  })}
-                </div>
-              </div>
+                    ))
+                  ) : <div className="text-xs text-muted-foreground italic">Detecting patterns...</div>}
+               </div>
+            </CardContent>
+         </Card>
+      </div>
+
+      {/* Row 3: Channels & ROI */}
+      <div className="grid lg:grid-cols-3 gap-6">
+         {/* Channels */}
+         <Card className="border-none bg-card shadow-xl shadow-black/5">
+            <CardHeader className="py-3 px-6 border-b border-border/40">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Channels</CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+               {data.platformDistribution.map((item, i) => (
+                 <div key={i} className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</span>
+                    <span className="text-xs font-black">{item.count} Leads</span>
+                 </div>
+               ))}
+            </CardContent>
+         </Card>
+
+         {/* ROI - Pipe Value */}
+         <Card className={cn(
+            "border-none overflow-hidden relative group",
+            data.isAdvancedAnalyticsEnabled ? "bg-emerald-500/5" : "bg-muted/30"
+         )}>
+            <CardContent className="p-6">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Est. Pipeline Value</p>
+              <h3 className="text-4xl font-black tracking-tighter">
+                {data.isAdvancedAnalyticsEnabled ? `$${data.estimatedPipelineValue.toLocaleString()}` : "$ —"}
+              </h3>
+              {!data.isAdvancedAnalyticsEnabled && <ProOverlay />}
+            </CardContent>
+         </Card>
+
+         {/* ROI - Conv Rate */}
+         <Card className={cn(
+            "border-none overflow-hidden relative group",
+            data.isAdvancedAnalyticsEnabled ? "bg-primary/5" : "bg-muted/30"
+         )}>
+            <CardContent className="p-6">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Conversion Rate</p>
+              <h3 className="text-4xl font-black tracking-tighter">
+                {data.isAdvancedAnalyticsEnabled ? `${data.leadConversionRate}%` : "— %"}
+              </h3>
+              {!data.isAdvancedAnalyticsEnabled && <ProOverlay />}
+            </CardContent>
+         </Card>
+      </div>
+
+      {/* AI Layer - Bottom */}
+      <div className="grid lg:grid-cols-2 gap-6 pt-4">
+          <Card className="border-none bg-card shadow-xl shadow-black/5">
+            <CardHeader className="py-3 px-6 border-b border-border/40 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Brain className="w-3.5 h-3.5" /> Task Efficiency
+              </CardTitle>
+              <div className="text-[10px] font-black text-foreground">${llmUsage?.totals.estimatedCost.toFixed(4)}</div>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+               {llmUsage?.breakdown.map((item, i) => (
+                 <div key={i} className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                    <span className="text-muted-foreground">{item.action.replace('_', ' ')}</span>
+                    <span>{Math.round((item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100)}%</span>
+                 </div>
+               ))}
             </CardContent>
           </Card>
 
-          {/* Model Breakdown */}
-          <Card className="border shadow-none bg-card">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Activity className="w-4 h-4 text-primary" /> Active Models
+          <Card className="border-none bg-card shadow-xl shadow-black/5">
+            <CardHeader className="py-3 px-6 border-b border-border/40">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Award className="w-3.5 h-3.5" /> Top Performer
               </CardTitle>
-              <CardDescription>Which minds are powering your radar?</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {llmUsage?.breakdown.reduce((acc: any[], curr) => {
-                  const existing = acc.find(a => a.modelId === curr.modelId)
-                  if (existing) {
-                    existing.requestCount += curr.requestCount
-                    existing.estimatedCost += curr.estimatedCost
-                  } else {
-                    acc.push({ ...curr })
-                  }
-                  return acc
-                }, []).map((model, i) => (
-                  <div key={i} className="p-4 rounded-xl border border-border/40 bg-muted/20 flex items-center justify-between group hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-primary/10 text-primary`}>
-                        <Brain className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-foreground tracking-tight">{model.modelId}</p>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{model.requestCount} Requests</p>
-                      </div>
+            <CardContent className="p-5">
+               {data.topProduct ? (
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
+                       <Box className="w-5 h-5" />
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-foreground">${model.estimatedCost.toFixed(4)}</p>
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Model Cost</p>
+                    <div>
+                       <p className="text-sm font-black tracking-tight">{data.topProduct.name}</p>
+                       <p className="text-[9px] font-black uppercase tracking-widest text-primary">{data.topProduct.count} Leads Found</p>
                     </div>
-                  </div>
-                ))}
-                {!llmUsage?.breakdown.length && (
-                  <div className="py-12 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground opacity-20" />
-                    <p className="text-xs text-muted-foreground mt-2 italic font-medium">No AI activity recorded yet.</p>
-                  </div>
-                )}
-              </div>
+                 </div>
+               ) : <div className="text-xs italic text-muted-foreground">Awaiting data...</div>}
             </CardContent>
           </Card>
-        </div>
       </div>
     </motion.div>
+  )
+}
+
+function SummaryStat({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color?: string }) {
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center gap-2 mb-0.5">
+         <Icon className={cn("w-2.5 h-2.5 opacity-50", color)} />
+         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground leading-none">{label}</span>
+      </div>
+      <p className="text-xl font-black tracking-tight text-foreground leading-tight">{value}</p>
+    </div>
+  )
+}
+
+function EmptyChartPlaceholder({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center space-y-3 opacity-30">
+       <div className="p-4 bg-muted/40 rounded-full">
+         <TrendingUp className="w-8 h-8" />
+       </div>
+       <p className="text-[10px] font-black uppercase tracking-widest">{message}</p>
+    </div>
+  )
+}
+
+function EmptyListPlaceholder() {
+  return (
+    <div className="space-y-4 py-2">
+       {[1, 2, 3].map(i => (
+         <div key={i} className="space-y-1.5 opacity-10">
+           <div className="h-1.5 w-24 bg-foreground rounded-full" />
+           <div className="h-1 w-full bg-muted rounded-full" />
+         </div>
+       ))}
+    </div>
+  )
+}
+
+function ProLock() {
+  return (
+    <div className="px-1.5 py-0.5 bg-primary text-primary-foreground rounded-md text-[8px] font-black uppercase tracking-widest flex items-center gap-1 shadow-lg shadow-primary/20">
+      <Lock className="w-2 h-2" /> Locked
+    </div>
+  )
+}
+
+function ProOverlay() {
+  return (
+    <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 text-center">
+       <div className="space-y-3">
+          <p className="text-[9px] font-black uppercase tracking-widest text-foreground">Available on Pro</p>
+          <a href="/dashboard/billing" className="inline-flex h-7 items-center justify-center rounded-lg bg-primary px-3 text-[9px] font-black text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+             Upgrade
+          </a>
+       </div>
+    </div>
   )
 }

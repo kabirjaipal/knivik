@@ -200,13 +200,13 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         isActive: data.isActive,
         aiConfig: data.aiConfig || {},
         keywords: {
-          create: data.keywords.map((k) => ({ keyword: k })),
+          create: [...new Set(data.keywords)].map((k) => ({ keyword: k })),
         },
         negativeKeywords: {
-          create: data.negativeKeywords.map((k) => ({ keyword: k })),
+          create: [...new Set(data.negativeKeywords)].map((k) => ({ keyword: k })),
         },
         competitors: {
-          create: data.competitors.map((c) => ({ name: c })),
+          create: [...new Set(data.competitors)].map((c) => ({ name: c })),
         },
         sources: {
           create: data.sources.map((s) => ({ platform: s.platform, identifier: s.identifier })),
@@ -311,13 +311,13 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           // Clear old queries - will regenerate
           searchQueries: [],
           keywords: {
-            create: data.keywords.map((k) => ({ keyword: k })),
+            create: [...new Set(data.keywords)].map((k) => ({ keyword: k })),
           },
           negativeKeywords: {
-            create: data.negativeKeywords.map((k) => ({ keyword: k })),
+            create: [...new Set(data.negativeKeywords)].map((k) => ({ keyword: k })),
           },
           competitors: {
-            create: data.competitors.map((c) => ({ name: c })),
+            create: [...new Set(data.competitors)].map((c) => ({ name: c })),
           },
           sources: {
             create: data.sources.map((s) => ({ platform: s.platform, identifier: s.identifier })),
