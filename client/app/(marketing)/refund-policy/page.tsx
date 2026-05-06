@@ -8,17 +8,20 @@ export const metadata: Metadata = {
 
 export default function RefundPolicy() {
   return (
-    <main className="container mx-auto px-4 py-20 max-w-3xl">
+    <div className="container mx-auto px-4 py-20 max-w-3xl">
       <h1 className="text-4xl font-black tracking-tight mb-8">Refund Policy</h1>
       
       <div className="prose prose-invert space-y-6 text-muted-foreground">
         <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">1. All Sales are Final</h2>
+          <h2 className="text-xl font-bold text-foreground mb-3">1. 14-Day Money-Back Guarantee</h2>
           <p>
-            Due to the immediate, non-recoverable costs associated with our AI processing (OpenAI tokens) and infrastructure usage for real-time social listening, <strong>we do not offer refunds</strong>. 
+            We offer a 14-day money-back guarantee for new subscriptions. If you're not satisfied with {PROJECT_NAME}, you can request a full refund within the first <strong>14 days</strong> of your initial purchase.
+          </p>
+          <p className="mt-4 bg-primary/5 border border-primary/20 p-4 rounded-sm text-sm italic">
+            <strong>Usage Limit:</strong> To prevent abuse of our AI resources, refunds are only eligible if you have used <strong>less than 10%</strong> of your monthly signal quota (e.g., fewer than 100 signals for Pro plans).
           </p>
           <p className="mt-4">
-            Once a subscription payment is processed, the transaction is considered final. Please carefully review our features and the Free plan (if available) before committing to a paid subscription.
+            After the 14-day period or if the usage limit is exceeded, all sales are final. Please carefully review our features and the Free plan before upgrading. To request a refund, please email <strong>{SUPPORT_EMAIL}</strong>.
           </p>
         </section>
 
@@ -41,6 +44,6 @@ export default function RefundPolicy() {
           <p className="mt-2">Last updated: April 26, 2026</p>
         </section>
       </div>
-    </main>
+    </div>
   )
 }

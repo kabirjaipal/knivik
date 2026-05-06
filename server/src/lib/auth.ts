@@ -15,6 +15,16 @@ export const auth: any = betterAuth({
   plugins: [
     username()
   ],
+  user: {
+    additionalFields: {
+      role: { type: "string" },
+      plan: { type: "string" },
+      subscriptionStatus: { type: "string" },
+      lemonSqueezyCustomerId: { type: "string" },
+      isScanning: { type: "boolean" },
+      lastScanStatus: { type: "string" },
+    }
+  },
 
   emailAndPassword: {
     enabled: true,

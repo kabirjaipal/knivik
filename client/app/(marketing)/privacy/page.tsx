@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="container mx-auto px-4 py-24 max-w-4xl">
+    <div className="container mx-auto px-4 py-24 max-w-4xl">
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="space-y-4 text-center">
           <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">Privacy Policy</h1>
@@ -73,6 +73,6 @@ export default function PrivacyPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

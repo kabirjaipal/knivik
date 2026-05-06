@@ -11,6 +11,8 @@ import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { PLANS } from "@/lib/plans";
 
+import { PricingComparison } from "./pricing-comparison";
+
 export default function PricingClient() {
   const { user } = useAuth();
   const { billingData, isLoading: isLoadingPrices } = useBilling();
@@ -36,11 +38,11 @@ export default function PricingClient() {
     <>
       <section className="pt-24 pb-8 px-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter mb-3">
-            Simple, honest pricing.
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tight mb-4">
+            Simple Pricing.
           </h1>
-          <p className="text-base text-muted-foreground mb-7 max-w-xl mx-auto">
-            One plan for all your real-time social intelligence needs.
+          <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
+            Choose the plan that fits your growth. No hidden fees.
           </p>
 
           <div className="flex items-center justify-center gap-5 mb-6">
@@ -85,12 +87,10 @@ export default function PricingClient() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col pt-0 px-7 pb-7">
-                <ul className="space-y-2.5 mb-6 flex-1 border-t border-border/40 pt-5">
-                  {PLANS.FREE.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-3 text-sm text-muted-foreground font-medium">
-                      <div className="h-5 w-5 rounded-full bg-muted/60 flex items-center justify-center shrink-0">
-                        <Check className="h-3 w-3 text-foreground" />
-                      </div>
+                <ul className="space-y-3 mb-8 flex-1 border-t border-border/40 pt-6">
+                  {PLANS.FREE.features.slice(0, 5).map((feature) => (
+                    <li key={feature} className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <Check className="h-4 w-4 text-foreground/50 shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -143,12 +143,10 @@ export default function PricingClient() {
               </CardHeader>
               
               <CardContent className="flex-1 flex flex-col pt-0 px-7 pb-7">
-                <ul className="space-y-2.5 mb-6 flex-1 border-t border-primary/20 pt-5">
-                  {PLANS.PRO.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-3 text-sm text-foreground/90 font-semibold group/item">
-                      <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 group-hover/item:bg-primary/25 transition-all">
-                        <Zap className="h-3 w-3 text-primary fill-primary" />
-                      </div>
+                <ul className="space-y-3 mb-8 flex-1 border-t border-primary/20 pt-6">
+                  {PLANS.PRO.features.slice(0, 6).filter(f => !f.includes("2 Months Free")).map((feature) => (
+                    <li key={feature} className="flex items-center gap-3 text-sm text-foreground/90 font-medium">
+                      <Zap className="h-4 w-4 text-primary fill-primary shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -175,11 +173,36 @@ export default function PricingClient() {
               </CardContent>
             </Card>
           </div>
-        </div>
-        <div className="max-w-4xl mx-auto mt-12 text-center">
-          <p className="text-xs text-muted-foreground/60 font-medium">
-            Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns.
-          </p>
+
+          <PricingComparison />
+
+          <div className="mt-32 max-w-4xl mx-auto border-t border-border/40 pt-20">
+            <h2 className="text-3xl font-black tracking-tight mb-12 text-center">Common Questions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+              <div>
+                <h3 className="text-lg font-bold mb-3">Can I cancel my subscription?</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">Yes, you can cancel your subscription at any time from your account settings. You will continue to have access to your Pro features until the end of your current billing period.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-3">Do you offer refunds?</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">We offer a 14-day money-back guarantee for new users, provided that less than 10% of the monthly signal quota has been consumed. This helps us cover the significant costs associated with our AI processing.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-3">What is a "Signal"?</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">A signal is a high-intent mention or discussion found by our AI that matches your monitored topics. We filter out the noise so you only see the most relevant leads.</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-3">How do alerts work?</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">Pro users can set up real-time notifications via Email, Slack, or Discord. As soon as we find a relevant signal, you'll be notified instantly.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-4xl mx-auto mt-16 text-center">
+            <p className="text-xs text-muted-foreground/60 font-medium">
+              Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns.
+            </p>
+          </div>
         </div>
       </section>
     </>

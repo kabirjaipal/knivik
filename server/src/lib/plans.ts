@@ -34,7 +34,7 @@ export const PLANS = {
       "1,000 High-Intent signals / mo",
       "Reddit, HN & Twitter (X)",
       "Advanced AI Intent Scoring",
-      "Custom AI Insight Models",
+      "Advanced AI Insight Models",
       "Email, Slack & Discord alerts",
       "Full context enrichment",
       "24/7 Priority support",
@@ -54,7 +54,7 @@ export const PLANS = {
       canAccessAlerts: true,
       canAccessEnrichment: true,
       canAccessCustomPersonas: true,
-      priorityProcessing: true,
+      priorityProcessing: false,
     }
   },
 } as const;

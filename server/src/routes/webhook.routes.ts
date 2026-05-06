@@ -125,6 +125,11 @@ async function processLemonSqueezyEvent(eventName: string, data: any, meta: any)
       await handleOrderCreated(data, meta);
       break;
 
+    case 'order_refunded':
+    case 'subscription_payment_refunded':
+      await handleRefundEvent(data);
+      break;
+
     case 'order_created':
       // We can log this but we don't need to record a payment here for subscriptions
       // as subscription_payment_success will handle it.
@@ -247,6 +252,32 @@ async function handleOrderCreated(data: any, meta: any) {
   );
 
   logger.info({ userId, lemonSqueezyPaymentId, amount }, 'Payment recorded from order');
+}
+
+async function handleRefundEvent(data: any) {
+  const lemonSqueezyPaymentId = data.id; // This matches order_id or payment_id
+  const attributes = data.attributes;
+  
+  // 1. Find the payment record
+  const payment = await db.client.payment.findUnique({
+    where: { lemonSqueezyPaymentId }
+  });
+
+  if (!payment) {
+    logger.warn({ lemonSqueezyPaymentId }, 'Payment record not found for refund event');
+    return;
+  }
+
+  // 2. Update payment status to refunded
+  await db.client.payment.update({
+    where: { lemonSqueezyPaymentId },
+    data: { status: 'refunded' }
+  });
+
+  // 3. Downgrade user to FREE immediately (standard for refunds)
+  await downgradeToFree(payment.userId);
+  
+  logger.info({ userId: payment.userId, paymentId: lemonSqueezyPaymentId }, 'User downgraded and payment marked as refunded');
 }
 
 export default router;
