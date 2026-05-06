@@ -18,11 +18,17 @@ import {
   Award,
   Box,
   Zap,
-  BarChart3
+  BarChart3,
+  Globe,
+  Clock,
+  Cpu,
+  Coins
 } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 
 interface MetricData {
   label: string;
@@ -44,7 +50,6 @@ interface AnalyticsData {
   topProduct: { name: string; count: number } | null;
   activeProductsCount: number;
   isAdvancedAnalyticsEnabled: boolean;
-  estimatedPipelineValue: number;
   leadConversionRate: string;
 }
 
@@ -55,7 +60,6 @@ interface LlmBreakdown {
   outputTokens: number;
   totalTokens: number;
   requestCount: number;
-  estimatedCost: number;
 }
 
 interface LlmUsageData {
@@ -64,7 +68,6 @@ interface LlmUsageData {
     inputTokens: number;
     outputTokens: number;
     totalTokens: number;
-    estimatedCost: number;
     requestCount: number;
   };
 }
@@ -73,15 +76,18 @@ export default function AnalyticsPage() {
   const { user, loading: authLoading } = useAuth()
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [llmUsage, setLlmUsage] = useState<LlmUsageData | null>(null)
+  const [usageStats, setUsageStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState<'7d' | '30d'>('7d')
   const [error, setError] = useState<string | null>(null)
   const hasFetchedAnalytics = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
+  const lastRange = useRef<'7d' | '30d'>('7d')
 
-  const fetchAnalytics = useCallback(async () => {
+  const fetchAnalytics = useCallback(async (range: '7d' | '30d') => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/analytics`, { credentials: 'include' })
+      const res = await fetch(`${apiUrl}/analytics?range=${range}`, { credentials: 'include' })
       if (!res.ok) throw new Error("Failed to fetch analytics")
       const result = await res.json()
       setData(result.data)
@@ -102,18 +108,37 @@ export default function AnalyticsPage() {
     }
   }, [])
 
+  const fetchUsageStats = useCallback(async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(`${apiUrl}/usage/stats`, { credentials: 'include' })
+      if (res.ok) {
+        const result = await res.json()
+        setUsageStats(result.data)
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch usage stats:", err.message)
+    }
+  }, [])
+
   useEffect(() => {
     if (authLoading || !user) return
     
-    if (hasFetchedAnalytics.current && lastFetchedUserId.current === user.id) return
+    // Check if we need to fetch (user changed or range changed)
+    const needsFetch = !hasFetchedAnalytics.current || 
+                       lastFetchedUserId.current !== user.id || 
+                       lastRange.current !== timeRange;
+
+    if (!needsFetch) return
     
     hasFetchedAnalytics.current = true
     lastFetchedUserId.current = user.id
+    lastRange.current = timeRange;
 
     setLoading(true)
-    Promise.all([fetchAnalytics(), fetchLlmUsage()])
+    Promise.all([fetchAnalytics(timeRange), fetchLlmUsage(), fetchUsageStats()])
       .finally(() => setLoading(false))
-  }, [user, authLoading, fetchAnalytics, fetchLlmUsage])
+  }, [user, authLoading, timeRange, fetchAnalytics, fetchLlmUsage, fetchUsageStats])
 
   if (loading) {
     return (
@@ -167,23 +192,51 @@ export default function AnalyticsPage() {
       animate={{ opacity: 1 }}
       className="space-y-6 pb-20"
     >
-      {/* Premium Header - More Compact */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border/40">
+      {/* Premium Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-border/40">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[9px]">
-            <Activity className="w-3 h-3" /> Intel Pulse
+            <Activity className="w-3 h-3" /> System Intelligence
           </div>
           <h1 className="text-3xl font-black tracking-tighter text-foreground leading-none">
-            Analytics<span className="text-primary">.</span>
+            Intelligence Pulse<span className="text-primary">.</span>
           </h1>
           <p className="text-muted-foreground text-xs font-medium">Monitoring {data.activeProductsCount} products across {data.platformDistribution.length || 0} channels.</p>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-8">
-          <SummaryStat label="Status" value="Live" icon={Zap} color="text-amber-500" />
-          <SummaryStat label="Velocity" value={`${data.leadVelocity > 0 ? '+' : ''}${data.leadVelocity}%`} icon={TrendingUp} color={data.leadVelocity >= 0 ? "text-emerald-500" : "text-destructive"} />
-          <SummaryStat label="Scanning" value={data.conversationsScanned.toLocaleString()} icon={Search} />
-          <SummaryStat label="Total Leads" value={data.totalLeads.toLocaleString()} icon={Target} color="text-primary" />
+        {/* Resource Consumption Pulse */}
+        <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+           {/* Signal Quota */}
+           <div className="min-w-[180px] p-4 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
+              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex justify-between items-center mb-3">
+                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Lead Quota</span>
+                 <Badge variant="outline" className="text-[8px] font-black h-4 px-1.5 border-primary/30 text-primary">
+                    {usageStats?.plan.name}
+                 </Badge>
+              </div>
+              <div className="flex items-baseline gap-1.5 mb-2">
+                 <span className="text-2xl font-black tracking-tighter">{usageStats?.leads.used}</span>
+                 <span className="text-[10px] font-bold text-muted-foreground">/ {usageStats?.leads.limit}</span>
+              </div>
+              <Progress value={(usageStats?.leads.used / usageStats?.leads.limit) * 100} className="h-1 bg-muted" />
+           </div>
+
+           {/* Manual Hours Saved */}
+           <div className="min-w-[180px] p-4 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
+              <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex justify-between items-center mb-3">
+                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Manual ROI</span>
+                 <Clock className="w-3 h-3 text-blue-500 opacity-50" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                 <span className="text-2xl font-black tracking-tighter text-blue-500">
+                    {Math.round((usageStats?.leads.used || 0) * 0.5 + (llmUsage?.totals.requestCount || 0) * 0.1)}
+                 </span>
+                 <span className="text-[10px] font-bold text-muted-foreground uppercase">Hrs Saved</span>
+              </div>
+              <p className="text-[9px] font-bold text-muted-foreground mt-2">AI filtered {(usageStats?.leads.used || 0) * 15} noise posts</p>
+           </div>
         </div>
       </div>
 
@@ -197,8 +250,24 @@ export default function AnalyticsPage() {
                   <TrendingUp className="w-3.5 h-3.5 text-primary" /> Lead Volume
                 </CardTitle>
                 <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-md">
-                   <button className="px-2 py-0.5 text-[9px] font-black bg-background shadow-xs rounded-sm">7D</button>
-                   <button className="px-2 py-0.5 text-[9px] font-bold text-muted-foreground">30D</button>
+                   <button 
+                    onClick={() => setTimeRange('7d')}
+                    className={cn(
+                      "px-2 py-0.5 text-[9px] font-black rounded-sm transition-all",
+                      timeRange === '7d' ? "bg-background shadow-xs text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    7D
+                  </button>
+                   <button 
+                    onClick={() => setTimeRange('30d')}
+                    className={cn(
+                      "px-2 py-0.5 text-[9px] font-black rounded-sm transition-all",
+                      timeRange === '30d' ? "bg-background shadow-xs text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    30D
+                  </button>
                 </div>
              </div>
           </CardHeader>
@@ -319,40 +388,80 @@ export default function AnalyticsPage() {
          </Card>
       </div>
 
-      {/* Row 3: Channels & ROI */}
-      <div className="grid lg:grid-cols-3 gap-6">
-         {/* Channels */}
+      {/* Row 3: Signal Sources (Full Width) */}
+      <div className="grid grid-cols-1 gap-6">
+         {/* Signal Sources */}
          <Card className="border-none bg-card shadow-xl shadow-black/5">
-            <CardHeader className="py-3 px-6 border-b border-border/40">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Channels</CardTitle>
+            <CardHeader className="py-3 px-6 border-b border-border/40 flex flex-row items-center justify-between">
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Signal Distribution & Efficiency</CardTitle>
+              <Globe className="w-3 h-3 text-muted-foreground/30" />
             </CardHeader>
-            <CardContent className="p-5 space-y-4">
-               {data.platformDistribution.map((item, i) => (
-                 <div key={i} className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</span>
-                    <span className="text-xs font-black">{item.count} Leads</span>
-                 </div>
-               ))}
+            <CardContent className="p-5">
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {usageStats?.leads.bySource.map((source: any, i: number) => {
+                    const colors: Record<string, string> = {
+                      'REDDIT': 'text-orange-500 bg-orange-500/10 border-orange-500/20',
+                      'TWITTER': 'text-sky-500 bg-sky-500/10 border-sky-500/20',
+                      'HACKERNEWS': 'text-amber-600 bg-amber-600/10 border-amber-600/20',
+                    }
+                    const icons: Record<string, any> = {
+                      'REDDIT': <Activity className="w-3 h-3" />,
+                      'TWITTER': <Zap className="w-3 h-3" />,
+                      'HACKERNEWS': <TrendingUp className="w-3 h-3" />,
+                    }
+                    
+                    return (
+                      <div
+                        key={source.platform}
+                        className="flex flex-col gap-3 p-5 rounded-2xl bg-muted/30 border border-border/50 group hover:border-primary/30 transition-all"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className={cn("p-2 rounded-lg border", colors[source.platform])}>
+                            {icons[source.platform]}
+                          </div>
+                          <span className="text-[9px] font-black tracking-widest text-muted-foreground">
+                            {source.count} SIGNALS
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-widest leading-none">{source.platform}</p>
+                          <div className="mt-3 flex items-baseline gap-1">
+                            <span className="text-3xl font-black tracking-tighter">{source.percentage}%</span>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Efficiency</span>
+                          </div>
+                          <Progress value={source.percentage} className="mt-4 h-1.5 bg-muted" />
+                        </div>
+                      </div>
+                    )
+                  })}
+               </div>
             </CardContent>
          </Card>
+      </div>
 
-         {/* ROI - Pipe Value */}
+      {/* Row 4: ROI & Pipeline */}
+      <div className="grid lg:grid-cols-2 gap-6">
+         {/* ROI - Intent Precision */}
          <Card className={cn(
-            "border-none overflow-hidden relative group",
+            "border-none overflow-hidden relative group min-h-[140px]",
             data.isAdvancedAnalyticsEnabled ? "bg-emerald-500/5" : "bg-muted/30"
          )}>
             <CardContent className="p-6">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Est. Pipeline Value</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">Intent Precision</p>
               <h3 className="text-4xl font-black tracking-tighter">
-                {data.isAdvancedAnalyticsEnabled ? `$${data.estimatedPipelineValue.toLocaleString()}` : "$ —"}
+                {data.isAdvancedAnalyticsEnabled ? `${data.averageIntentScore}%` : "— %"}
               </h3>
+              <p className="text-[10px] font-bold text-muted-foreground mt-2 flex items-center gap-1">
+                 <Percent className="w-3 h-3 text-emerald-500" />
+                 Avg. Lead Quality
+              </p>
               {!data.isAdvancedAnalyticsEnabled && <ProOverlay />}
             </CardContent>
          </Card>
 
          {/* ROI - Conv Rate */}
          <Card className={cn(
-            "border-none overflow-hidden relative group",
+            "border-none overflow-hidden relative group min-h-[140px]",
             data.isAdvancedAnalyticsEnabled ? "bg-primary/5" : "bg-muted/30"
          )}>
             <CardContent className="p-6">
@@ -365,20 +474,22 @@ export default function AnalyticsPage() {
          </Card>
       </div>
 
-      {/* AI Layer - Bottom */}
-      <div className="grid lg:grid-cols-2 gap-6 pt-4">
+      {/* Row 5: AI Layer & Performance */}
+      <div className="grid lg:grid-cols-2 gap-6">
           <Card className="border-none bg-card shadow-xl shadow-black/5">
             <CardHeader className="py-3 px-6 border-b border-border/40 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Brain className="w-3.5 h-3.5" /> Task Efficiency
+                <Brain className="w-3.5 h-3.5" /> Task Distribution
               </CardTitle>
-              <div className="text-[10px] font-black text-foreground">${llmUsage?.totals.estimatedCost.toFixed(4)}</div>
+              <div className="text-[10px] font-black text-foreground">
+                {llmUsage?.totals.requestCount || 0} AI Tasks Completed
+              </div>
             </CardHeader>
             <CardContent className="p-5 space-y-4">
                {llmUsage?.breakdown.map((item, i) => (
                  <div key={i} className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
                     <span className="text-muted-foreground">{item.action.replace('_', ' ')}</span>
-                    <span>{Math.round((item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100)}%</span>
+                    <span>{Math.round((item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100)}% Effort</span>
                  </div>
                ))}
             </CardContent>

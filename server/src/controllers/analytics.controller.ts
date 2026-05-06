@@ -13,6 +13,7 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
   }
 
   const userId = req.user.id;
+  const range = req.query['range'] === '30d' ? 30 : 7;
 
   // 1. Get all products for this user
   const products = await db.client.product.findMany({
@@ -44,27 +45,26 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
         topProduct: null,
         activeProductsCount: 0,
         isAdvancedAnalyticsEnabled,
-        estimatedPipelineValue: 0,
         leadConversionRate: 0
       }
     });
   }
 
-  // 2. Leads over the last 7 days
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // 2. Leads over the requested range
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - range);
 
   const leadsOverTimeRaw = await db.client.lead.findMany({
     where: {
       productId: { in: productIds },
-      createdAt: { gte: sevenDaysAgo }
+      createdAt: { gte: startDate }
     },
     select: { createdAt: true }
   });
 
-  // Group by day manually for simplicity in JS
+  // Group by day manually
   const dailyCounts: Record<string, number> = {};
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < range; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dayKey = d.toISOString().split('T')[0];
@@ -203,10 +203,11 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
     .slice(0, 10)
     .map(([word, count]) => ({ label: word, count }));
 
-  // 12. Lead Velocity (Growth Rate)
+  // 12. Lead Velocity (Growth Rate - always based on 7-day windows)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  // sevenDaysAgo is already defined at the top of the function
 
   const leadsLast7 = await db.client.lead.count({
     where: { productId: { in: productIds }, createdAt: { gte: sevenDaysAgo } }
@@ -223,9 +224,6 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
   }
 
   const totalConverted = statusDistRaw.find(s => s.status === 'CONVERTED')?._count.id || 0;
-  
-  // Default lead value assumption: $250
-  const estimatedPipelineValue = totalConverted * 250;
   const leadConversionRate = totalLeads > 0 ? ((totalConverted / totalLeads) * 100).toFixed(1) : 0;
 
   res.status(200).json({
@@ -245,7 +243,6 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
       topProduct,
       activeProductsCount: products.length,
       isAdvancedAnalyticsEnabled,
-      estimatedPipelineValue,
       leadConversionRate
     },
     requestId: req.requestId
@@ -279,9 +276,6 @@ export const getLlmUsage = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   const data = usageStats.map(stat => {
     const model = modelMap.get(stat.modelId);
-    const inputCost = model ? (stat._sum.inputTokens || 0) * (model.inputPrice / 1_000_000) : 0;
-    const outputCost = model ? (stat._sum.outputTokens || 0) * (model.outputPrice / 1_000_000) : 0;
-    
     return {
       modelId: stat.modelId,
       action: stat.action,
@@ -289,7 +283,6 @@ export const getLlmUsage = asyncHandler(async (req: AuthenticatedRequest, res: R
       outputTokens: stat._sum.outputTokens || 0,
       totalTokens: stat._sum.totalTokens || 0,
       requestCount: stat._count.id,
-      estimatedCost: inputCost + outputCost,
     };
   });
 
@@ -297,9 +290,8 @@ export const getLlmUsage = asyncHandler(async (req: AuthenticatedRequest, res: R
     inputTokens: acc.inputTokens + curr.inputTokens,
     outputTokens: acc.outputTokens + curr.outputTokens,
     totalTokens: acc.totalTokens + curr.totalTokens,
-    estimatedCost: acc.estimatedCost + curr.estimatedCost,
     requestCount: acc.requestCount + curr.requestCount,
-  }), { inputTokens: 0, outputTokens: 0, totalTokens: 0, estimatedCost: 0, requestCount: 0 });
+  }), { inputTokens: 0, outputTokens: 0, totalTokens: 0, requestCount: 0 });
 
   res.status(200).json({
     success: true,

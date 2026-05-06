@@ -197,10 +197,16 @@ Return your analysis as JSON:
 
     // Log LLM usage
     setImmediate(() => {
+      // If we only analyzed one product, link this log to it
+      const singleProductId = collectedPostsByProduct.length === 1 
+        ? collectedPostsByProduct[0].product.id 
+        : null;
+
       logLlmUsage({
         action: 'batch_analysis',
         model: 'llama-3.3-70b-versatile',
         userId,
+        productId: singleProductId,
         inputTokens: usage?.prompt_tokens || 0,
         outputTokens: usage?.completion_tokens || 0,
         latencyMs: elapsed

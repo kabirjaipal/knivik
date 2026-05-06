@@ -322,7 +322,7 @@ export default function DashboardPage() {
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
   const router = useRouter()
   const [socket, setSocket] = useState<Socket | null>(null)
-  const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, estimatedCost: number, requestCount: number } } | null>(null)
+  const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, requestCount: number } } | null>(null)
   const hasFetchedDashboard = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
 
@@ -471,10 +471,10 @@ export default function DashboardPage() {
               { label: 'Competitor Alerts', value: competitorLeads, icon: Flame, sub: 'High-poach leads', subColor: 'text-destructive' },
               { label: 'Last 24h', value: recentSignals, icon: Clock, sub: 'New signals', subColor: 'text-muted-foreground' },
               { 
-                label: 'AI Usage (USD)', 
-                value: llmUsage ? `$${llmUsage.totals.estimatedCost.toFixed(4)}` : '$0.000', 
+                label: 'Autonomous Tasks', 
+                value: llmUsage?.totals.requestCount || 0, 
                 icon: Brain, 
-                sub: `${llmUsage?.totals.requestCount || 0} AI inferences`, 
+                sub: 'AI Inferences Run', 
                 subColor: 'text-primary' 
               },
             ].map((m, i) => (
