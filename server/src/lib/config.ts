@@ -32,9 +32,6 @@ const configSchema = z.object({
   TRUST_PROXY: envBool(true),
   REQUEST_BODY_LIMIT: z.string().default('1mb'),
   REDIS_URL: z.string().optional(),
-  // DB request logging controls
-  LOG_REQUESTS_TO_DB: envBool(false),
-  LOG_DB_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
   LOG_DB_MAX_BODY_LENGTH: z.coerce.number().default(2000),
   // Prisma logging controls
   PRISMA_LOG_QUERIES: envBool(false),

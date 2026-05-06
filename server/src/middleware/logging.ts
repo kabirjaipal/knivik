@@ -47,7 +47,6 @@ const pinoHttpLogger = pinoHttpFactory({
 export const httpLogger = pinoHttpLogger;
 
 export const dbLogger = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  if (!config.LOG_REQUESTS_TO_DB) return next();
   const startTime = Date.now();
   
   const originalSend = res.send;
@@ -59,8 +58,6 @@ export const dbLogger = async (req: Request, res: Response, next: NextFunction):
   };
 
   res.on('finish', async () => {
-    // sampling to reduce write load
-    if (config.LOG_DB_SAMPLE_RATE < 1 && Math.random() > config.LOG_DB_SAMPLE_RATE) return;
     const responseTime = Date.now() - startTime;
     
     const redactSensitive = (obj: unknown): unknown => {
