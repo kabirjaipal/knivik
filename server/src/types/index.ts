@@ -25,7 +25,7 @@ export interface User {
   subscriptionStatus: string | null;
   billingCycle: string | null;
   currentPeriodEnd: Date | null;
-  lemonSqueezyCustomerId: string | null;
+  dodoCustomerId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

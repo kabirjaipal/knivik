@@ -15,7 +15,7 @@ interface User {
   plan?: string
   metadata?: any
   subscriptionStatus?: string | null
-  lemonSqueezyCustomerId?: string | null
+  dodoCustomerId?: string | null
   isScanning?: boolean
   lastScanStatus?: string
 }
@@ -30,7 +30,7 @@ interface ExtendedUser {
   role?: string
   plan?: string
   subscriptionStatus?: string | null
-  lemonSqueezyCustomerId?: string | null
+  dodoCustomerId?: string | null
   isScanning?: boolean
   lastScanStatus?: string
 }
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: extendedUser.role || 'user',
       plan: extendedUser.plan || 'FREE',
       subscriptionStatus: extendedUser.subscriptionStatus || null,
-      lemonSqueezyCustomerId: extendedUser.lemonSqueezyCustomerId || null,
+      dodoCustomerId: extendedUser.dodoCustomerId || null,
       isScanning: extendedUser.isScanning,
       lastScanStatus: extendedUser.lastScanStatus,
     }

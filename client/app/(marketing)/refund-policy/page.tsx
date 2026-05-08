@@ -35,12 +35,12 @@ export default function RefundPolicy() {
         <section>
           <h2 className="text-xl font-bold text-foreground mb-3">3. Exceptions</h2>
           <p>
-            In the rare event of a duplicate charge or technical error originating entirely from our payment processor (Lemon Squeezy), please contact us at <strong>{SUPPORT_EMAIL}</strong> within 7 days of the charge for an adjustment.
+            We use Dodo Payments for payments, and as a Merchant of Record, they are the data controller of your checkout information. You can read how they handle your data in the <a href="https://www.dodopayments.com/privacy" target="_blank" className="text-primary hover:underline">Dodo Payments Privacy Policy</a>.
           </p>
         </section>
 
         <section className="pt-8 border-t border-border/40 text-xs">
-          <p>Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns.</p>
+          <p>Our order process is conducted by our online reseller & Merchant of Record, DodoPayments.com, who also handles all customer service inquiries and returns.</p>
           <p className="mt-2">Last updated: April 26, 2026</p>
         </section>
       </div>

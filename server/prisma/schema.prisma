@@ -21,7 +21,7 @@ model User {
   metadata           Json?
   lastScanStatus     String?
   isScanning         Boolean?       @default(false)
-  lemonSqueezyCustomerId String?        @unique
+  dodoCustomerId     String?        @unique
   subscriptionStatus String?
   billingCycle       String?
   currentPeriodEnd   DateTime?
@@ -388,8 +388,8 @@ model LlmUsageLog {
 model Subscription {
   id                         String    @id @default(cuid())
   userId                     String
-  lemonSqueezySubscriptionId String    @unique
-  lemonSqueezyCustomerId     String
+  dodoSubscriptionId         String?   @unique
+  dodoCustomerId             String?
   plan                       UserPlan
   billingCycle               String
   status                     String
@@ -405,7 +405,7 @@ model Subscription {
 model Payment {
   id                    String   @id @default(cuid())
   userId                String
-  lemonSqueezyPaymentId String   @unique
+  dodoPaymentId         String?  @unique
   amount                Int
   currency              String
   status                String

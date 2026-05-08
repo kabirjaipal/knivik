@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
       "lucide-react", 
       "framer-motion", 
       "radix-ui", 
-      "@lemonsqueezy/lemonsqueezy.js"
     ],
   },
 
@@ -43,12 +42,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.lemonsqueezy.com https://va.vercel-scripts.com",
-              "style-src 'self' 'unsafe-inline' https://*.lemonsqueezy.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com",
+              "style-src 'self' 'unsafe-inline' https://*.dodopayments.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "frame-src 'self' https://*.lemonsqueezy.com",
-              "connect-src 'self' https://*.lemonsqueezy.com https://va.vercel-scripts.com"
+              "frame-src 'self' https://*.dodopayments.com",
+              "connect-src 'self' https://*.dodopayments.com https://va.vercel-scripts.com"
             ].join("; "),
           },
 

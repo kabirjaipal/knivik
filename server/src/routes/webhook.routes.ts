@@ -9,164 +9,173 @@ import {
   recordPayment, 
   upsertSubscription 
 } from '../lib/billing.js';
-import { getPlanFromVariantId } from '../lib/plans.js';
+import { getPlanFromProductId } from '../lib/plans.js';
+
+import { dodo } from '../lib/dodo.js';
 
 const router = Router();
 
 /**
- * POST /api/webhooks/lemonsqueezy
- * Handle Lemon Squeezy webhook events
+ * POST /api/webhooks/dodopayments
+ * Handle Dodo Payments webhook events
  */
-router.post('/lemonsqueezy', async (req: any, res: any) => {
-  logger.info('🔔 Webhook request received at /api/webhooks/lemonsqueezy');
+router.post('/dodopayments', async (req: any, res: any) => {
+  logger.info('🔔 Webhook request received at /api/webhooks/dodopayments');
   
   try {
-    const signature = req.headers['x-signature'] as string;
-    const secret = config.LEMON_SQUEEZY_WEBHOOK_SECRET || '';
-    
-    if (!signature) {
-      logger.error('No signature header found');
-      return res.status(401).json({ success: false, error: 'No signature' });
-    }
-
-    // Use the rawBody string captured by the verify function in index.ts
     const rawBody = req.rawBody;
     
     if (!rawBody) {
-      logger.error('No raw body found for signature verification');
+      logger.error('No raw body found for webhook verification');
       return res.status(400).json({ success: false, error: 'Missing raw body' });
     }
 
-    // Verify signature
-    if (secret) {
-      const hmac = crypto.createHmac('sha256', secret);
-      const digest = Buffer.from(hmac.update(rawBody).digest('hex'), 'utf8');
-      const signatureBuffer = Buffer.from(signature, 'utf8');
-
-      if (digest.length !== signatureBuffer.length || !crypto.timingSafeEqual(digest, signatureBuffer)) {
-        logger.error({ signature }, 'Lemon Squeezy signature verification failed');
-        return res.status(401).json({ success: false, error: 'Invalid signature' });
-      }
-    } else if (config.NODE_ENV === 'production') {
-      logger.error('CRITICAL: Lemon Squeezy webhook received in PRODUCTION without LEMON_SQUEEZY_WEBHOOK_SECRET');
-      return res.status(500).json({ success: false, error: 'Internal configuration error' });
+    // Official Dodo SDK helper for Svix (Standard Webhooks) verification
+    let payload;
+    try {
+      payload = dodo.webhooks.unwrap(rawBody, { headers: req.headers });
+    } catch (err) {
+      logger.error({ err, headers: req.headers }, 'Dodo Payments signature verification failed via SDK');
+      return res.status(401).json({ success: false, error: 'Invalid signature' });
     }
 
-    const payload = JSON.parse(rawBody);
-    const eventName = payload.meta.event_name;
+    const eventName = payload.type;
     const data = payload.data;
 
-    // IDEMPOTENCY CHECK: Use signature as unique key for this specific message
+    logger.info({ eventName, payload }, 'Verified Dodo Payments webhook received');
+
+    // IDEMPOTENCY CHECK
+    const eventId = payload.event_id || (req.headers['webhook-signature'] as string);
     const existingEvent = await db.client.webhookEvent.findUnique({
-      where: { eventId: signature }
+      where: { eventId }
     });
 
     if (existingEvent) {
-      logger.info({ signature, eventName }, 'Webhook event already processed (idempotent skip)');
+      logger.info({ eventId, eventName }, 'Webhook event already processed (idempotent skip)');
       return res.json({ success: true, message: 'Already processed' });
     }
 
-    // Record the event as "received"
+    // Record the event
     const webhookEvent = await db.client.webhookEvent.create({
       data: {
-        eventId: signature,
+        eventId,
         eventName,
         payload: payload,
         processed: false
       }
     });
 
-    logger.info({ eventName, id: data.id, webhookEventId: webhookEvent.id }, 'Received verified Lemon Squeezy webhook');
+    logger.info({ eventName, webhookEventId: webhookEvent.id }, 'Received verified Dodo Payments webhook');
 
-    // RESPOND EARLY to avoid timeouts
+    // RESPOND EARLY
     res.json({ success: true });
 
     // PROCESS ASYNCHRONOUSLY
     (async () => {
       try {
-        await processLemonSqueezyEvent(eventName, data, payload.meta);
+        await processDodoEvent(eventName, data);
         
-        // Mark as processed
         await db.client.webhookEvent.update({
           where: { id: webhookEvent.id },
           data: { processed: true }
         });
         
-        logger.info({ eventName, id: data.id }, 'Successfully processed Lemon Squeezy event');
+        logger.info({ eventName }, 'Successfully processed Dodo Payments event');
       } catch (error: any) {
         logger.error({ 
           error: error.message, 
           eventName, 
-          id: data.id,
           webhookEventId: webhookEvent.id 
-        }, 'Async processing of Lemon Squeezy event failed');
+        }, 'Async processing of Dodo Payments event failed');
       }
     })();
 
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Lemon Squeezy webhook validation failed');
+    logger.error({ error: error.message }, 'Dodo Payments webhook processing failed');
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
-async function processLemonSqueezyEvent(eventName: string, data: any, meta: any) {
+async function processDodoEvent(eventName: string, data: any) {
   switch (eventName) {
-    case 'subscription_created':
-    case 'subscription_updated':
-      await handleSubscriptionEvent(data, meta);
+    case 'subscription.active':
+    case 'subscription.updated':
+      await handleSubscriptionEvent(data);
       break;
 
-    case 'subscription_cancelled':
-    case 'subscription_expired':
+    case 'subscription.cancelled':
       await handleSubscriptionTerminated(data);
       break;
 
-    case 'subscription_payment_success':
-      await handleOrderCreated(data, meta);
-      break;
-
-    case 'order_refunded':
-    case 'subscription_payment_refunded':
-      await handleRefundEvent(data);
-      break;
-
-    case 'order_created':
-      // We can log this but we don't need to record a payment here for subscriptions
-      // as subscription_payment_success will handle it.
-      logger.info({ id: data.id }, 'Order created (subscription initial order)');
+    case 'payment.succeeded':
+      await handleCheckoutCompleted(data);
       break;
 
     default:
-      logger.info({ eventName }, 'Unhandled Lemon Squeezy event type');
+      logger.info({ eventName }, 'Unhandled Dodo Payments event type');
   }
 }
 
-async function handleSubscriptionEvent(data: any, meta: any) {
-  const attributes = data.attributes;
-  const lemonSqueezySubscriptionId = data.id;
-  const lemonSqueezyCustomerId = String(attributes.customer_id);
-  const variantId = String(attributes.variant_id);
-  const status = attributes.status;
-  const renewsAt = attributes.renews_at;
-  const endsAt = attributes.ends_at;
+async function handleCheckoutCompleted(data: any) {
+  const userId = data.metadata?.userId;
+  // Dodo can put product_id at top level or inside product_cart
+  const productId = data.product_id || data.product_cart?.[0]?.product_id;
+  const customerId = data.customer?.customer_id;
+  const paymentId = data.transaction_id || data.payment_id;
+  const amount = data.total_amount || data.amount;
+  const currency = data.currency;
+  const status = data.status;
 
-  const planMapping = getPlanFromVariantId(variantId);
+  if (!userId) {
+    logger.error({ paymentId }, 'No userId found in payment metadata');
+    return;
+  }
+
+  // Record payment
+  await recordPayment(
+    userId,
+    paymentId,
+    amount,
+    currency,
+    status
+  );
+
+  // If it's a subscription, the subscription.active event will also fire
+  // but we can proactively upgrade here if we have enough info
+  const planInfo = getPlanFromProductId(productId);
+  if (planInfo) {
+    await updateUserPlan(
+      userId,
+      planInfo.plan,
+      'active',
+      planInfo.billingCycle,
+      null,
+      undefined,
+      customerId
+    );
+  }
+}
+
+async function handleSubscriptionEvent(data: any) {
+  const dodoSubscriptionId = data.subscription_id;
+  const dodoCustomerId = data.customer_id;
+  const productId = data.product_id;
+  const status = data.status; // 'active', 'canceled', etc.
+  const currentPeriodEnd = data.next_billing_date ? new Date(data.next_billing_date) : null;
+  const userId = data.metadata?.userId;
+
+  const planMapping = getPlanFromProductId(productId);
   if (!planMapping) {
-    logger.error({ variantId }, 'Unknown variant ID in subscription');
+    logger.error({ productId }, 'Unknown product ID in subscription');
+    return;
+  }
+
+  if (!userId) {
+    logger.error({ dodoSubscriptionId }, 'No userId found in subscription metadata');
     return;
   }
 
   const { plan, billingCycle } = planMapping;
-  // Look in meta.custom_data
-  const userId = meta.custom_data?.user_id || meta.custom_data?.userId;
-
-  if (!userId) {
-    logger.error({ lemonSqueezySubscriptionId }, 'No user_id found in webhook meta.custom_data');
-    return;
-  }
-
-  // Use renews_at for the next billing date, fallback to ends_at
-  const nextBillingDate = renewsAt ? new Date(renewsAt) : (endsAt ? new Date(endsAt) : null);
 
   // Update user plan
   await updateUserPlan(
@@ -174,110 +183,52 @@ async function handleSubscriptionEvent(data: any, meta: any) {
     plan,
     status,
     billingCycle,
-    nextBillingDate,
-    lemonSqueezySubscriptionId,
-    lemonSqueezyCustomerId
+    currentPeriodEnd,
+    dodoSubscriptionId,
+    dodoCustomerId
   );
 
   // Upsert subscription record
   await upsertSubscription(
     userId,
-    lemonSqueezySubscriptionId,
-    lemonSqueezyCustomerId,
+    dodoSubscriptionId,
+    dodoCustomerId,
     plan,
     billingCycle,
     status,
-    nextBillingDate
+    currentPeriodEnd
   );
-
-  logger.info({ userId, plan, status }, 'Subscription event processed');
 }
 
 async function handleSubscriptionTerminated(data: any) {
-  const lemonSqueezySubscriptionId = data.id;
+  const dodoSubscriptionId = data.subscription_id;
 
   const subscription = await db.client.subscription.findUnique({
-    where: { lemonSqueezySubscriptionId },
+    where: { dodoSubscriptionId },
   });
 
   if (!subscription) {
-    logger.warn({ lemonSqueezySubscriptionId }, 'Subscription not found for termination');
+    logger.warn({ dodoSubscriptionId }, 'Subscription not found for termination');
     return;
   }
 
-  // Check if user has any OTHER active subscriptions before downgrading
+  // Check if user has any OTHER active subscriptions
   const otherActiveSubscription = await db.client.subscription.findFirst({
     where: {
       userId: subscription.userId,
       status: 'active',
-      NOT: { lemonSqueezySubscriptionId },
+      NOT: { dodoSubscriptionId },
     },
   });
 
   if (!otherActiveSubscription) {
     await downgradeToFree(subscription.userId);
-    logger.info({ userId: subscription.userId }, 'User downgraded to FREE');
-  } else {
-    logger.info({ userId: subscription.userId }, 'User remains PRO due to another active subscription');
   }
 
-  // Update this specific subscription record to match the terminated status
   await db.client.subscription.update({
-    where: { lemonSqueezySubscriptionId },
-    data: { status: data.attributes.status },
+    where: { dodoSubscriptionId },
+    data: { status: 'canceled' },
   });
-}
-
-async function handleOrderCreated(data: any, meta: any) {
-  const attributes = data.attributes;
-  const lemonSqueezyPaymentId = data.id;
-  const lemonSqueezyCustomerId = String(attributes.customer_id);
-  // Look in meta.custom_data
-  const userId = meta.custom_data?.user_id || meta.custom_data?.userId;
-  const amount = attributes.total; // in cents
-  const currency = attributes.currency;
-  const status = attributes.status;
-
-  if (!userId) {
-    logger.warn({ lemonSqueezyPaymentId }, 'No user_id found in webhook meta.custom_data');
-    return;
-  }
-
-  await recordPayment(
-    userId,
-    lemonSqueezyPaymentId,
-    amount,
-    currency,
-    status
-  );
-
-  logger.info({ userId, lemonSqueezyPaymentId, amount }, 'Payment recorded from order');
-}
-
-async function handleRefundEvent(data: any) {
-  const lemonSqueezyPaymentId = data.id; // This matches order_id or payment_id
-  const attributes = data.attributes;
-  
-  // 1. Find the payment record
-  const payment = await db.client.payment.findUnique({
-    where: { lemonSqueezyPaymentId }
-  });
-
-  if (!payment) {
-    logger.warn({ lemonSqueezyPaymentId }, 'Payment record not found for refund event');
-    return;
-  }
-
-  // 2. Update payment status to refunded
-  await db.client.payment.update({
-    where: { lemonSqueezyPaymentId },
-    data: { status: 'refunded' }
-  });
-
-  // 3. Downgrade user to FREE immediately (standard for refunds)
-  await downgradeToFree(payment.userId);
-  
-  logger.info({ userId: payment.userId, paymentId: lemonSqueezyPaymentId }, 'User downgraded and payment marked as refunded');
 }
 
 export default router;

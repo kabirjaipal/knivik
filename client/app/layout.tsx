@@ -8,7 +8,6 @@ import { PROJECT_NAME, PROJECT_DESCRIPTION, PROJECT_URL } from "@/lib/constants"
 import { siteConfig } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import LemonSqueezyScript from "@/components/billing/LemonSqueezyScript";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -137,7 +136,6 @@ export default function RootLayout({
         <Toaster position="top-right" richColors closeButton />
         <Analytics />
         <SpeedInsights />
-        <LemonSqueezyScript />
       </body>
     </html>
   );

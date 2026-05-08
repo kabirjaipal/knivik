@@ -1,43 +1,31 @@
 import { Router } from 'express';
-import { createCheckout, lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
 import config from '../lib/config.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
-import { getPlanFromVariantId } from '../lib/plans.js';
+import { getPlanFromProductId } from '../lib/plans.js';
+import { dodo } from '../lib/dodo.js';
 
 const router = Router();
 
-// Initialize Lemon Squeezy
-lemonSqueezySetup({
-  apiKey: config.LEMON_SQUEEZY_API_KEY || '',
-});
-
 /**
  * POST /api/billing/create-checkout
- * Create a Lemon Squeezy checkout URL
+ * Create a Dodo Payments checkout session
  */
 router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
   try {
-    const { variantId, email, name } = req.body;
+    const { productId, email, name } = req.body;
     const userId = req.user?.id;
 
-    if (!variantId) {
-      return res.status(400).json({ success: false, error: 'variantId is required' });
+    if (!productId) {
+      return res.status(400).json({ success: false, error: 'productId is required' });
     }
 
-    // SECURITY: Validate that the variantId belongs to a defined plan
-    const planInfo = getPlanFromVariantId(String(variantId));
+    // SECURITY: Validate that the productId belongs to a defined plan
+    const planInfo = getPlanFromProductId(String(productId));
     if (!planInfo) {
-      logger.warn({ userId, variantId }, 'Attempted checkout with invalid variantId');
+      logger.warn({ userId, productId }, 'Attempted checkout with invalid productId');
       return res.status(400).json({ success: false, error: 'Invalid plan selected' });
-    }
-
-    const storeId = config.LEMON_SQUEEZY_STORE_ID;
-    if (!storeId) {
-      return res
-        .status(500)
-        .json({ success: false, error: 'LEMON_SQUEEZY_STORE_ID is not configured' });
     }
 
     // SMART CHECK: Prevent double subscriptions
@@ -67,34 +55,25 @@ router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
     }
 
     logger.info(
-      { userId, variantId, email: checkoutEmail, name: checkoutName },
-      'Creating Lemon Squeezy checkout'
+      { userId, productId, email: checkoutEmail, name: checkoutName },
+      'Creating Dodo Payments checkout'
     );
 
-    const { data, error } = await createCheckout(storeId, variantId, {
-      checkoutData: {
+    const checkout = await dodo.checkoutSessions.create({
+      product_cart: [{ product_id: productId, quantity: 1 }],
+      customer: {
         email: checkoutEmail,
-        ...(checkoutName ? { name: checkoutName } : {}),
-        custom: {
-          userId: userId,
-        },
+        name: checkoutName || 'Customer',
       },
-      productOptions: {
-        redirectUrl: `${config.FRONTEND_URL}/dashboard/billing?status=success`,
-        receiptButtonText: 'Go to Dashboard',
-        receiptThankYouNote: 'Thank you for subscribing to Knivik!',
-        enabledVariants: [Number(variantId)],
+      metadata: {
+        userId: userId,
       },
+      return_url: `${config.FRONTEND_URL}/dashboard/billing`,
     });
-
-    if (error) {
-      logger.error({ error }, 'Lemon Squeezy checkout creation failed');
-      return res.status(500).json({ success: false, error: error.message });
-    }
 
     res.json({
       success: true,
-      checkoutUrl: data.data.attributes.url,
+      checkoutUrl: checkout.checkout_url,
     });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Create checkout error');

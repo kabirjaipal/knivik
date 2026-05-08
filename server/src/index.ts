@@ -32,7 +32,7 @@ declare global {
         subscriptionStatus: string | null;
         billingCycle: string | null;
         currentPeriodEnd: Date | null;
-        lemonSqueezyCustomerId: string | null;
+        dodoCustomerId: string | null;
         createdAt: Date;
         updatedAt: Date;
       };
@@ -53,10 +53,12 @@ app.get('/', (req, res) => {
 
 // Security middleware
 app.use((helmet as any)());
-app.use(cors({
-  origin: config.CORS_ORIGIN.split(',').map((origin: string) => origin.trim()),
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: config.CORS_ORIGIN.split(',').map((origin: string) => origin.trim()),
+    credentials: true,
+  })
+);
 
 // Rate limiting — always memory-based.
 const rateLimiter = rateLimit({
@@ -64,7 +66,7 @@ const rateLimiter = rateLimit({
   max: config.RATE_LIMIT_MAX_REQUESTS,
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { trustProxy: false },
+  validate: { trustProxy: config.TRUST_PROXY },
   message: {
     success: false,
     error: {
@@ -82,12 +84,14 @@ app.use('/api/auth', authRoutes);
 
 // Basic middleware (only for non-Better-Auth routes)
 app.use(compression());
-app.use(express.json({ 
-  limit: config.REQUEST_BODY_LIMIT,
-  verify: (req: any, _res, buf) => {
-    (req as any).rawBody = buf.toString('utf8');
-  }
-}));
+app.use(
+  express.json({
+    limit: config.REQUEST_BODY_LIMIT,
+    verify: (req: any, _res, buf) => {
+      (req as any).rawBody = buf.toString('utf8');
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -129,18 +133,20 @@ const setupGracefulShutdown = (server: import('http').Server) => {
 async function startServer() {
   try {
     await db.connect();
-    
+
     const httpServer = createServer(app);
     initSocket(httpServer);
 
     httpServer.listen(config.PORT, config.HOST, () => {
-      logger.info(`🚀 Worker ${process.pid} listening at http://${config.HOST}:${config.PORT} (${config.NODE_ENV})`);
+      logger.info(
+        `🚀 Worker ${process.pid} listening at http://${config.HOST}:${config.PORT} (${config.NODE_ENV})`
+      );
     });
-    
+
     // Tune HTTP server timeouts for proxies/load balancers
     httpServer.keepAliveTimeout = 65_000;
     httpServer.headersTimeout = 67_000;
-    
+
     setupGracefulShutdown(httpServer);
 
     // Start Distributed Workers (if enabled)
@@ -150,21 +156,21 @@ async function startServer() {
         // Drain waiting jobs
         await pipelineQueue.drain();
         logger.info('🧹 Stale scraper jobs drained from queue.');
-        
+
         // Clean up active, completed, and failed jobs
         await pipelineQueue.clean(0, 0, 'active');
         await pipelineQueue.clean(0, 0, 'completed');
         await pipelineQueue.clean(0, 0, 'failed');
         await pipelineQueue.clean(0, 0, 'delayed');
-        
+
         logger.info('🧹 All scraper job states cleaned from queue.');
       } catch (err) {
         logger.warn({ err }, 'Failed to clean pipeline queue on startup');
       }
-      
+
       // Small delay before starting workers to ensure cleanup is complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       startWorkers();
       logger.info('⚙️ Distributed workers started and listening for jobs...');
     }
@@ -176,7 +182,7 @@ async function startServer() {
         logger.info(`🛰 Dispatching scraper jobs to the queue...`);
         const activeProducts = await db.client.product.findMany({
           where: { isActive: true },
-          select: { id: true, userId: true }
+          select: { id: true, userId: true },
         });
 
         // Group products by user
@@ -188,34 +194,50 @@ async function startServer() {
           productsByUser.get(product.userId)!.push(product.id);
         }
 
-        logger.info(`📊 Found ${activeProducts.length} products across ${productsByUser.size} users`);
+        logger.info(
+          `📊 Found ${activeProducts.length} products across ${productsByUser.size} users`
+        );
 
         // Process each user's products sequentially, but users in parallel
-        const userPromises = Array.from(productsByUser.entries()).map(async ([userId, productIds]) => {
-          logger.info(`👤 [User: ${userId}] Starting scan for ${productIds.length} products`);
-          
-          for (let i = 0; i < productIds.length; i++) {
-            const productId = productIds[i];
-            const jobId = `scrape-product-${productId}`;
-            
-            logger.info(`👤 [User: ${userId}] Queuing product ${i + 1}/${productIds.length}: ${productId}`);
-            
-            const added = await pipelineQueue.add('scrape-product', { userId, productId }, {
-              jobId,
-              removeOnComplete: true,
-            });
-            
-            if (added.alreadyExists) {
-              logger.info(`👤 [User: ${userId}] Product ${productId} already running, waiting for completion...`);
+        const userPromises = Array.from(productsByUser.entries()).map(
+          async ([userId, productIds]) => {
+            logger.info(`👤 [User: ${userId}] Starting scan for ${productIds.length} products`);
+
+            for (let i = 0; i < productIds.length; i++) {
+              const productId = productIds[i];
+              const jobId = `scrape-product-${productId}`;
+
+              logger.info(
+                `👤 [User: ${userId}] Queuing product ${i + 1}/${productIds.length}: ${productId}`
+              );
+
+              const added = await pipelineQueue.add(
+                'scrape-product',
+                { userId, productId },
+                {
+                  jobId,
+                  removeOnComplete: true,
+                }
+              );
+
+              if (added.alreadyExists) {
+                logger.info(
+                  `👤 [User: ${userId}] Product ${productId} already running, waiting for completion...`
+                );
+              }
+
+              // Wait for this product to complete before starting next one
+              await waitForJobToComplete(jobId);
+              logger.info(
+                `👤 [User: ${userId}] ✅ Product ${i + 1}/${productIds.length} finished processing`
+              );
             }
-            
-            // Wait for this product to complete before starting next one
-            await waitForJobToComplete(jobId);
-            logger.info(`👤 [User: ${userId}] ✅ Product ${i + 1}/${productIds.length} finished processing`);
+
+            logger.info(
+              `👤 [User: ${userId}] ✅ All ${productIds.length} products completed for this interval`
+            );
           }
-          
-          logger.info(`👤 [User: ${userId}] ✅ All ${productIds.length} products completed for this interval`);
-        });
+        );
 
         // Wait for all users to complete their sequential product runs
         await Promise.all(userPromises);
@@ -232,26 +254,26 @@ async function startServer() {
 
       while (Date.now() - startTime < maxWaitTime) {
         const job = await pipelineQueue.getJob(jobId);
-        
+
         if (!job || job.finishedOn) {
           return;
         }
-        
-        await new Promise(resolve => setTimeout(resolve, checkInterval));
+
+        await new Promise((resolve) => setTimeout(resolve, checkInterval));
       }
-      
+
       logger.warn(`Timeout waiting for job ${jobId} to complete`);
     };
 
     const scheduleNextScraperRun = async () => {
       if (config.SCRAPER_INTERVAL_MS > 0) {
         logger.info(`⏳ Waiting ${config.SCRAPER_INTERVAL_MS / 60000} minutes before next scan...`);
-        await new Promise(resolve => setTimeout(resolve, config.SCRAPER_INTERVAL_MS));
+        await new Promise((resolve) => setTimeout(resolve, config.SCRAPER_INTERVAL_MS));
         await runScraperDispatcher();
         await scheduleNextScraperRun(); // Schedule the next one after this completes
       }
     };
-    
+
     // Start the loop
     if (config.SCRAPER_INTERVAL_MS > 0) {
       logger.info(`⏳ Initial scan starting in ${config.SCRAPER_INTERVAL_MS / 60000} minutes`);

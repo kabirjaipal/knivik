@@ -54,12 +54,11 @@ const configSchema = z.object({
   // Queue configuration
   ENABLE_QUEUE: envBool(true),
   SCRAPER_CONCURRENCY: z.coerce.number().default(5),
-  // Lemon Squeezy configuration
-  LEMON_SQUEEZY_API_KEY: z.string().optional(),
-  LEMON_SQUEEZY_WEBHOOK_SECRET: z.string().optional(),
-  LEMON_SQUEEZY_STORE_ID: z.string().optional(),
-  LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID: z.string().optional(),
-  LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID: z.string().optional(),
+  // Dodo Payments configuration
+  DODO_PAYMENTS_API_KEY: z.string().optional(),
+  DODO_PAYMENTS_WEBHOOK_KEY: z.string().optional(),
+  DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID: z.string().optional(),
+  DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID: z.string().optional(),
 });
 
 const configResult = configSchema.safeParse(process.env);

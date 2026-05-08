@@ -20,7 +20,7 @@ export const authClient = createAuthClient({
       role: { type: "string" },
       plan: { type: "string" },
       subscriptionStatus: { type: "string" },
-      lemonSqueezyCustomerId: { type: "string" },
+      dodoCustomerId: { type: "string" },
       isScanning: { type: "boolean" },
       lastScanStatus: { type: "string" },
     }

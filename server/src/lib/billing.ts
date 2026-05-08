@@ -1,54 +1,37 @@
-import { listVariants, lemonSqueezySetup } from "@lemonsqueezy/lemonsqueezy.js";
 import { UserPlan, type User } from "@prisma/client";
+import DodoPayments from "dodopayments";
 import { db } from "./db.js";
-import config from "./config.js";
 import logger from "./logger.js";
-
-// Initialize Lemon Squeezy
-lemonSqueezySetup({
-  apiKey: config.LEMON_SQUEEZY_API_KEY || '',
-});
+import { dodo } from "./dodo.js";
 
 /**
- * Get prices from Lemon Squeezy variants
+ * Get prices from Dodo Payments
  */
 export async function getPrices() {
   try {
-    const storeId = config.LEMON_SQUEEZY_STORE_ID;
-    if (!storeId) {
-      logger.warn("LEMON_SQUEEZY_STORE_ID not configured, returning empty prices");
-      return [];
-    }
+    logger.info("Fetching prices from Dodo Payments");
+    const products = await dodo.products.list({
+      page_size: 10,
+    });
 
-    logger.info({ storeId }, "Fetching prices for store");
-    const { data, error } = await listVariants();
-
-    if (error) {
-      logger.error({ error }, "Failed to fetch prices from Lemon Squeezy");
-      return [];
-    }
-
-    logger.info({ variantCount: data?.data?.length }, "Fetched variants from Lemon Squeezy");
-
-    // Map Lemon Squeezy variants to the format expected by the frontend
-    return (data?.data || []).map((variant: any) => ({
-      id: variant.id,
-      productId: variant.attributes.product_id,
-      name: variant.attributes.name,
-      amount: variant.attributes.price,
-      currency: "USD", // Lemon Squeezy price is in cents/units, attributes.price is amount
-      interval: variant.attributes.interval,
-      intervalCount: variant.attributes.interval_count,
+    // Map Dodo products to the format expected by the frontend
+    return (products.items || []).map((product: DodoPayments.ProductListResponse) => ({
+      id: product.product_id,
+      productId: product.product_id,
+      name: product.name,
+      amount: product.price / 100, 
+      currency: product.currency || "USD",
+      interval: product.is_recurring ? "month" : null,
+      intervalCount: 1,
     }));
   } catch (error) {
-    logger.error({ error }, "Error in getPrices");
+    logger.error({ error }, "Error in getPrices from Dodo");
     return [];
   }
 }
 
 /**
  * Get user's effective plan
- * Returns the UserPlan enum value from the User model (source of truth)
  */
 export function getUserPlan(user: User): UserPlan {
   return user.plan;
@@ -78,20 +61,6 @@ export function hasActiveSubscription(user: User): boolean {
 }
 
 /**
- * Check if user can access premium features
- */
-export function canAccessPremium(user: User): boolean {
-  return isPro(user);
-}
-
-/**
- * Check if user can access Pro-only features
- */
-export function canAccessProFeatures(user: User): boolean {
-  return isPro(user);
-}
-
-/**
  * Get subscription status display
  */
 export function getSubscriptionStatusDisplay(user: User): string {
@@ -117,20 +86,19 @@ export async function updateUserPlan(
   subscriptionStatus: string,
   billingCycle: string | null,
   currentPeriodEnd: Date | null,
-  lemonSqueezySubscriptionId?: string,
-  lemonSqueezyCustomerId?: string
+  dodoSubscriptionId?: string,
+  dodoCustomerId?: string
 ): Promise<void> {
   let targetPlan = plan;
   const isActive = subscriptionStatus === "active" || subscriptionStatus === "trialing";
 
-  // If subscription is not active, check if user has ANY OTHER active subscription
   if (!isActive) {
     const otherActive = await db.client.subscription.findFirst({
       where: {
         userId,
         status: { in: ['active', 'trialing'] },
-        ...(lemonSqueezySubscriptionId && {
-          NOT: { lemonSqueezySubscriptionId }
+        ...(dodoSubscriptionId && {
+          NOT: { dodoSubscriptionId }
         })
       }
     });
@@ -138,16 +106,14 @@ export async function updateUserPlan(
     if (!otherActive) {
       targetPlan = UserPlan.FREE;
     } else {
-      // Keep them as PRO because they have another active sub
       targetPlan = UserPlan.PRO;
     }
   }
 
   try {
-    // Check if user exists first to prevent Prisma crash
     const user = await db.client.user.findUnique({ where: { id: userId } });
     if (!user) {
-      logger.warn({ userId }, 'Cannot update plan: User not found in database');
+      logger.warn({ userId }, 'Cannot update plan: User not found');
       return;
     }
 
@@ -158,7 +124,7 @@ export async function updateUserPlan(
         subscriptionStatus,
         billingCycle,
         currentPeriodEnd,
-        ...(lemonSqueezyCustomerId && { lemonSqueezyCustomerId }),
+        ...(dodoCustomerId && { dodoCustomerId }),
       },
     });
 
@@ -170,7 +136,7 @@ export async function updateUserPlan(
 }
 
 /**
- * Downgrade user to Free plan (when subscription canceled/expired)
+ * Downgrade user to Free plan
  */
 export async function downgradeToFree(userId: string): Promise<void> {
   try {
@@ -197,21 +163,21 @@ export async function downgradeToFree(userId: string): Promise<void> {
 }
 
 /**
- * Record a payment in the database
+ * Record a payment
  */
 export async function recordPayment(
   userId: string,
-  lemonSqueezyPaymentId: string,
+  dodoPaymentId: string,
   amount: number,
   currency: string,
   status: string
 ): Promise<void> {
   try {
     await db.client.payment.upsert({
-      where: { lemonSqueezyPaymentId },
+      where: { dodoPaymentId },
       create: {
         userId,
-        lemonSqueezyPaymentId,
+        dodoPaymentId,
         amount,
         currency,
         status,
@@ -220,9 +186,9 @@ export async function recordPayment(
         status,
       },
     });
-    logger.info({ userId, lemonSqueezyPaymentId, amount, currency }, "Payment recorded");
+    logger.info({ userId, dodoPaymentId, amount }, "Payment recorded");
   } catch (error) {
-    logger.error({ error, userId, lemonSqueezyPaymentId }, "Failed to record payment");
+    logger.error({ error, userId, dodoPaymentId }, "Failed to record payment");
     throw error;
   }
 }
@@ -232,8 +198,8 @@ export async function recordPayment(
  */
 export async function upsertSubscription(
   userId: string,
-  lemonSqueezySubscriptionId: string,
-  lemonSqueezyCustomerId: string,
+  dodoSubscriptionId: string,
+  dodoCustomerId: string,
   plan: UserPlan,
   billingCycle: string,
   status: string,
@@ -241,11 +207,11 @@ export async function upsertSubscription(
 ): Promise<void> {
   try {
     await db.client.subscription.upsert({
-      where: { lemonSqueezySubscriptionId },
+      where: { dodoSubscriptionId },
       create: {
         userId,
-        lemonSqueezySubscriptionId,
-        lemonSqueezyCustomerId,
+        dodoSubscriptionId,
+        dodoCustomerId,
         plan,
         billingCycle,
         status,
@@ -258,9 +224,9 @@ export async function upsertSubscription(
         currentPeriodEnd,
       },
     });
-    logger.info({ userId, lemonSqueezySubscriptionId, status }, "Subscription upserted");
+    logger.info({ userId, dodoSubscriptionId, status }, "Subscription upserted");
   } catch (error) {
-    logger.error({ error, userId, lemonSqueezySubscriptionId }, "Failed to upsert subscription");
+    logger.error({ error, userId, dodoSubscriptionId }, "Failed to upsert subscription");
     throw error;
   }
 }

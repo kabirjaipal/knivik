@@ -46,10 +46,10 @@ export const PLANS = {
       leadsPerMonth: 1000,
     },
     monthly: { 
-      variantId: process.env.NEXT_PUBLIC_LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID!,
+      productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID!,
     },
     yearly: { 
-      variantId: process.env.NEXT_PUBLIC_LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID!,
+      productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID!,
     },
     capabilities: {
       canAccessTwitter: true,
@@ -63,21 +63,21 @@ export const PLANS = {
 
 export type PlanKey = keyof typeof PLANS;
 
-export function getPlanVariantId(plan: string, billingCycle: "monthly" | "yearly"): string | null {
+export function getPlanProductId(plan: string, billingCycle: "monthly" | "yearly"): string | null {
   if (plan === "FREE") return null;
   const planConfig = PLANS[plan as PlanKey];
   if (!planConfig || !("monthly" in planConfig)) return null;
-  return (planConfig as any)[billingCycle].variantId;
+  return (planConfig as any)[billingCycle].productId;
 }
 
-export function getPlanFromVariantId(variantId: string): { plan: string; billingCycle: "monthly" | "yearly" } | null {
+export function getPlanFromProductId(productId: string): { plan: string; billingCycle: "monthly" | "yearly" } | null {
   for (const [planKey, planConfig] of Object.entries(PLANS)) {
     if (planKey === "FREE") continue;
     const config = planConfig as any;
-    if (config.monthly?.variantId === variantId) {
+    if (config.monthly?.productId === productId) {
       return { plan: planKey, billingCycle: "monthly" };
     }
-    if (config.yearly?.variantId === variantId) {
+    if (config.yearly?.productId === productId) {
       return { plan: planKey, billingCycle: "yearly" };
     }
   }

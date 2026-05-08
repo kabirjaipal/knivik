@@ -220,10 +220,10 @@ export const getBillingHub = asyncHandler(async (req: AuthenticatedRequest, res:
           subscriptionStatus: freshUser.subscriptionStatus || (freshUser.plan === 'FREE' ? 'inactive' : 'active'),
           billingCycle: freshUser.billingCycle,
           currentPeriodEnd: freshUser.currentPeriodEnd,
-          lemonSqueezyCustomerId: freshUser.lemonSqueezyCustomerId,
+          dodoCustomerId: freshUser.dodoCustomerId,
         },
         subscription,
-        lemonSqueezySubscriptionId: subscription?.lemonSqueezySubscriptionId,
+        dodoSubscriptionId: subscription?.dodoSubscriptionId,
         payments,
         prices,
       },
@@ -238,10 +238,6 @@ export const getBillingHub = asyncHandler(async (req: AuthenticatedRequest, res:
   }
 });
 
-/**
- * Redirect to Lemon Squeezy Customer Portal
- * Lemon Squeezy provides a hosted portal for users to manage their own subscriptions.
- */
 export const getCustomerPortalUrl = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   if (!req.user) {
     res.status(401).json({
@@ -251,10 +247,8 @@ export const getCustomerPortalUrl = asyncHandler(async (req: AuthenticatedReques
     return;
   }
 
-  // Lemon Squeezy customer portal is a fixed URL (managed in their dashboard)
-  // We can return a generic link or a specific one if managed via API.
-  // For now, we return the base portal URL or instructions.
-  const portalUrl = "https://app.lemonsqueezy.com/my-orders"; 
+  // Dodo Payments customer portal
+  const portalUrl = "https://www.dodopayments.com/customer-portal"; 
   
   res.status(200).json({
     success: true,

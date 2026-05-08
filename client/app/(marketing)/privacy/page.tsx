@@ -61,7 +61,7 @@ export default function PrivacyPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">7. Payment Processors</h2>
             <p>
-              We use Lemon Squeezy for payments, and as a Merchant of Record, they are the data controller of your checkout information. You can read how they handle your data in the <a href="https://www.lemonsqueezy.com/privacy" target="_blank" className="text-primary hover:underline">Lemon Squeezy Privacy Policy</a>.
+              We use Dodo Payments for payments, and as a Merchant of Record, they are the data controller of your checkout information. You can read how they handle your data in the <a href="https://www.dodopayments.com/privacy" target="_blank" className="text-primary hover:underline">Dodo Payments Privacy Policy</a>.
             </p>
           </section>
 

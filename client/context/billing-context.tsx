@@ -11,13 +11,13 @@ interface BillingUser {
   subscriptionStatus: string;
   billingCycle: string | null;
   currentPeriodEnd: string | null;
-  lemonSqueezyCustomerId: string | null;
+  dodoCustomerId: string | null;
 }
 
 interface BillingHubData {
   user: BillingUser;
   subscription: any;
-  lemonSqueezySubscriptionId?: string | null;
+  dodoSubscriptionId?: string | null;
   payments: any[];
   prices: any[];
 }

@@ -161,7 +161,7 @@ export default function BillingPage() {
               <div className="flex items-center justify-between gap-4">
                 <p className="text-4xl font-black tracking-tighter">{planConfig.name}</p>
                 {isProPlan ? (
-                  (billingInfo?.lemonSqueezyCustomerId || billingData?.user?.lemonSqueezyCustomerId) ? (
+                  (billingInfo?.dodoCustomerId || billingData?.user?.dodoCustomerId) ? (
                     <Button variant="outline" className="font-bold gap-2 shrink-0"
                       onClick={handleOpenCustomerPortal} disabled={isRedirecting}>
                       {isRedirecting

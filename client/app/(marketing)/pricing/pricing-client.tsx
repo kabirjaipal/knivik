@@ -27,10 +27,10 @@ export default function PricingClient() {
     const plan = PLANS[planKey];
     if (!("monthly" in plan)) return 0;
 
-    const variantId = (plan as any)[cycle].variantId;
-    const livePrice = livePrices.find(p => String(p.id) === String(variantId));
+    const productId = (plan as any)[cycle].productId;
+    const livePrice = livePrices.find(p => String(p.id) === String(productId));
     
-    if (livePrice) return livePrice.amount / 100;
+    if (livePrice) return livePrice.amount; // Dodo returns float or exact amount?
     return "--";
   };
 
@@ -152,10 +152,10 @@ export default function PricingClient() {
                   ))}
                 </ul>
                 <CheckoutButton
-                  variantId={
+                  productId={
                     billingCycle === "monthly"
-                      ? PLANS.PRO.monthly.variantId
-                      : PLANS.PRO.yearly.variantId
+                      ? PLANS.PRO.monthly.productId
+                      : PLANS.PRO.yearly.productId
                   }
                   email={user?.email || ""}
                   name={user?.name || user?.username || ""}
@@ -200,7 +200,7 @@ export default function PricingClient() {
 
           <div className="max-w-4xl mx-auto mt-16 text-center">
             <p className="text-xs text-muted-foreground/60 font-medium">
-              Our order process is conducted by our online reseller & Merchant of Record, LemonSqueezy.com, who also handles all customer service inquiries and returns.
+              Our order process is conducted by our online reseller & Merchant of Record, DodoPayments.com, who also handles all customer service inquiries and returns.
             </p>
           </div>
         </div>
