@@ -1,13 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
 import logger from './logger.js';
 import config from './config.js';
 
 const createPrismaClient = () => {
-  const adapter = new PrismaPg({ connectionString: config.DATABASE_URL });
-
   return new PrismaClient({
-    adapter,
     log: [
       ...(config.PRISMA_LOG_QUERIES ? [{ emit: 'event' as const, level: 'query' as const }] : []),
       { emit: 'stdout' as const, level: 'error' as const },

@@ -14,6 +14,9 @@ import { optionalAuth } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
+// Mount health routes FIRST so deployment probes get an instant response without DB/Auth checks
+router.use('/api', healthRoutes);
+
 // Auth middleware
 router.use(optionalAuth);
 
@@ -27,6 +30,5 @@ router.use('/api/admin', adminRoutes);
 router.use('/api/webhooks', webhookRoutes);
 router.use('/api/billing', billingRoutes);
 router.use('/api/usage', usageRoutes);
-router.use('/api', healthRoutes);
 
 export default router;
