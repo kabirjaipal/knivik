@@ -1,9 +1,23 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import logger from './logger.js';
 import config from './config.js';
 
+const { Pool } = pg;
+
 const createPrismaClient = () => {
+  const connectionString = config.DATABASE_URL;
+  
+  const pool = new Pool({
+    connectionString,
+    ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: false },
+  });
+
+  const adapter = new PrismaPg(pool as any);
+
   return new PrismaClient({
+    adapter,
     log: [
       ...(config.PRISMA_LOG_QUERIES ? [{ emit: 'event' as const, level: 'query' as const }] : []),
       { emit: 'stdout' as const, level: 'error' as const },

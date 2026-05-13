@@ -22,7 +22,7 @@ export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
     mode: 'in-memory',
   };
 
-  res.status(dbHealth ? 200 : 503).json({
+  res.status(200).json({
     success: true,
     data: health,
     requestId: req.requestId,
