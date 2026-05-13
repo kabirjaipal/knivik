@@ -3,8 +3,8 @@ import { Metadata } from "next";
 export const siteConfig = {
   name: "Knivik",
   description: "Advanced AI Social Intelligence tool to find high-intent buyers across Reddit, HackerNews, and the public web. Turn online conversations into warm leads automatically.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://knivik.com",
-  ogImage: "https://knivik.com/og-image.png",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://knivik.xyz",
+  ogImage: "https://knivik.xyz/og-image.png",
   links: {
     twitter: "https://twitter.com/knivik",
     github: "https://github.com/knivik",
@@ -30,7 +30,7 @@ export const siteConfig = {
   authors: [
     {
       name: "Knivik Team",
-      url: "https://knivik.com",
+      url: "https://knivik.xyz",
     },
   ],
   creator: "Knivik",

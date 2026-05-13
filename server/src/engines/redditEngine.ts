@@ -64,7 +64,7 @@ export class RedditEngine extends BaseScraperEngine {
       const response = await httpClient.get(url, {
         headers: {
           // Reddit JSON API requires a proper User-Agent, or it returns 429
-          'User-Agent': 'Knivik-LeadFinder/1.0 (Intent detection pipeline; contact@knivik.com)',
+          'User-Agent': 'Knivik-LeadFinder/1.0 (Intent detection pipeline; contact@knivik.xyz)',
           'Accept': 'application/json',
         },
       });
@@ -102,7 +102,7 @@ export class RedditEngine extends BaseScraperEngine {
     try {
       const response = await httpClient.get(url, {
         headers: {
-          'User-Agent': 'Knivik-LeadFinder/1.0 (Intent detection pipeline; contact@knivik.com)',
+          'User-Agent': 'Knivik-LeadFinder/1.0 (Intent detection pipeline; contact@knivik.xyz)',
           'Accept': 'application/json',
         },
       });

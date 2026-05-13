@@ -3,7 +3,7 @@ import { db } from '../src/lib/db.js';
 
 async function main() {
   const user = await db.client.user.findUnique({
-    where: { email: 'kabir@knivik.com' },
+    where: { email: 'kabir@knivik.xyz' },
     select: { 
       id: true, 
       email: true, 

@@ -49,7 +49,7 @@ async function main() {
   // Admin user with Better Auth Account
   const admin = await prisma.user.create({
     data: {
-      email: 'kabir@knivik.com',
+      email: 'kabir@knivik.xyz',
       name: 'kabir',
       username: 'kabir',
       password: hashedPassword,
@@ -61,47 +61,7 @@ async function main() {
       accounts: {
         create: {
           providerId: 'credential',
-          accountId: 'kabir@knivik.com',
-          password: hashedPassword,
-        }
-      }
-    },
-  });
-
-  // SDR user with Better Auth Account
-  await prisma.user.create({
-    data: {
-      email: 'nakul@knivik.com',
-      name: 'nakul',
-      username: 'nakul',
-      password: hashedPassword,
-      role: 'user',
-      plan: 'FREE',
-      emailVerified: true,
-      accounts: {
-        create: {
-          providerId: 'credential',
-          accountId: 'nakul@knivik.com',
-          password: hashedPassword,
-        }
-      }
-    },
-  });
-
-  // Growth user with Better Auth Account
-  await prisma.user.create({
-    data: {
-      email: 'nikhil@knivik.com',
-      name: 'nikhil_hacker',
-      username: 'nikhil_hacker',
-      password: hashedPassword,
-      role: 'user',
-      plan: 'FREE',
-      emailVerified: true,
-      accounts: {
-        create: {
-          providerId: 'credential',
-          accountId: 'nikhil@knivik.com',
+          accountId: 'kabir@knivik.xyz',
           password: hashedPassword,
         }
       }
@@ -169,8 +129,8 @@ async function main() {
   console.log('🤖 LLM Models: 4 models registered');
 
   console.log('\n Demo Login Credentials (All Passwords: admin123):');
-  console.log('1. Admin: kabir@knivik.com');
-  console.log('2. User: nakul@knivik.com');
+  console.log('1. Admin: kabir@knivik.xyz');
+  console.log('2. User: nakul@knivik.xyz');
   console.log('--------------------------------------------');
 
   console.log('\n🚀 Ready to test awesome engines with IP protection!');

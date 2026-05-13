@@ -40,7 +40,7 @@ const configSchema = z.object({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
-  SMTP_FROM: z.string().default('noreply@knivik.com'),
+  SMTP_FROM: z.string().default('noreply@knivik.xyz'),
   // Add:
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

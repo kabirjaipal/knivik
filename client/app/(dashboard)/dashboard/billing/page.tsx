@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { PlanBadge } from "@/components/billing/PricingUtils";
 import { PLANS } from "@/lib/plans";
+import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -171,7 +172,7 @@ export default function BillingPage() {
                     </Button>
                   ) : (
                     <Button variant="outline" className="font-bold gap-2 shrink-0" asChild>
-                      <a href="mailto:support@knivik.com">Contact Support</a>
+                      <a href={'mailto:'+ SUPPORT_EMAIL}>Contact Support</a>
                     </Button>
                   )
                 ) : (
@@ -283,7 +284,7 @@ export default function BillingPage() {
               <p className="text-sm font-bold">Need help?</p>
               <p className="text-xs text-muted-foreground mt-0.5 mb-4">Billing issues or questions? We're here.</p>
               <Button variant="outline" size="sm" className="w-full font-bold text-xs" asChild>
-                <a href="mailto:support@knivik.com">Contact Support</a>
+                <a href={'mailto:'+ SUPPORT_EMAIL}>Contact Support</a>
               </Button>
             </CardContent>
           </Card>
