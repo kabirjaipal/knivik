@@ -1,59 +1,55 @@
-# Multi-stage Dockerfile for production-ready Express + TypeScript app
+# Multi-stage Dockerfile optimized for high-performance Railway production orchestration
 
-# Build stage
+# ==========================================
+# Build Stage
+# ==========================================
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files for dependency resolution cache layer
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for building)
+# Install exact dependency tree cleanly
 RUN npm ci
 
-# Copy source code
+# Copy entire application source
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client artifacts
 RUN npx prisma generate
 
-# Build the application
+# Transpile TypeScript modules into static JavaScript artifacts
 RUN npm run build
 
-# Production stage
+# ==========================================
+# Production Stage
+# ==========================================
 FROM node:20-alpine AS production
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Enforce strict production optimizations for V8 engine and Express
+ENV NODE_ENV=production
 
 WORKDIR /app
 
-# Copy package files
+# Copy minimal configuration layouts
 COPY package*.json ./
 COPY prisma ./prisma
 
-# Install only production dependencies
+# Install pure production dependencies and purge residual npm package caches
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy built application from builder stage
+# Copy static compilation output from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Generate Prisma client in production
+# Generate production Prisma binaries tailored for minimal container footprint
 RUN npx prisma generate
 
-# Set ownership to nodejs user
-RUN chown -R nodejs:nodejs /app
-USER nodejs
+# Transfer full ownership to unprivileged 'node' user to prevent container escalation attacks
+RUN chown -R node:node /app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { \
-    process.exit(res.statusCode === 200 ? 0 : 1); \
-  }).on('error', () => process.exit(1));"
+# Switch to standard non-root secure user context
+USER node
 
-# Expose port
-EXPOSE 3000
-
-# Start the application
-CMD ["node", "dist/index.js"]
+# Execute live schema migrations synchronously before starting production worker clusters
+CMD npx prisma migrate deploy && node dist/index.js
