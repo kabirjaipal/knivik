@@ -34,6 +34,7 @@ WORKDIR /app
 
 # Copy minimal configuration layouts required for production execution
 COPY package*.json ./
+COPY prisma.config.ts ./
 COPY prisma ./prisma
 
 # Install pure production dependencies adhering to modern npm standards and purge caches

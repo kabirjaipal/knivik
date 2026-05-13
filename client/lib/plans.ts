@@ -3,10 +3,10 @@ import { UserPlan } from "./constants";
 export const PLANS = {
   FREE: { 
     name: "Free",
-    description: "Get started with basic monitoring",
+    description: "Get started with basic lead detection",
     features: [
-      "Monitor 1 Topic/Product",
-      "50 signals per month",
+      "Track 1 Product",
+      "50 leads per month",
       "Reddit & HackerNews scanning",
       "Basic intent detection",
       "Dashboard access only",
@@ -28,16 +28,16 @@ export const PLANS = {
   },
   PRO: {
     name: "Pro",
-    description: "Everything you need to scale your market monitoring. Get 2 months free with annual billing!",
+    description: "Everything you need to scale your lead generation. Get 2 months free with annual billing!",
     popular: true,
     features: [
-      "Monitor up to 5 Topics",
-      "1,000 High-Intent signals / mo",
+      "Track up to 5 Products",
+      "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
       "Advanced AI Intent Scoring",
-      "Advanced AI Insight Models",
+      "Custom AI Personas for replies",
       "Email, Slack & Discord alerts",
-      "Full context enrichment",
+      "Full lead enrichment",
       "24/7 Priority support",
       "2 Months Free (Annual Plan)",
     ],
