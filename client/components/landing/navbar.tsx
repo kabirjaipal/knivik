@@ -8,14 +8,11 @@ import { useAuth } from "@/context/auth-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PROJECT_NAME } from "@/lib/constants"
 
-import { PromoBanner } from "./promo-banner"
-
 export function Navbar() {
   const { user, loading } = useAuth()
 
   return (
     <div className="sticky top-0 z-50 w-full">
-      <PromoBanner />
       <header className="w-full border-b border-border/40 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
