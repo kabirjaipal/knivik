@@ -108,15 +108,13 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       },
     });
 
-    // Generate AI search queries asynchronously (don't block response)
-    setImmediate(async () => {
-      try {
-        await SearchQueryService.generateAndSaveQueries(product.id);
-        logger.info({ productId: product.id }, 'Auto-generated search queries for new product');
-      } catch (err) {
-        logger.error({ err, productId: product.id }, 'Failed to auto-generate search queries');
-      }
-    });
+    // Generate AI search queries synchronously so frontend waits for it
+    try {
+      await SearchQueryService.generateAndSaveQueries(product.id);
+      logger.info({ productId: product.id }, 'Generated search queries for new product');
+    } catch (err) {
+      logger.error({ err, productId: product.id }, 'Failed to generate search queries');
+    }
 
     // Remove searchQueries from response to keep it backend-only
     // @ts-ignore
@@ -177,15 +175,13 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
       });
     });
 
-    // Regenerate AI search queries asynchronously after update
-    setImmediate(async () => {
-      try {
-        await SearchQueryService.generateAndSaveQueries(productId);
-        logger.info({ productId }, 'Regenerated search queries after product update');
-      } catch (err) {
-        logger.error({ err, productId }, 'Failed to regenerate search queries after update');
-      }
-    });
+    // Regenerate AI search queries synchronously after update
+    try {
+      await SearchQueryService.generateAndSaveQueries(productId);
+      logger.info({ productId }, 'Regenerated search queries after product update');
+    } catch (err) {
+      logger.error({ err, productId }, 'Failed to regenerate search queries after update');
+    }
 
     // Remove searchQueries from response to keep it backend-only
     // @ts-ignore

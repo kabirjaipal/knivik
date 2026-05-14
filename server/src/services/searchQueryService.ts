@@ -41,11 +41,7 @@ export class SearchQueryService {
     try {
       // Fetch product with all related data
       const product = await db.client.product.findUnique({
-        where: { id: productId },
-        include: {
-          keywords: true,
-          competitors: true,
-        },
+        where: { id: productId }
       });
 
       if (!product) {
