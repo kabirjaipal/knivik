@@ -48,9 +48,6 @@ export default function ProductsPage() {
     description: "",
     websiteUrl: "",
     isActive: true,
-    keywords: "",
-    negativeKeywords: "",
-    competitors: "",
   })
 
   const router = useRouter()
@@ -103,10 +100,6 @@ export default function ProductsPage() {
           description: formData.description,
           websiteUrl: formData.websiteUrl,
           isActive: formData.isActive,
-          keywords: formData.keywords.split(',').map(k => k.trim()).filter(k => k),
-          negativeKeywords: formData.negativeKeywords.split(',').map(k => k.trim()).filter(k => k),
-          competitors: formData.competitors.split(',').map(c => c.trim()).filter(c => c),
-          sources: [], // Server auto-generates from AI based on plan
         })
       });
 
@@ -126,8 +119,7 @@ export default function ProductsPage() {
       // Reset form
       const actionLabel = editingProductId ? "Product updated" : "Product created";
       setFormData({
-        name: "", description: "", websiteUrl: "", isActive: true, keywords: "",
-        negativeKeywords: "", competitors: "",
+        name: "", description: "", websiteUrl: "", isActive: true
       })
       setIsCreating(false)
       setEditingProductId(null)
@@ -191,8 +183,7 @@ export default function ProductsPage() {
         if (!open) {
           setIsCreating(false);
           setFormData({ 
-            name: "", description: "", websiteUrl: "", isActive: true, keywords: "", 
-            negativeKeywords: "", competitors: "",
+            name: "", description: "", websiteUrl: "", isActive: true 
           });
         }
       }}>
@@ -233,8 +224,7 @@ export default function ProductsPage() {
               onClick={() => {
                 setIsCreating(false);
                 setFormData({ 
-                  name: "", description: "", websiteUrl: "", keywords: "", 
-                  negativeKeywords: "", competitors: "" , isActive: true
+                  name: "", description: "", websiteUrl: "", isActive: true 
                 });
               }}
             >
@@ -259,8 +249,7 @@ export default function ProductsPage() {
         if (!open) {
           setEditingProductId(null);
           setFormData({ 
-            name: "", description: "", websiteUrl: "", isActive: true, keywords: "", 
-            negativeKeywords: "", competitors: "" 
+            name: "", description: "", websiteUrl: "", isActive: true 
           });
         }
       }}>
@@ -300,8 +289,7 @@ export default function ProductsPage() {
               onClick={() => {
                 setEditingProductId(null);
                 setFormData({ 
-                  name: "", description: "", websiteUrl: "", isActive: true, keywords: "", 
-                  negativeKeywords: "", competitors: "" 
+                  name: "", description: "", websiteUrl: "", isActive: true 
                 });
                 
               }}
@@ -343,9 +331,6 @@ export default function ProductsPage() {
                     description: product.description || "",
                     websiteUrl: product.websiteUrl || "",
                     isActive: product.isActive ?? true,
-                    keywords: product.keywords.map((k: any) => k.keyword).join(", "),
-                    negativeKeywords: product.negativeKeywords.map((k: any) => k.keyword).join(", "),
-                    competitors: product.competitors.map((c: any) => c.name).join(", "),
                   })
                 }}
                 onDelete={() => {
@@ -399,9 +384,6 @@ interface ProductFormProps {
     description: string;
     websiteUrl: string;
     isActive: boolean;
-    keywords: string;
-    negativeKeywords: string;
-    competitors: string;
   };
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   formError: string | null;
@@ -421,131 +403,74 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Product Name</label>
-            <input 
-              required 
-              value={formData.name} 
-              onChange={e => setFormData({...formData, name: e.target.value})} 
-              className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-              placeholder="e.g. Acme CRM" 
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Website</label>
-            <input 
-              type="url"
-              value={formData.websiteUrl} 
-              onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
-              className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-              placeholder="https://example.com" 
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer group">
-              <div className="relative flex items-center">
-                <input 
-                  type="checkbox" 
-                  checked={formData.isActive}
-                  onChange={e => setFormData({...formData, isActive: e.target.checked})}
-                  className="peer sr-only"
-                />
-                <div className="w-10 h-5 bg-muted rounded-full peer-checked:bg-success transition-colors duration-200 border border-border"></div>
-                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-5 shadow-sm"></div>
-              </div>
-              <span className="group-hover:text-primary transition-colors">
-                Product Active
-              </span>
-            </label>
-            <p className="text-xs text-muted-foreground ml-12">
-              {formData.isActive ? "We will track social signals for this product." : "Tracking is paused for this product."}
-            </p>
-          </div>
-        </div>
-
+      <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="block text-sm font-medium text-foreground">Description</label>
-            <button
-              type="button"
-              disabled={!formData.name || !formData.description || isAiLoading || isSubmitting}
-              onClick={async () => {
-                setIsAiLoading(true)
-                try {
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-                  const res = await fetch(`${apiUrl}/products/analyze`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ name: formData.name, description: formData.description })
-                  });
-                  if (!res.ok) throw new Error('AI analysis failed');
-                  const data = await res.json();
-                  const strategy = data.strategy;
-                  
-                  setFormData({
-                    ...formData,
-                    keywords: strategy.keywords.join(', '),
-                    negativeKeywords: strategy.negativeKeywords.join(', '),
-                    competitors: strategy.competitors.join(', '),
-                  });
-                } catch (err: any) {
-                  // Error handled silently
-                } finally {
-                  setIsAiLoading(false)
-                }
-              }}
-              className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5 text-primary bg-primary/10 px-2 py-1 rounded-md hover:bg-primary/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 fill-current" />}
-              Magic AI Suggest
-            </button>
-          </div>
-          <textarea 
-            required 
-            value={formData.description} 
-            onChange={e => setFormData({...formData, description: e.target.value})} 
-            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-24 resize-none" 
-            placeholder="We help freelancers track sales..." 
-          />
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Keywords (comma separated)</label>
+          <label className="block text-sm font-medium text-foreground">Product Name</label>
           <input 
-            value={formData.keywords} 
-            onChange={e => setFormData({...formData, keywords: e.target.value})} 
-            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-            placeholder="CRM, customer software, sales tool" 
+            required 
+            value={formData.name} 
+            onChange={e => setFormData({...formData, name: e.target.value})} 
+            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            placeholder="e.g. Acme CRM" 
           />
         </div>
         
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Negative Keywords (comma separated)</label>
+          <label className="block text-sm font-medium text-foreground">Website</label>
           <input 
-            value={formData.negativeKeywords} 
-            onChange={e => setFormData({...formData, negativeKeywords: e.target.value})} 
-            className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-            placeholder="free, open source, cheap" 
+            type="url"
+            value={formData.websiteUrl} 
+            onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
+            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
+            placeholder="https://example.com" 
           />
         </div>
       </div>
 
-      {/* Competitors */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">Competitors (comma separated)</label>
-        <input 
-          value={formData.competitors} 
-          onChange={e => setFormData({...formData, competitors: e.target.value})} 
-          className="w-full border border-input bg-background rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-          placeholder="competitor1, competitor2" 
+        <label className="block text-sm font-medium text-foreground">
+          Description <span className="text-muted-foreground font-normal text-xs ml-1">(Used by AI to find leads)</span>
+        </label>
+        <textarea 
+          required 
+          value={formData.description} 
+          onChange={e => setFormData({...formData, description: e.target.value})} 
+          className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-28 resize-none" 
+          placeholder="We help freelancers track sales and manage invoices effortlessly..." 
         />
+      </div>
+
+      <div className="space-y-3 pt-2 border-t border-border/50">
+        <label className="block text-sm font-medium text-foreground">Tracking Status</label>
+        <div className="flex bg-muted/30 p-1 rounded-lg border border-border/50 w-full sm:max-w-[300px]">
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, isActive: true })}
+            className={`flex-1 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider py-2 px-3 rounded-md transition-all ${
+              formData.isActive 
+                ? "bg-background text-success shadow-sm border border-border/50" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <Radar className={`w-3.5 h-3.5 ${formData.isActive ? "text-success" : ""}`} />
+            Active
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, isActive: false })}
+            className={`flex-1 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider py-2 px-3 rounded-md transition-all ${
+              !formData.isActive 
+                ? "bg-background text-foreground shadow-sm border border-border/50" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            }`}
+          >
+            <div className={`w-2 h-2 rounded-full ${!formData.isActive ? "bg-muted-foreground" : "bg-muted-foreground/50"}`}></div>
+            Paused
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground font-medium">
+          {formData.isActive ? "The AI will continuously scan for new leads." : "Scanning is paused. No new leads will be found."}
+        </p>
       </div>
 
     </form>
@@ -583,15 +508,11 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           {product.description || "No description provided."}
         </p>
         
-        <div className="flex flex-wrap gap-1.5">
-          {product.keywords.slice(0, 3).map((k: any) => (
-            <span key={k.id} className="text-xs font-black uppercase tracking-widest bg-muted border border-border/40 px-2 py-0.5 rounded text-muted-foreground truncate max-w-[100px]">
-              {k.keyword}
-            </span>
-          ))}
-          {product.keywords.length > 3 && (
-            <span className="text-xs font-black text-muted-foreground/50 self-center">+{product.keywords.length - 3}</span>
-          )}
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          <span className="text-xs font-black uppercase tracking-widest bg-primary/10 border border-primary/20 px-2 py-0.5 rounded text-primary flex items-center gap-1.5">
+            <Zap className="w-3 h-3 fill-current" />
+            AI Global Scan
+          </span>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-border/50">

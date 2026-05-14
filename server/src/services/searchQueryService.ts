@@ -14,8 +14,6 @@ interface ProductData {
   id: string;
   name: string;
   description: string | null;
-  keywords: Array<{ keyword: string }>;
-  competitors: Array<{ name: string }>;
 }
 
 /**
@@ -60,8 +58,6 @@ export class SearchQueryService {
         id: product.id,
         name: product.name,
         description: product.description,
-        keywords: product.keywords,
-        competitors: product.competitors,
       });
 
       // Save to database
@@ -121,16 +117,11 @@ export class SearchQueryService {
    */
   private static async generateQueriesWithAI(product: ProductData): Promise<string[]> {
     const startTime = Date.now();
-    const keywords = product.keywords.map(k => k.keyword).join(', ');
-    const competitors = product.competitors.map(c => c.name).join(', ');
-    
     const prompt = `You are a B2B lead generation expert specializing in finding high-intent prospects across online forums and social platforms.
 
 PRODUCT INFORMATION:
 Name: ${product.name}
 Description: ${product.description || 'N/A'}
-Keywords: ${keywords}
-Competitors: ${competitors}
 
 YOUR TASK:
 Generate 15-20 search queries that will find people expressing buying intent for this type of product.

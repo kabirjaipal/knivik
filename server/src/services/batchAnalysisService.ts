@@ -21,8 +21,6 @@ export interface CollectedPost {
   postedAt?: Date;
   source: string; // subreddit, community, etc.
   detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR';
-  keywordMatch?: string;
-  competitorMatch?: string;
 }
 
 export interface ProductAnalysisResult {
@@ -55,8 +53,6 @@ export const analyzeUserPostsBatch = async (
       id: string;
       name: string;
       description: string | null;
-      keywords: Array<{ keyword: string }>;
-      competitors: Array<{ name: string }>;
     };
     posts: CollectedPost[];
   }>
@@ -90,8 +86,6 @@ export const analyzeUserPostsBatch = async (
     productId: product.id,
     productName: product.name,
     productDescription: product.description || '',
-    keywords: product.keywords.map(k => k.keyword),
-    competitors: product.competitors.map(c => c.name),
     postCount: posts.length,
     posts: posts.map(post => ({
       id: post.id,
@@ -102,8 +96,6 @@ export const analyzeUserPostsBatch = async (
       author: post.authorUsername,
       postedAt: post.postedAt?.toISOString(),
       detectionMode: post.detectionMode,
-      keywordMatch: post.keywordMatch,
-      competitorMatch: post.competitorMatch,
       url: post.url
     }))
   }));
@@ -116,8 +108,6 @@ ${productsContext.map((ctx, i) => `
 PRODUCT ${i + 1} (Product ID: ${ctx.productId})
 Name: "${ctx.productName}"
 Description: ${ctx.productDescription}
-Target Keywords: ${ctx.keywords.join(', ')}
-Competitors: ${ctx.competitors.join(', ')}
 Posts to analyze: ${ctx.postCount}
 
 POSTS:
@@ -129,7 +119,7 @@ Title: "${post.title}"
 Content: "${post.content}"
 Author: ${post.author}
 Posted: ${post.postedAt}
-Detection: ${post.detectionMode}${post.keywordMatch ? ` (Keyword: ${post.keywordMatch})` : ''}${post.competitorMatch ? ` (Competitor: ${post.competitorMatch})` : ''}
+Detection: ${post.detectionMode}
 URL: ${post.url}
 `).join('\n---\n')}
 `).join('\n\n===\n\n')}

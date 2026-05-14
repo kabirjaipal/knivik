@@ -33,12 +33,6 @@ export class BatchProcessingService {
       // Get the product with its settings
       const product = await db.client.product.findUnique({
         where: { id: productId, isActive: true },
-        include: {
-          keywords: { where: { isActive: true } },
-          sources: { where: { isActive: true } },
-          negativeKeywords: true,
-          competitors: true,
-        },
       });
 
       if (!product) {
@@ -68,8 +62,6 @@ export class BatchProcessingService {
           id: product.id,
           name: product.name,
           description: product.description,
-          keywords: product.keywords,
-          competitors: product.competitors,
         },
         posts
       }];
@@ -154,8 +146,6 @@ export class BatchProcessingService {
           id: product.id,
           name: product.name,
           description: product.description,
-          keywords: product.keywords,
-          competitors: product.competitors,
         },
         posts
       }));

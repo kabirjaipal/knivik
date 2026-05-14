@@ -12,13 +12,6 @@ const productSchema = z.object({
   websiteUrl: z.string().url().optional().or(z.literal('')),
   isActive: z.boolean().default(true),
   aiConfig: z.record(z.any()).optional(),
-  keywords: z.array(z.string()).default([]),
-  negativeKeywords: z.array(z.string()).default([]),
-  competitors: z.array(z.string()).default([]),
-  sources: z.array(z.object({
-    platform: z.nativeEnum(Platform),
-    identifier: z.string().min(1),
-  })).default([]),
 });
 
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
@@ -29,12 +22,6 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
 
     const products = await db.client.product.findMany({
       where: { userId },
-      include: {
-        keywords: true,
-        negativeKeywords: true,
-        competitors: true,
-        sources: true,
-      },
       orderBy: { createdAt: 'desc' },
     });
     
@@ -66,12 +53,6 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
 
     const product = await db.client.product.findUnique({
       where: { id: productId },
-      include: {
-        keywords: true,
-        negativeKeywords: true,
-        competitors: true,
-        sources: true,
-      },
     });
 
     if (!product || product.userId !== userId) {
@@ -116,81 +97,6 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Auto-generate strategy for users who submit empty or minimal configs (only global HN)
-    const hasNoKeywords = data.keywords.length === 0;
-    const hasOnlyGlobalSources = data.sources.length === 0 || 
-      (data.sources.length === 1 && data.sources[0]?.platform === Platform.HACKERNEWS && data.sources[0]?.identifier === 'global');
-
-    if (hasNoKeywords && hasOnlyGlobalSources && data.name) {
-      try {
-        const strategy = await generateProductStrategy(data.name, data.description || '', userId);
-        if (strategy) {
-          data.keywords = strategy.keywords || [];
-          data.negativeKeywords = strategy.negativeKeywords || [];
-          data.competitors = strategy.competitors || [];
-          
-          if (strategy.subreddits && strategy.subreddits.length > 0) {
-            strategy.subreddits.forEach(sub => {
-              data.sources.push({ platform: Platform.REDDIT, identifier: sub });
-            });
-          }
-
-          if (strategy.twitterHandles && strategy.twitterHandles.length > 0) {
-            strategy.twitterHandles.forEach(handle => {
-              data.sources.push({ platform: Platform.TWITTER, identifier: handle.replace('@', '') });
-            });
-          }
-
-          // if (strategy.linkedinSearchFlags && strategy.linkedinSearchFlags.length > 0) {
-          //   strategy.linkedinSearchFlags.forEach(flag => {
-          //     data.sources.push({ platform: "LINKEDIN" as any, identifier: flag });
-          //   });
-          // }
-
-          // if (strategy.productHuntCommunities && strategy.productHuntCommunities.length > 0) {
-          //   strategy.productHuntCommunities.forEach(topic => {
-          //     data.sources.push({ platform: "PRODUCTHUNT" as any, identifier: topic });
-          //   });
-          // }
-
-          // Always add HackerNews global
-          data.sources.push({ platform: Platform.HACKERNEWS, identifier: 'global' });
-        }
-      } catch (err) {
-        logger.warn({ err }, 'Failed to auto-generate strategy during onboarding, applying fallback');
-      }
-      
-      // Fallback if AI generation fails or returned no sources
-      if (data.sources.length === 0) {
-        data.sources = [
-          { platform: Platform.REDDIT, identifier: 'SaaS' },
-          { platform: Platform.REDDIT, identifier: 'startups' },
-          { platform: Platform.HACKERNEWS, identifier: 'global' }
-        ];
-        data.keywords = [data.name];
-      }
-    }
-
-    // Deduplicate sources and check for plan-restricted platforms
-    const uniqueSourcesMap = new Map<string, { platform: Platform; identifier: string }>();
-    const hasTwitter = data.sources.some(s => s.platform === Platform.TWITTER);
-    const { hasCapability } = await import('../lib/plans.js');
-    
-    if (hasTwitter && (!user || !hasCapability(user.plan as any, 'canAccessTwitter'))) {
-      res.status(403).json({ error: 'Twitter (X) tracking is only available on premium plans.' });
-      return;
-    }
-
-    data.sources
-      .filter((s): s is { platform: Platform; identifier: string } => !!s.platform && !!s.identifier)
-      .forEach(s => {
-        const key = `${s.platform}:${s.identifier}`;
-        if (!uniqueSourcesMap.has(key)) {
-          uniqueSourcesMap.set(key, s);
-        }
-      });
-    data.sources = Array.from(uniqueSourcesMap.values());
-
     const product = await db.client.product.create({
       data: {
         userId,
@@ -199,24 +105,6 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         websiteUrl: data.websiteUrl || null,
         isActive: data.isActive,
         aiConfig: data.aiConfig || {},
-        keywords: {
-          create: [...new Set(data.keywords)].map((k) => ({ keyword: k })),
-        },
-        negativeKeywords: {
-          create: [...new Set(data.negativeKeywords)].map((k) => ({ keyword: k })),
-        },
-        competitors: {
-          create: [...new Set(data.competitors)].map((c) => ({ name: c })),
-        },
-        sources: {
-          create: data.sources.map((s) => ({ platform: s.platform, identifier: s.identifier })),
-        },
-      },
-      include: {
-        keywords: true,
-        negativeKeywords: true,
-        competitors: true,
-        sources: true,
       },
     });
 
@@ -272,33 +160,8 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
       delete data.aiConfig['customPersona'];
     }
 
-    // Deduplicate sources and check for plan-restricted platforms
-    const uniqueSourcesMap = new Map<string, { platform: Platform; identifier: string }>();
-    const hasTwitter = data.sources.some(s => s.platform === Platform.TWITTER);
-    
-    if (hasTwitter && (!user || !hasCap(user.plan as any, 'canAccessTwitter'))) {
-      res.status(403).json({ error: 'Twitter (X) tracking is only available on premium plans.' });
-      return;
-    }
-
-    data.sources
-      .filter((s): s is { platform: Platform; identifier: string } => !!s.platform && !!s.identifier)
-      .forEach(s => {
-        const key = `${s.platform}:${s.identifier}`;
-        if (!uniqueSourcesMap.has(key)) {
-          uniqueSourcesMap.set(key, s);
-        }
-      });
-    data.sources = Array.from(uniqueSourcesMap.values());
-
     // We'll use a transaction to cleanly overwrite the relations
     const updated = await db.client.$transaction(async (tx) => {
-      // 1. Delete associated nested records
-      await tx.keyword.deleteMany({ where: { productId } });
-      await tx.negativeKeyword.deleteMany({ where: { productId } });
-      await tx.competitor.deleteMany({ where: { productId } });
-      await tx.productSource.deleteMany({ where: { productId } });
-
       // 2. Update parent and re-create nested records
       return tx.product.update({
         where: { id: productId },
@@ -310,24 +173,6 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           aiConfig: data.aiConfig || {},
           // Clear old queries - will regenerate
           searchQueries: [],
-          keywords: {
-            create: [...new Set(data.keywords)].map((k) => ({ keyword: k })),
-          },
-          negativeKeywords: {
-            create: [...new Set(data.negativeKeywords)].map((k) => ({ keyword: k })),
-          },
-          competitors: {
-            create: [...new Set(data.competitors)].map((c) => ({ name: c })),
-          },
-          sources: {
-            create: data.sources.map((s) => ({ platform: s.platform, identifier: s.identifier })),
-          },
-        },
-        include: {
-          keywords: true,
-          negativeKeywords: true,
-          competitors: true,
-          sources: true,
         },
       });
     });

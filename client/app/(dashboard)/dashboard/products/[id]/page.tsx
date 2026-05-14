@@ -14,10 +14,6 @@ interface Product {
   description: string | null
   websiteUrl: string | null
   isActive: boolean
-  keywords: Array<{ id: string; keyword: string }>
-  negativeKeywords: Array<{ id: string; keyword: string }>
-  competitors: Array<{ id: string; name: string }>
-  sources: Array<{ id: string; platform: string; identifier: string }>
 }
 
 export default function ProductDetailPage() {

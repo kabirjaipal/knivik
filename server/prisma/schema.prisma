@@ -134,12 +134,8 @@ model Product {
   searchQueries    Json?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  competitors      Competitor[]
-  keywords         Keyword[]
   leads            Lead[]
   llmUsageLogs     LlmUsageLog[]
-  negativeKeywords NegativeKeyword[]
-  sources          ProductSource[]
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -147,55 +143,7 @@ model Product {
   @@map("ir_products")
 }
 
-model ProductSource {
-  id         String   @id @default(cuid())
-  productId  String
-  platform   Platform
-  identifier String
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, platform, identifier])
-  @@map("ir_product_sources")
-}
-
-model Keyword {
-  id        String      @id @default(cuid())
-  productId String
-  keyword   String
-  isActive  Boolean     @default(true)
-  createdAt DateTime    @default(now())
-  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  matches   LeadMatch[]
-
-  @@unique([productId, keyword])
-  @@index([productId, isActive])
-  @@map("ir_keywords")
-}
-
-model NegativeKeyword {
-  id        String   @id @default(cuid())
-  productId String
-  keyword   String
-  createdAt DateTime @default(now())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, keyword])
-  @@map("ir_negative_keywords")
-}
-
-model Competitor {
-  id        String   @id @default(cuid())
-  productId String
-  name      String
-  createdAt DateTime @default(now())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, name])
-  @@index([productId])
-  @@map("ir_competitors")
-}
 
 model Lead {
   id             String      @id @default(cuid())
@@ -219,7 +167,6 @@ model Lead {
   reasoning      String?
   enrichment     Json?
   alertLogs      AlertLog[]
-  matches        LeadMatch[]
   product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   replies        Reply[]
 
@@ -233,19 +180,7 @@ model Lead {
   @@map("ir_leads")
 }
 
-model LeadMatch {
-  id        String   @id @default(cuid())
-  leadId    String
-  keywordId String?
-  type      String
-  createdAt DateTime @default(now())
-  keyword   Keyword? @relation(fields: [keywordId], references: [id], onDelete: Cascade)
-  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
-  @@index([leadId])
-  @@index([keywordId])
-  @@map("ir_lead_matches")
-}
 
 model Reply {
   id            String   @id @default(cuid())

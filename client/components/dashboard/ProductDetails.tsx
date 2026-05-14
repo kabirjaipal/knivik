@@ -9,10 +9,7 @@ interface Product {
   description: string | null
   websiteUrl: string | null
   isActive: boolean
-  keywords: Array<{ id: string; keyword: string }>
-  negativeKeywords: Array<{ id: string; keyword: string }>
-  competitors: Array<{ id: string; name: string }>
-  sources: Array<{ id: string; platform: string; identifier: string }>
+  searchQueries?: string[]
   aiConfig?: any
 }
 
@@ -32,54 +29,30 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </section>
 
       <div className="space-y-6">
-        {/* Keywords */}
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
-            <Hash className="w-3.5 h-3.5" /> Keywords
+        {/* Universal Engine Configuration */}
+        <section className="bg-primary/[0.03] p-5 rounded-2xl border border-primary/10">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-3 flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 fill-current" /> Universal AI Engine
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {product.keywords.map((k) => (
-              <Badge key={k.id} variant="secondary" className="text-xs py-1 px-3 bg-secondary/50 text-secondary-foreground hover:bg-secondary/70 border-none transition-colors">
-                {k.keyword}
-              </Badge>
-            ))}
-          </div>
-        </section>
-
-        {/* Negative Keywords */}
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
-            <XCircle className="w-3.5 h-3.5 text-destructive/60" /> Exclusions
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {product.negativeKeywords.length > 0 ? (
-              product.negativeKeywords.map((k) => (
-                <Badge key={k.id} variant="outline" className="text-xs py-1 px-3 text-destructive border-destructive/30 bg-destructive/5 hover:bg-destructive/10 transition-colors">
-                  {k.keyword}
-                </Badge>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground/40 italic">No exclusions defined</p>
-            )}
-          </div>
-        </section>
-
-        {/* Competitors */}
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40 mb-3 flex items-center gap-1.5">
-            <Target className="w-3.5 h-3.5" /> Competitors
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {product.competitors.length > 0 ? (
-                product.competitors.map((c) => (
-                <Badge key={c.id} variant="secondary" className="text-xs py-1 px-3 bg-secondary/50 text-secondary-foreground border-none">
-                    {c.name}
-                </Badge>
-                ))
-            ) : (
-                <p className="text-xs text-muted-foreground/40 italic">None</p>
-            )}
-          </div>
+          <p className="text-sm font-medium text-foreground/70 leading-relaxed mb-4">
+            Global network scanning is enabled. The AI will autonomously find leads across Reddit, HackerNews, and Twitter by semantically matching their posts against your product description.
+          </p>
+          
+          {product.searchQueries && product.searchQueries.length > 0 && (
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-2">Generated AI Search Vectors</p>
+              <div className="flex flex-wrap gap-2">
+                {product.searchQueries.slice(0, 5).map((q, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs py-1 px-3 bg-secondary/50 text-secondary-foreground border-none">
+                    "{q}"
+                  </Badge>
+                ))}
+                {product.searchQueries.length > 5 && (
+                  <span className="text-xs font-black text-muted-foreground/50 self-center">+{product.searchQueries.length - 5} more</span>
+                )}
+              </div>
+            </div>
+          )}
         </section>
       </div>
 
