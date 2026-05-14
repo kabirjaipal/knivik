@@ -51,6 +51,32 @@ export const sendLeadAlert = async (leadId: string) => {
 async function sendWebhookAlert(alertSetting: any, lead: any) {
   const url = alertSetting.slackWebhook;
   const webhookType = alertSetting.webhookType || 'SLACK';
+
+  // SSRF protection: block private/loopback/link-local addresses
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+    // Block loopback, private ranges, link-local, and metadata endpoints
+    const blockedPatterns = [
+      /^localhost$/,
+      /^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+      /^192\.168\./, /^169\.254\./, /^::1$/, /^\[::1\]$/,
+      /^0\.0\.0\.0$/,
+      /metadata\.google\.internal/,
+    ];
+    if (blockedPatterns.some(p => p.test(hostname))) {
+      logger.error({ url, leadId: lead.id }, 'SSRF: Blocked webhook URL targeting private/internal address');
+      return;
+    }
+    // Only allow https in production
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      logger.error({ url }, 'Invalid webhook URL protocol');
+      return;
+    }
+  } catch {
+    logger.error({ url }, 'Invalid webhook URL');
+    return;
+  }
   try {
     let payload: any = {};
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };

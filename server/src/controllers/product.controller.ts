@@ -386,8 +386,17 @@ export const analyzeProduct = async (req: Request, res: Response): Promise<void>
     // @ts-ignore
     const userId = req.user?.id as string | undefined;
     const { name, description } = req.body;
-    if (!name || !description) {
+    if (!name || typeof name !== 'string' || !description || typeof description !== 'string') {
       res.status(400).json({ error: 'Name and description are required for AI analysis' });
+      return;
+    }
+    // Enforce length limits to prevent prompt injection via oversized inputs
+    if (name.length > 100) {
+      res.status(400).json({ error: 'Product name must be 100 characters or fewer' });
+      return;
+    }
+    if (description.length > 1000) {
+      res.status(400).json({ error: 'Product description must be 1000 characters or fewer' });
       return;
     }
 

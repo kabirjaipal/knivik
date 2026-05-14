@@ -593,11 +593,13 @@ export const googleCallback = async (req: Request, res: Response) => {
       },
     });
 
-    // Issue a session JWT identical to the standard login flow.
-    const token = await issueSession(res, user.id);
+    // Issue session cookie via the standard login flow.
+    // NOTE: Do NOT pass the token in the URL — it leaks into browser history,
+    // server access logs, and Referer headers. The HttpOnly cookie set by
+    // issueSession() is the secure transport mechanism.
+    await issueSession(res, user.id);
 
-    // Redirect to the frontend callback so it can set the cookie in a first-party context
-    res.redirect(`${config.FRONTEND_URL}/auth/callback?token=${token}`);
+    res.redirect(`${config.FRONTEND_URL}/dashboard`);
   } catch (error) {
     logger.error({ error }, 'Google OAuth Error');
     res.redirect(`${config.FRONTEND_URL}/login?error=Google+Authentication+Failed`);

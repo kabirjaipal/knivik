@@ -137,6 +137,7 @@ export const updateLeadNotes = async (req: Request, res: Response): Promise<void
 
     if (!userId || !leadId) { res.status(401).json({ error: 'Unauthorized' }); return; }
     if (typeof notes !== 'string') { res.status(400).json({ error: 'notes must be a string' }); return; }
+    if (notes.length > 5000) { res.status(400).json({ error: 'notes must be 5000 characters or fewer' }); return; }
 
     const lead = await db.client.lead.findUnique({
       where: { id: leadId },

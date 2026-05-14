@@ -3,7 +3,7 @@ import logger from '../lib/logger.js';
 import { IntentLevel, LeadStatus } from '@prisma/client';
 import { BatchCollectionService } from './batchCollectionService.js';
 import { analyzeUserPostsBatch } from './batchAnalysisService.js';
-import { emitToUser } from '../lib/socket.js';
+
 import { enrichLead } from './enrichmentService.js';
 import { sendLeadAlert } from './alertService.js';
 
@@ -197,8 +197,7 @@ export class BatchProcessingService {
         }
       });
 
-      // Emit completion status to dashboard
-      emitToUser(userId, 'scan-status', { isScanning: false });
+
 
       return {
         success: true,
@@ -219,7 +218,7 @@ export class BatchProcessingService {
         }
       });
 
-      emitToUser(userId, 'scan-status', { isScanning: false });
+
 
       return {
         success: false,
@@ -279,11 +278,7 @@ export class BatchProcessingService {
 
       logger.info(`[BATCH] New lead saved: ${newLead.id} (Score: ${intentScore})`);
 
-      // Emit to dashboard in real-time
-      emitToUser(userId, 'new-lead', {
-        ...newLead,
-        product: { name: bestLead.productName }
-      });
+
 
       // Integrated Pipeline: Run enrichment and alerts immediately in the same process
       if (post.authorUsername) {

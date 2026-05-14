@@ -3,7 +3,6 @@ import { HackerNewsEngine } from './hackerNewsEngine.js';
 import { TwitterEngine } from './twitterEngine.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
-import { emitToUser } from '../lib/socket.js';
 
 export const engines = [
   new RedditEngine(),
@@ -41,7 +40,7 @@ export const runAllEngines = async (userId: string) => {
       return;
     }
 
-    emitToUser(userId, 'scan-status', { isScanning: true, status: 'SCANNING' });
+
 
     // 3. Launch Engines (Pass signal)
     const tasks = engines.map(engine => engine.runAll(userId, controller.signal));
@@ -54,7 +53,7 @@ export const runAllEngines = async (userId: string) => {
         where: { id: userId },
         data: { isScanning: false, lastScanStatus: 'SUCCESS' }
       });
-      emitToUser(userId, 'scan-status', { isScanning: false, status: 'SUCCESS' });
+
       logger.info(`✅ User ${userId} scan cycle finished.`);
     }
   } catch (err: any) {
@@ -67,7 +66,7 @@ export const runAllEngines = async (userId: string) => {
         where: { id: userId },
         data: { isScanning: false, lastScanStatus: 'FAILED' }
       });
-      emitToUser(userId, 'scan-status', { isScanning: false, status: 'FAILED' });
+
     }
   } finally {
     // Only delete OUR controller from the map
@@ -91,6 +90,6 @@ export const stopAllEngines = async (userId: string) => {
     data: { isScanning: false, lastScanStatus: 'STOPPED' }
   });
 
-  emitToUser(userId, 'scan-status', { isScanning: false, status: 'STOPPED' });
+
   return true;
 };

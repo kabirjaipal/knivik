@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { io, Socket } from "socket.io-client"
+
 import React, { memo } from "react"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -321,7 +321,7 @@ export default function DashboardPage() {
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
   const router = useRouter()
-  const [socket, setSocket] = useState<Socket | null>(null)
+
   const [llmUsage, setLlmUsage] = useState<{ totals: { inputTokens: number, outputTokens: number, totalTokens: number, requestCount: number } } | null>(null)
   const hasFetchedDashboard = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
@@ -364,17 +364,6 @@ export default function DashboardPage() {
 
     fetchLeads()
     fetchLlmUsage()
-
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin
-    const newSocket = io(socketUrl, { withCredentials: true, transports: ['websocket', 'polling'] })
-
-    newSocket.on('connect', () => newSocket.emit('join-user-room', user.id))
-    newSocket.on('new-lead', (newLead: Lead) => {
-      setLeads(prev => prev.find(l => l.id === newLead.id) ? prev : [newLead, ...prev])
-    })
-
-    setSocket(newSocket)
-    return () => { newSocket.disconnect() }
   }, [user, authLoading, fetchLlmUsage, fetchLeads])
 
   const handleDraftReply = async (leadId: string) => {

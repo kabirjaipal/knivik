@@ -14,7 +14,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 import authRoutes from './routes/auth.routes.js';
 import { createServer } from 'http';
-import { initSocket } from './lib/socket.js';
+
 import { pipelineQueue } from './lib/queue.js';
 import { startWorkers, stopWorkers } from './workers/index.js';
 
@@ -134,8 +134,21 @@ async function startServer() {
   try {
     await db.connect();
 
+    // Reset stale scanning states from any previous crashed/interrupted run.
+    // Without this, users remain stuck in 'SCANNING' state after a server crash/restart.
+    try {
+      const staleCount = await db.client.user.updateMany({
+        where: { isScanning: true },
+        data: { isScanning: false, lastScanStatus: 'FAILED' },
+      });
+      if (staleCount.count > 0) {
+        logger.warn({ count: staleCount.count }, 'Reset stale isScanning flags from previous run');
+      }
+    } catch (err) {
+      logger.error({ err }, 'Failed to reset stale isScanning flags');
+    }
+
     const httpServer = createServer(app);
-    initSocket(httpServer);
 
     httpServer.listen(config.PORT, config.HOST, () => {
       logger.info(

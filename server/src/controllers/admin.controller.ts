@@ -45,8 +45,8 @@ export const getStats = async (_req: Request, res: Response) => {
  */
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20)); // Cap at 100
     const skip = (page - 1) * limit;
     const search = (req.query.search as string) || '';
 
@@ -102,8 +102,8 @@ export const getUsers = async (req: Request, res: Response) => {
  */
 export const getLlmUsage = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 50;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 50)); // Cap at 200
     const skip = (page - 1) * limit;
 
     const [logs, totalCount] = await Promise.all([
@@ -331,8 +331,8 @@ export const deleteUser = async (req: Request, res: Response) => {
  */
 export const getLeads = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20)); // Cap at 100
     const skip = (page - 1) * limit;
 
     const [leads, totalCount] = await Promise.all([
@@ -375,8 +375,8 @@ export const getLeads = async (req: Request, res: Response) => {
  */
 export const getAlertLogs = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20)); // Cap at 100
     const skip = (page - 1) * limit;
 
     const [logs, totalCount] = await Promise.all([
@@ -422,8 +422,12 @@ export const getAlertLogs = async (req: Request, res: Response) => {
  */
 export const getRevenue = async (_req: Request, res: Response) => {
   try {
-    const [totalPayments, activeSubscriptions, recentPayments] = await Promise.all([
-      db.client.payment.findMany({ where: { status: 'paid' } }),
+    const [revenueAggregate, activeSubscriptions, recentPayments] = await Promise.all([
+      // Use aggregate instead of findMany to avoid loading all rows into memory
+      db.client.payment.aggregate({
+        where: { status: 'paid' },
+        _sum: { amount: true },
+      }),
       db.client.subscription.findMany({ where: { status: 'active' } }),
       db.client.payment.findMany({ 
         take: 10, 
@@ -432,7 +436,7 @@ export const getRevenue = async (_req: Request, res: Response) => {
       })
     ]);
 
-    const totalRevenueCents = totalPayments.reduce((sum, p) => sum + p.amount, 0);
+    const totalRevenueCents = revenueAggregate._sum.amount ?? 0;
     
     // Simple MRR calculation based on active subscriptions
     // In a real app, this would be more complex (handling annual vs monthly)
@@ -495,6 +499,14 @@ export const getConfig = async (_req: Request, res: Response) => {
 export const updateConfig = async (req: Request, res: Response) => {
   try {
     const { key, value } = req.body;
+
+    // Validate key and value are present and sane types
+    if (!key || typeof key !== 'string' || key.length > 128) {
+      return res.status(400).json({ success: false, error: 'Invalid config key' });
+    }
+    if (value === undefined || value === null) {
+      return res.status(400).json({ success: false, error: 'Config value is required' });
+    }
 
     await db.client.systemConfig.upsert({
       where: { key },

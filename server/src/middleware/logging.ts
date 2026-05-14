@@ -63,7 +63,7 @@ export const dbLogger = async (req: Request, res: Response, next: NextFunction):
     const redactSensitive = (obj: unknown): unknown => {
       if (!obj || typeof obj !== 'object') return obj;
       const copy: Record<string, unknown> = Array.isArray(obj) ? [...(obj as unknown[])] as unknown as Record<string, unknown> : { ...(obj as Record<string, unknown>) };
-      const sensitive = ['password', 'authorization', 'jwt', 'token', 'secret', 'apikey', 'key', 'sessionid', 'cvv', 'card'];
+      const sensitive = ['password', 'authorization', 'jwt', 'token', 'secret', 'apikey', 'key', 'sessionid', 'cvv', 'card', 'cookie', 'set-cookie'];
 
       for (const key of Object.keys(copy)) {
         if (sensitive.includes(key.toLowerCase())) copy[key] = '[REDACTED]';

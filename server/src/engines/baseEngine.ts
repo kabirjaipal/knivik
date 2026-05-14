@@ -9,7 +9,7 @@ import {
 import { Platform, IntentLevel, Product, Keyword, NegativeKeyword, ProductSource, Competitor } from '@prisma/client';
 import { enrichLead } from '../services/enrichmentService.js';
 import { sendLeadAlert } from '../services/alertService.js';
-import { emitToUser } from '../lib/socket.js';
+
 
 export type ProductWithDetails = Product & {
   keywords: Keyword[];
@@ -376,13 +376,6 @@ export abstract class BaseScraperEngine {
         `[${this.platform}] New ${detectedBy} lead saved for ${product.name} (Score: ${intentScore})`
       );
 
-      // Emit to dashboard in real-time
-      if (product.userId) {
-        emitToUser(product.userId, 'new-lead', {
-          ...newLead,
-          product: { name: product.name },
-        });
-      }
 
       // Unified Pipeline: Enrich and Alert directly
       if (authorUsername) {
