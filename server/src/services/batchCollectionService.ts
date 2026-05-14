@@ -336,8 +336,11 @@ export class BatchCollectionService {
 
     // To respect Reddit's strict 10 requests/minute unauthenticated limit, we randomly pick
     // 5 queries per cycle for better coverage. Since the job runs repeatedly, all queries will eventually be covered.
-    const shuffledQueries = [...searchQueries].sort(() => 0.5 - Math.random());
-    const cycleQueries = shuffledQueries.slice(0, 5);
+    const cycleQueries = [...searchQueries]
+      .map(q => ({ q, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .slice(0, 5)
+      .map(({ q }) => q);
     
     // Strategy 1: Advanced query-based collection
     for (const query of cycleQueries) { 
@@ -910,154 +913,123 @@ export class BatchCollectionService {
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
 
-    // Generate search queries from product data
-    const queries = this.generateSearchQueries(product);
-    if (queries.length === 0) {
+    // Load pre-generated search queries
+    const { SearchQueryService } = await import('./searchQueryService.js');
+    const allQueries = await SearchQueryService.getStoredQueries(product.id);
+    if (allQueries.length === 0) {
       logger.warn(`[COLLECTION] No search queries for Twitter scan of "${product.name}"`);
       return posts;
     }
 
-    // Pick 3 random queries per cycle for better coverage
-    const shuffledQueries = [...queries].sort(() => 0.5 - Math.random());
-    const cycleQueries = shuffledQueries.slice(0, 3);
+    // Pick 3 random queries per cycle
+    const cycleQueries = [...allQueries]
+      .map(q => ({ q, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .slice(0, 3)
+      .map(({ q }) => q);
+
+    const cheerio = await import('cheerio');
 
     for (const query of cycleQueries) {
       try {
-        // Use nitter.privacydev.net as a lightweight Twitter alternative (no auth needed)
-        // Multiple nitter instances for fallback if one is down
-        const nitterInstances = ['nitter.privacydev.net', 'nitter.net', 'nitter.cz'];
-        const searchQuery = encodeURIComponent(`${query} (looking for OR recommendation OR alternative)`);
-        const sinceDate = Math.floor(oneMonthAgo.getTime() / 1000);
-        
-        let response: Response | null = null;
-        let lastError: string = '';
-        
-        for (const instance of nitterInstances) {
-          try {
-            const url = `https://${instance}/search?f=tweets&q=${searchQuery}&since=${sinceDate}`;
-            const attempt = await fetch(url, {
-              headers: {
-                'User-Agent': this.getRandomUserAgent(),
-                'Accept': 'text/html',
-              },
-              signal: AbortSignal.timeout(10000)
-            });
-            if (attempt.ok) {
-              response = attempt;
-              break;
-            }
-          } catch (err: any) {
-            lastError = err.message;
-            continue;
-          }
-        }
-        
-        if (!response) {
-          logger.warn(`[DEEP-LOG] [TWITTER] All Nitter instances failed. Last error: ${lastError}`);
-          break; // Skip Twitter for this cycle
-        }
+        // Yahoo Search: site:x.com query — no auth, no API key needed
+        const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:x.com ${query}`)}`;
 
-        if (response.status === 429 || response.status === 403) {
-          logger.warn(`[DEEP-LOG] [TWITTER] Rate limited or blocked on Nitter. Consider using TwitterEngine with auth tokens.`);
-          break; // Stop Twitter collection for this cycle
-        }
+        logger.info(`[DEEP-LOG] [TWITTER] Yahoo search: "${query}"`);
+
+        const response = await fetch(searchUrl, {
+          headers: {
+            'User-Agent': this.getRandomUserAgent(),
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml',
+          },
+          signal: AbortSignal.timeout(12000)
+        });
 
         if (!response.ok) {
-          logger.warn(`[DEEP-LOG] [TWITTER] Fetch failed (${response.status}) for query: ${query}`);
+          logger.warn(`[DEEP-LOG] [TWITTER] Yahoo returned ${response.status} for query: ${query}`);
           continue;
         }
 
         const html = await response.text();
+        const $ = cheerio.load(html);
 
-        // Simple regex-based parsing for Nitter HTML structure
-        // Nitter tweet structure: <div class="timeline-item" ...>
-        const tweetMatches = html.match(/<div class="timeline-item"[^>]*>(.*?)<\/div>\s*<\/div>/gs);
+        let queryMatches = 0;
+        $('.algo').each((_i, el) => {
+          if (posts.length >= 25) return false;
 
-        if (!tweetMatches || tweetMatches.length === 0) {
-          logger.debug(`[DEEP-LOG] [TWITTER] No tweets found for query: "${query}"`);
-          continue;
-        }
+          const rawUrl = $(el).find('a').attr('href') || '';
+          const rawText = $(el).find('.compTitle + div').text() || $(el).find('.fz-ms').text() || $(el).find('.compText').text() || '';
 
-        for (const tweetHtml of tweetMatches.slice(0, 10)) {
-          try {
-            // Extract tweet ID from link
-            const idMatch = tweetHtml.match(/status\/(\d+)/);
-            const tweetId = idMatch ? idMatch[1] : `tw_${Date.now()}_${Math.random()}`;
+          // Unwrap Yahoo redirect (RU=https%3A%2F%2Fx.com%2F...)
+          let url = rawUrl;
+          const ruMatch = rawUrl.match(/RU=([^/&]+)/);
+          if (ruMatch) {
+            try { url = decodeURIComponent(ruMatch[1]); } catch { /* ignore */ }
+          }
 
-            // Extract content
-            const contentMatch = tweetHtml.match(/<div class="tweet-content[^"]*"[^>]*>(.*?)<\/div>/s);
-            const content = contentMatch ? this.stripHtml(contentMatch[1]) : '';
+          if (!(url.includes('x.com/') || url.includes('twitter.com/'))) return;
+          if (!url.includes('/status/')) return;
 
-            if (!content || content.length < 30) continue;
+          const idMatch = url.match(/\/status\/(\d+)/);
+          if (!idMatch) return;
+          const tweetId = idMatch[1];
 
-            // Extract author
-            const authorMatch = tweetHtml.match(/<a href="\/([^"\/]+)"/);
-            const author = authorMatch ? authorMatch[1] : 'unknown';
+          const authorMatch = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
+          const author = authorMatch ? authorMatch[1] : 'unknown';
+          if (author === 'unknown' || author === 'i') return;
 
-            // Extract timestamp
-            const timeMatch = tweetHtml.match(/datetime="([^"]+)"/);
-            const postedAt = timeMatch ? new Date(timeMatch[1]) : new Date();
-            if (postedAt < oneMonthAgo) continue;
+          // Remove the date prefix Yahoo sometimes prepends
+          const content = rawText.replace(/^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d+,\s\d{4}\s[·\-]\s*/i, '').trim();
 
-            const combinedText = content.toLowerCase();
+          if (!content || content.length < 30) return;
+          if (!this.passesBasicFilters(content, product)) return;
 
-            // Check for keyword/competitor matches
-            let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'SEMANTIC';
-            let keywordMatch: string | undefined;
-            let competitorMatch: string | undefined;
+          // Detect mode
+          let detectionMode: 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR' = 'SEMANTIC';
+          let keywordMatch: string | undefined;
+          let competitorMatch: string | undefined;
 
-            for (const competitor of product.competitors) {
-              if (combinedText.includes(competitor.name.toLowerCase())) {
-                detectionMode = 'COMPETITOR';
-                competitorMatch = competitor.name;
+          for (const competitor of product.competitors) {
+            if (content.toLowerCase().includes(competitor.name.toLowerCase())) {
+              detectionMode = 'COMPETITOR';
+              competitorMatch = competitor.name;
+              break;
+            }
+          }
+          if (!competitorMatch) {
+            for (const keyword of product.keywords) {
+              if (content.toLowerCase().includes(keyword.keyword.toLowerCase())) {
+                detectionMode = 'KEYWORD';
+                keywordMatch = keyword.keyword;
                 break;
               }
             }
-
-            if (!competitorMatch) {
-              for (const keyword of product.keywords) {
-                if (combinedText.includes(keyword.keyword.toLowerCase())) {
-                  detectionMode = 'KEYWORD';
-                  keywordMatch = keyword.keyword;
-                  break;
-                }
-              }
-            }
-
-            // RELAXED: Allow tweets through even without strong keyword match
-            // The AI analysis phase will filter out false positives
-            if (!keywordMatch && !competitorMatch) {
-              detectionMode = 'SEMANTIC';
-            }
-
-            // Basic filters
-            if (!this.passesBasicFilters(content, product)) continue;
-
-            posts.push({
-              id: `twitter-${tweetId}`,
-              platform: 'TWITTER',
-              externalPostId: tweetId,
-              title: null,
-              content,
-              url: `https://twitter.com/${author}/status/${tweetId}`,
-              authorUsername: author,
-              postedAt,
-              source: source.identifier,
-              detectionMode,
-              ...(keywordMatch && { keywordMatch }),
-              ...(competitorMatch && { competitorMatch })
-            });
-          } catch (_parseError) {
-            continue; // Skip malformed tweets
           }
+
+          posts.push({
+            id: `twitter-${tweetId}`,
+            platform: 'TWITTER',
+            externalPostId: tweetId,
+            title: null,
+            content,
+            url: `https://x.com/${author}/status/${tweetId}`,
+            authorUsername: author,
+            postedAt: new Date(), // Yahoo does not provide exact timestamp
+            source: source.identifier,
+            detectionMode,
+            ...(keywordMatch && { keywordMatch }),
+            ...(competitorMatch && { competitorMatch })
+          });
+          queryMatches++;
+        });
+
+        if (queryMatches > 0) {
+          logger.info(`[DEEP-LOG] [TWITTER] Query "${query}" yielded ${queryMatches} potential leads`);
         }
 
-        if (posts.length > 0) {
-          logger.info(`[DEEP-LOG] [TWITTER] Query "${query}" yielded ${posts.length} potential leads`);
-        }
-
-        // Rate limiting delay
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Rate limiting: 4 seconds between Yahoo requests
+        await new Promise(resolve => setTimeout(resolve, 4000));
 
       } catch (error: any) {
         logger.warn(`[DEEP-LOG] [TWITTER] Query "${query}" error: ${error.message}`);

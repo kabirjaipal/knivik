@@ -76,7 +76,6 @@ export class HackerNewsEngine extends BaseScraperEngine {
    */
   private async fetchLatestViaFirebase(count: number = 30): Promise<HNPost[]> {
     try {
-      // Step 1: Get list of newest story IDs
       const idsRes = await httpClient.get(`${this.HN_BASE}/newstories.json`, {
         headers: { 'Accept': 'application/json' },
       });
@@ -84,17 +83,19 @@ export class HackerNewsEngine extends BaseScraperEngine {
       const ids: number[] = ((idsRes.data as any) || []).slice(0, count);
       if (!ids.length) return [];
 
-      // Step 2: Fetch each story's details in parallel
-      const posts = await Promise.all(
-        ids.map(async (id) => {
-          try {
+      // Fetch in parallel batches of 10 to avoid hammering Firebase
+      const BATCH_SIZE = 10;
+      const allPosts: HNPost[] = [];
+
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const batch = ids.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(
+          batch.map(async (id) => {
             const res = await httpClient.get(`${this.HN_BASE}/item/${id}.json`, {
               headers: { 'Accept': 'application/json' },
             });
             const item = res.data as any;
-            if (!item || item.deleted || item.dead) return null;
-            if (item.type !== 'story') return null;
-
+            if (!item || item.deleted || item.dead || item.type !== 'story') return null;
             return {
               id: String(item.id),
               title: item.title || '',
@@ -105,13 +106,17 @@ export class HackerNewsEngine extends BaseScraperEngine {
               externalPostId: String(item.id),
               score: item.score || 0,
             } as HNPost;
-          } catch {
-            return null;
-          }
-        })
-      );
+          })
+        );
 
-      return posts.filter((p): p is HNPost => p !== null);
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value !== null) {
+            allPosts.push(result.value);
+          }
+        }
+      }
+
+      return allPosts;
     } catch (error: any) {
       logger.error(`[HACKERNEWS] Firebase API failed: ${error.message}`);
       return [];

@@ -227,11 +227,9 @@ Return your analysis as JSON:
         
         for (const aiLead of aiResult.qualifiedLeads) {
           const rawId = String(aiLead.postId).trim();
-          const originalPost = originalProductData?.posts.find(p => 
-            p.id === rawId || 
-            p.id.endsWith(rawId) || 
-            rawId.includes(p.id)
-          );
+          // Exact match first — prevents mismatches between e.g. "reddit-abc" and "reddit-recent-abc"
+          const originalPost = originalProductData?.posts.find(p => p.id === rawId)
+            ?? originalProductData?.posts.find(p => p.id.endsWith(rawId) || rawId.endsWith(p.externalPostId));
           
           if (originalPost) {
             validLeads.push({

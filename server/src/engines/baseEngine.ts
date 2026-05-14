@@ -90,8 +90,10 @@ export abstract class BaseScraperEngine {
         const MAX = 5;
         let found = 0;
 
-        // Shuffle keywords to avoid hitting the same pattern every time
-        const shuffledKeywords = [...product.keywords].sort(() => Math.random() - 0.5);
+        const shuffledKeywords = [...product.keywords]
+          .map(k => ({ k, sort: Math.random() }))
+          .sort((a, b) => a.sort - b.sort)
+          .map(({ k }) => k);
 
         // Pass 1: Keyword scan
         if (shuffledKeywords.length > 0) {

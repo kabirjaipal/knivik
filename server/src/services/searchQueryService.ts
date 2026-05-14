@@ -176,13 +176,20 @@ Return ONLY a JSON array of strings:
         throw new Error('No content returned from AI');
       }
 
-      // Extract JSON from response (handle markdown code blocks)
-      const jsonMatch = content.match(/\[\s*"[^\]]+\]/s);
-      if (!jsonMatch) {
+      // Extract JSON from response — handle markdown code blocks and plain JSON
+      let jsonText = content.trim();
+      // Strip markdown fences (```json ... ``` or ``` ... ```)
+      const fenceMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fenceMatch) jsonText = fenceMatch[1].trim();
+      // Extract the first JSON array found
+      const arrayStart = jsonText.indexOf('[');
+      const arrayEnd = jsonText.lastIndexOf(']');
+      if (arrayStart === -1 || arrayEnd === -1 || arrayEnd <= arrayStart) {
         throw new Error('No JSON array found in response');
       }
+      jsonText = jsonText.slice(arrayStart, arrayEnd + 1);
 
-      const queries: string[] = JSON.parse(jsonMatch[0]);
+      const queries: string[] = JSON.parse(jsonText);
       
       // Validate and clean
       const validQueries = queries

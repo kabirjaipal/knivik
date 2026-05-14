@@ -40,7 +40,7 @@ export class TwitterEngine extends BaseScraperEngine {
 
   private async scrapeYahooSearch(query: string, limit: number): Promise<TwitterPost[]> {
     const posts: TwitterPost[] = [];
-    const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:x.com ${query}`)}&age=1d&btf=d`;
+    const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:x.com ${query}`)}`;
 
     try {
       logger.debug(`[TWITTER via YAHOO] Fetching: ${searchUrl}`);
