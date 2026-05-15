@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
-  const [llmUsage, setLlmUsage] = useState<{ totals: { requestCount: number; totalTokens: number } } | null>(null)
+  const [llmUsage, setLlmUsage] = useState<{ totals: { requestCount: number } } | null>(null)
 
   const hasFetched = useRef(false)
   const lastUserId = useRef<string | null>(null)

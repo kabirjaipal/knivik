@@ -107,17 +107,12 @@ export class UsageController {
             }))
           },
           llm: {
-            totalTokens: totalInputTokens + totalOutputTokens,
-            inputTokens: totalInputTokens,
-            outputTokens: totalOutputTokens,
             usageByAction: Object.entries(usageByAction).map(([action, stats]) => ({
               action,
-              tokens: stats.tokens,
               count: stats.count
             })),
             usageByModel: Object.entries(usageByModel).map(([model, stats]) => ({
               model,
-              tokens: stats.tokens,
               count: stats.count
             }))
           },
@@ -154,11 +149,9 @@ export class UsageController {
           id: log.id,
           action: log.action,
           model: log.modelId,
-          tokens: log.totalTokens,
           product: log.product?.name || 'System Task',
           status: log.status,
-          createdAt: log.createdAt,
-          cost: Number(((log.inputTokens / 1_000_000) * (log.model.inputPrice || 0) + (log.outputTokens / 1_000_000) * (log.model.outputPrice || 0)).toFixed(6))
+          createdAt: log.createdAt
         }))
       });
     } catch (error) {

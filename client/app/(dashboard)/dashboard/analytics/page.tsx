@@ -56,18 +56,12 @@ interface AnalyticsData {
 interface LlmBreakdown {
   modelId: string;
   action: string;
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
   requestCount: number;
 }
 
 interface LlmUsageData {
   breakdown: LlmBreakdown[];
   totals: {
-    inputTokens: number;
-    outputTokens: number;
-    totalTokens: number;
     requestCount: number;
   };
 }
@@ -489,7 +483,7 @@ export default function AnalyticsPage() {
                {llmUsage?.breakdown.map((item, i) => (
                  <div key={i} className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
                     <span className="text-muted-foreground">{item.action.replace('_', ' ')}</span>
-                    <span>{Math.round((item.totalTokens / (llmUsage.totals.totalTokens || 1)) * 100)}% Effort</span>
+                    <span>{Math.round((item.requestCount / (llmUsage.totals.requestCount || 1)) * 100)}% Effort</span>
                  </div>
                ))}
             </CardContent>

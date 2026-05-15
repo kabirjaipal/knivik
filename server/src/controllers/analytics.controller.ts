@@ -296,8 +296,8 @@ export const getLlmUsage = asyncHandler(async (req: AuthenticatedRequest, res: R
   res.status(200).json({
     success: true,
     data: {
-      breakdown: data,
-      totals
+      breakdown: data.map(({ inputTokens, outputTokens, totalTokens, ...rest }) => rest),
+      totals: { requestCount: totals.requestCount }
     }
   });
 });
