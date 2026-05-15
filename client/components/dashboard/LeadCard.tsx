@@ -130,7 +130,7 @@ export const LeadCard = memo(({
 
   return (
     <div className={`group relative border-b border-border/40 last:border-0 border-l-2 ${getAccentBorder(lead.detectedBy)}`}>
-      <div className="pl-4 pr-4 pt-3 pb-2 hover:bg-muted/[0.06] transition-colors">
+      <div className="pl-4 pr-4 pt-3 pb-2 hover:bg-muted/6 transition-colors">
 
         {/* ── Row 1: badges + score + engage ──────────────────────────── */}
         <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
@@ -283,7 +283,7 @@ export const LeadCard = memo(({
 
       {/* ── Expandable: AI Draft ─────────────────────────────────────────────── */}
       {draftedReply && isExpanded && (
-        <div className="border-t border-border/40 px-4 py-3 bg-primary/[0.02] relative animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="border-t border-border/40 px-4 py-3 bg-primary/2 relative animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="absolute left-0 top-0 w-0.5 h-full bg-primary" />
           <h4 className="flex items-center gap-1 text-[10px] uppercase tracking-widest font-black text-primary mb-2">
             <Zap className="w-2.5 h-2.5" /> AI Draft

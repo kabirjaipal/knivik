@@ -317,7 +317,7 @@ export default function DashboardPage() {
 
           {/* AI usage */}
           {llmUsage && (
-            <div className="rounded-xl border border-primary/15 bg-primary/[0.03] p-3 space-y-1">
+            <div className="rounded-xl border border-primary/15 bg-primary/3 p-3 space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 flex items-center gap-1">
                 <Zap className="w-2.5 h-2.5" /> AI Engine
               </p>

@@ -30,7 +30,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
       <div className="space-y-6">
         {/* Universal Engine Configuration */}
-        <section className="bg-primary/[0.03] p-5 rounded-2xl border border-primary/10">
+        <section className="bg-primary/3 p-5 rounded-2xl border border-primary/10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-3 flex items-center gap-1.5">
             <Zap className="w-3.5 h-3.5 fill-current" /> Universal AI Engine
           </h2>
@@ -58,7 +58,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
       {/* AI Persona */}
       {product.aiConfig?.customPersona && (
-        <section className="bg-primary/[0.03] p-5 rounded-2xl border border-primary/10">
+        <section className="bg-primary/3 p-5 rounded-2xl border border-primary/10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-2 flex items-center gap-1.5">
             <Zap className="w-3 h-3 fill-current" /> AI Persona
           </h2>

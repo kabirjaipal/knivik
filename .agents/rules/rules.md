@@ -14,6 +14,7 @@ GLOBAL ENFORCEMENT RULES:
 - Never omit imports, types, configs, or dependencies.
 - Never assume implicit behavior—everything must be explicit.
 - Every decision must follow modern best practices (2025+).
+- Always use Tailwind CSS v4 utility classes; never use older version syntax or deprecated classes.
 - Prefer standard libraries over external dependencies unless justified.
 - All outputs must be deterministic, consistent, and reproducible.
 

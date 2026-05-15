@@ -170,7 +170,7 @@ export default function ProductDetailPage() {
 
         {/* Collapsible AI queries */}
         {showConfig && queries.length > 0 && (
-          <div className="mt-1 p-3 rounded-xl border border-primary/15 bg-primary/[0.03] animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
+          <div className="mt-1 p-3 rounded-xl border border-primary/15 bg-primary/3 animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">AI Search Vectors</p>
             <div className="flex flex-wrap gap-1.5">
               {queries.map((q, i) => (
