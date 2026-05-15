@@ -5,6 +5,8 @@ import { AlertCircle, MessageSquare, TrendingUp, Radar } from "lucide-react"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
 import { ProductStats } from "./ProductStats"
 
+type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
+
 interface ProductLeadsProps {
   productId: string
   lastManualScanDate?: string | null
@@ -17,6 +19,7 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
   const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
+  const [activeTab, setActiveTab] = useState<FilterTab>('ALL')
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -113,6 +116,27 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
+  const buyNow = leads.filter(l => l.intentLevel === 'BUY_NOW').length
+  const competitor = leads.filter(l => l.detectedBy === 'COMPETITOR').length
+  const semantic = leads.filter(l => l.detectedBy === 'SEMANTIC').length
+  const saved = leads.filter(l => l.status === 'SAVED').length
+
+  const TABS: { key: FilterTab; label: string; count: number }[] = [
+    { key: 'ALL',        label: 'All Signals',    count: leads.length },
+    { key: 'BUY_NOW',    label: '🔥 Buy Now',     count: buyNow },
+    { key: 'COMPETITOR', label: '⚔️ Competitor',  count: competitor },
+    { key: 'SEMANTIC',   label: '🧠 Semantic',    count: semantic },
+    { key: 'SAVED',      label: '📌 Saved',       count: saved },
+  ]
+
+  const filteredLeads = leads.filter(l => {
+    if (activeTab === 'BUY_NOW')    return l.intentLevel === 'BUY_NOW'
+    if (activeTab === 'COMPETITOR') return l.detectedBy === 'COMPETITOR'
+    if (activeTab === 'SEMANTIC')   return l.detectedBy === 'SEMANTIC'
+    if (activeTab === 'SAVED')      return l.status === 'SAVED'
+    return true
+  })
+
   if (loading) {
     return (
       <div className="py-12 flex flex-col items-center justify-center gap-3">
@@ -146,40 +170,65 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Section header */}
-          <div className="flex items-center gap-2 pb-2 border-b border-border/40">
-            <TrendingUp className="w-3.5 h-3.5 text-primary" />
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-              Detected Signals
-            </h2>
-            <span className="ml-auto text-xs font-bold text-muted-foreground/50 bg-muted px-2 py-0.5 rounded-full">
-              {leads.length}
-            </span>
+          <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+            {/* Header / Tabs */}
+            <div className="flex flex-col border-b border-border/30">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/10">
+                <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  Product Feed
+                </h2>
+              </div>
+              <div className="flex gap-0 overflow-x-auto">
+                {TABS.map(tab => (
+                  <button key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                      activeTab === tab.key
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground/40 hover:text-foreground'
+                    }`}>
+                    {tab.label}
+                    {tab.count > 0 && (
+                      <span className="ml-1.5 bg-muted px-1.5 py-0.5 rounded-full font-bold">{tab.count}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Lead list */}
+            {filteredLeads.length === 0 ? (
+              <div className="h-48 flex flex-col items-center justify-center gap-2">
+                <Radar className="h-8 w-8 text-muted-foreground/20" />
+                <p className="text-sm font-bold text-foreground">No signals in this view</p>
+                <p className="text-xs text-muted-foreground">Adjust filters or wait for the next scan cycle.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/30">
+                {filteredLeads.map(lead => (
+                  <LeadCard
+                    key={lead.id}
+                    lead={lead}
+                    showProductName={false}
+                    draftingLeadId={draftingLeadId}
+                    draftedReply={draftedReplies[lead.id]}
+                    isExpanded={expandedReplies[lead.id]}
+                    onDraftReply={handleDraftReply}
+                    onToggleExpand={handleToggleExpand}
+                    onStatusChange={handleStatusChange}
+                    onNotesChange={handleNotesChange}
+                    onFeedbackChange={handleFeedbackChange}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Lead cards */}
-          <div className="border border-border/40 rounded-md overflow-hidden bg-card shadow-sm">
-            {leads.map(lead => (
-              <LeadCard
-                key={lead.id}
-                lead={lead}
-                showProductName={false}
-                draftingLeadId={draftingLeadId}
-                draftedReply={draftedReplies[lead.id]}
-                isExpanded={expandedReplies[lead.id]}
-                onDraftReply={handleDraftReply}
-                onToggleExpand={handleToggleExpand}
-                onStatusChange={handleStatusChange}
-                onNotesChange={handleNotesChange}
-                onFeedbackChange={handleFeedbackChange}
-              />
-            ))}
-          </div>
-
-          {leads.length > 5 && (
+          {filteredLeads.length > 5 && (
             <p className="text-center text-xs text-muted-foreground/40 font-medium pt-2">
               <MessageSquare className="inline w-3 h-3 mr-1" />
-              Showing all {leads.length} signals for this product
+              Showing all {filteredLeads.length} signals for this view
             </p>
           )}
         </div>

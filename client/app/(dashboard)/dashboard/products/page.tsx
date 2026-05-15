@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit } from "lucide-react"
+import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit, Globe, Package } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -319,7 +319,7 @@ export default function ProductsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {products.map((product) => (
               <CompactProductCard 
                 key={product.id} 
@@ -478,70 +478,89 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
 }
 
 function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDelete: () => void, onEdit: () => void }) {
+  const leadCount = product._count?.leads ?? 0;
+  const isActive = product.isActive;
+  
   return (
-    <Card className="border-border/60 rounded-md hover:border-primary/50 group cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-primary/5">
-      <CardHeader className="pb-3 border-b border-border/50">
-        <div className="flex justify-between items-start">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-black text-base text-foreground truncate tracking-tight">
-              {product.name}
-            </h3>
-            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-              {product.isActive ? (
-                <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-success">
-                  <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-success/40"></div>
-                  Active
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 font-black uppercase tracking-widest text-muted-foreground">
-                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
-                  Paused
-                </span>
-              )}
-            </div>
+    <div className="relative bg-card border border-border/40 rounded-[2rem] p-8 flex flex-col gap-6 group transition-all hover:border-primary/20 shadow-sm">
+      
+      {/* Header section */}
+      <div className="flex justify-between items-start">
+        <div className="flex items-center gap-5">
+          <div className="w-16 h-16 rounded-2xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors">
+            <Package className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-2xl font-bold text-foreground tracking-tight">{product.name}</h3>
+            {product.websiteUrl && (
+              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground/40 uppercase tracking-widest">
+                <Globe className="w-3.5 h-3.5" />
+                {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </div>
+            )}
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-4">
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed font-medium">
-          {product.description || "No description provided."}
-        </p>
-        
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          <span className="text-xs font-black uppercase tracking-widest bg-primary/10 border border-primary/20 px-2 py-0.5 rounded text-primary flex items-center gap-1.5">
-            <Zap className="w-3 h-3 fill-current" />
-            AI Global Scan
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
-          <div className="flex gap-1">
-            <button 
-              onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-              className="w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
-              title="Edit product"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-              className="w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-              title="Delete product"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+        {isActive ? (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20 text-success">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
           </div>
-          
-          <Link 
-            href={`/dashboard/products/${product.id}`}
-            className="text-xs font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1 transition-all"
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
+            <div className="w-2 h-2 rounded-full bg-muted-foreground/30"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Paused</span>
+          </div>
+        )}
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-muted-foreground/60 leading-relaxed max-w-md font-medium">
+        {product.description || "No specific detection vectors defined for this product yet."}
+      </p>
+
+      {/* Signals block */}
+      <div className="bg-muted/20 border border-border/40 rounded-2xl p-5 flex items-center justify-between group/signals hover:bg-muted/30 transition-colors cursor-pointer">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-muted/40 flex items-center justify-center text-primary/80">
+            <Radar className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-muted-foreground/30 uppercase tracking-widest mb-1">Total Signals</p>
+            <p className="text-2xl font-bold text-foreground">{leadCount}</p>
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground/20 group-hover/signals:text-primary transition-colors" />
+      </div>
+
+      {/* Footer / Actions */}
+      <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+            className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 hover:text-foreground transition-colors"
           >
-            View Signal
-            <ChevronRight className="w-3 h-3" />
-          </Link>
+            <Edit className="w-4 h-4" />
+            Edit
+          </button>
+          <div className="w-px h-4 bg-border/40"></div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+            className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 hover:text-destructive transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </button>
         </div>
-      </CardContent>
-    </Card>
+
+        <Link 
+          href={`/dashboard/products/${product.id}`}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
+        >
+          Open Feed
+          <ChevronRight className="w-4 h-4" />
+        </Link>
+      </div>
+    </div>
   )
 }
