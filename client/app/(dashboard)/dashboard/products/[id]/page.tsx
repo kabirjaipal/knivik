@@ -108,82 +108,93 @@ export default function ProductDetailPage() {
   const queries = Array.isArray(product.searchQueries) ? product.searchQueries : []
 
   return (
-    <div className="space-y-4">
-      {/* ── Slim header bar ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2">
+    <div className="space-y-8 pb-12">
+      {/* ── Premium Header Section ────────────────────────────────────────── */}
+      <div className="flex flex-col gap-6 border-b border-border/40 pb-8">
+        
         {/* Breadcrumb */}
         <button onClick={() => router.push("/dashboard/products")}
-          className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground/50 hover:text-primary transition-colors w-fit">
-          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-          All Products
+          className="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors w-fit bg-muted/50 px-3 py-1.5 rounded-lg border border-border/50">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Products
         </button>
 
-        {/* Title row */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-xl font-black tracking-tight truncate">{product.name}</h1>
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="space-y-3 min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground truncate">
+                {product.name}
+              </h1>
 
-            {product.isActive ? (
-              <span className="flex items-center gap-1 text-success font-black uppercase tracking-wider text-[10px] shrink-0">
-                <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" /> Live
-              </span>
-            ) : (
-              <span className="flex items-center gap-1 text-muted-foreground font-black uppercase tracking-wider text-[10px] shrink-0">
-                <span className="w-1.5 h-1.5 bg-muted-foreground/30 rounded-full" /> Standby
-              </span>
-            )}
+              {product.isActive ? (
+                <span className="flex items-center gap-1.5 text-success bg-success/10 border border-success/20 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0 shadow-sm">
+                  <span className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" /> Live
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0">
+                  <span className="w-2 h-2 bg-muted-foreground/50 rounded-full" /> Standby
+                </span>
+              )}
 
-            {product.websiteUrl && (
-              <a href={product.websiteUrl} target="_blank" rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors shrink-0">
-                <Globe className="w-2.5 h-2.5" />
-                {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                <ExternalLink className="w-2 h-2" />
-              </a>
+              {product.websiteUrl && (
+                <a href={product.websiteUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1 rounded-lg shrink-0">
+                  <Globe className="w-3.5 h-3.5" />
+                  {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  <ExternalLink className="w-3 h-3 opacity-70" />
+                </a>
+              )}
+            </div>
+
+            {/* Description */}
+            {product.description && (
+              <p className="text-sm font-medium text-muted-foreground max-w-3xl leading-relaxed">
+                {product.description}
+              </p>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             {/* AI config toggle */}
             {queries.length > 0 && (
               <button onClick={() => setShowConfig(v => !v)}
-                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 hover:text-primary transition-colors border border-border/40 rounded-lg px-2.5 py-1.5">
-                <Zap className="w-2.5 h-2.5" />
-                Queries
-                {showConfig ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all rounded-xl px-4 py-2.5 border ${showConfig ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20' : 'bg-card text-foreground hover:bg-muted border-border/60 shadow-sm'}`}>
+                <Zap className="w-4 h-4" />
+                AI Config
+                {showConfig ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
             )}
 
-            <Button size="sm" disabled={isScanning || !product.isActive} onClick={handleScanNow}
-              className="h-8 px-4 font-black text-[10px] uppercase tracking-wider rounded-lg">
+            <Button size="lg" disabled={isScanning || !product.isActive} onClick={handleScanNow}
+              className="h-auto py-2.5 px-6 font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20">
               {isScanning
-                ? <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Scanning...</>
-                : <><Radar className="w-3 h-3 mr-1" /> Scan Now</>}
+                ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Scanning...</>
+                : <><Radar className="w-4 h-4 mr-2" /> Force Scan</>}
             </Button>
           </div>
         </div>
 
-        {/* Description — single line, muted */}
-        {product.description && (
-          <p className="text-xs text-muted-foreground/60 truncate max-w-2xl">{product.description}</p>
-        )}
-
         {/* Collapsible AI queries */}
         {showConfig && queries.length > 0 && (
-          <div className="mt-1 p-3 rounded-xl border border-primary/15 bg-primary/3 animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">AI Search Vectors</p>
-            <div className="flex flex-wrap gap-1.5">
+          <div className="p-6 rounded-2xl border border-primary/20 bg-primary/5 animate-in fade-in slide-in-from-top-2 duration-200 shadow-inner">
+            <p className="text-xs font-black uppercase tracking-widest text-primary/80 flex items-center gap-2 mb-4">
+              <Zap className="w-4 h-4" /> Configured Search Vectors
+            </p>
+            <div className="flex flex-wrap gap-2 mb-4">
               {queries.map((q, i) => (
                 <Badge key={i} variant="secondary"
-                  className="text-[10px] py-0.5 px-2.5 bg-primary/5 text-primary/60 border border-primary/10 font-medium">
+                  className="text-sm py-1.5 px-4 bg-card border border-primary/20 text-foreground font-bold shadow-sm rounded-lg hover:border-primary/50 transition-colors">
                   "{q}"
                 </Badge>
               ))}
             </div>
             {product.aiConfig?.customPersona && (
-              <p className="text-xs italic text-muted-foreground/50">
-                Persona: "{product.aiConfig.customPersona}"
-              </p>
+              <div className="mt-4 pt-4 border-t border-primary/10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Custom Persona</p>
+                <p className="text-sm font-medium text-foreground/80 italic border-l-2 border-primary/40 pl-3">
+                  "{product.aiConfig.customPersona}"
+                </p>
+              </div>
             )}
           </div>
         )}

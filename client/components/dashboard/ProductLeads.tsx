@@ -170,59 +170,69 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+          <div className="rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
             {/* Header / Tabs */}
-            <div className="flex flex-col border-b border-border/30">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-border/10">
-                <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Product Feed
-                </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/10 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black tracking-tight text-foreground">Product Feed</h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-0.5">Real-time signals filtered by intent</p>
+                </div>
               </div>
-              <div className="flex gap-0 overflow-x-auto">
+            </div>
+            
+            <div className="flex gap-2 px-6 py-4 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
                 {TABS.map(tab => (
                   <button key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                    className={`px-5 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
                       activeTab === tab.key
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-muted-foreground/40 hover:text-foreground'
+                        ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20'
+                        : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}>
                     {tab.label}
                     {tab.count > 0 && (
-                      <span className="ml-1.5 bg-muted px-1.5 py-0.5 rounded-full font-bold">{tab.count}</span>
+                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                        {tab.count}
+                      </span>
                     )}
                   </button>
                 ))}
-              </div>
             </div>
 
             {/* Lead list */}
-            {filteredLeads.length === 0 ? (
-              <div className="h-48 flex flex-col items-center justify-center gap-2">
-                <Radar className="h-8 w-8 text-muted-foreground/20" />
-                <p className="text-sm font-bold text-foreground">No signals in this view</p>
-                <p className="text-xs text-muted-foreground">Adjust filters or wait for the next scan cycle.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border/30">
-                {filteredLeads.map(lead => (
-                  <LeadCard
-                    key={lead.id}
-                    lead={lead}
-                    showProductName={false}
-                    draftingLeadId={draftingLeadId}
-                    draftedReply={draftedReplies[lead.id]}
-                    isExpanded={expandedReplies[lead.id]}
-                    onDraftReply={handleDraftReply}
-                    onToggleExpand={handleToggleExpand}
-                    onStatusChange={handleStatusChange}
-                    onNotesChange={handleNotesChange}
-                    onFeedbackChange={handleFeedbackChange}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="p-0 sm:p-4 bg-muted/5 min-h-[500px]">
+              {filteredLeads.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center gap-3 min-h-[400px]">
+                  <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
+                    <Radar className="h-10 w-10 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-xl font-black text-foreground">No signals in this view</p>
+                  <p className="text-sm font-medium text-muted-foreground max-w-sm text-center">Adjust filters or wait for the next scan cycle.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredLeads.map(lead => (
+                    <LeadCard
+                      key={lead.id}
+                      lead={lead}
+                      showProductName={false}
+                      draftingLeadId={draftingLeadId}
+                      draftedReply={draftedReplies[lead.id]}
+                      isExpanded={expandedReplies[lead.id]}
+                      onDraftReply={handleDraftReply}
+                      onToggleExpand={handleToggleExpand}
+                      onStatusChange={handleStatusChange}
+                      onNotesChange={handleNotesChange}
+                      onFeedbackChange={handleFeedbackChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {filteredLeads.length > 5 && (

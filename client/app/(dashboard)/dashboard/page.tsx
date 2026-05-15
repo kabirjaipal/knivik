@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import {
   Radar, Activity, Clock, Brain, Flame, TrendingUp, CheckCircle2,
-  BarChart2, ArrowRight, Zap, Target, Package, ChevronRight
+  BarChart2, Zap, Target, Package, ChevronRight, AlertCircle
 } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -173,91 +173,97 @@ export default function DashboardPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8 pb-12">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight">
-            {getGreeting()}, <span className="text-primary">{user?.username}</span> 👋
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6">
+        <div className="space-y-1.5">
+          <h1 className="text-4xl font-black tracking-tighter">
+            {getGreeting()}, <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/60">{user?.username}</span> 👋
           </h1>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">
-            {products.filter(p => p.isActive).length} product{products.filter(p => p.isActive).length !== 1 ? 's' : ''} live · Reddit, HackerNews & Twitter monitored 24/7
+          <p className="text-sm font-medium text-muted-foreground">
+            <span className="text-foreground">{products.filter(p => p.isActive).length}</span> product{products.filter(p => p.isActive).length !== 1 ? 's' : ''} live · Radar monitoring Reddit, HackerNews & Twitter.
           </p>
         </div>
 
         {/* Scanning badge */}
         {user?.isScanning && (
-          <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full animate-pulse">
-            <Radar className="w-3 h-3" /> Scanning Web...
-          </span>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl animate-pulse shadow-lg shadow-primary/10">
+            <Radar className="w-4 h-4" /> System Active
+          </div>
         )}
       </div>
 
       {/* ── Stat strip ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         {([
-          { label: 'Total',      value: total,      icon: Activity,      color: 'text-foreground' },
-          { label: 'High Intent',value: highIntent, icon: TrendingUp,    color: 'text-primary',    hi: true },
-          { label: 'Buy Now',    value: buyNow,     icon: Flame,         color: 'text-destructive' },
-          { label: 'Competitor', value: competitor, icon: Target,        color: 'text-destructive' },
-          { label: 'Last 24h',   value: last24h,    icon: Clock,         color: 'text-primary' },
-          { label: 'Avg Score',  value: avgScore,   icon: BarChart2,     color: 'text-primary' },
-          { label: 'Converted',  value: converted,  icon: CheckCircle2,  color: 'text-success' },
-          { label: 'AI Tasks',   value: llmUsage?.totals.requestCount ?? 0, icon: Brain, color: 'text-primary' },
-        ]).map(({ label, value, icon: Icon, color, hi }) => (
+          { label: 'Total',      value: total,      icon: Activity,      color: 'text-foreground',    bg: 'bg-card' },
+          { label: 'High Intent',value: highIntent, icon: TrendingUp,    color: 'text-primary',       bg: 'bg-primary/5 border-primary/20', hi: true },
+          { label: 'Buy Now',    value: buyNow,     icon: Flame,         color: 'text-destructive',   bg: 'bg-card' },
+          { label: 'Competitor', value: competitor, icon: Target,        color: 'text-destructive',   bg: 'bg-card' },
+          { label: 'Last 24h',   value: last24h,    icon: Clock,         color: 'text-primary',       bg: 'bg-card' },
+          { label: 'Avg Score',  value: avgScore,   icon: BarChart2,     color: 'text-primary',       bg: 'bg-card' },
+          { label: 'Converted',  value: converted,  icon: CheckCircle2,  color: 'text-success',       bg: 'bg-card' },
+          { label: 'AI Tasks',   value: llmUsage?.totals.requestCount ?? 0, icon: Brain, color: 'text-primary', bg: 'bg-card' },
+        ]).map(({ label, value, icon: Icon, color, bg, hi }) => (
           <div key={label}
-            className={`rounded-xl border px-3 py-2.5 flex flex-col gap-1 transition-all ${hi ? 'bg-primary/5 border-primary/20' : 'bg-card border-border/40 hover:border-border/60'}`}>
+            className={`rounded-2xl border p-4 flex flex-col gap-2 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${bg} ${!hi ? 'border-border/40 hover:border-border/60' : ''}`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{label}</span>
-              <Icon className={`w-3 h-3 ${color} opacity-60`} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</span>
+              <Icon className={`w-4 h-4 ${color} opacity-80`} />
             </div>
-            <span className={`text-xl font-black ${color}`}>{value}</span>
+            <span className={`text-3xl font-black tracking-tighter ${color}`}>{value}</span>
           </div>
         ))}
       </div>
 
       {/* ── Two column: sidebar + lead stream ─────────────────────────────── */}
-      <div className="grid lg:grid-cols-[220px_1fr] gap-4">
+      <div className="grid xl:grid-cols-[320px_1fr] gap-8">
 
         {/* ── Left sidebar ──────────────────────────────────────────────── */}
-        <aside className="space-y-3">
+        <aside className="space-y-6">
 
           {/* Products panel */}
-          <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border/30">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-1">
-                <Package className="w-3 h-3" /> Products
+          <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card">
+              <span className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                <Package className="w-4 h-4 text-primary" /> Active Products
               </span>
               <button onClick={() => router.push('/dashboard/products')}
-                className="text-[10px] font-bold text-primary/60 hover:text-primary transition-colors flex items-center gap-0.5">
-                All <ChevronRight className="w-2.5 h-2.5" />
+                className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                Manage <ChevronRight className="w-3 h-3" />
               </button>
             </div>
             {products.length === 0 ? (
-              <div className="px-3 py-4 text-center">
-                <p className="text-[10px] text-muted-foreground/40 font-bold uppercase tracking-widest">No products yet</p>
+              <div className="p-8 text-center bg-card">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Package className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">No products yet</p>
                 <button onClick={() => router.push('/dashboard/products/new')}
-                  className="mt-2 text-xs font-bold text-primary hover:text-primary/80 transition-colors">
-                  + Add Product
+                  className="mt-4 text-sm font-black text-primary bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors w-full">
+                  Create Product
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-border/20">
+              <div className="divide-y divide-border/20 bg-card">
                 {products.slice(0, 6).map(p => (
                   <button key={p.id} onClick={() => router.push(`/dashboard/products/${p.id}`)}
-                    className="w-full text-left px-3 py-2 hover:bg-muted/20 transition-colors group flex items-center justify-between gap-2">
+                    className="w-full text-left px-5 py-4 hover:bg-muted/30 transition-colors group flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground/80 group-hover:text-primary transition-colors truncate">{p.name}</p>
-                      <span className={`text-[10px] font-bold ${p.isActive ? 'text-success' : 'text-muted-foreground/40'}`}>
-                        {p.isActive ? '● Live' : '○ Standby'}
-                      </span>
+                      <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-muted-foreground'}`} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          {p.isActive ? 'Live' : 'Standby'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="shrink-0 text-right">
-                      <span className="text-xs font-black text-muted-foreground/50 tabular-nums">
+                    <div className="shrink-0 text-right bg-muted/50 px-3 py-1.5 rounded-lg border border-border/50">
+                      <span className="text-sm font-black text-foreground tabular-nums">
                         {leadsByProduct[p.name] ?? 0}
                       </span>
-                      <p className="text-[9px] text-muted-foreground/30">leads</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">leads</p>
                     </div>
                   </button>
                 ))}
@@ -267,63 +273,71 @@ export default function DashboardPage() {
 
           {/* Platform breakdown */}
           {total > 0 && (
-            <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Platform Split</p>
-              {(['REDDIT', 'HACKERNEWS', 'TWITTER'] as const).map(p => {
-                const count = leads.filter(l => l.platform === p).length
-                const pct = Math.round((count / total) * 100)
-                return (
-                  <div key={p} className="space-y-0.5">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-muted-foreground/60 font-medium">{p === 'HACKERNEWS' ? 'HN' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
-                      <span className="text-muted-foreground/50 font-bold tabular-nums">{count}</span>
+            <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                 <Activity className="w-4 h-4 text-primary" /> Platform Split
+              </p>
+              <div className="space-y-3">
+                {(['REDDIT', 'HACKERNEWS', 'TWITTER'] as const).map(p => {
+                  const count = leads.filter(l => l.platform === p).length
+                  const pct = Math.round((count / total) * 100)
+                  return (
+                    <div key={p} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="text-muted-foreground">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
+                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-[10px]">({pct}%)</span></span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-1000 ${p === 'REDDIT' ? 'bg-orange-500' : p === 'HACKERNEWS' ? 'bg-amber-500' : 'bg-sky-500'}`}
+                          style={{ width: `${pct}%` }} />
+                      </div>
                     </div>
-                    <div className="h-1 bg-muted rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-700 ${p === 'REDDIT' ? 'bg-orange-500/70' : p === 'HACKERNEWS' ? 'bg-amber-500/70' : 'bg-sky-500/70'}`}
-                        style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           )}
 
           {/* Intent breakdown */}
           {total > 0 && (
-            <div className="rounded-xl border border-border/40 bg-card p-3 space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Intent Mix</p>
-              {([
-                ['BUY_NOW', 'Buy Now', 'bg-destructive/70'],
-                ['COMPARING', 'Comparing', 'bg-primary/70'],
-                ['RESEARCHING', 'Researching', 'bg-primary/40'],
-                ['LOW_INTENT', 'Low', 'bg-muted-foreground/30'],
-              ] as const).map(([key, label, bar]) => {
-                const count = leads.filter(l => l.intentLevel === key).length
-                const pct = Math.round((count / total) * 100)
-                return (
-                  <div key={key} className="space-y-0.5">
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-muted-foreground/60 font-medium">{label}</span>
-                      <span className="text-muted-foreground/50 font-bold tabular-nums">{count}</span>
+            <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                 <Flame className="w-4 h-4 text-destructive" /> Intent Mix
+              </p>
+              <div className="space-y-3">
+                {([
+                  ['BUY_NOW', 'Buy Now', 'bg-destructive'],
+                  ['COMPARING', 'Comparing', 'bg-primary'],
+                  ['RESEARCHING', 'Researching', 'bg-primary/60'],
+                  ['LOW_INTENT', 'Low Intent', 'bg-muted-foreground/40'],
+                ] as const).map(([key, label, bar]) => {
+                  const count = leads.filter(l => l.intentLevel === key).length
+                  const pct = Math.round((count / total) * 100)
+                  return (
+                    <div key={key} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="text-muted-foreground">{label}</span>
+                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-[10px]">({pct}%)</span></span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-1000 ${bar}`} style={{ width: `${pct}%` }} />
+                      </div>
                     </div>
-                    <div className="h-1 bg-muted rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-700 ${bar}`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           )}
-
+          
           {/* AI usage */}
           {llmUsage && (
-            <div className="rounded-xl border border-primary/15 bg-primary/3 p-3 space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 flex items-center gap-1">
-                <Zap className="w-2.5 h-2.5" /> AI Engine
+            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 space-y-2 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary/80 flex items-center gap-2">
+                <Zap className="w-4 h-4" /> AI Engine
               </p>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground/50">Inferences</span>
-                <span className="font-black text-primary">{llmUsage.totals.requestCount}</span>
+              <div className="flex justify-between items-end">
+                <span className="text-xs font-medium text-muted-foreground">Inferences Completed</span>
+                <span className="text-2xl font-black tracking-tighter text-primary">{llmUsage.totals.requestCount}</span>
               </div>
             </div>
           )}
@@ -331,75 +345,88 @@ export default function DashboardPage() {
 
         {/* ── Lead stream ───────────────────────────────────────────────── */}
         <main className="min-w-0">
-          <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+          <div className="rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center">
-                  <Radar className="w-3.5 h-3.5 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/10 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                  <Radar className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-black tracking-tight">Live Detection Stream</h2>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">Keyword · Semantic · Competitor signals</p>
+                  <h2 className="text-xl font-black tracking-tight text-foreground">Live Detection Stream</h2>
+                  <p className="text-sm text-muted-foreground font-medium mt-0.5">Real-time keyword, semantic, and competitor signals</p>
                 </div>
               </div>
               {last24h > 0 && (
-                <span className="text-[10px] font-black text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-full">
-                  +{last24h} today
+                <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+                  +{last24h} Today
                 </span>
               )}
             </div>
 
             {/* Filter tabs */}
-            <div className="flex gap-0 border-b border-border/30 overflow-x-auto">
+            <div className="flex gap-2 px-6 py-4 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
               {TABS.map(tab => (
                 <button key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                  className={`px-5 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
                     activeTab === tab.key
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground/50 hover:text-foreground'
+                      ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20'
+                      : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}>
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className="ml-1.5 bg-muted px-1.5 py-0.5 rounded-full font-bold">{tab.count}</span>
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                      {tab.count}
+                    </span>
                   )}
                 </button>
               ))}
             </div>
 
             {/* Lead list */}
-            {loading ? (
-              <div className="h-48 flex flex-col items-center justify-center gap-3">
-                <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs text-muted-foreground/40 font-bold uppercase tracking-widest">Scanning the matrix...</p>
-              </div>
-            ) : error ? (
-              <div className="p-8 text-center">
-                <p className="text-xs text-destructive font-semibold">Error: {error}</p>
-              </div>
-            ) : filteredLeads.length === 0 ? (
-              <div className="h-48 flex flex-col items-center justify-center gap-2">
-                <Radar className="h-8 w-8 text-muted-foreground/20" />
-                <p className="text-sm font-bold text-foreground">No signals in this view</p>
-                <p className="text-xs text-muted-foreground">Adjust filters or wait for the next scan cycle.</p>
-              </div>
-            ) : (
-              <div>
-                {filteredLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead}
-                    draftingLeadId={draftingLeadId}
-                    draftedReply={draftedReplies[lead.id]}
-                    isExpanded={expandedReplies[lead.id]}
-                    onDraftReply={handleDraftReply}
-                    onToggleExpand={id => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }))}
-                    onStatusChange={handleStatusChange}
-                    onNotesChange={handleNotesChange}
-                    onFeedbackChange={handleFeedbackChange}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="p-0 sm:p-4 bg-muted/5 min-h-[500px]">
+              {loading ? (
+                <div className="h-full flex flex-col items-center justify-center gap-4 min-h-[400px]">
+                  <div className="relative">
+                    <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Scanning the matrix...</p>
+                </div>
+              ) : error ? (
+                <div className="p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8" />
+                  </div>
+                  <p className="text-sm text-destructive font-black tracking-widest uppercase">System Error</p>
+                  <p className="text-muted-foreground mt-2">{error}</p>
+                </div>
+              ) : filteredLeads.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center gap-3 min-h-[400px]">
+                  <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
+                    <Radar className="h-10 w-10 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-xl font-black text-foreground">No signals detected</p>
+                  <p className="text-sm font-medium text-muted-foreground max-w-sm text-center">Adjust your filters or wait for the next AI scan cycle.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredLeads.map(lead => (
+                    <LeadCard key={lead.id} lead={lead}
+                      draftingLeadId={draftingLeadId}
+                      draftedReply={draftedReplies[lead.id]}
+                      isExpanded={expandedReplies[lead.id]}
+                      onDraftReply={handleDraftReply}
+                      onToggleExpand={id => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }))}
+                      onStatusChange={handleStatusChange}
+                      onNotesChange={handleNotesChange}
+                      onFeedbackChange={handleFeedbackChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
