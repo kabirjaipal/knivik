@@ -8,6 +8,8 @@ import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CreditCard
 
 interface RevenueStats {
   totalRevenue: number;
+  totalCost: number;
+  netProfit: number;
   mrr: number;
   activeSubscribers: number;
   recentPayments: Array<{
@@ -47,17 +49,17 @@ export default function AdminRevenuePage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-black text-foreground">Revenue & Subscriptions</h1>
-        <p className="text-sm text-muted-foreground mt-1">Financial performance and subscription health oversight.</p>
+        <p className="text-sm text-muted-foreground mt-1">Financial performance, infrastructure cost deduction, and profit oversight.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-primary">Monthly Recurring Revenue</CardTitle>
+            <CardTitle className="text-xs font-black uppercase tracking-widest text-primary">Monthly Recurring</CardTitle>
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-black text-foreground">${data?.mrr.toFixed(2)}</div>
+            <div className="text-3xl font-black text-foreground">${data?.mrr.toFixed(2)}</div>
             <div className="flex items-center gap-1 text-[10px] font-bold text-success mt-1 uppercase">
               <ArrowUpRight className="w-3 h-3" /> Growth stable
             </div>
@@ -66,23 +68,34 @@ export default function AdminRevenuePage() {
 
         <Card className="border-border/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Total Gross Revenue</CardTitle>
+            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Gross Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-black text-foreground">${data?.totalRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-black text-foreground">${data?.totalRevenue.toFixed(2)}</div>
             <div className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-wider">All-time processed</div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/40">
+        <Card className="border-destructive/20 bg-destructive/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Active Subscribers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs font-black uppercase tracking-widest text-destructive">Infra Cost (LLMs)</CardTitle>
+            <ArrowDownRight className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-black text-foreground">{data?.activeSubscribers}</div>
-            <div className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-wider">Paid PRO accounts</div>
+            <div className="text-3xl font-black text-destructive">${data?.totalCost?.toFixed(4)}</div>
+            <div className="text-[10px] font-bold text-destructive/80 mt-1 uppercase tracking-wider">API input/output usage</div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-success/30 bg-success/5">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-black uppercase tracking-widest text-success">Net Profit</CardTitle>
+            <DollarSign className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-success">${data?.netProfit?.toFixed(2)}</div>
+            <div className="text-[10px] font-bold text-success/80 mt-1 uppercase tracking-wider">Gross minus infrastructure</div>
           </CardContent>
         </Card>
       </div>

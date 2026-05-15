@@ -88,7 +88,7 @@ export default function PricingClient() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col pt-0 px-7 pb-7">
                 <ul className="space-y-3 mb-8 flex-1 border-t border-border/40 pt-6">
-                  {PLANS.FREE.features.slice(0, 5).map((feature) => (
+                  {PLANS.FREE.features.slice(0, 7).map((feature) => (
                     <li key={feature} className="flex items-center gap-3 text-sm text-muted-foreground">
                       <Check className="h-4 w-4 text-foreground/50 shrink-0" />
                       <span>{feature}</span>
@@ -144,7 +144,7 @@ export default function PricingClient() {
               
               <CardContent className="flex-1 flex flex-col pt-0 px-7 pb-7">
                 <ul className="space-y-3 mb-8 flex-1 border-t border-primary/20 pt-6">
-                  {PLANS.PRO.features.slice(0, 6).filter(f => !f.includes("2 Months Free")).map((feature) => (
+                  {PLANS.PRO.features.slice(0, 8).filter(f => !f.includes("2 Months Free")).map((feature) => (
                     <li key={feature} className="flex items-center gap-3 text-sm text-foreground/90 font-medium">
                       <Zap className="h-4 w-4 text-primary fill-primary shrink-0" />
                       <span>{feature}</span>

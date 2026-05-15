@@ -9,6 +9,8 @@ const COMPARISON_FEATURES = [
     features: [
       { name: "Monitored Topics", free: "1", pro: "5" },
       { name: "Signals per Month", free: "50", pro: "1,000" },
+      { name: "Global Auto Search", free: "Every 24h", pro: "Every 24h" },
+      { name: "Manual Force Scans", free: false, pro: "3 / day / product" },
       { name: "Reddit Support", free: true, pro: true },
       { name: "Hacker News Support", free: true, pro: true },
       { name: "Twitter (X) Support", free: false, pro: true },

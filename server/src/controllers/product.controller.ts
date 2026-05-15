@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { z } from 'zod';
-import { Platform } from '@prisma/client';
 import { generateProductStrategy } from '../services/aiService.js';
 import { SearchQueryService } from '../services/searchQueryService.js';
+import { BatchProcessingService } from '../services/batchProcessingService.js';
+import { pipelineQueue } from '../lib/queue.js';
 
 const productSchema = z.object({
   name: z.string().min(1).max(255),
@@ -246,5 +247,84 @@ export const analyzeProduct = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     logger.error({ error }, 'Analyze Product error');
     res.status(500).json({ error: 'AI analysis failed' });
+  }
+};
+
+export const scanProduct = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id as string;
+    if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    const productId = req.params['id'] as string;
+    if (!productId) {
+      res.status(400).json({ error: 'Missing product ID' });
+      return;
+    }
+
+    const existing = await db.client.product.findUnique({ where: { id: productId } });
+    if (!existing || existing.userId !== userId) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    // Enforce daily manual scan quota per product based on User Plan tier
+    const user = await db.client.user.findUnique({ where: { id: userId } });
+    const { getPlanLimits } = await import('../lib/plans.js');
+    const maxScans = user ? getPlanLimits(user.plan as any).manualScansPerDay : 0;
+
+    if (maxScans <= 0) {
+      res.status(403).json({
+        error: 'Manual force scanning is a Pro feature. Your product is automatically scanned globally every 24 hours for free.'
+      });
+      return;
+    }
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0]; // e.g. "2026-05-14"
+    const aiConfig = (existing.aiConfig as Record<string, any>) || {};
+    const lastScanDate = aiConfig['lastManualScanDate'];
+    let scansToday = aiConfig['manualScansToday'] || 0;
+
+    if (lastScanDate === todayStr) {
+      if (scansToday >= maxScans) {
+        res.status(429).json({ 
+          error: `Daily force scan quota reached (${maxScans}/${maxScans}) for this product. Scans automatically run globally every 24 hours.` 
+        });
+        return;
+      }
+      scansToday++;
+    } else {
+      scansToday = 1;
+    }
+
+    // Persist incremented scan tracking
+    await db.client.product.update({
+      where: { id: productId },
+      data: {
+        aiConfig: {
+          ...aiConfig,
+          lastManualScanDate: todayStr,
+          manualScansToday: scansToday
+        }
+      }
+    });
+
+    // Mark user as scanning in database
+    await db.client.user.update({
+      where: { id: userId },
+      data: { isScanning: true }
+    });
+
+    // Add to background queue instead of awaiting (prevents Vercel/Proxy timeouts)
+    await pipelineQueue.add('manual-scan', { userId, productId });
+
+    res.status(202).json({ 
+      success: true, 
+      message: 'Scan started in background. New leads will appear in a few moments.' 
+    });
+  } catch (error: any) {
+    logger.error({ error }, 'Scan Product error');
+    res.status(500).json({ error: error.message || 'Manual scan failed' });
   }
 };

@@ -21,12 +21,7 @@ async function main() {
     prisma.alertLog.deleteMany({}),
     prisma.alertSetting.deleteMany({}),
     prisma.reply.deleteMany({}),
-    prisma.leadMatch.deleteMany({}),
     prisma.lead.deleteMany({}),
-    prisma.keyword.deleteMany({}),
-    prisma.negativeKeyword.deleteMany({}),
-    prisma.competitor.deleteMany({}),
-    prisma.productSource.deleteMany({}),
     prisma.product.deleteMany({}),
     prisma.llmUsageLog.deleteMany({}),
     prisma.usageRecord.deleteMany({}),
@@ -35,6 +30,9 @@ async function main() {
     prisma.account.deleteMany({}),
     prisma.verification.deleteMany({}),
     prisma.oAuthAccount.deleteMany({}),
+    prisma.payment.deleteMany({}),
+    prisma.subscription.deleteMany({}),
+    prisma.webhookEvent.deleteMany({}),
     prisma.user.deleteMany({}),
     prisma.scrapeCache.deleteMany({}),
     prisma.requestLog.deleteMany({}),
@@ -54,7 +52,7 @@ async function main() {
       username: 'kabir',
       password: hashedPassword,
       role: 'admin',
-      plan: 'FREE',
+      plan: 'PRO',
       emailVerified: true,
       isScanning: false,
       lastScanStatus: null,
@@ -66,6 +64,44 @@ async function main() {
         }
       }
     },
+  });
+
+  const proUser = await prisma.user.create({
+    data: {
+      email: 'nakul@knivik.xyz',
+      name: 'Nakul',
+      username: 'nakul',
+      password: hashedPassword,
+      role: 'user',
+      plan: 'PRO',
+      emailVerified: true,
+      accounts: {
+        create: {
+          providerId: 'credential',
+          accountId: 'nakul@knivik.xyz',
+          password: hashedPassword,
+        }
+      }
+    }
+  });
+
+  const freeUser = await prisma.user.create({
+    data: {
+      email: 'demo@knivik.xyz',
+      name: 'Demo User',
+      username: 'demo_user',
+      password: hashedPassword,
+      role: 'user',
+      plan: 'FREE',
+      emailVerified: true,
+      accounts: {
+        create: {
+          providerId: 'credential',
+          accountId: 'demo@knivik.xyz',
+          password: hashedPassword,
+        }
+      }
+    }
   });
 
   console.log('🤖 Seeding LLM models and pricing...');

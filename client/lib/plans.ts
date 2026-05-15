@@ -8,6 +8,7 @@ export const PLANS = {
       "Track 1 Product",
       "50 leads per month",
       "Reddit & HackerNews scanning",
+      "Global Auto Search (every 24h)",
       "Basic intent detection",
       "Dashboard access only",
       "No automated alerts",
@@ -17,6 +18,7 @@ export const PLANS = {
     limits: {
       products: 1,
       leadsPerMonth: 50,
+      manualScansPerDay: 0,
     },
     capabilities: {
       canAccessTwitter: false,
@@ -34,16 +36,18 @@ export const PLANS = {
       "Track up to 5 Products",
       "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
+      "Global Auto Search (every 24h)",
+      "3 Force Scans per day / product",
       "Advanced AI Intent Scoring",
       "Custom AI Personas for replies",
       "Email, Slack & Discord alerts",
       "Full lead enrichment",
       "24/7 Priority support",
-      "2 Months Free (Annual Plan)",
     ],
     limits: {
       products: 5,
       leadsPerMonth: 1000,
+      manualScansPerDay: 3,
     },
     monthly: { 
       productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID!,

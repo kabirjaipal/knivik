@@ -4,7 +4,7 @@ import { useAuth } from "@/context/auth-context"
 import { ProductDetails } from "@/components/dashboard/ProductDetails"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react"
+import { ArrowLeft, Loader2, ExternalLink, Radar } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 
@@ -17,13 +17,66 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
-  const { user } = useAuth()
+  const { user, refresh } = useAuth()
   const router = useRouter()
   const params = useParams()
   const productId = params.id as string
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isScanning, setIsScanning] = useState(false)
+
+  // Polling logic for background scans
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    // If user status shows scanning, poll for completion
+    if (user?.isScanning) {
+      setIsScanning(true);
+      interval = setInterval(() => {
+        refresh();
+      }, 3000);
+    } else if (isScanning && !user?.isScanning) {
+      // Just finished scanning
+      setIsScanning(false);
+      // Brief delay to ensure DB consistency before reload
+      setTimeout(() => window.location.reload(), 500);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [user?.isScanning, isScanning, refresh]);
+
+  const handleScanNow = async () => {
+    // Only allow if not already scanning
+    if (isScanning) return;
+    
+    setIsScanning(true)
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(`${apiUrl}/products/${productId}/scan`, {
+        method: "POST",
+        credentials: "include",
+      })
+      
+      if (res.status === 202) {
+        // Background scan started, the useEffect will handle polling
+        return;
+      }
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Scan failed")
+      }
+      
+      // Fallback for immediate success
+      window.location.reload()
+    } catch (err: any) {
+      alert(err.message || "Scan failed to complete. Please check server logs.")
+      setIsScanning(false)
+    }
+  }
 
   useEffect(() => {
     if (user && productId) {
@@ -119,8 +172,19 @@ export default function ProductDetailPage() {
             </div>
           </div>
           
-          <div className="text-xs font-mono text-muted-foreground/30 tabular-nums">
-            {product.id}
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              disabled={isScanning || !product.isActive}
+              onClick={handleScanNow}
+              className="rounded-xl px-4 font-black text-xs uppercase tracking-wider shadow-md hover:shadow-primary/20 transition-all"
+            >
+              {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Radar className="w-3.5 h-3.5 mr-1.5 text-primary-foreground animate-spin-slow" />}
+              {isScanning ? "Scanning Web..." : "Scan Now"}
+            </Button>
+            <div className="text-xs font-mono text-muted-foreground/30 tabular-nums hidden sm:block">
+              {product.id}
+            </div>
           </div>
         </div>
       </header>

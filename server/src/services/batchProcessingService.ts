@@ -28,6 +28,7 @@ export class BatchProcessingService {
     error?: string;
   }> {
     const startTime = Date.now();
+    let userId: string | undefined;
     
     try {
       // Get the product with its settings
@@ -39,8 +40,14 @@ export class BatchProcessingService {
         throw new Error('Product not found or inactive');
       }
 
-      const userId = product.userId;
+      userId = product.userId;
       logger.info(`[BATCH] Starting pipeline for product "${product.name}" (User: ${userId})`);
+
+      // Set scanning status
+      await db.client.user.update({
+        where: { id: userId },
+        data: { isScanning: true }
+      });
 
       // Step 1: Collect posts for this product
       const sourceBreakdown: Record<string, number> = {};
@@ -48,6 +55,13 @@ export class BatchProcessingService {
       
       if (posts.length === 0) {
         logger.info(`[BATCH] No posts collected for product "${product.name}"`);
+        
+        // Reset scanning status
+        await db.client.user.update({
+          where: { id: userId },
+          data: { isScanning: false, lastScanStatus: 'SUCCESS' }
+        });
+
         return {
           success: true,
           postsCollected: 0,
@@ -75,19 +89,17 @@ export class BatchProcessingService {
         if (result.leads.length > 0) {
           for (const lead of result.leads) {
             logger.info(`[DEEP-LOG] [AI-STAGE] AI found a high-quality lead for "${product.name}"! Score: ${lead.intentScore}`);
-            // Still using saveBestLead function name, but we pass each lead independently
             const saved = await this.saveBestLead({ ...lead, product }, userId);
             if (saved) leadsGenerated++;
           }
         }
       }
 
-      if (leadsGenerated === 0) {
-        // Find the summary to explain WHY the AI rejected these posts
-        const summary = analysisResult.results[0]?.analysisSummary || "No reasoning provided by AI.";
-        logger.info(`[DEEP-LOG] [AI-STAGE] AI finished analysis for "${product.name}" but did not find any lead meeting the quality threshold.`);
-        logger.info(`[DEEP-LOG] [AI-STAGE] 🧠 AI Reasoning for Rejection: "${summary}"`);
-      }
+      // Reset scanning status
+      await db.client.user.update({
+        where: { id: userId },
+        data: { isScanning: false, lastScanStatus: 'SUCCESS' }
+      });
 
       // Finalize
       const processingTime = Date.now() - startTime;
@@ -102,6 +114,14 @@ export class BatchProcessingService {
 
     } catch (error: any) {
       logger.error({ error, productId }, 'Product processing failed');
+      
+      if (userId) {
+        await db.client.user.update({
+          where: { id: userId },
+          data: { isScanning: false, lastScanStatus: 'FAILED' }
+        });
+      }
+
       return {
         success: false,
         postsCollected: 0,

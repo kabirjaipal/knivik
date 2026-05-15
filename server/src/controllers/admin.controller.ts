@@ -422,7 +422,7 @@ export const getAlertLogs = async (req: Request, res: Response) => {
  */
 export const getRevenue = async (_req: Request, res: Response) => {
   try {
-    const [revenueAggregate, activeSubscriptions, recentPayments] = await Promise.all([
+    const [revenueAggregate, activeSubscriptions, recentPayments, totals, models] = await Promise.all([
       // Use aggregate instead of findMany to avoid loading all rows into memory
       db.client.payment.aggregate({
         where: { status: 'paid' },
@@ -433,11 +433,31 @@ export const getRevenue = async (_req: Request, res: Response) => {
         take: 10, 
         orderBy: { createdAt: 'desc' },
         include: { user: { select: { username: true, email: true } } }
-      })
+      }),
+      db.client.llmUsageLog.groupBy({
+        by: ['modelId'],
+        _sum: { inputTokens: true, outputTokens: true }
+      }),
+      db.client.llmModel.findMany()
     ]);
 
     const totalRevenueCents = revenueAggregate._sum.amount ?? 0;
+    const totalRevenue = totalRevenueCents / 100;
     
+    // Calculate total LLM cost system-wide
+    const modelMap = new Map(models.map(m => [m.id, m]));
+    let totalLlmCost = 0;
+    for (const t of totals) {
+      const model = modelMap.get(t.modelId);
+      const inputPrice = model?.inputPrice || 0;
+      const outputPrice = model?.outputPrice || 0;
+      totalLlmCost += ((t._sum.inputTokens || 0) / 1_000_000 * inputPrice) + 
+                      ((t._sum.outputTokens || 0) / 1_000_000 * outputPrice);
+    }
+    
+    // Net profit is Revenue minus LLM infrastructure costs
+    const netProfit = totalRevenue - totalLlmCost;
+
     // Simple MRR calculation based on active subscriptions
     // In a real app, this would be more complex (handling annual vs monthly)
     const mrrCents = activeSubscriptions.reduce((sum, s) => {
@@ -449,8 +469,10 @@ export const getRevenue = async (_req: Request, res: Response) => {
     res.json({
       success: true,
       data: {
-        totalRevenue: totalRevenueCents / 100,
-        mrr: mrrCents / 100,
+        totalRevenue: Number(totalRevenue.toFixed(2)),
+        totalCost: Number(totalLlmCost.toFixed(4)),
+        netProfit: Number(netProfit.toFixed(2)),
+        mrr: Number((mrrCents / 100).toFixed(2)),
         activeSubscribers: activeSubscriptions.length,
         recentPayments: recentPayments.map(p => ({
           id: p.id,
