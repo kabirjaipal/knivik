@@ -1,4 +1,4 @@
-import { Platform, Keyword, ProductSource } from '@prisma/client';
+import { Platform } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
 import httpClient from '../lib/httpClient.js';
 import logger from '../lib/logger.js';
@@ -135,29 +135,17 @@ export class RedditEngine extends BaseScraperEngine {
     return BUYING_SIGNALS.some(signal => lowerText.includes(signal));
   }
 
-  protected async scrapeKeyword(
+  protected async scrapeQuery(
     product: ProductWithDetails,
-    source: ProductSource,
-    keyword: Keyword,
+    query: string,
     limit: number,
     signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
-    const isGlobal = source.identifier.toLowerCase() === 'global';
 
     try {
-      let posts: RedditPost[] = [];
-
-      if (isGlobal) {
-        // Global: search keyword across all of Reddit
-        posts = await this.searchReddit(keyword.keyword);
-      } else {
-        // Specific subreddit: search within it
-        const subreddit = source.identifier.startsWith('r/')
-          ? source.identifier.substring(2)
-          : source.identifier;
-        posts = await this.searchReddit(keyword.keyword, subreddit);
-      }
+      // Global search across all of Reddit for the AI-generated query
+      const posts = await this.searchReddit(query);
 
       // Filter posts that contain buying intent
       const matchingPosts = posts.filter(post => {
@@ -186,33 +174,22 @@ export class RedditEngine extends BaseScraperEngine {
         }
       }
 
-      logger.info(`[REDDIT] ${savedCount} leads found for keyword: "${keyword.keyword}"`);
+      logger.info(`[REDDIT] ${savedCount} leads found for query: "${query}"`);
     } catch (error: any) {
-      logger.error(`[REDDIT] Error scraping keyword "${keyword.keyword}": ${error.message}`);
+      logger.error(`[REDDIT] Error scraping query "${query}": ${error.message}`);
     }
 
     await this.sleep(this.getRandomDelay());
     return savedCount;
   }
 
-  override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal) {
-    const isGlobal = source.identifier.toLowerCase() === 'global' || !source.identifier;
-
+  override async fetchRecentPosts(_product: ProductWithDetails, limit: number, _signal?: AbortSignal) {
     try {
-      let posts: RedditPost[] = [];
-
-      if (isGlobal) {
-        // Pull new posts from multiple high-value subreddits
-        const results = await Promise.all(
-          HIGH_VALUE_SUBREDDITS.slice(0, 4).map(s => this.fetchSubredditNew(s))
-        );
-        posts = results.flat();
-      } else {
-        const subreddit = source.identifier.startsWith('r/')
-          ? source.identifier.substring(2)
-          : source.identifier;
-        posts = await this.fetchSubredditNew(subreddit);
-      }
+      // Pull new posts from multiple high-value subreddits to find implicit leads
+      const results = await Promise.all(
+        HIGH_VALUE_SUBREDDITS.slice(0, 6).map(s => this.fetchSubredditNew(s))
+      );
+      const posts = results.flat();
 
       return posts.slice(0, limit).map(post => ({
         id: post.externalPostId,

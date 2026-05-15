@@ -3,6 +3,7 @@ import logger from '../lib/logger.js';
 import config from '../lib/config.js';
 import { AlertChannel } from '@prisma/client';
 import nodemailer from 'nodemailer';
+import { hasCapability } from '../lib/plans.js';
 
 export const sendLeadAlert = async (leadId: string) => {
   try {
@@ -26,6 +27,11 @@ export const sendLeadAlert = async (leadId: string) => {
     }
 
     const { alertSetting } = lead.product.user;
+
+    // 0. Plan Capability Check
+    if (!hasCapability(lead.product.user.plan as any, 'canAccessAlerts')) {
+      return;
+    }
 
     // 1. Check intent score threshold
     if (lead.intentScore < alertSetting.minIntentScore) {

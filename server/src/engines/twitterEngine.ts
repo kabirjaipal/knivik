@@ -1,4 +1,4 @@
-import { Platform, Keyword, ProductSource } from '@prisma/client';
+import { Platform } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -106,10 +106,9 @@ export class TwitterEngine extends BaseScraperEngine {
     return Promise.resolve();
   }
 
-  protected async scrapeKeyword(
+  protected async scrapeQuery(
     product: ProductWithDetails,
-    _source: ProductSource,
-    keyword: Keyword,
+    query: string,
     limit: number,
     signal?: AbortSignal
   ): Promise<number> {
@@ -117,7 +116,8 @@ export class TwitterEngine extends BaseScraperEngine {
 
     try {
       // Create a search query targeting buying intent
-      const intentQuery = `"${keyword.keyword}" ("${BUYING_SIGNALS.slice(0, 4).join('" OR "')}")`;
+      // We wrap the AI-generated query and add intent signals for Yahoo
+      const intentQuery = `"${query}" ("${BUYING_SIGNALS.slice(0, 4).join('" OR "')}")`;
       const posts = await this.scrapeYahooSearch(intentQuery, limit);
 
       const matchingPosts = posts.filter(post => {
@@ -144,20 +144,18 @@ export class TwitterEngine extends BaseScraperEngine {
         }
       }
 
-      logger.info(`[TWITTER] ${savedCount} leads for keyword: "${keyword.keyword}"`);
+      logger.info(`[TWITTER] ${savedCount} leads for query: "${query}"`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      logger.error(`[TWITTER] Error scraping keyword "${keyword.keyword}": ${message}`);
+      logger.error(`[TWITTER] Error scraping query "${query}": ${message}`);
     }
 
     await this.sleep(this.getRandomDelay());
     return savedCount;
   }
 
-  override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal): Promise<Array<{ id: string; title: string | null; content: string; url: string; author?: string; postedAt?: Date }>> {
-    const searchQuery = (source.identifier.toLowerCase() === 'global' || !source.identifier)
-      ? 'saas OR "software tool" OR recommendation'
-      : source.identifier;
+  override async fetchRecentPosts(_product: ProductWithDetails, limit: number, _signal?: AbortSignal): Promise<Array<{ id: string; title: string | null; content: string; url: string; author?: string; postedAt?: Date }>> {
+    const searchQuery = 'saas OR "software tool" OR recommendation';
 
     try {
       const posts = await this.scrapeYahooSearch(searchQuery, limit);

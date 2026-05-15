@@ -69,6 +69,14 @@ export const generateLeadReply = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    // Plan check for AI Replies
+    const user = await db.client.user.findUnique({ where: { id: userId } });
+    const { hasCapability } = await import('../lib/plans.js');
+    if (!user || !hasCapability(user.plan as any, 'canAccessAdvancedAI')) {
+      res.status(403).json({ error: 'AI-generated replies are only available on Pro plans.' });
+      return;
+    }
+
     // Call OpenAI LLM Generator
     const replyText = await generateReply(lead.content, {
        name: lead.product.name,

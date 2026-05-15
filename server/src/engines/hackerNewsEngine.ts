@@ -1,4 +1,4 @@
-import { Platform, Keyword, ProductSource } from '@prisma/client';
+import { Platform } from '@prisma/client';
 import { BaseScraperEngine, ProductWithDetails } from './baseEngine.js';
 import httpClient from '../lib/httpClient.js';
 import logger from '../lib/logger.js';
@@ -133,18 +133,17 @@ export class HackerNewsEngine extends BaseScraperEngine {
     return BUSINESS_KEYWORDS.some(keyword => lowerText.includes(keyword));
   }
 
-  protected async scrapeKeyword(
+  protected async scrapeQuery(
     product: ProductWithDetails,
-    _source: ProductSource,
-    keyword: Keyword,
+    query: string,
     limit: number,
     signal?: AbortSignal
   ): Promise<number> {
     let savedCount = 0;
 
     try {
-      // Primary: Algolia search for keyword-targeted results
-      let posts = await this.searchAlgolia(keyword.keyword);
+      // Primary: Algolia search for query-targeted results
+      let posts = await this.searchAlgolia(query);
 
       // Fallback: Firebase latest stories if Algolia fails
       if (!posts.length) {
@@ -152,16 +151,16 @@ export class HackerNewsEngine extends BaseScraperEngine {
         posts = await this.fetchLatestViaFirebase(50);
       }
 
-      // Filter for keyword + buying intent
+      // Filter for query + buying intent
       const matchingPosts = posts.filter(post => {
         if (signal?.aborted) return false;
         const searchText = `${post.title} ${post.content}`.toLowerCase();
-        const hasKeyword = keyword.keyword.toLowerCase().split(' ').every(
+        const hasQuery = query.toLowerCase().split(' ').every(
           word => searchText.includes(word)
         );
         const hasBuyingIntent = this.containsBuyingIntent(searchText);
         const isBusiness = this.isBusinessRelevant(searchText);
-        return hasKeyword && (hasBuyingIntent || isBusiness);
+        return hasQuery && (hasBuyingIntent || isBusiness);
       });
 
       for (const post of matchingPosts.slice(0, limit)) {
@@ -183,27 +182,18 @@ export class HackerNewsEngine extends BaseScraperEngine {
         }
       }
 
-      logger.info(`[HACKERNEWS] ${savedCount} leads found for keyword: "${keyword.keyword}"`);
+      logger.info(`[HACKERNEWS] ${savedCount} leads found for query: "${query}"`);
     } catch (error: any) {
-      logger.error(`[HACKERNEWS] Error scraping keyword "${keyword.keyword}": ${error.message}`);
+      logger.error(`[HACKERNEWS] Error scraping query "${query}": ${error.message}`);
     }
 
     return savedCount;
   }
 
-  override async fetchRecentPosts(source: ProductSource, limit: number, _signal?: AbortSignal) {
+  override async fetchRecentPosts(_product: ProductWithDetails, limit: number, _signal?: AbortSignal) {
     try {
-      const isGlobal = source.identifier.toLowerCase() === 'global' || !source.identifier;
-
-      let posts: HNPost[];
-
-      if (isGlobal) {
-        // Firebase API for global feed — most stable
-        posts = await this.fetchLatestViaFirebase(limit + 10);
-      } else {
-        // For a specific search term, use Algolia
-        posts = await this.searchAlgolia(source.identifier);
-      }
+      // Firebase API for global feed — most stable
+      const posts = await this.fetchLatestViaFirebase(limit + 20);
 
       return posts.slice(0, limit).map(post => ({
         id: post.externalPostId,

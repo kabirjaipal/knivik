@@ -25,6 +25,7 @@ export const PLANS = {
       canAccessAlerts: false,
       canAccessEnrichment: false,
       canAccessCustomPersonas: false,
+      canAccessAdvancedAI: false,
       priorityProcessing: false,
     }
   },
@@ -59,6 +60,7 @@ export const PLANS = {
       canAccessAlerts: true,
       canAccessEnrichment: true,
       canAccessCustomPersonas: true,
+      canAccessAdvancedAI: true,
       priorityProcessing: false,
     }
   },

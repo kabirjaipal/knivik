@@ -6,17 +6,13 @@ import {
   semanticScan,
   SemanticScanPost,
 } from '../services/aiService.js';
-import { Platform, IntentLevel, Product, Keyword, NegativeKeyword, ProductSource, Competitor } from '@prisma/client';
+import { Platform, IntentLevel, Product } from '@prisma/client';
 import { enrichLead } from '../services/enrichmentService.js';
 import { sendLeadAlert } from '../services/alertService.js';
+import { hasCapability } from '../lib/plans.js';
 
 
-export type ProductWithDetails = Product & {
-  keywords: Keyword[];
-  negativeKeywords: NegativeKeyword[];
-  sources: ProductSource[];
-  competitors: Competitor[];
-};
+export type ProductWithDetails = Product;
 
 // Detection mode for how a lead was found
 export type DetectionMode = 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR';
@@ -24,10 +20,9 @@ export type DetectionMode = 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR';
 export abstract class BaseScraperEngine {
   abstract platform: Platform;
 
-  protected abstract scrapeKeyword(
+  protected abstract scrapeQuery(
     product: ProductWithDetails,
-    source: ProductSource,
-    keyword: Keyword,
+    query: string,
     limit: number,
     signal?: AbortSignal
   ): Promise<number>;
@@ -37,7 +32,7 @@ export abstract class BaseScraperEngine {
    * Subclasses may override this to provide platform-specific fetching.
    */
   protected async fetchRecentPosts(
-    _source: ProductSource,
+    _product: ProductWithDetails,
     _limit: number
   ): Promise<Array<{ id: string; title: string | null; content: string; url: string; author?: string; postedAt?: Date }>> {
     return [];
@@ -51,16 +46,20 @@ export abstract class BaseScraperEngine {
 
     try {
       signal?.throwIfAborted();
+
+      // 0. Plan Capability Check (e.g. Twitter is PRO only)
+      if (userId && this.platform === Platform.TWITTER) {
+        const user = await db.client.user.findUnique({ where: { id: userId }, select: { plan: true } });
+        if (!user || !hasCapability(user.plan as any, 'canAccessTwitter')) {
+          logger.info(`[${this.platform}] Skipping: User ${userId} plan (${user?.plan}) does not include Twitter access.`);
+          return;
+        }
+      }
+
       const activeProducts = await db.client.product.findMany({
         where: {
           isActive: true,
           ...(userId ? { userId } : {}),
-        },
-        include: {
-          keywords: { where: { isActive: true } },
-          sources: { where: { isActive: true, platform: this.platform } },
-          negativeKeywords: true,
-          competitors: true,
         },
       });
 
@@ -75,51 +74,41 @@ export abstract class BaseScraperEngine {
 
       for (const product of activeProducts) {
         signal?.throwIfAborted();
-        if (product.sources.length === 0) {
-          product.sources = [{
-            id: 'auto-injected-fallback',
-            productId: product.id,
-            platform: this.platform,
-            identifier: this.platform === 'REDDIT' ? 'startups' : 'global',
-            isActive: true,
-            createdAt: new Date()
-          }];
-        }
-
+        
         logger.info(`[${this.platform}] Starting cycle for: ${product.name}`);
         const MAX = 5;
         let found = 0;
 
-        const shuffledKeywords = [...product.keywords]
-          .map(k => ({ k, sort: Math.random() }))
-          .sort((a, b) => a.sort - b.sort)
-          .map(({ k }) => k);
+        const searchQueries = (product.searchQueries as string[]) || [];
 
-        // Pass 1: Keyword scan
-        if (shuffledKeywords.length > 0) {
-          for (const source of product.sources) {
+        // Pass 1: Query scan
+        if (searchQueries.length > 0) {
+          // Shuffle queries to ensure variety across runs
+          const shuffledQueries = [...searchQueries].sort(() => Math.random() - 0.5);
+          
+          for (const query of shuffledQueries) {
             signal?.throwIfAborted();
             if (found >= MAX) break;
-            for (const keyword of shuffledKeywords) {
-              signal?.throwIfAborted();
-              if (found >= MAX) break;
-              found += await this.scrapeKeyword(product as ProductWithDetails, source, keyword, MAX - found, signal);
-              
-              // Extra pause between keywords to be respectful
-              await this.sleep(3000); 
-            }
+            
+            found += await this.scrapeQuery(product as ProductWithDetails, query, MAX - found, signal);
+            
+            // Extra pause between queries to be respectful
+            await this.sleep(3000); 
           }
         }
 
-        // Pass 2: Semantic scan (no-keyword detection)
-        if (product.description) {
+        // Pass 2: Semantic scan (no-keyword detection) - PRO only
+        const user = await db.client.user.findUnique({ where: { id: product.userId }, select: { plan: true } });
+        const hasAdvancedAI = user && hasCapability(user.plan as any, 'canAccessAdvancedAI');
+
+        if (product.description && hasAdvancedAI) {
           found += await this.runSemanticPass(product as ProductWithDetails, MAX - found);
         }
 
-        // Pass 3: Competitor venting scan
-        if (product.competitors.length > 0) {
-          found += await this.runCompetitorPass(product as ProductWithDetails, MAX - found);
-        }
+        // Pass 3: Competitor venting scan - PRO only
+        // Note: Competitor names are now implicitly handled via AI-generated search queries (Pass 1)
+        // and semantic analysis (Pass 2), but we could still have a specific pass if needed.
+        // For now, Pass 1 and 2 cover it.
 
         logger.info(`[${this.platform}] Done with ${product.name}. Found ${found} leads this cycle.`);
       }
@@ -136,112 +125,58 @@ export abstract class BaseScraperEngine {
     if (limit <= 0) return 0;
     let found = 0;
 
-    for (const source of product.sources) {
+    let rawPosts = await this.fetchRecentPosts(product, 30);
+    if (!rawPosts.length) return 0;
+
+    // Filter out posts older than 1 month
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    rawPosts = rawPosts.filter(p => !p.postedAt || p.postedAt >= oneMonthAgo);
+
+    if (!rawPosts.length) return 0;
+
+    const postsForScan: SemanticScanPost[] = rawPosts.map(p => ({
+      id: p.id,
+      text: `${p.title || ''}\n${p.content}`.trim(),
+    }));
+
+    const results = await semanticScan(
+      postsForScan,
+      product.description || product.name,
+      product.userId,
+      product.id
+    );
+
+    for (const result of results) {
       if (found >= limit) break;
+      if (!result.isMatch || result.intentScore < 80) continue; // Higher bar for quality
 
-      let rawPosts = await this.fetchRecentPosts(source, 15);
-      if (!rawPosts.length) continue;
+      const rawPost = rawPosts.find(p => p.id === result.id);
+      if (!rawPost) continue;
 
-      // Filter out posts older than 1 month
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      rawPosts = rawPosts.filter(p => !p.postedAt || p.postedAt >= oneMonthAgo);
+      const intentLevel: IntentLevel = result.intentScore >= 80 ? 'BUY_NOW'
+        : result.intentScore >= 60 ? 'RESEARCHING'
+        : 'LOW_INTENT';
 
-      if (!rawPosts.length) continue;
-
-      const postsForScan: SemanticScanPost[] = rawPosts.map(p => ({
-        id: p.id,
-        text: `${p.title || ''}\n${p.content}`.trim(),
-      }));
-
-      const results = await semanticScan(
-        postsForScan,
-        product.description || product.name,
-        product.userId,
-        product.id
+      const saved = await this.saveLead(
+        product,
+        rawPost.id,
+        rawPost.title,
+        rawPost.content,
+        rawPost.url,
+        rawPost.author,
+        rawPost.postedAt,
+        intentLevel,
+        result.intentScore,
+        'SEMANTIC',
+        result.reasoning
       );
-
-      for (const result of results) {
-        if (found >= limit) break;
-        if (!result.isMatch || result.intentScore < 80) continue; // Higher bar for quality
-
-        const rawPost = rawPosts.find(p => p.id === result.id);
-        if (!rawPost) continue;
-
-        const intentLevel: IntentLevel = result.intentScore >= 80 ? 'BUY_NOW'
-          : result.intentScore >= 60 ? 'RESEARCHING'
-          : 'LOW_INTENT';
-
-        const saved = await this.saveLead(
-          product,
-          rawPost.id,
-          rawPost.title,
-          rawPost.content,
-          rawPost.url,
-          rawPost.author,
-          rawPost.postedAt,
-          intentLevel,
-          result.intentScore,
-          'SEMANTIC',
-          result.reasoning
-        );
-        if (saved) found++;
-      }
+      if (saved) found++;
     }
 
     return found;
   }
 
-  /**
-   * Competitor pass: fetches recent posts from each source and checks for
-   * explicit frustration or switching intent from configured competitors.
-   */
-  private async runCompetitorPass(product: ProductWithDetails, limit: number): Promise<number> {
-    if (limit <= 0 || !product.competitors.length) return 0;
-    let found = 0;
-
-    const competitorNames = product.competitors.map(c => c.name);
-
-    for (const source of product.sources) {
-      if (found >= limit) break;
-
-      let rawPosts = await this.fetchRecentPosts(source, 15);
-      if (!rawPosts.length) continue;
-
-      // Filter out posts older than 1 month
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      rawPosts = rawPosts.filter(p => !p.postedAt || p.postedAt >= oneMonthAgo);
-
-      for (const rawPost of rawPosts) {
-        if (found >= limit) break;
-
-        const text = `${rawPost.title || ''}\n${rawPost.content}`.trim();
-        const signal = await detectCompetitorSignal(text, competitorNames, product.userId, product.id);
-
-        if (!signal.detected || signal.confidence < 60) continue;
-
-        // Competitor venting is treated as high-intent — they are actively looking to switch
-        const intentScore = Math.max(signal.confidence, 70);
-        const saved = await this.saveLead(
-          product,
-          rawPost.id,
-          rawPost.title,
-          rawPost.content,
-          rawPost.url,
-          rawPost.author,
-          rawPost.postedAt,
-          'BUY_NOW' as IntentLevel,
-          intentScore,
-          'COMPETITOR',
-          signal.reasoning
-        );
-        if (saved) found++;
-      }
-    }
-
-    return found;
-  }
 
   /**
    * processPotentialLead: Used by keyword scan (Pass 1) with all smart pre-filters.
@@ -282,19 +217,12 @@ export abstract class BaseScraperEngine {
     if (authorUsername?.toLowerCase().includes('bot')) return false;
 
     // 5. Smart regex negative keywords
-    const hasNegative = product.negativeKeywords.find((nk: NegativeKeyword) => {
-      const regex = new RegExp(`\\b${nk.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      return regex.test(combinedText);
-    });
-    if (hasNegative) {
-      logger.debug(`[${this.platform}] Rejected: Negative keyword "${hasNegative.keyword}" found for ${externalPostId}`);
-      return false;
-    }
+    // [REMOVED] - Negative keywords are now handled by the heuristic pre-qualifier logic 
+    // or implicitly by the search query generation.
 
     // 6. Heuristic pre-qualifier gate (zero-cost, zero-latency)
     // Only posts that pass this gate are sent to the LLM.
-    const competitorNames = product.competitors.map(c => c.name);
-    const preQualified = this.preQualifyLead(combinedText, competitorNames);
+    const preQualified = this.preQualifyLead(combinedText);
     if (!preQualified.passed) {
       logger.debug(`[${this.platform}] Heuristic reject [score:${preQualified.score}] (${preQualified.reason}) for ${externalPostId}`);
       return false;
@@ -415,8 +343,7 @@ export abstract class BaseScraperEngine {
    * PASS_THRESHOLD = 35 → only top ~15% of posts ever touch the LLM.
    */
   private preQualifyLead(
-    text: string,
-    competitorNames: string[]
+    text: string
   ): { passed: boolean; score: number; reason: string } {
     const PASS_THRESHOLD = 35;
     const lower = text.toLowerCase();
@@ -508,16 +435,7 @@ export abstract class BaseScraperEngine {
     }
 
     // ── TIER 4: COMPETITOR MENTION (+50 pts, stacks with everything) ──────────
-    //  Someone complaining about or comparing a named competitor = hottest lead signal.
-    if (competitorNames.length > 0) {
-      const mentioned = competitorNames.find(name =>
-        new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text)
-      );
-      if (mentioned) {
-        score += 50;
-        signals.push(`competitor:${mentioned}(+50)`);
-      }
-    }
+    // [DEPRECATED] - Competitors model removed. Intent now handled via general signals.
 
     // ── TIER 5: QUESTION DEPTH (+10–20 pts) ──────────────────────────────────
     //  More questions = more confused/searching person = better lead.
