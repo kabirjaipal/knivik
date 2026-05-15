@@ -1,144 +1,189 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { 
-  ExternalLink, 
-  User, 
-  Calendar, 
-  TrendingUp,
-  AlertCircle,
-  MessageSquare
-} from "lucide-react"
-
-interface Lead {
-  id: string
-  title: string | null
-  content: string
-  platform: string
-  externalPostId: string
-  url: string
-  authorUsername: string | null
-  intentScore: number
-  intentLevel: "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT"
-  status: "NEW" | "QUALIFIED" | "SAVED" | "CONTACTED" | "CONVERTED" | "DISMISSED"
-  detectedBy: "KEYWORD" | "SEMANTIC" | "COMPETITOR"
-  createdAt: string
-  reasoning?: string
-}
+import { useEffect, useState, useCallback } from "react"
+import { AlertCircle, MessageSquare, TrendingUp, Radar } from "lucide-react"
+import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
+import { ProductStats } from "./ProductStats"
 
 interface ProductLeadsProps {
   productId: string
+  lastManualScanDate?: string | null
 }
 
-export function ProductLeads({ productId }: ProductLeadsProps) {
-  const [leads, setLeads] = useState<Lead[]>([])
+export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProps) {
+  const [leads, setLeads] = useState<LeadCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
+  const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
 
-  useEffect(() => {
-    fetchLeads()
-  }, [productId])
-
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/leads?productId=${productId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads?productId=${productId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch leads")
       const data = await res.json()
-      setLeads(data.leads || [])
+      const fetched = (data.leads || []) as LeadCardData[]
+      setLeads(fetched)
+
+      // Pre-populate any previously drafted replies
+      const initialDrafts: Record<string, string> = {}
+      fetched.forEach(l => {
+        if (l.replies?.length) initialDrafts[l.id] = l.replies[0]!.generatedText
+      })
+      setDraftedReplies(initialDrafts)
     } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }
+  }, [productId])
+
+  useEffect(() => {
+    fetchLeads()
+  }, [fetchLeads])
+
+  // ─── Action Handlers ─────────────────────────────────────────────────────────
+
+  const handleDraftReply = useCallback(async (leadId: string) => {
+    setDraftingLeadId(leadId)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/reply`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('Failed to generate draft')
+      const data = await res.json()
+      setDraftedReplies(prev => ({ ...prev, [leadId]: data.generatedText }))
+      setExpandedReplies(prev => ({ ...prev, [leadId]: true }))
+    } catch (e) {
+      console.error('Draft reply failed:', e)
+    } finally {
+      setDraftingLeadId(null)
+    }
+  }, [])
+
+  const handleToggleExpand = useCallback((leadId: string) => {
+    setExpandedReplies(prev => ({ ...prev, [leadId]: !prev[leadId] }))
+  }, [])
+
+  const handleStatusChange = useCallback(async (leadId: string, status: LeadStatus) => {
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/status`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+    } catch {
+      console.error('Failed to update status')
+    }
+  }, [])
+
+  const handleNotesChange = useCallback(async (leadId: string, notes: string) => {
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, notes } : l))
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/notes`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+      })
+    } catch {
+      console.error('Failed to update notes')
+    }
+  }, [])
+
+  const handleFeedbackChange = useCallback(async (leadId: string, feedback: number) => {
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, feedback } : l))
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/feedback`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback }),
+      })
+    } catch {
+      console.error('Failed to update feedback')
+    }
+  }, [])
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="py-8 text-center">
-        <div className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
-        <p className="mt-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/40">Syncing Stream...</p>
+      <div className="py-12 flex flex-col items-center justify-center gap-3">
+        <div className="w-7 h-7 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Syncing Signal Stream...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="py-8 text-center">
-        <AlertCircle className="w-6 h-6 mx-auto text-destructive/40 mb-2" />
+      <div className="py-10 text-center">
+        <AlertCircle className="w-7 h-7 mx-auto text-destructive/40 mb-2" />
         <p className="text-xs font-bold uppercase tracking-wider text-destructive/60">Stream Connection Error</p>
       </div>
     )
   }
 
-  if (leads.length === 0) {
-    return (
-      <div className="py-12 text-center bg-muted/5 rounded-xl border border-dashed border-border/50">
-        <MessageSquare className="w-6 h-6 mx-auto text-muted-foreground/20 mb-2" />
-        <p className="text-xs font-bold text-muted-foreground/40 uppercase tracking-widest">No Signals Detected</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 flex items-center gap-1.5">
-        <TrendingUp className="w-3 h-3" /> Detected Leads ({leads.length})
-      </h2>
+    <div className="space-y-0">
+      {/* Stats above the lead stream — always shown even with 0 leads */}
+      <ProductStats leads={leads} />
 
-      <div className="space-y-10">
-        {leads.map((lead) => (
-          <div key={lead.id} className="group relative">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                    lead.intentLevel === 'BUY_NOW' ? 'bg-success/10 text-success' : 
-                    lead.intentLevel === 'RESEARCHING' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {lead.intentLevel.replace('_', ' ')}
-                  </span>
-                  <span className="text-xs font-bold uppercase tracking-wider px-1.5 py-0.5 bg-primary/10 text-primary rounded">
-                    Score: {lead.intentScore}
-                  </span>
-                </div>
-                <a 
-                  href={lead.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-muted-foreground/40 hover:text-primary transition-colors"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-
-              <h3 className="text-base font-bold tracking-tight text-foreground group-hover:text-primary transition-colors leading-tight">
-                {lead.title || "Untitled Conversation Signal"}
-              </h3>
-
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                {lead.content}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase tracking-wider text-muted-foreground/40">
-                <span className="flex items-center gap-1"><User className="w-2.5 h-2.5" /> {lead.authorUsername || "Anonymous"}</span>
-                <span className="flex items-center gap-1"><Calendar className="w-2.5 h-2.5" /> {new Date(lead.createdAt).toLocaleDateString()}</span>
-                <span className="bg-muted px-1.5 py-0.5 rounded text-xs uppercase">{lead.platform}</span>
-              </div>
-
-              {lead.reasoning && (
-                <div className="bg-muted/30 dark:bg-muted/10 p-2.5 rounded-lg border-l-2 border-primary/20">
-                   <p className="text-xs font-medium text-muted-foreground/80 leading-snug italic">
-                     "{lead.reasoning}"
-                   </p>
-                </div>
-              )}
-            </div>
+      {leads.length === 0 ? (
+        <div className="py-16 text-center bg-muted/5 rounded-xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-3">
+          <Radar className="w-8 h-8 text-muted-foreground/20" />
+          <div>
+            <p className="text-sm font-bold text-foreground">No Signals Detected</p>
+            <p className="text-xs text-muted-foreground mt-1">Trigger a scan or wait for the global 24h sweep.</p>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Section header */}
+          <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+            <TrendingUp className="w-3.5 h-3.5 text-primary" />
+            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Detected Signals
+            </h2>
+            <span className="ml-auto text-xs font-bold text-muted-foreground/50 bg-muted px-2 py-0.5 rounded-full">
+              {leads.length}
+            </span>
+          </div>
+
+          {/* Lead cards */}
+          <div className="border border-border/40 rounded-md overflow-hidden bg-card shadow-sm">
+            {leads.map(lead => (
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                showProductName={false}
+                draftingLeadId={draftingLeadId}
+                draftedReply={draftedReplies[lead.id]}
+                isExpanded={expandedReplies[lead.id]}
+                onDraftReply={handleDraftReply}
+                onToggleExpand={handleToggleExpand}
+                onStatusChange={handleStatusChange}
+                onNotesChange={handleNotesChange}
+                onFeedbackChange={handleFeedbackChange}
+              />
+            ))}
+          </div>
+
+          {leads.length > 5 && (
+            <p className="text-center text-xs text-muted-foreground/40 font-medium pt-2">
+              <MessageSquare className="inline w-3 h-3 mr-1" />
+              Showing all {leads.length} signals for this product
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

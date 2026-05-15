@@ -1,10 +1,10 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
-import { ProductDetails } from "@/components/dashboard/ProductDetails"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, ExternalLink, Radar } from "lucide-react"
+import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 
@@ -14,6 +14,12 @@ interface Product {
   description: string | null
   websiteUrl: string | null
   isActive: boolean
+  searchQueries?: string[] | null
+  aiConfig?: {
+    lastManualScanDate?: string | null
+    customPersona?: string | null
+    [key: string]: any
+  } | null
 }
 
 export default function ProductDetailPage() {
@@ -25,69 +31,47 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [isScanning, setIsScanning] = useState(false)
+  const [showConfig, setShowConfig] = useState(false)
 
-  // Polling logic for background scans
+  // ─── Background scan polling ──────────────────────────────────────────────
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    // If user status shows scanning, poll for completion
+    let interval: NodeJS.Timeout
     if (user?.isScanning) {
-      setIsScanning(true);
-      interval = setInterval(() => {
-        refresh();
-      }, 3000);
+      setIsScanning(true)
+      interval = setInterval(() => { refresh() }, 3000)
     } else if (isScanning && !user?.isScanning) {
-      // Just finished scanning
-      setIsScanning(false);
-      // Brief delay to ensure DB consistency before reload
-      setTimeout(() => window.location.reload(), 500);
+      setIsScanning(false)
+      setTimeout(() => window.location.reload(), 500)
     }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [user?.isScanning, isScanning, refresh]);
+    return () => { if (interval) clearInterval(interval) }
+  }, [user?.isScanning, isScanning, refresh])
 
   const handleScanNow = async () => {
-    // Only allow if not already scanning
-    if (isScanning) return;
-    
+    if (isScanning) return
     setIsScanning(true)
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/products/${productId}/scan`, {
-        method: "POST",
-        credentials: "include",
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/scan`, {
+        method: "POST", credentials: "include",
       })
-      
-      if (res.status === 202) {
-        // Background scan started, the useEffect will handle polling
-        return;
-      }
-      
+      if (res.status === 202) return
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Scan failed")
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Scan failed")
       }
-      
-      // Fallback for immediate success
       window.location.reload()
     } catch (err: any) {
-      alert(err.message || "Scan failed to complete. Please check server logs.")
+      alert(err.message || "Scan failed")
       setIsScanning(false)
     }
   }
 
   useEffect(() => {
-    if (user && productId) {
-      fetchProduct()
-    }
+    if (user && productId) fetchProduct()
   }, [user, productId])
 
   const fetchProduct = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/products/${productId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch product")
@@ -104,7 +88,7 @@ export default function ProductDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-primary/60" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Loading Signal Data...</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Loading...</p>
       </div>
     )
   }
@@ -113,94 +97,103 @@ export default function ProductDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4">
         <p className="text-sm font-bold text-muted-foreground">Product not found</p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/dashboard/products")}
-          className="rounded-xl px-4 font-bold text-xs uppercase tracking-wider"
-        >
-          <ArrowLeft className="w-3 h-3 mr-2" /> Back to Overview
+        <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/products")}
+          className="rounded-xl px-4 font-bold text-xs uppercase tracking-wider">
+          <ArrowLeft className="w-3 h-3 mr-2" /> Back
         </Button>
       </div>
     )
   }
 
-  return (
-    <div className="">
-      {/* Navigation */}
-      <nav className="mb-4">
-        <button 
-          onClick={() => router.push("/dashboard/products")}
-          className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> 
-          Back
-        </button>
-      </nav>
+  const queries = Array.isArray(product.searchQueries) ? product.searchQueries : []
 
-      {/* Main Header */}
-      <header className="mb-8 border-b border-border/50 pb-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-              {product.name}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                {product.isActive ? (
-                  <span className="flex items-center gap-1.5 text-success font-bold uppercase tracking-wider text-xs">
-                    <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-success/40"></span>
-                    Live Scanning
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-xs">
-                    <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full"></span>
-                    Standby
-                  </span>
-                )}
-              </div>
-              {product.websiteUrl && (
-                <a 
-                  href={product.websiteUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs font-bold uppercase tracking-wider text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
-                >
-                  Visit <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
+  return (
+    <div className="space-y-4">
+      {/* ── Slim header bar ──────────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2">
+        {/* Breadcrumb */}
+        <button onClick={() => router.push("/dashboard/products")}
+          className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground/50 hover:text-primary transition-colors w-fit">
+          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+          All Products
+        </button>
+
+        {/* Title row */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <h1 className="text-xl font-black tracking-tight truncate">{product.name}</h1>
+
+            {product.isActive ? (
+              <span className="flex items-center gap-1 text-success font-black uppercase tracking-wider text-[10px] shrink-0">
+                <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" /> Live
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-muted-foreground font-black uppercase tracking-wider text-[10px] shrink-0">
+                <span className="w-1.5 h-1.5 bg-muted-foreground/30 rounded-full" /> Standby
+              </span>
+            )}
+
+            {product.websiteUrl && (
+              <a href={product.websiteUrl} target="_blank" rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors shrink-0">
+                <Globe className="w-2.5 h-2.5" />
+                {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                <ExternalLink className="w-2 h-2" />
+              </a>
+            )}
           </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              size="sm"
-              disabled={isScanning || !product.isActive}
-              onClick={handleScanNow}
-              className="rounded-xl px-4 font-black text-xs uppercase tracking-wider shadow-md hover:shadow-primary/20 transition-all"
-            >
-              {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Radar className="w-3.5 h-3.5 mr-1.5 text-primary-foreground animate-spin-slow" />}
-              {isScanning ? "Scanning Web..." : "Scan Now"}
+
+          <div className="flex items-center gap-2">
+            {/* AI config toggle */}
+            {queries.length > 0 && (
+              <button onClick={() => setShowConfig(v => !v)}
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 hover:text-primary transition-colors border border-border/40 rounded-lg px-2.5 py-1.5">
+                <Zap className="w-2.5 h-2.5" />
+                Queries
+                {showConfig ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+              </button>
+            )}
+
+            <Button size="sm" disabled={isScanning || !product.isActive} onClick={handleScanNow}
+              className="h-8 px-4 font-black text-[10px] uppercase tracking-wider rounded-lg">
+              {isScanning
+                ? <><Loader2 className="w-3 h-3 animate-spin mr-1" /> Scanning...</>
+                : <><Radar className="w-3 h-3 mr-1" /> Scan Now</>}
             </Button>
-            <div className="text-xs font-mono text-muted-foreground/30 tabular-nums hidden sm:block">
-              {product.id}
-            </div>
           </div>
         </div>
-      </header>
 
-      {/* Grid Content */}
-      <div className="grid lg:grid-cols-[350px_1fr] gap-8 xl:gap-12">
-        {/* Left: Product Logic */}
-        <aside className="space-y-8">
-          <ProductDetails product={product} />
-        </aside>
+        {/* Description — single line, muted */}
+        {product.description && (
+          <p className="text-xs text-muted-foreground/60 truncate max-w-2xl">{product.description}</p>
+        )}
 
-        {/* Right: Detected Signals */}
-        <main className="lg:border-l lg:border-border/20 lg:pl-8 xl:pl-12">
-          <ProductLeads productId={productId} />
-        </main>
+        {/* Collapsible AI queries */}
+        {showConfig && queries.length > 0 && (
+          <div className="mt-1 p-3 rounded-xl border border-primary/15 bg-primary/[0.03] animate-in fade-in slide-in-from-top-1 duration-150 space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">AI Search Vectors</p>
+            <div className="flex flex-wrap gap-1.5">
+              {queries.map((q, i) => (
+                <Badge key={i} variant="secondary"
+                  className="text-[10px] py-0.5 px-2.5 bg-primary/5 text-primary/60 border border-primary/10 font-medium">
+                  "{q}"
+                </Badge>
+              ))}
+            </div>
+            {product.aiConfig?.customPersona && (
+              <p className="text-xs italic text-muted-foreground/50">
+                Persona: "{product.aiConfig.customPersona}"
+              </p>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* ── Stats + Leads (full width) ───────────────────────────────────────── */}
+      <ProductLeads
+        productId={productId}
+        lastManualScanDate={product.aiConfig?.lastManualScanDate ?? null}
+      />
     </div>
   )
 }
