@@ -1,5 +1,16 @@
 import { UserPlan } from "./constants";
 
+const getIntervalText = () => {
+  const ms = Number(process.env.NEXT_PUBLIC_SCRAPER_INTERVAL_MS) || 3600000;
+  if (ms <= 0) return "Manual Only";
+  if (ms === 3600000) return "Hourly";
+  if (ms === 86400000) return "Daily";
+  if (ms % 3600000 === 0) return `Every ${ms / 3600000}h`;
+  return `Every ${Math.round(ms / 60000)}m`;
+};
+
+const INTERVAL_TEXT = getIntervalText();
+
 export const PLANS = {
   FREE: { 
     name: "Free",
@@ -8,10 +19,10 @@ export const PLANS = {
       "Track 1 Product",
       "50 leads per month",
       "Reddit & HackerNews scanning",
-      "Global Auto Search (every 24h)",
+      `${INTERVAL_TEXT} Auto-Search (Global)`,
       "Basic intent detection",
-      "Dashboard access only",
-      "No automated alerts",
+      "Standard dashboard analytics",
+      "No automated alerts (Dashboard only)",
     ],
     cta: "Get Started Free",
     href: "/register",
@@ -25,6 +36,7 @@ export const PLANS = {
       canAccessAlerts: false,
       canAccessEnrichment: false,
       canAccessCustomPersonas: false,
+      canAccessAdvancedAI: false,
       priorityProcessing: false,
     }
   },
@@ -36,13 +48,15 @@ export const PLANS = {
       "Track up to 5 Products",
       "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
-      "Global Auto Search (every 24h)",
-      "3 Force Scans per day / product",
+      `${INTERVAL_TEXT} Auto-Search (Global)`,
+      "3 Manual Force Scans / day per product",
+      "Semantic AI Discovery (No keywords)",
+      "Advanced ROI & Intent Analytics",
+      "Zapier, Make & Custom Webhooks",
       "Advanced AI Intent Scoring",
       "Custom AI Personas for replies",
       "Email, Slack & Discord alerts",
       "Full lead enrichment",
-      "24/7 Priority support",
     ],
     limits: {
       products: 5,
@@ -60,6 +74,7 @@ export const PLANS = {
       canAccessAlerts: true,
       canAccessEnrichment: true,
       canAccessCustomPersonas: true,
+      canAccessAdvancedAI: true,
       priorityProcessing: false,
     }
   },

@@ -2,18 +2,29 @@ import { UserPlan } from "@prisma/client";
 import config from "./config.js";
 import { db } from "./db.js";
 
+const getIntervalText = () => {
+  const ms = config.SCRAPER_INTERVAL_MS;
+  if (ms <= 0) return "Manual Only";
+  if (ms === 3600000) return "Hourly";
+  if (ms === 86400000) return "Daily";
+  if (ms % 3600000 === 0) return `Every ${ms / 3600000}h`;
+  return `Every ${Math.round(ms / 60000)}m`;
+};
+
+const INTERVAL_TEXT = getIntervalText();
+
 export const PLANS = {
   FREE: { 
     name: "Free",
     description: "Get started with basic lead detection",
     features: [
-      "1 Product",
+      "1 Product Tracking",
       "50 leads per month",
       "Reddit & HackerNews scanning",
-      "Global Auto Search (every 24h)",
+      `${INTERVAL_TEXT} Auto-Search (Global)`,
       "Basic intent detection",
-      "Dashboard access only",
-      "No automated alerts",
+      "Standard dashboard analytics",
+      "No automated alerts (Dashboard only)",
     ],
     limits: {
       products: 1,
@@ -36,13 +47,15 @@ export const PLANS = {
       "Track up to 5 Products",
       "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
-      "Global Auto Search (every 24h)",
-      "3 Force Scans per day / product",
+      `${INTERVAL_TEXT} Auto-Search (Global)`,
+      "3 Manual Force Scans / day per product",
+      "Semantic AI Discovery (No keywords)",
+      "Advanced ROI & Intent Analytics",
+      "Zapier, Make & Custom Webhooks",
       "Advanced AI Intent Scoring",
       "Custom AI Personas for replies",
       "Email, Slack & Discord alerts",
       "Full lead enrichment",
-      "24/7 Priority support",
     ],
     limits: {
       products: 5,
