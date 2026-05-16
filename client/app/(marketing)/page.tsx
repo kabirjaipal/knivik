@@ -54,9 +54,9 @@ export default function Home() {
       {/* Grid-Locked Landing Content */}
       <div className="container mx-auto px-6 lg:px-10 flex flex-col gap-20 lg:gap-32">
         <Hero />
+        <Workflow />
         <Problem />
         <Features />
-        <Workflow />
         <FAQ />
         <FinalCTA />
       </div>

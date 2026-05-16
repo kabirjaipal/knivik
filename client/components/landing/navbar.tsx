@@ -17,8 +17,8 @@ export async function Navbar() {
   const user = session?.user
   
   const navLinks = [
-    { label: "Capabilities", href: "/#features" },
     { label: "The System", href: "/#workflow" },
+    { label: "Capabilities", href: "/#features" },
     { label: "Pricing", href: "/pricing" },
     { label: "FAQ", href: "/#faq" },
   ]

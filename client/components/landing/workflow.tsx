@@ -1,20 +1,20 @@
-import { Search, BrainCircuit, MessageSquareCode, ArrowRight } from "lucide-react"
+import { Radar, BrainCircuit, Zap, ArrowRight } from "lucide-react"
 
 const steps = [
   {
-    icon: <Search className="h-6 w-6" />,
-    title: "Monitor Keywords",
-    description: "Tell Knivik what you do. We'll start monitoring Reddit, X, and HackerNews for relevant discussions instantly."
+    icon: <Radar className="h-6 w-6" />,
+    title: "Neural Scan",
+    description: "Knivik generates high-intent search queries and deploys them 24/7 across Reddit, X, and HackerNews to find hidden conversations."
   },
   {
     icon: <BrainCircuit className="h-6 w-6" />,
-    title: "AI Intent Filtering",
-    description: "Our LLMs analyze every post to distinguish casual chatter from high-intent buyers looking for a solution."
+    title: "AI Intent Engine",
+    description: "Our batch processing engine uses LLMs to score every post from 0-100, isolating the 1% of users who are ready to buy right now."
   },
   {
-    icon: <MessageSquareCode className="h-6 w-6" />,
-    title: "Instant Outreach",
-    description: "Get notified immediately with auto-drafted replies tailored to the user's specific problem."
+    icon: <Zap className="h-6 w-6" />,
+    title: "Smart Alerts",
+    description: "Once qualified, leads are enriched with author data and pushed instantly to your dashboard and Slack for immediate engagement."
   }
 ]
 
