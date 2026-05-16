@@ -12,6 +12,7 @@ import {
   Loader2, CreditCard, AlertCircle, Check,
   Sparkles, ExternalLink, PartyPopper, Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 import { PlanBadge } from "@/components/billing/PricingUtils";
 import { PLANS } from "@/lib/plans";
 import { SUPPORT_EMAIL } from "@/lib/constants";
@@ -69,16 +70,16 @@ export default function BillingPage() {
         if (url) {
           window.location.href = url;
         } else {
-          alert("Customer portal URL not found");
+          toast.error("Customer portal URL not found");
           setIsRedirecting(false);
         }
       } else {
         const error = await response.json();
-        alert(`Failed: ${error.error?.message || "Unknown error"}`);
+        toast.error(`Failed: ${error.error?.message || "Unknown error"}`);
         setIsRedirecting(false);
       }
     } catch {
-      alert("Failed to open customer portal");
+      toast.error("Failed to open customer portal");
       setIsRedirecting(false);
     }
   };

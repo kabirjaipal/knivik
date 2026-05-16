@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
 
   // 3. Security Headers (Hardened)
   async headers() {
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
+    const wsUrl = backendUrl.replace(/^http/, "ws");
+    
     return [
       {
         source: "/(.*)",
@@ -47,7 +50,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
               "frame-src 'self' https://*.dodopayments.com",
-              "connect-src 'self' https://*.dodopayments.com https://va.vercel-scripts.com"
+              "connect-src 'self' " + backendUrl + " " + wsUrl + " https://*.dodopayments.com https://va.vercel-scripts.com"
             ].join("; "),
           },
 

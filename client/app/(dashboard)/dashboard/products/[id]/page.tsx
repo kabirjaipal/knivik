@@ -5,8 +5,10 @@ import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
+import { getSocket } from "@/lib/socket"
+import { toast } from "sonner"
 
 interface Product {
   id: string
@@ -30,46 +32,16 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isScanning, setIsScanning] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [localScanning, setLocalScanning] = useState(false)
+  const isCurrentlyScanning = localScanning || !!user?.isScanning
+  const lastFetchedId = useRef<string | null>(null)
 
-  // ─── Background scan polling ──────────────────────────────────────────────
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (user?.isScanning) {
-      setIsScanning(true)
-      interval = setInterval(() => { refresh() }, 3000)
-    } else if (isScanning && !user?.isScanning) {
-      setIsScanning(false)
-      setTimeout(() => window.location.reload(), 500)
-    }
-    return () => { if (interval) clearInterval(interval) }
-  }, [user?.isScanning, isScanning, refresh])
-
-  const handleScanNow = async () => {
-    if (isScanning) return
-    setIsScanning(true)
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/scan`, {
-        method: "POST", credentials: "include",
-      })
-      if (res.status === 202) return
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Scan failed")
-      }
-      window.location.reload()
-    } catch (err: any) {
-      alert(err.message || "Scan failed")
-      setIsScanning(false)
-    }
-  }
-
-  useEffect(() => {
-    if (user && productId) fetchProduct()
-  }, [user, productId])
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
+    if (!productId || lastFetchedId.current === productId) return
+    
+    lastFetchedId.current = productId
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
         credentials: "include",
@@ -79,8 +51,75 @@ export default function ProductDetailPage() {
       setProduct(data.product)
     } catch (e: any) {
       console.error("Failed to fetch product:", e)
+      lastFetchedId.current = null // Reset on error to allow retry
     } finally {
       setLoading(false)
+    }
+  }, [productId])
+
+  useEffect(() => {
+    if (user?.id && productId && lastFetchedId.current !== productId) {
+      fetchProduct()
+    }
+  }, [user?.id, productId, fetchProduct])
+
+  // ─── Real-time scan updates via WebSocket ──────────────────────────────────
+  useEffect(() => {
+    const socket = getSocket();
+    
+    const joinRoom = () => {
+      if (productId) {
+        console.log('Emitting join-product for:', productId);
+        socket.emit('join-product', productId);
+      }
+    };
+
+    // Join if already connected, otherwise wait for connect event
+    if (socket.connected) {
+      joinRoom();
+    }
+
+    // Always listen for connect/reconnect to ensure we are in the room
+    socket.on('connect', joinRoom);
+
+    socket.on('scan-status', (data: { isScanning: boolean; status: string }) => {
+      console.log('Real-time scan update:', data);
+      
+      if (data.isScanning) {
+        setLocalScanning(true);
+      } else {
+        setLocalScanning(false);
+        // Refresh product data and leads list
+        fetchProduct();
+        setRefreshTrigger(prev => prev + 1);
+      }
+    });
+
+    return () => {
+      socket.off('connect', joinRoom);
+      socket.off('scan-status');
+    };
+  }, [productId, fetchProduct]);
+
+  const handleScanNow = async () => {
+    if (isCurrentlyScanning) return
+    setLocalScanning(true)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/scan`, {
+        method: "POST", credentials: "include",
+      })
+      
+      if (res.status === 202) return
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Scan failed")
+      }
+      setLocalScanning(false)
+      fetchProduct()
+      setRefreshTrigger(prev => prev + 1)
+    } catch (err: any) {
+      toast.error(err.message || "Scan failed")
+      setLocalScanning(false)
     }
   }
 
@@ -165,9 +204,9 @@ export default function ProductDetailPage() {
               </button>
             )}
 
-            <Button size="lg" disabled={isScanning || !product.isActive} onClick={handleScanNow}
+            <Button size="lg" disabled={isCurrentlyScanning || !product.isActive} onClick={handleScanNow}
               className="h-auto py-2.5 px-6 font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20">
-              {isScanning
+              {isCurrentlyScanning
                 ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Scanning...</>
                 : <><Radar className="w-4 h-4 mr-2" /> Force Scan</>}
             </Button>
@@ -204,6 +243,7 @@ export default function ProductDetailPage() {
       <ProductLeads
         productId={productId}
         lastManualScanDate={product.aiConfig?.lastManualScanDate ?? null}
+        refreshTrigger={refreshTrigger}
       />
     </div>
   )

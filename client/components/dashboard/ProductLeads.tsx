@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { AlertCircle, MessageSquare, TrendingUp, Radar } from "lucide-react"
+import { toast } from "sonner"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
 import { ProductStats } from "./ProductStats"
 
@@ -10,9 +11,10 @@ type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
 interface ProductLeadsProps {
   productId: string
   lastManualScanDate?: string | null
+  refreshTrigger?: number
 }
 
-export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProps) {
+export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0 }: ProductLeadsProps) {
   const [leads, setLeads] = useState<LeadCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,8 +22,12 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL')
+  const lastFetchRef = useRef<{ id: string | null; trigger: number }>({ id: null, trigger: -1 })
 
   const fetchLeads = useCallback(async () => {
+    if (!productId || (lastFetchRef.current.id === productId && lastFetchRef.current.trigger === refreshTrigger)) return
+
+    lastFetchRef.current = { id: productId, trigger: refreshTrigger }
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads?productId=${productId}`, {
         credentials: "include",
@@ -39,10 +45,12 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
       setDraftedReplies(initialDrafts)
     } catch (e: any) {
       setError(e.message)
+      toast.error(`Error loading leads: ${e.message}`)
+      lastFetchRef.current = { id: null, trigger: -1 } // Reset on error
     } finally {
       setLoading(false)
     }
-  }, [productId])
+  }, [productId, refreshTrigger])
 
   useEffect(() => {
     fetchLeads()
@@ -61,8 +69,10 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
       const data = await res.json()
       setDraftedReplies(prev => ({ ...prev, [leadId]: data.generatedText }))
       setExpandedReplies(prev => ({ ...prev, [leadId]: true }))
-    } catch (e) {
+      toast.success('AI draft generated')
+    } catch (e: any) {
       console.error('Draft reply failed:', e)
+      toast.error(e.message || 'Draft generation failed')
     } finally {
       setDraftingLeadId(null)
     }
@@ -81,8 +91,10 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-    } catch {
+      toast.success(`Status updated to ${status.toLowerCase()}`)
+    } catch (e: any) {
       console.error('Failed to update status')
+      toast.error('Failed to update status')
     }
   }, [])
 
@@ -95,8 +107,10 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes }),
       })
+      toast.success('Notes saved')
     } catch {
       console.error('Failed to update notes')
+      toast.error('Failed to save notes')
     }
   }, [])
 

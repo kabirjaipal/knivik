@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from '@/lib/auth-client'
+import { disconnectSocket } from '@/lib/socket'
 
 // Keep same User interface for backward compatibility
 interface User {
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loading = !isClientLoaded || isPending || (!hasInitialFetch && !session && !error);
 
   const logout = async () => {
+    disconnectSocket()
     await signOut()
     router.push('/login')
     router.refresh()

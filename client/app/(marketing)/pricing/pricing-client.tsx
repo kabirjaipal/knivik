@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { PLANS } from "@/lib/plans";
+import { toast } from "sonner";
 
 import { PricingComparison } from "./pricing-comparison";
 
@@ -164,9 +165,9 @@ export default function PricingClient() {
                   className="w-full h-11 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground border-none"
                   disabled={currentPlan !== "FREE"}
                   onSuccess={() => {
-                    console.log("Payment success!");
+                    toast.success("Payment successful!");
                   }}
-                  onError={(error) => alert(error.message)}
+                  onError={(error) => toast.error(error.message)}
                 >
                   {currentPlan === "PRO" ? "Active" : (user?.plan !== "FREE" ? "Manage Plan" : "Get Started Now")}
                 </CheckoutButton>

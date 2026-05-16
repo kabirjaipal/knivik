@@ -14,6 +14,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 import authRoutes from './routes/auth.routes.js';
 import { createServer } from 'http';
+import { initSocket } from './lib/socket.js';
 
 import { pipelineQueue } from './lib/queue.js';
 import { startWorkers, stopWorkers } from './workers/index.js';
@@ -149,6 +150,7 @@ async function startServer() {
     }
 
     const httpServer = createServer(app);
+    initSocket(httpServer);
 
     httpServer.listen(config.PORT, config.HOST, () => {
       logger.info(

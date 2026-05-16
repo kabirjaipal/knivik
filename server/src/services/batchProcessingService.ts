@@ -6,6 +6,7 @@ import { analyzeUserPostsBatch } from './batchAnalysisService.js';
 
 import { enrichLead } from './enrichmentService.js';
 import { sendLeadAlert } from './alertService.js';
+import { emitScanStatus } from '../lib/socket.js';
 
 /**
  * Main Batch Processing Service
@@ -48,6 +49,7 @@ export class BatchProcessingService {
         where: { id: userId },
         data: { isScanning: true }
       });
+      emitScanStatus(userId, productId, true, 'STARTED');
 
       // Step 1: Collect posts for this product
       const sourceBreakdown: Record<string, number> = {};
@@ -61,6 +63,7 @@ export class BatchProcessingService {
           where: { id: userId },
           data: { isScanning: false, lastScanStatus: 'SUCCESS' }
         });
+        emitScanStatus(userId, productId, false, 'SUCCESS');
 
         return {
           success: true,
@@ -100,6 +103,7 @@ export class BatchProcessingService {
         where: { id: userId },
         data: { isScanning: false, lastScanStatus: 'SUCCESS' }
       });
+      emitScanStatus(userId, productId, false, 'SUCCESS');
 
       // Finalize
       const processingTime = Date.now() - startTime;
@@ -120,6 +124,7 @@ export class BatchProcessingService {
           where: { id: userId },
           data: { isScanning: false, lastScanStatus: 'FAILED' }
         });
+        emitScanStatus(userId, productId, false, 'FAILED');
       }
 
       return {

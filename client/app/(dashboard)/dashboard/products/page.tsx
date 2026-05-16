@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit, Globe, Package } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import Link from "next/link"
 import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog"
 import {
@@ -29,18 +30,12 @@ export default function ProductsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<any | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const hasFetchedProducts = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
 
-  // Auto-hide success message
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+  // Auto-hide success message - REMOVED since we use sonner now
+
 
   // Form State
   const [formData, setFormData] = useState({
@@ -123,7 +118,7 @@ export default function ProductsPage() {
       })
       setIsCreating(false)
       setEditingProductId(null)
-      setSuccessMessage(actionLabel)
+      toast.success(actionLabel)
       await fetchProducts()
     } catch (e: any) {
       setFormError("A network error occurred. Please try again.");
@@ -145,12 +140,12 @@ export default function ProductsPage() {
 
       if (!res.ok) throw new Error('Failed to delete product')
       
-      setSuccessMessage('Product deleted')
+      toast.success('Product deleted')
       setIsDeleteDialogOpen(false)
       setProductToDelete(null)
       await fetchProducts()
     } catch (e: any) {
-      setSuccessMessage('Failed to delete product')
+      toast.error('Failed to delete product')
     } finally {
       setIsDeleting(false)
     }
@@ -360,20 +355,7 @@ export default function ProductsPage() {
         variant="danger"
       />
 
-      {/* Floating Success Toast */}
-      {successMessage && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-100 animate-in slide-in-from-bottom-5 fade-in duration-300">
-          <div className="bg-foreground text-background dark:bg-card dark:text-foreground border border-border/50 shadow-2xl px-6 py-4 rounded-md flex items-center gap-4 min-w backdrop-blur-xl">
-            <div className="shrink-0 w-10 h-10 rounded-sm bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-               <Zap className="w-5 h-5 fill-current text-primary-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-black uppercase tracking-widest text-primary leading-none mb-0.5">Success</p>
-              <p className="text-xs font-bold opacity-80">{successMessage}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Success Toast removed (now handled by sonner) */}
     </div>
   )
 }
