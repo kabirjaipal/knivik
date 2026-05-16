@@ -13,16 +13,7 @@ import { cn } from "@/lib/utils"
 export function Navbar() {
   const { user, loading } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
   
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
   const navLinks = [
     { label: "Pricing", href: "/pricing" },
     { label: "Features", href: "/#features" },
@@ -30,25 +21,10 @@ export function Navbar() {
     { label: "FAQ", href: "/#faq" },
   ]
 
-  // Prevent scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "unset"
-    }
-    return () => { document.body.style.overflow = "unset" }
-  }, [isMobileMenuOpen])
-
   return (
     <>
       <div 
-        className={cn(
-          "fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 max-w-7xl",
-          isScrolled 
-            ? "top-5 w-[92%] rounded-[28px] border bg-background/60 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] py-2" 
-            : "top-0 w-full border-b bg-background/60 backdrop-blur-xl py-4"
-        )}
+        className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-7xl rounded-3xl border bg-background/60 backdrop-blur-xl shadow-2xl py-2 transition-all duration-500"
       >
         <header className="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo Section */}
@@ -61,7 +37,7 @@ export function Navbar() {
                 <span className="font-black tracking-tighter text-base sm:text-lg text-foreground group-hover:text-primary transition-colors leading-none">{PROJECT_NAME}</span>
                 <div className="flex items-center gap-1 mt-0.5">
                   <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-[6px] sm:text-[7px] font-black uppercase tracking-[0.2em] text-success/80">Live</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-success/80">Live</span>
                 </div>
               </div>
             </Link>
@@ -73,7 +49,7 @@ export function Navbar() {
               <Link 
                 key={link.label} 
                 href={link.href} 
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-all relative group"
+                className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all relative group"
               >
                 {link.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full" />
@@ -92,7 +68,7 @@ export function Navbar() {
                 <Link href="/dashboard">
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden group">
                     <Avatar className="h-8 w-8 border-2 border-primary/20 transition-all group-hover:border-primary">
-                      <AvatarFallback className="bg-primary/5 text-primary font-black text-[10px]">
+                      <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">
                         {(user.username || user.email || 'U').slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -170,7 +146,7 @@ export function Navbar() {
           </nav>
 
           <div className="mt-auto flex justify-center">
-             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/40">
                 <Circle className="h-2 w-2 fill-success text-success animate-pulse" />
                 Systems Operational
              </div>
