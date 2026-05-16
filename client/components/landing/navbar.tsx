@@ -52,7 +52,7 @@ export async function Navbar() {
               <Link 
                 key={link.label} 
                 href={link.href} 
-                className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-all relative group py-2"
+                className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-all relative group py-2"
               >
                 {link.label}
                 <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-accent shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)] transition-all group-hover:w-full rounded-full" />
@@ -80,10 +80,10 @@ export async function Navbar() {
               /* Desktop Auth Buttons (Guest Only) */
               <div className="hidden md:flex items-center gap-3">
                 <Link href="/login">
-                  <Button variant="ghost" className="text-xs h-8 font-black uppercase tracking-widest px-4">Log in</Button>
+                  <Button variant="ghost" className="text-sm h-9 font-bold px-4">Log in</Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="font-black uppercase tracking-widest shadow-lg shadow-primary/20 h-8 px-5 rounded-xl text-xs bg-primary hover:scale-105 active:scale-95 transition-all">
+                  <Button size="sm" className="font-bold shadow-lg shadow-primary/20 h-9 px-6 rounded-xl text-sm bg-primary hover:scale-105 active:scale-95 transition-all">
                     Get Started
                   </Button>
                 </Link>
@@ -123,10 +123,10 @@ export async function Navbar() {
             {!user && (
               <div className="flex flex-col gap-3">
                 <Link href="/login">
-                  <Button variant="outline" className="w-full h-14 text-xs font-black uppercase tracking-widest rounded-xl border-2">Log in</Button>
+                  <Button variant="outline" className="w-full h-14 text-sm font-bold rounded-xl border-2">Log in</Button>
                 </Link>
                 <Link href="/register">
-                  <Button className="w-full h-14 text-xs font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20">Get Started</Button>
+                  <Button className="w-full h-14 text-sm font-bold rounded-xl shadow-xl shadow-primary/20">Get Started</Button>
                 </Link>
               </div>
             )}
