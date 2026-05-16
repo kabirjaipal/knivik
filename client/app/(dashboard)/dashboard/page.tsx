@@ -209,7 +209,7 @@ export default function DashboardPage() {
           <div key={label}
             className={`rounded-2xl border p-4 flex flex-col gap-2 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${bg} ${!hi ? 'border-border/40 hover:border-border/60' : ''}`}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</span>
+              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{label}</span>
               <Icon className={`w-4 h-4 ${color} opacity-80`} />
             </div>
             <span className={`text-3xl font-black tracking-tighter ${color}`}>{value}</span>
@@ -226,7 +226,7 @@ export default function DashboardPage() {
           {/* Products panel */}
           <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden shadow-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card">
-              <span className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" /> Active Products
               </span>
               <button onClick={() => router.push('/dashboard/products')}
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                       <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
                       <div className="flex items-center gap-1.5 mt-1">
                         <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-muted-foreground'}`} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                           {p.isActive ? 'Live' : 'Standby'}
                         </span>
                       </div>
@@ -263,7 +263,7 @@ export default function DashboardPage() {
                       <span className="text-sm font-black text-foreground tabular-nums">
                         {leadsByProduct[p.name] ?? 0}
                       </span>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">leads</p>
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">leads</p>
                     </div>
                   </button>
                 ))}
@@ -274,7 +274,7 @@ export default function DashboardPage() {
           {/* Platform breakdown */}
           {total > 0 && (
             <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+              <p className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
                  <Activity className="w-4 h-4 text-primary" /> Platform Split
               </p>
               <div className="space-y-3">
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                     <div key={p} className="space-y-1.5">
                       <div className="flex justify-between text-xs font-bold">
                         <span className="text-muted-foreground">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
-                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-[10px]">({pct}%)</span></span>
+                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-xs">({pct}%)</span></span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div className={`h-full rounded-full transition-all duration-1000 ${p === 'REDDIT' ? 'bg-orange-500' : p === 'HACKERNEWS' ? 'bg-amber-500' : 'bg-sky-500'}`}
@@ -301,7 +301,7 @@ export default function DashboardPage() {
           {/* Intent breakdown */}
           {total > 0 && (
             <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+              <p className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
                  <Flame className="w-4 h-4 text-destructive" /> Intent Mix
               </p>
               <div className="space-y-3">
@@ -317,7 +317,7 @@ export default function DashboardPage() {
                     <div key={key} className="space-y-1.5">
                       <div className="flex justify-between text-xs font-bold">
                         <span className="text-muted-foreground">{label}</span>
-                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-[10px]">({pct}%)</span></span>
+                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-xs">({pct}%)</span></span>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div className={`h-full rounded-full transition-all duration-1000 ${bar}`} style={{ width: `${pct}%` }} />
@@ -332,7 +332,7 @@ export default function DashboardPage() {
           {/* AI usage */}
           {llmUsage && (
             <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 space-y-2 shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary/80 flex items-center gap-2">
+              <p className="text-xs font-black uppercase tracking-widest text-primary/80 flex items-center gap-2">
                 <Zap className="w-4 h-4" /> AI Engine
               </p>
               <div className="flex justify-between items-end">
@@ -370,14 +370,14 @@ export default function DashboardPage() {
               {TABS.map(tab => (
                 <button key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-5 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
+                  className={`px-5 py-2.5 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
                     activeTab === tab.key
                       ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20'
                       : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}>
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
                       {tab.count}
                     </span>
                   )}
@@ -386,16 +386,16 @@ export default function DashboardPage() {
             </div>
 
             {/* Lead list */}
-            <div className="p-0 sm:p-4 bg-muted/5 min-h-[500px]">
+            <div className="p-0 sm:p-4 bg-muted/5 min-h-96">
               {loading ? (
-                <div className="h-full flex flex-col items-center justify-center gap-4 min-h-[400px]">
+                <div className="h-full flex flex-col items-center justify-center gap-4 min-h-96">
                   <div className="relative">
                     <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                   </div>
                   <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Scanning the matrix...</p>
                 </div>
               ) : error ? (
-                <div className="p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
+                <div className="p-12 text-center min-h-96 flex flex-col items-center justify-center">
                   <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="w-8 h-8" />
                   </div>
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                   <p className="text-muted-foreground mt-2">{error}</p>
                 </div>
               ) : filteredLeads.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center gap-3 min-h-[400px]">
+                <div className="h-full flex flex-col items-center justify-center gap-3 min-h-96">
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
                     <Radar className="h-10 w-10 text-muted-foreground/30" />
                   </div>

@@ -135,34 +135,34 @@ export const LeadCard = memo(({
         {/* ── Row 1: badges + score + engage ──────────────────────────── */}
         <div className="flex items-center gap-2 flex-wrap mb-3">
           {/* Platform */}
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md">
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground bg-muted px-2 py-1 rounded-md">
             {lead.platform}
           </span>
 
           {/* Intent level */}
-          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md border ${getIntentColor(lead.intentLevel)}`}>
+          <span className={`text-xs font-black uppercase tracking-widest px-2 py-1 rounded-md border ${getIntentColor(lead.intentLevel)}`}>
             {lead.intentLevel.replace('_', ' ')}
           </span>
 
           {/* Score */}
-          <span className="text-[10px] font-black px-2 py-1 bg-primary/10 text-primary rounded-md">
+          <span className="text-xs font-black px-2 py-1 bg-primary/10 text-primary rounded-md">
             ★ {lead.intentScore}
           </span>
 
           {/* Detection badge */}
           {lead.detectedBy === 'COMPETITOR' && (
-            <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-destructive/15 text-destructive border border-destructive/30">
-              <Flame className="w-3 h-3 fill-current" /> Competitor
+            <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-md bg-destructive/15 text-destructive border border-destructive/30">
+              <Flame className="w-4 h-4 fill-current" /> Competitor
             </span>
           )}
           {lead.detectedBy === 'SEMANTIC' && (
-            <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-primary/15 text-primary border border-primary/30">
-              <Brain className="w-3 h-3" /> Semantic
+            <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-md bg-primary/15 text-primary border border-primary/30">
+              <Brain className="w-4 h-4" /> Semantic
             </span>
           )}
           {lead.detectedBy === 'KEYWORD' && (
-            <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md bg-muted text-muted-foreground border border-border">
-              <Tags className="w-3 h-3" /> Keyword
+            <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest px-2 py-1 rounded-md bg-muted text-muted-foreground border border-border">
+              <Tags className="w-4 h-4" /> Keyword
             </span>
           )}
 
@@ -224,7 +224,7 @@ export const LeadCard = memo(({
               <button className={`flex items-center gap-1.5 text-xs font-bold py-1.5 px-3 rounded-lg border transition-all ${currentStatus.color}`}>
                 {currentStatus.label} <ChevronDown className="w-3 h-3" />
               </button>
-              <div className="absolute z-20 bottom-full mb-1 right-0 min-w-[130px] bg-card border border-border rounded-xl shadow-xl overflow-hidden hidden group-hover/status:block">
+              <div className="absolute z-20 bottom-full mb-1 right-0 min-w-32 bg-card border border-border rounded-xl shadow-xl overflow-hidden hidden group-hover/status:block">
                 {STATUS_OPTIONS.map(opt => (
                   <button key={opt.value}
                     onClick={() => onStatusChange(lead.id, opt.value)}

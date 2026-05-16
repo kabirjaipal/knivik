@@ -76,7 +76,7 @@ export default function AdminAlertsPage() {
               <TableHead className="font-bold">Channel</TableHead>
               <TableHead className="font-bold">Lead Details</TableHead>
               <TableHead className="font-bold">Timestamp</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -84,11 +84,11 @@ export default function AdminAlertsPage() {
               <TableRow key={log.id} className={log.status === 'failed' ? 'bg-destructive/5' : ''}>
                 <TableCell>
                   {log.status === 'sent' ? (
-                    <Badge variant="outline" className="text-success border-success/30 bg-success/5 gap-1 font-bold uppercase tracking-widest text-[10px]">
+                    <Badge variant="outline" className="text-success border-success/30 bg-success/5 gap-1 font-bold uppercase tracking-widest text-sm">
                       <CheckCircle2 className="w-3 h-3" /> Sent
                     </Badge>
                   ) : (
-                    <Badge variant="destructive" className="gap-1 font-bold uppercase tracking-widest text-[10px]">
+                    <Badge variant="destructive" className="gap-1 font-bold uppercase tracking-widest text-sm">
                       <AlertCircle className="w-3 h-3" /> Failed
                     </Badge>
                   )}
@@ -96,7 +96,7 @@ export default function AdminAlertsPage() {
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-bold text-sm">{log.alertSetting.user.username}</span>
-                    <span className="text-[10px] text-muted-foreground italic truncate max-w-[150px]">{log.alertSetting.user.email}</span>
+                    <span className="text-sm text-muted-foreground italic truncate max-w-xs">{log.alertSetting.user.email}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -110,12 +110,12 @@ export default function AdminAlertsPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col max-w-[250px]">
+                  <div className="flex flex-col max-w-sm">
                     <span className="text-xs font-bold truncate">{log.lead.title || "Social Match"}</span>
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Score: {log.lead.intentScore}%</span>
+                    <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Score: {log.lead.intentScore}%</span>
                   </div>
                 </TableCell>
-                <TableCell className="text-[10px] text-muted-foreground font-mono">
+                <TableCell className="text-sm text-muted-foreground font-mono">
                   {new Date(log.sentAt).toLocaleString()}
                 </TableCell>
                 <TableCell>

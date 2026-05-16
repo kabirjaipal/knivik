@@ -186,11 +186,11 @@ export default function BillingPage() {
               {subscriptionStatus === "active" && (
                 <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border/40">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Next Billing</p>
+                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Next Billing</p>
                     <p className="text-sm font-bold mt-0.5">{formatDate(billingInfo?.currentPeriodEnd!)}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cycle</p>
+                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Cycle</p>
                     <p className="text-sm font-bold mt-0.5 capitalize">{billingInfo?.billingCycle ?? "—"}</p>
                   </div>
                 </div>
@@ -222,10 +222,10 @@ export default function BillingPage() {
                         </div>
                         <div>
                           <p className="text-sm font-bold">{formatAmount(payment.amount, payment.currency)}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{formatDate(payment.createdAt)}</p>
+                          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{formatDate(payment.createdAt)}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={`text-[10px] uppercase font-black ${payment.status === "completed" ? "bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : ""}`}>
+                      <Badge variant="outline" className={`text-sm uppercase font-black ${payment.status === "completed" ? "bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : ""}`}>
                         {payment.status}
                       </Badge>
                     </div>

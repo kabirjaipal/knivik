@@ -285,7 +285,7 @@ export default function SettingsPage() {
                     </div>
                   </CardContent>
                   <CardFooter className="border-t border-border/40 py-4">
-                    <Button type="submit" disabled={savingProfile} className="w-full sm:w-auto min-w-[160px] gap-2">
+                    <Button type="submit" disabled={savingProfile} className="w-full sm:w-auto min-w-40 gap-2">
                       {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       Save Profile
                     </Button>
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                     </div>
                   </CardContent>
                   <CardFooter className="border-t border-border/40 py-4">
-                    <Button type="submit" disabled={loading} className="w-full sm:w-auto min-w-[160px] gap-2">
+                    <Button type="submit" disabled={loading} className="w-full sm:w-auto min-w-40 gap-2">
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       Update Password
                     </Button>
@@ -426,7 +426,7 @@ export default function SettingsPage() {
                         {user?.plan === 'PRO' ? (
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" className="sr-only peer" checked={alertSettings.slackEnabled} onChange={e => setAlertSettings({...alertSettings, slackEnabled: e.target.checked})} />
-                            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                           </label>
                         ) : (
                           <div className="text-xs font-bold text-muted-foreground uppercase opacity-50 flex items-center gap-1"><Lock className="w-3 h-3"/> Locked</div>
@@ -484,7 +484,7 @@ export default function SettingsPage() {
                         {user?.plan !== 'FREE' ? (
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" className="sr-only peer" checked={alertSettings.emailEnabled} onChange={e => setAlertSettings({...alertSettings, emailEnabled: e.target.checked})} />
-                            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                           </label>
                         ) : (
                           <div className="text-xs font-bold text-muted-foreground uppercase opacity-50 flex items-center gap-1"><Lock className="w-3 h-3"/> Locked</div>
@@ -507,7 +507,7 @@ export default function SettingsPage() {
 
                   </CardContent>
                   <CardFooter className="border-t border-border/40 py-4">
-                    <Button type="submit" disabled={savingAlerts} className="w-full sm:w-auto min-w-[160px] gap-2">
+                    <Button type="submit" disabled={savingAlerts} className="w-full sm:w-auto min-w-40 gap-2">
                       {savingAlerts ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                       Save Alert Config
                     </Button>

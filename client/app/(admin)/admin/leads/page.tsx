@@ -84,7 +84,7 @@ export default function AdminLeadsPage() {
             <CardHeader className="border-b border-border/40 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="font-bold uppercase tracking-widest text-[10px]">{lead.platform}</Badge>
+                  <Badge variant="outline" className="font-bold uppercase tracking-widest text-sm">{lead.platform}</Badge>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <User className="w-3 h-3" />
                     <span className="font-bold text-foreground/80">{lead.product.user.username}</span>
@@ -146,7 +146,7 @@ export default function AdminLeadsPage() {
                 
                 <div className="md:w-64 space-y-4">
                   <div className="bg-muted/30 p-4 rounded-xl space-y-3 border border-border/40">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detection Meta</h4>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Detection Meta</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">Found</span>
@@ -154,7 +154,7 @@ export default function AdminLeadsPage() {
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">ID</span>
-                        <span className="font-mono text-[10px]">{lead.id.slice(-8)}</span>
+                        <span className="font-mono text-sm">{lead.id.slice(-8)}</span>
                       </div>
                     </div>
                   </div>

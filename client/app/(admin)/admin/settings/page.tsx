@@ -157,7 +157,7 @@ export default function AdminSettingsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground italic">Currently active: {config?.aiModelVersatile}</p>
+              <p className="text-sm text-muted-foreground italic">Currently active: {config?.aiModelVersatile}</p>
             </div>
 
             <div className="grid gap-2">
@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground italic">Currently active: {config?.aiModelLite}</p>
+              <p className="text-sm text-muted-foreground italic">Currently active: {config?.aiModelLite}</p>
             </div>
           </CardContent>
         </Card>

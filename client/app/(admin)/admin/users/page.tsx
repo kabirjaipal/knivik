@@ -153,7 +153,7 @@ export default function AdminUsersPage() {
   }
 
   if (loading && users.length === 0) return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-96">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
   )
@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
               <TableHead className="font-bold text-center">Topics</TableHead>
               <TableHead className="font-bold">Status</TableHead>
               <TableHead className="font-bold">Joined</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
+              <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,13 +197,13 @@ export default function AdminUsersPage() {
                     <div className="flex flex-col">
                       <span className="font-bold flex items-center gap-1.5">
                         {user.username}
-                        {user.role === 'admin' && <Badge variant="outline" className="text-[10px] h-4 px-1 uppercase border-primary/40 text-primary">Admin</Badge>}
+                        {user.role === 'admin' && <Badge variant="outline" className="text-sm h-4 px-1 uppercase border-primary/40 text-primary">Admin</Badge>}
                       </span>
                       <span className="text-xs text-muted-foreground">{user.email}</span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.plan === 'PRO' ? 'default' : 'secondary'} className="font-black uppercase tracking-widest text-[10px]">
+                    <Badge variant={user.plan === 'PRO' ? 'default' : 'secondary'} className="font-black uppercase tracking-widest text-sm">
                       {user.plan}
                     </Badge>
                   </TableCell>
@@ -211,10 +211,10 @@ export default function AdminUsersPage() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {isSuspended ? (
-                        <Badge variant="destructive" className="text-[10px] uppercase font-black tracking-widest">Suspended</Badge>
+                        <Badge variant="destructive" className="text-sm uppercase font-black tracking-widest">Suspended</Badge>
                       ) : user.isScanning ? (
                         <span className="text-xs text-success font-bold flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" /> 
+                          <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-lg shadow-success/50" /> 
                           Scanning
                         </span>
                       ) : (

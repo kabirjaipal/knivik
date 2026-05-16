@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
+      <div className="flex flex-col items-center justify-center min-h-96 gap-3">
         <Loader2 className="w-6 h-6 animate-spin text-primary/60" />
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Loading...</p>
       </div>
@@ -127,11 +127,11 @@ export default function ProductDetailPage() {
               </h1>
 
               {product.isActive ? (
-                <span className="flex items-center gap-1.5 text-success bg-success/10 border border-success/20 px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0 shadow-sm">
+                <span className="flex items-center gap-1.5 text-success bg-success/10 border border-success/20 px-3 py-1 rounded-full font-black uppercase tracking-widest text-sm shrink-0 shadow-sm">
                   <span className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" /> Live
                 </span>
               ) : (
-                <span className="flex items-center gap-1.5 text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0">
+                <span className="flex items-center gap-1.5 text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full font-black uppercase tracking-widest text-sm shrink-0">
                   <span className="w-2 h-2 bg-muted-foreground/50 rounded-full" /> Standby
                 </span>
               )}
@@ -190,7 +190,7 @@ export default function ProductDetailPage() {
             </div>
             {product.aiConfig?.customPersona && (
               <div className="mt-4 pt-4 border-t border-primary/10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Custom Persona</p>
+                <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-1">Custom Persona</p>
                 <p className="text-sm font-medium text-foreground/80 italic border-l-2 border-primary/40 pl-3">
                   "{product.aiConfig.customPersona}"
                 </p>

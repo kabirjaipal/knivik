@@ -15,21 +15,21 @@ export async function Hero() {
   return (
     <section className="relative overflow-hidden pt-20 pb-12 lg:pt-32 lg:pb-24">
       {/* Premium Atmospheric Lighting */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[10%] w-[70%] sm:w-[50%] h-[60%] rounded-full bg-primary/10 blur-[100px] sm:blur-[140px] opacity-60 animate-pulse" />
-        <div className="absolute top-[20%] right-[10%] w-[60%] sm:w-[40%] h-[50%] rounded-full bg-accent/5 blur-[80px] sm:blur-[120px] opacity-40 animate-pulse [animation-delay:2s]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-screen pointer-events-none z-0">
+        <div className="absolute -top-20 left-10 w-2/3 sm:w-1/2 h-2/3 rounded-full bg-primary/10 blur-3xl sm:blur-4xl opacity-60 animate-pulse" />
+        <div className="absolute top-24 right-10 w-2/3 sm:w-2/5 h-1/2 rounded-full bg-accent/5 blur-3xl sm:blur-4xl opacity-40 animate-pulse" />
       </div>
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           <div className="transition-all duration-1000 ease-out">
-            <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 sm:px-4 sm:py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-primary mb-8 sm:mb-10 shadow-2xl shadow-primary/10 backdrop-blur-sm">
+            <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-black uppercase tracking-wide sm:tracking-widest text-primary mb-8 sm:mb-10 shadow-2xl shadow-primary/10 backdrop-blur-sm">
               <Sparkles className="h-3 w-3 mr-2 animate-pulse" />
               Autonomous Growth is Here
             </div>
           </div>
           
-          <h1 className="text-5xl sm:text-8xl lg:text-[10rem] font-black tracking-[-0.05em] text-foreground mb-6 sm:mb-8 leading-[0.85] sm:leading-[0.75] lg:max-w-5xl transition-all duration-1000 ease-out">
+          <h1 className="text-5xl sm:text-8xl lg:text-8xl font-black tracking-tight text-foreground mb-6 sm:mb-8 leading-tight sm:leading-none lg:max-w-5xl transition-all duration-1000 ease-out">
             Scale Your <br />
             <span className="text-transparent bg-clip-text bg-linear-to-b from-primary via-primary to-primary/40 drop-shadow-sm">
               Sales Pipeline.
@@ -47,12 +47,12 @@ export async function Hero() {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <div className="flex flex-col items-center sm:items-start gap-2">
-              <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">
+              <div className="flex flex-col items-center sm:items-start gap-2">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-[0.1em] text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" /> 
                 No Credit Card Required
               </div>
-              <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-[0.1em] text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" /> 
                 Instant Data Export
               </div>
@@ -61,13 +61,13 @@ export async function Hero() {
 
           {/* Enhanced Live Signal Feed */}
           <div className="mt-16 sm:mt-24 w-full max-w-4xl group px-2 sm:px-0 transition-all duration-1000 delay-500 ease-out">
-            <div className="relative glass p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden bg-background/40 backdrop-blur-3xl transition-transform duration-500 hover:scale-[1.02]">
+            <div className="relative glass p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-white/10 shadow-2xl overflow-hidden bg-background/40 backdrop-blur-3xl transition-transform duration-500 hover:scale-105">
               <div className="flex items-center justify-between mb-4 sm:mb-6 border-b border-white/5 pb-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Live Monitoring System</span>
+                  <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-muted-foreground">Live Monitoring System</span>
                 </div>
-                <div className="text-[9px] sm:text-[10px] font-black text-primary px-2 sm:px-3 py-1 bg-primary/10 rounded-full">Systems Active</div>
+                <div className="text-xs sm:text-sm font-black text-primary px-2 sm:px-3 py-1 bg-primary/10 rounded-full">Systems Active</div>
               </div>
               
               <div className="space-y-3 sm:space-y-4 text-left">
@@ -82,17 +82,17 @@ export async function Hero() {
                        </div>
                        <div className="min-w-0">
                          <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                           <span className="text-[10px] sm:text-[11px] font-black text-foreground truncate max-w-[80px] sm:max-w-none">@{sig.user}</span>
-                           <span className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase shrink-0">{sig.time}</span>
+                           <span className="text-xs sm:text-sm font-black text-foreground truncate max-w-20 sm:max-w-none">@{sig.user}</span>
+                           <span className="text-xs sm:text-sm font-bold text-muted-foreground uppercase shrink-0">{sig.time}</span>
                          </div>
-                         <div className="text-xs sm:text-sm font-medium text-muted-foreground group-hover/item:text-foreground transition-colors truncate max-w-[150px] sm:max-w-md">
+                         <div className="text-xs sm:text-sm font-medium text-muted-foreground group-hover/item:text-foreground transition-colors truncate max-w-xs sm:max-w-md">
                            "{sig.msg}"
                          </div>
                        </div>
                      </div>
                      <div className="hidden xs:flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-success/5 rounded-full border border-success/10 shrink-0">
                         <Radar className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-success" />
-                        <span className="text-[8px] sm:text-[9px] font-black uppercase text-success">High Intent</span>
+                        <span className="text-xs sm:text-sm font-black uppercase text-success">High Intent</span>
                      </div>
                   </div>
                 ))}

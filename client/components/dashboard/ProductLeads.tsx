@@ -188,14 +188,14 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
                 {TABS.map(tab => (
                   <button key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`px-5 py-2.5 text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
+                    className={`px-5 py-2.5 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
                       activeTab === tab.key
                         ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20'
                         : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}>
                     {tab.label}
                     {tab.count > 0 && (
-                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                      <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
                         {tab.count}
                       </span>
                     )}
@@ -204,7 +204,7 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
             </div>
 
             {/* Lead list */}
-            <div className="p-0 sm:p-4 bg-muted/5 min-h-[500px]">
+            <div className="p-0 sm:p-4 bg-muted/5 min-h-96">
               {filteredLeads.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center gap-3 min-h-[400px]">
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">

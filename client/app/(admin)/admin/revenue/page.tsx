@@ -40,7 +40,7 @@ export default function AdminRevenuePage() {
   }, [])
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-96">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
   )
@@ -60,7 +60,7 @@ export default function AdminRevenuePage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-foreground">${data?.mrr.toFixed(2)}</div>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-success mt-1 uppercase">
+            <div className="flex items-center gap-1 text-sm font-bold text-success mt-1 uppercase">
               <ArrowUpRight className="w-3 h-3" /> Growth stable
             </div>
           </CardContent>
@@ -73,7 +73,7 @@ export default function AdminRevenuePage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-foreground">${data?.totalRevenue.toFixed(2)}</div>
-            <div className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-wider">All-time processed</div>
+            <div className="text-sm font-bold text-muted-foreground mt-1 uppercase tracking-wider">All-time processed</div>
           </CardContent>
         </Card>
 
@@ -84,7 +84,7 @@ export default function AdminRevenuePage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-destructive">${data?.totalCost?.toFixed(4)}</div>
-            <div className="text-[10px] font-bold text-destructive/80 mt-1 uppercase tracking-wider">API input/output usage</div>
+            <div className="text-sm font-bold text-destructive/80 mt-1 uppercase tracking-wider">API input/output usage</div>
           </CardContent>
         </Card>
 
@@ -95,7 +95,7 @@ export default function AdminRevenuePage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-success">${data?.netProfit?.toFixed(2)}</div>
-            <div className="text-[10px] font-bold text-success/80 mt-1 uppercase tracking-wider">Gross minus infrastructure</div>
+            <div className="text-sm font-bold text-success/80 mt-1 uppercase tracking-wider">Gross minus infrastructure</div>
           </CardContent>
         </Card>
       </div>
@@ -122,19 +122,19 @@ export default function AdminRevenuePage() {
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-bold text-sm">{payment.user.username}</span>
-                    <span className="text-[10px] text-muted-foreground italic truncate max-w-[200px]">{payment.user.email}</span>
+                    <span className="text-sm text-muted-foreground italic truncate max-w-[200px]">{payment.user.email}</span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className="font-black text-foreground">${payment.amount.toFixed(2)}</span>
-                  <span className="text-[10px] text-muted-foreground ml-1 uppercase">{payment.currency}</span>
+                  <span className="text-sm text-muted-foreground ml-1 uppercase">{payment.currency}</span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'} className="font-black uppercase tracking-widest text-[9px]">
+                  <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'} className="font-black uppercase tracking-widest text-xs">
                     {payment.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right text-[10px] text-muted-foreground font-mono">
+                <TableCell className="text-right text-sm text-muted-foreground font-mono">
                   {new Date(payment.createdAt).toLocaleDateString()}
                 </TableCell>
               </TableRow>

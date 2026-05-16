@@ -44,7 +44,7 @@ export function ProductStats({ leads }: ProductStatsProps) {
         ] as const).map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="flex-1 flex flex-col items-center py-3 px-2 min-w-0">
             <span className={`text-lg font-black ${color}`}>{value}</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mt-0.5 truncate">{label}</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mt-0.5 truncate">{label}</span>
           </div>
         ))}
 
@@ -53,8 +53,8 @@ export function ProductStats({ leads }: ProductStatsProps) {
           <button
             onClick={() => setExpanded(v => !v)}
             className="px-3 py-3 flex flex-col items-center justify-center text-muted-foreground/40 hover:text-primary transition-colors self-stretch">
-            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            <span className="text-[9px] uppercase tracking-widest mt-0.5">More</span>
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span className="text-xs uppercase tracking-widest mt-0.5">More</span>
           </button>
         )}
       </div>
@@ -64,7 +64,7 @@ export function ProductStats({ leads }: ProductStatsProps) {
         <div className="grid sm:grid-cols-2 gap-px border-t border-border/40 bg-border/20 animate-in fade-in slide-in-from-top-1 duration-200">
           {/* Platform */}
           <div className="bg-card p-4 space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Platform</p>
+            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">Platform</p>
             {([
               { key: 'REDDIT', label: 'Reddit', icon: Rss, bar: 'bg-orange-500/80' },
               { key: 'HACKERNEWS', label: 'HackerNews', icon: Hash, bar: 'bg-amber-500/80' },
@@ -75,8 +75,8 @@ export function ProductStats({ leads }: ProductStatsProps) {
               return (
                 <div key={key} className="space-y-0.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1 text-foreground/60 font-medium">
-                      <Icon className="w-2.5 h-2.5" />{label}
+                    <span className="flex items-center gap-2 text-foreground/60 font-medium">
+                      <Icon className="w-4 h-4" />{label}
                     </span>
                     <span className="font-bold text-muted-foreground tabular-nums">{count} <span className="text-muted-foreground/40">({pct}%)</span></span>
                   </div>
@@ -90,7 +90,7 @@ export function ProductStats({ leads }: ProductStatsProps) {
 
           {/* Intent */}
           <div className="bg-card p-4 space-y-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Intent</p>
+            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">Intent</p>
             {([
               { key: 'BUY_NOW', label: 'Buy Now 🔥', bar: 'bg-destructive/80' },
               { key: 'COMPARING', label: 'Comparing', bar: 'bg-primary/80' },

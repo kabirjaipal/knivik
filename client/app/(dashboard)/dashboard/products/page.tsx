@@ -442,7 +442,7 @@ function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoadi
 
       <div className="space-y-3 pt-2 border-t border-border/50">
         <label className="block text-sm font-medium text-foreground">Tracking Status</label>
-        <div className="flex bg-muted/30 p-1 rounded-lg border border-border/50 w-full sm:max-w-[300px]">
+        <div className="flex bg-muted/30 p-1 rounded-lg border border-border/50 w-full sm:max-w-xs">
           <button
             type="button"
             onClick={() => setFormData({ ...formData, isActive: true })}
@@ -504,12 +504,12 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         {isActive ? (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20 text-success">
             <div className="w-2 h-2 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
+            <span className="text-sm font-black uppercase tracking-widest">Live</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
             <div className="w-2 h-2 rounded-full bg-muted-foreground/30"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Paused</span>
+            <span className="text-sm font-black uppercase tracking-widest">Paused</span>
           </div>
         )}
       </div>

@@ -12,7 +12,7 @@ export function FinalCTA() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
           {/* Left: Text Content */}
           <div className="max-w-2xl text-center lg:text-left transition-all duration-700 ease-out">
-            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary mb-6">
+            <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs sm:text-sm font-black uppercase tracking-widest text-primary mb-6">
               Immediate Results
             </div>
             <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-[-0.05em] mb-8 leading-[0.9] sm:leading-[0.8] text-foreground">
@@ -29,7 +29,7 @@ export function FinalCTA() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-widest text-muted-foreground">
                 <Check className="h-4 w-4 text-success" />
                 No credit card required
               </div>
@@ -48,10 +48,10 @@ export function FinalCTA() {
                   className="flex items-center justify-between p-5 border-l-2 border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all duration-300 rounded-r-xl hover:translate-x-1"
                 >
                   <div>
-                    <div className="text-[10px] font-black text-muted-foreground mb-1">@{lead.user}</div>
+                    <div className="text-sm font-black text-muted-foreground mb-1">@{lead.user}</div>
                     <div className="text-sm font-bold text-foreground italic">"{lead.msg}"</div>
                   </div>
-                  <div className="text-[9px] font-black bg-primary/10 text-primary px-2 py-1 uppercase tracking-widest rounded-md">
+                  <div className="text-xs font-black bg-primary/10 text-primary px-2 py-1 uppercase tracking-widest rounded-md">
                     {lead.status}
                   </div>
                 </div>

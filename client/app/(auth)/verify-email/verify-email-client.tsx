@@ -113,7 +113,7 @@ function VerifyEmailLogic() {
 export default function VerifyEmailClient() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      <div className="relative z-10 w-full max-w-[420px]">
+      <div className="relative z-10 w-full max-w-md">
         <Card className="border-border/60 shadow-2xl bg-card rounded-md overflow-hidden">
           <CardHeader className="space-y-4 pb-3 pt-6 text-center">
             <div className="flex flex-col items-center">

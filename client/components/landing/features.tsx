@@ -5,7 +5,7 @@ export function Features() {
     <section id="features" className="py-16 lg:py-32 relative overflow-hidden bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         <div className="flex flex-col items-center text-center mb-16 sm:mb-24">
-          <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary mb-4 sm:mb-6 transition-all duration-700 ease-out">
+          <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs sm:text-sm font-black uppercase tracking-widest text-primary mb-4 sm:mb-6 transition-all duration-700 ease-out">
             <Sparkles className="h-3 w-3 mr-2" />
             Capabilities
           </div>
@@ -17,7 +17,7 @@ export function Features() {
         <div className="grid gap-6 md:grid-cols-6 md:grid-rows-2">
           {/* Main Feature - Large */}
           <div 
-            className="md:col-span-3 md:row-span-2 glass p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] border border-border/50 flex flex-col justify-between group overflow-hidden relative min-h-[400px] md:min-h-0 transition-all duration-700 hover:-translate-y-1"
+            className="md:col-span-3 md:row-span-2 glass p-8 sm:p-10 rounded-4xl sm:rounded-5xl border border-border/50 flex flex-col justify-between group overflow-hidden relative min-h-96 md:min-h-0 transition-all duration-700 hover:-translate-y-1"
           >
             <div className="absolute -right-12 -top-12 h-64 w-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
             <div className="relative z-10">
@@ -30,15 +30,15 @@ export function Features() {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-2 relative z-10">
-              {["Reddit", "X / Twitter", "HackerNews", "Dev.to"].map((t) => (
-                <span key={t} className="px-3 py-1 bg-secondary/50 backdrop-blur-md text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-full border border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors cursor-default">{t}</span>
+              {"Reddit", "X / Twitter", "HackerNews", "Dev.to"].map((t) => (
+                <span key={t} className="px-3 py-1 bg-secondary/50 backdrop-blur-md text-xs sm:text-sm font-black uppercase tracking-widest rounded-full border border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors cursor-default">{t}</span>
               ))}
             </div>
           </div>
 
           {/* AI Intent - Wide */}
           <div 
-            className="md:col-span-3 glass p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-border/50 flex flex-col sm:flex-row items-start gap-6 group transition-all duration-700 hover:-translate-y-1"
+            className="md:col-span-3 glass p-8 rounded-4xl sm:rounded-5xl border border-border/50 flex flex-col sm:flex-row items-start gap-6 group transition-all duration-700 hover:-translate-y-1"
           >
             <div className="h-12 w-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary transition-transform group-hover:scale-110">
               <BrainCircuit className="h-6 w-6" />
@@ -53,15 +53,15 @@ export function Features() {
 
           {/* Quick Stats - Small */}
           <div 
-            className="md:col-span-1 glass p-6 rounded-[2rem] sm:rounded-[2.5rem] border border-border/50 flex flex-col items-center justify-center text-center group min-h-[160px] md:min-h-0 transition-all duration-700 hover:-translate-y-1"
+            className="md:col-span-1 glass p-6 rounded-4xl sm:rounded-5xl border border-border/50 flex flex-col items-center justify-center text-center group min-h-40 md:min-h-0 transition-all duration-700 hover:-translate-y-1"
           >
             <div className="text-4xl sm:text-3xl lg:text-4xl font-black text-primary mb-1 transition-transform group-hover:scale-110">98%</div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Accuracy</div>
+            <div className="text-xs font-black uppercase tracking-widest text-muted-foreground">Accuracy</div>
           </div>
 
           {/* Instant Alerts - Medium */}
           <div 
-            className="md:col-span-2 glass p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-border/50 flex flex-col justify-between group min-h-[160px] md:min-h-0 transition-all duration-700 hover:-translate-y-1"
+            className="md:col-span-2 glass p-8 rounded-4xl sm:rounded-5xl border border-border/50 flex flex-col justify-between group min-h-40 md:min-h-0 transition-all duration-700 hover:-translate-y-1"
           >
             <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center text-success mb-4 sm:mb-2 transition-transform group-hover:scale-110">
               <Zap className="h-5 w-5" />
@@ -88,7 +88,7 @@ export function Features() {
               className="glass p-4 rounded-2xl border border-border/50 flex items-center gap-3 hover:bg-white/5 transition-all duration-300 hover:-translate-y-1"
             >
                <div className="text-primary">{item.icon}</div>
-               <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">{item.text}</span>
+               <span className="text-xs sm:text-sm font-black uppercase tracking-widest">{item.text}</span>
             </div>
           ))}
         </div>

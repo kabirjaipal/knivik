@@ -63,7 +63,7 @@ export default function PricingClient() {
               className={`text-sm font-bold tracking-wide flex items-center gap-2 transition-colors ${billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
             >
               Yearly
-              <Badge className="bg-primary text-primary-foreground border-none text-[10px] font-black py-0.5 px-2">2 MONTHS FREE</Badge>
+              <Badge className="bg-primary text-primary-foreground border-none text-sm font-black py-0.5 px-2">2 MONTHS FREE</Badge>
             </button>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function PricingClient() {
                     </div>
                   </CardTitle>
                 </div>
-                <div className="mt-3 flex items-baseline min-h-[44px] gap-1.5">
+                <div className="mt-3 flex items-baseline min-h-11 gap-1.5">
                   {isLoadingPrices ? (
                      <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
                   ) : (

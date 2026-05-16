@@ -8,7 +8,7 @@ export function Problem() {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         <div className="text-center mb-16 sm:mb-24">
-          <div className="inline-flex items-center rounded-full bg-destructive/10 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-destructive mb-6">
+          <div className="inline-flex items-center rounded-full bg-destructive/10 px-3 py-1 text-xs sm:text-sm font-black uppercase tracking-widest text-destructive mb-6">
             <AlertTriangle className="h-3 w-3 mr-2" />
             The Growth Gap
           </div>

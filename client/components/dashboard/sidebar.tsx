@@ -208,17 +208,17 @@ export function Sidebar({ className }: SidebarProps) {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold truncate">{user?.username}</span>
                       {currentPlan === 'PRO' ? (
-                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20 gap-0.5">
+                        <Badge variant="outline" className="h-4 px-1.5 text-xs font-black uppercase tracking-tighter bg-primary/10 text-primary border-primary/20 gap-0.5">
                           <Sparkles className="h-2 w-2" />
                           Pro
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-black uppercase tracking-tighter bg-muted text-muted-foreground border-border/50">
+                        <Badge variant="outline" className="h-4 px-1.5 text-xs font-black uppercase tracking-tighter bg-muted text-muted-foreground border-border/50">
                           Free
                         </Badge>
                       )}
                     </div>
-                    <span className="text-[10px] text-muted-foreground truncate">{user?.email}</span>
+                    <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
                  </div>
                )}
             </div>

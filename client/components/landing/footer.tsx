@@ -35,7 +35,7 @@ export function Footer() {
               <Link 
                 key={link.label} 
                 href={link.href} 
-                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -45,17 +45,17 @@ export function Footer() {
           {/* Security Badge */}
           <div className="flex items-center gap-3 px-4 py-2 bg-secondary/50 border border-border/50 rounded-2xl">
             <ShieldCheck className="h-4 w-4 text-success" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Secure & GDPR Ready</span>
+            <span className="text-sm font-black uppercase tracking-widest text-foreground">Secure & GDPR Ready</span>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-muted-foreground/60 text-[10px] font-black uppercase tracking-widest">
+          <p className="text-muted-foreground/60 text-sm font-black uppercase tracking-widest">
             © {new Date().getFullYear()} {PROJECT_NAME}. All rights reserved.
           </p>
           <div className="flex items-center gap-2">
              <div className="h-1 w-1 rounded-full bg-success animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Systems Operational</span>
+             <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Systems Operational</span>
           </div>
         </div>
       </div>
