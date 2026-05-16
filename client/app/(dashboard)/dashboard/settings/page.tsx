@@ -203,13 +203,13 @@ export default function SettingsPage() {
         <div className="w-full md:w-64 space-y-1 shrink-0 p-2 border rounded-2xl bg-card">
           <button 
             onClick={() => setActiveTab("profile")} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'profile' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
           >
             <User className="w-4 h-4" /> Profile Info
           </button>
           <button 
             onClick={() => setActiveTab("alerts")} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold ${activeTab === 'alerts' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'alerts' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
           >
             <Bell className="w-4 h-4" /> Alert Routing
           </button>
@@ -359,6 +359,28 @@ export default function SettingsPage() {
                     </Button>
                   </CardFooter>
                 </form>
+              </Card>
+
+              <Card className="border border-destructive/20 overflow-hidden shadow-none rounded-2xl bg-destructive/5">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-destructive/10 rounded-lg text-destructive">
+                      <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                      <CardDescription>Permanent actions for your account.</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pb-8">
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Once you delete your account, all your products, leads, and settings will be permanently removed. This action cannot be undone.
+                  </p>
+                  <Button variant="destructive" className="w-full sm:w-auto font-bold uppercase tracking-widest text-xs h-10 px-6">
+                    Delete Account
+                  </Button>
+                </CardContent>
               </Card>
             </div>
           )}
