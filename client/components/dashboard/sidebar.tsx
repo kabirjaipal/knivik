@@ -90,7 +90,7 @@ export function Sidebar({ className }: SidebarProps) {
             <Logo size={24} />
           </div>
           <div className="flex flex-col">
-            <span className="font-black tracking-[-0.05em] text-xl text-foreground leading-none">Knivik</span>
+            <span className="font-black tracking-tighter text-xl text-foreground leading-none">Knivik</span>
           </div>
         </Link>
         <Button variant="ghost" size="icon" onClick={toggleMobile}>
@@ -121,7 +121,7 @@ export function Sidebar({ className }: SidebarProps) {
             </div>
             {!isCollapsed && (
               <div className="flex flex-col animate-in fade-in duration-300">
-                <span className="font-black tracking-[-0.05em] text-xl text-foreground leading-none">Knivik</span>
+                <span className="font-black tracking-tighter text-xl text-foreground leading-none">Knivik</span>
               </div>
             )}
           </Link>

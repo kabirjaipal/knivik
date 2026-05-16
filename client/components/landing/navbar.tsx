@@ -39,7 +39,7 @@ export async function Navbar() {
                 <Logo size={28} />
               </div>
               <div className="flex flex-col">
-                <span className="font-black tracking-[-0.05em] text-2xl text-foreground transition-all leading-none text-glow">
+                <span className="font-black tracking-tighter text-2xl text-foreground transition-all leading-none text-glow">
                   Knivik
                 </span>
               </div>

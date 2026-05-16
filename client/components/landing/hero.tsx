@@ -16,7 +16,7 @@ export async function Hero() {
     <section className="relative overflow-hidden pt-32 lg:pt-48 bg-grid">
       {/* Premium Atmospheric Lighting */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0">
-        <div className="absolute -top-[10%] left-[10%] w-[80%] h-[40%] rounded-[100%] bg-primary/15 blur-[120px] opacity-70 animate-pulse" />
+        <div className="absolute top-[-10%] left-[10%] w-[80%] h-[40%] rounded-[100%] bg-primary/15 blur-[120px] opacity-70 animate-pulse" />
         <div className="absolute top-[20%] right-[5%] w-[40%] h-[30%] rounded-[100%] bg-accent/10 blur-[100px] opacity-50" />
       </div>
 
