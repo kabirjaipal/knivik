@@ -1,18 +1,19 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Radar, Menu, X, Circle } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useAuth } from "@/context/auth-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PROJECT_NAME } from "@/lib/constants"
-import { useState, useEffect } from "react"
-import { cn } from "@/lib/utils"
+import { getSession } from "@/lib/auth-client"
+import { headers } from "next/headers"
 
-export function Navbar() {
-  const { user, loading } = useAuth()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+export async function Navbar() {
+  const { data: session } = await getSession({
+    fetchOptions: {
+      headers: await headers()
+    }
+  })
+  const user = session?.user
   
   const navLinks = [
     { label: "Pricing", href: "/pricing" },
@@ -23,22 +24,21 @@ export function Navbar() {
 
   return (
     <>
+      {/* Hidden Checkbox for Mobile Menu Toggle (Pure CSS) */}
+      <input type="checkbox" id="mobile-menu-toggle" className="peer hidden" />
+      
       <div 
-        className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-7xl rounded-3xl border bg-background/60 backdrop-blur-xl shadow-2xl py-2 transition-all duration-500"
+        className="fixed top-0 left-0 w-full z-50 md:top-5 md:left-1/2 md:-translate-x-1/2 md:w-11/12 md:max-w-7xl md:rounded-3xl border-b md:border bg-background/60 backdrop-blur-xl shadow-2xl py-2 transition-all duration-500"
       >
         <header className="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo Section */}
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2.5 group relative">
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary shadow-lg transition-transform group-hover:rotate-12">
-                <Radar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg transition-transform group-hover:rotate-12">
+                <Radar className="h-4 w-4 text-primary-foreground" />
               </div>
               <div className="flex flex-col">
-                <span className="font-black tracking-tighter text-base sm:text-lg text-foreground group-hover:text-primary transition-colors leading-none">{PROJECT_NAME}</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-success animate-pulse" />
-                  <span className="text-xs font-black uppercase tracking-widest text-success/80">Live</span>
-                </div>
+                <span className="font-black tracking-tighter text-lg text-foreground group-hover:text-primary transition-colors leading-none">{PROJECT_NAME}</span>
               </div>
             </Link>
           </div>
@@ -58,97 +58,81 @@ export function Navbar() {
           </nav>
           
           {/* Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden sm:block">
-              <ThemeToggle />
-            </div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* 1. Theme Toggle - Always Visible */}
+            <ThemeToggle />
             
-            <div className="hidden md:flex items-center gap-3">
-              {!loading && user ? (
-                <Link href="/dashboard">
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden group">
-                    <Avatar className="h-8 w-8 border-2 border-primary/20 transition-all group-hover:border-primary">
-                      <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">
-                        {(user.username || user.email || 'U').slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+            {/* 2. User Profile / Auth Buttons */}
+            {user ? (
+              <Link href="/dashboard">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden group">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20 transition-all group-hover:border-primary">
+                    <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">
+                      {(user.username || user.email || 'U').slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </Link>
+            ) : (
+              /* Desktop Auth Buttons (Guest Only) */
+              <div className="hidden md:flex items-center gap-3">
+                <Link href="/login">
+                  <Button variant="ghost" className="text-xs h-8 font-black uppercase tracking-widest px-4">Log in</Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm" className="font-black uppercase tracking-widest shadow-lg shadow-primary/20 h-8 px-5 rounded-xl text-xs bg-primary hover:scale-105 active:scale-95 transition-all">
+                    Get Started
                   </Button>
                 </Link>
-              ) : !loading && !user ? (
-                <>
-                  <Link href="/login">
-                    <Button variant="ghost" className="text-[10px] h-8 font-black uppercase tracking-widest px-4">Log in</Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button size="sm" className="font-black uppercase tracking-widest shadow-lg shadow-primary/20 h-8 px-5 rounded-xl text-[10px] bg-primary hover:scale-105 active:scale-95 transition-all">
-                      Get Started
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                 <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Mobile Toggle */}
-            <div className="flex items-center gap-2 md:hidden">
-              <ThemeToggle />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <X className="h-5 w-5 text-primary" /> : <Menu className="h-5 w-5" />}
-              </Button>
-            </div>
+            {/* 3. Hamburger Menu - Mobile Only */}
+            <label 
+              htmlFor="mobile-menu-toggle" 
+              className="cursor-pointer h-8 w-8 flex items-center justify-center rounded-lg hover:bg-primary/10 transition-colors md:hidden"
+            >
+              <Menu className="h-5 w-5 block peer-checked:hidden" />
+              <X className="h-5 w-5 hidden peer-checked:block text-primary" />
+            </label>
           </div>
         </header>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Pure CSS controlled by peer-checked) */}
       <div 
-        className={cn(
-          "fixed inset-0 z-40 bg-background/80 backdrop-blur-2xl md:hidden transition-all duration-500 ease-in-out",
-          isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none -translate-y-4"
-        )}
+        className="fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl md:hidden opacity-0 pointer-events-none -translate-y-4 peer-checked:opacity-100 peer-checked:pointer-events-auto peer-checked:translate-y-0 transition-all duration-500 ease-in-out"
       >
-        <div className="flex flex-col h-full pt-32 px-8 pb-12">
-          <nav className="flex flex-col gap-8">
+        <div className="flex flex-col h-full pt-24 px-6 pb-12">
+          <nav className="flex flex-col gap-4">
             {navLinks.map((link, i) => (
               <Link 
                 key={link.label}
                 href={link.href} 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-4xl font-black tracking-tighter text-foreground hover:text-primary transition-colors flex items-center gap-4"
+                className="text-2xl font-black tracking-tight text-foreground hover:text-primary transition-colors flex items-center p-2 rounded-xl hover:bg-primary/5"
               >
-                <span className="text-primary/20 text-xl font-mono">0{i+1}</span>
                 {link.label}
               </Link>
             ))}
             
-            <div className="h-px w-full bg-border/50 my-4" />
+            <div className="h-px w-full bg-border/50 my-6" />
             
-            {!user ? (
-              <div className="flex flex-col gap-4">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl border-2">Log in</Button>
+            {!user && (
+              <div className="flex flex-col gap-3">
+                <Link href="/login">
+                  <Button variant="outline" className="w-full h-14 text-xs font-black uppercase tracking-widest rounded-xl border-2">Log in</Button>
                 </Link>
-                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Get Started</Button>
+                <Link href="/register">
+                  <Button className="w-full h-14 text-xs font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20">Get Started</Button>
                 </Link>
               </div>
-            ) : (
-              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Go to Dashboard</Button>
-              </Link>
             )}
           </nav>
 
-          <div className="mt-auto flex justify-center">
-             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/40">
+          <div className="mt-auto pt-8 border-t border-border/50 flex justify-center">
+             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/30">
                 <Circle className="h-2 w-2 fill-success text-success animate-pulse" />
-                Systems Operational
+                System Active
              </div>
           </div>
         </div>

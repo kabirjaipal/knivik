@@ -1,5 +1,3 @@
-"use client"
-
 import { XCircle, Clock, TrendingDown, AlertTriangle } from "lucide-react"
 
 export function Problem() {

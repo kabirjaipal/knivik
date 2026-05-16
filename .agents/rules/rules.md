@@ -63,6 +63,12 @@ VALIDATION:
 - Sanitize external data.
 - Enforce schema validation (Zod / Joi / equivalent).
 
+NEXT.JS & SERVER-SIDE RULES:
+
+- Always prioritize Server Components (RSC) over Client Components for maximum performance, SEO, and reduced client-side hydration.
+- Strictly forbid direct database operations (e.g., Prisma, SQL) within the Next.js frontend application.
+- All database access and heavy business logic must reside in the dedicated backend (`server` directory) and be accessed via API calls or server-side auth utilities.
+
 DATABASE & MIGRATIONS:
 1. Any schema change ⇒ run `npx prisma migrate dev --name <desc>` immediately
 2. Keep migration history fully synced with DB at all times

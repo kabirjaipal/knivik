@@ -1,12 +1,16 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Radar, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
-import { useAuth } from "@/context/auth-context"
+import { getSession } from "@/lib/auth-client"
+import { headers } from "next/headers"
 
-export function Hero() {
-  const { user } = useAuth()
+export async function Hero() {
+  const { data: session } = await getSession({
+    fetchOptions: {
+      headers: await headers()
+    }
+  })
+  const user = session?.user
   
   return (
     <section className="relative overflow-hidden pt-20 pb-12 lg:pt-32 lg:pb-24">
@@ -38,7 +42,7 @@ export function Hero() {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 w-full sm:w-auto px-4 transition-all duration-1000 delay-200 ease-out">
             <Link href={user ? "/dashboard" : "/register"} className="w-full sm:w-auto">
-              <Button size="lg" className="h-14 sm:h-16 px-8 sm:px-12 text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_20px_50px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95 rounded-2xl w-full">
+              <Button size="lg" className="h-14 sm:h-16 px-8 sm:px-12 text-xs sm:text-sm font-black uppercase tracking-widest shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 rounded-2xl w-full">
                 {user ? "Go to Dashboard" : "Start For Free"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

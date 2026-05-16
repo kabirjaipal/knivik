@@ -1,21 +1,19 @@
-"use client"
-
 import { Search, BrainCircuit, MessageSquareCode, ArrowRight } from "lucide-react"
 
 const steps = [
   {
     icon: <Search className="h-6 w-6" />,
-    title: "1. Monitor Keywords",
+    title: "Monitor Keywords",
     description: "Tell Knivik what you do. We'll start monitoring Reddit, X, and HackerNews for relevant discussions instantly."
   },
   {
     icon: <BrainCircuit className="h-6 w-6" />,
-    title: "2. AI Intent Filtering",
+    title: "AI Intent Filtering",
     description: "Our LLMs analyze every post to distinguish casual chatter from high-intent buyers looking for a solution."
   },
   {
     icon: <MessageSquareCode className="h-6 w-6" />,
-    title: "3. Instant Outreach",
+    title: "Instant Outreach",
     description: "Get notified immediately with auto-drafted replies tailored to the user's specific problem."
   }
 ]

@@ -1,5 +1,3 @@
-"use client"
-
 import { Search, BrainCircuit, Globe, Zap, ShieldCheck, Sparkles, MessageSquare, BarChart3 } from "lucide-react"
 
 export function Features() {
