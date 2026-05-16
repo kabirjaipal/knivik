@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PROJECT_NAME } from "@/lib/constants"
+import { Logo } from "@/components/logo"
 import { getSession } from "@/lib/auth-client"
 import { headers } from "next/headers"
 
@@ -16,9 +17,9 @@ export async function Navbar() {
   const user = session?.user
   
   const navLinks = [
+    { label: "Capabilities", href: "/#features" },
+    { label: "The System", href: "/#workflow" },
     { label: "Pricing", href: "/pricing" },
-    { label: "Features", href: "/#features" },
-    { label: "Workflow", href: "/#workflow" },
     { label: "FAQ", href: "/#faq" },
   ]
 
@@ -28,31 +29,33 @@ export async function Navbar() {
       <input type="checkbox" id="mobile-menu-toggle" className="peer hidden" />
       
       <div 
-        className="fixed top-0 left-0 w-full z-50 md:top-5 md:left-1/2 md:-translate-x-1/2 md:w-11/12 md:max-w-7xl md:rounded-3xl border-b md:border bg-background/60 backdrop-blur-xl shadow-2xl py-2 transition-all duration-500"
+        className="fixed top-0 left-0 w-full z-50 md:top-6 md:left-1/2 md:-translate-x-1/2 md:w-11/12 md:max-w-7xl md:rounded-[2rem] border-b md:border border-white/10 bg-background/60 backdrop-blur-2xl shadow-2xl py-3 transition-all duration-500"
       >
-        <header className="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        <header className="container mx-auto flex items-center justify-between px-6 lg:px-10">
           {/* Logo Section */}
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2.5 group relative">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-lg transition-transform group-hover:rotate-12">
-                <Radar className="h-4 w-4 text-primary-foreground" />
+            <Link href="/" className="flex items-center gap-3 group relative">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)] transition-all group-hover:scale-110 group-hover:rotate-3 group-hover:bg-primary/20">
+                <Logo size={28} />
               </div>
               <div className="flex flex-col">
-                <span className="font-black tracking-tighter text-lg text-foreground group-hover:text-primary transition-colors leading-none">{PROJECT_NAME}</span>
+                <span className="font-black tracking-[-0.05em] text-2xl text-foreground transition-all leading-none text-glow">
+                  Knivik
+                </span>
               </div>
             </Link>
           </div>
 
           {/* Navigation - Centered */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-10">
             {navLinks.map((link) => (
               <Link 
                 key={link.label} 
                 href={link.href} 
-                className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all relative group"
+                className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-all relative group py-2"
               >
                 {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full" />
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-accent shadow-[0_0_10px_rgba(var(--accent-rgb),0.8)] transition-all group-hover:w-full rounded-full" />
               </Link>
             ))}
           </nav>
@@ -104,18 +107,18 @@ export async function Navbar() {
         className="fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl md:hidden opacity-0 pointer-events-none -translate-y-4 peer-checked:opacity-100 peer-checked:pointer-events-auto peer-checked:translate-y-0 transition-all duration-500 ease-in-out"
       >
         <div className="flex flex-col h-full pt-24 px-6 pb-12">
-          <nav className="flex flex-col gap-4">
+          <nav className="flex flex-col gap-6">
             {navLinks.map((link, i) => (
               <Link 
                 key={link.label}
                 href={link.href} 
-                className="text-2xl font-black tracking-tight text-foreground hover:text-primary transition-colors flex items-center p-2 rounded-xl hover:bg-primary/5"
+                className="text-4xl font-black tracking-tighter text-foreground hover:text-accent transition-all flex items-center p-2 rounded-2xl hover:bg-white/5"
               >
                 {link.label}
               </Link>
             ))}
             
-            <div className="h-px w-full bg-border/50 my-6" />
+            {!user && <div className="h-px w-full bg-border/50 my-6" />}
             
             {!user && (
               <div className="flex flex-col gap-3">
@@ -128,13 +131,6 @@ export async function Navbar() {
               </div>
             )}
           </nav>
-
-          <div className="mt-auto pt-8 border-t border-border/50 flex justify-center">
-             <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground/30">
-                <Circle className="h-2 w-2 fill-success text-success animate-pulse" />
-                System Active
-             </div>
-          </div>
         </div>
       </div>
     </>

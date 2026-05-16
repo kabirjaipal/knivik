@@ -21,6 +21,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { PROJECT_NAME } from "@/lib/constants"
 import { cn } from "@/lib/utils"
+import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useMemo } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -85,10 +86,12 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/95 px-6 backdrop-blur-xl shadow-sm">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md">
-            <Radar className="h-5 w-5 text-primary-foreground" />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-md">
+            <Logo size={24} />
           </div>
-          <span className="font-black tracking-tighter text-xl text-foreground">{PROJECT_NAME}</span>
+          <div className="flex flex-col">
+            <span className="font-black tracking-[-0.05em] text-xl text-foreground leading-none">Knivik</span>
+          </div>
         </Link>
         <Button variant="ghost" size="icon" onClick={toggleMobile}>
           <Menu className="h-6 w-6" />
@@ -112,14 +115,14 @@ export function Sidebar({ className }: SidebarProps) {
       )}>
         {/* Logo Container */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shrink-0">
-              <Radar className="h-5 w-5 text-primary-foreground" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl glass shadow-md shrink-0 border border-white/10 group-hover:scale-110 transition-transform">
+              <Logo size={24} />
             </div>
             {!isCollapsed && (
-              <span className="font-black tracking-tighter text-xl text-foreground truncate animate-in fade-in duration-300">
-                {PROJECT_NAME}
-              </span>
+              <div className="flex flex-col animate-in fade-in duration-300">
+                <span className="font-black tracking-[-0.05em] text-xl text-foreground leading-none">Knivik</span>
+              </div>
             )}
           </Link>
           <Button 
@@ -188,7 +191,9 @@ export function Sidebar({ className }: SidebarProps) {
               )}
               title={isCollapsed ? "Return to App" : undefined}
             >
-              <Radar className="h-5 w-5" />
+              <div className="relative h-5 w-5 shrink-0 flex items-center justify-center">
+                <Logo size={20} />
+              </div>
               {!isCollapsed && <span className="text-xs font-black uppercase tracking-widest">Return to App</span>}
             </Link>
           </div>

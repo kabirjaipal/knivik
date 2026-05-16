@@ -2,11 +2,11 @@ import { XCircle, Clock, TrendingDown, AlertTriangle } from "lucide-react"
 
 export function Problem() {
   return (
-    <section className="py-16 lg:py-32 relative overflow-hidden bg-secondary/20">
+    <section className="relative overflow-hidden bg-secondary/20 rounded-[2.5rem] border border-white/5 py-16 sm:py-24">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '40px 40px' }} />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
+      <div className="w-full relative z-10">
         <div className="text-center mb-16 sm:mb-24">
           <div className="inline-flex items-center rounded-full bg-destructive/10 px-3 py-1 text-xs sm:text-sm font-black uppercase tracking-widest text-destructive mb-6">
             <AlertTriangle className="h-3 w-3 mr-2" />
@@ -21,7 +21,7 @@ export function Problem() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-3">
           {[
             {
               icon: <Clock className="h-6 w-6" />,
@@ -41,12 +41,12 @@ export function Problem() {
           ].map((item, index) => (
             <div
               key={index}
-              className="glass p-8 sm:p-10 rounded-3xl border border-destructive/10 hover:border-destructive/30 transition-all duration-500 group hover:-translate-y-2"
+              className="glass p-5 sm:p-7 rounded-3xl border border-destructive/10 hover:border-destructive/30 transition-all duration-500 group hover:-translate-y-2"
             >
-              <div className="mb-6 sm:mb-8 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-destructive/5 text-destructive shadow-xl shadow-destructive/5 group-hover:scale-110 group-hover:shadow-2xl group-hover:shadow-destructive/15 transition-all">
+              <div className="mb-4 sm:mb-5 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-destructive/5 text-destructive shadow-xl shadow-destructive/5 group-hover:scale-110 group-hover:shadow-2xl group-hover:shadow-destructive/15 transition-all">
                 {item.icon}
               </div>
-              <h3 className="text-xl sm:text-2xl font-black mb-4 tracking-tight">{item.title}</h3>
+              <h3 className="text-xl sm:text-2xl font-black mb-2 tracking-tight">{item.title}</h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">
                 {item.description}
               </p>

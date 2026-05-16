@@ -30,8 +30,8 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="flex flex-col min-h-screen">
-      {/* Schema.org JSON-LD for SEO */}
+    <main className="flex flex-col min-h-screen gap-20 lg:gap-32 pb-32 items-center">
+      {/* Schema.org JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -47,20 +47,19 @@ export default function Home() {
               "priceCurrency": "USD"
             },
             "description": "Autonomous AI sales agent for social media lead generation.",
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.9",
-              "reviewCount": "128"
-            }
           }),
         }}
       />
-      <Hero />
-      <Problem />
-      <Workflow />
-      <Features />
-      <FAQ />
-      <FinalCTA />
+
+      {/* Grid-Locked Landing Content */}
+      <div className="container mx-auto px-6 lg:px-10 flex flex-col gap-20 lg:gap-32">
+        <Hero />
+        <Problem />
+        <Workflow />
+        <Features />
+        <FAQ />
+        <FinalCTA />
+      </div>
     </main>
   )
 }

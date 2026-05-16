@@ -13,14 +13,14 @@ export async function Hero() {
   const user = session?.user
   
   return (
-    <section className="relative overflow-hidden pt-24 pb-16 lg:pt-40 lg:pb-32 bg-grid">
+    <section className="relative overflow-hidden pt-32 lg:pt-48 bg-grid">
       {/* Premium Atmospheric Lighting */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none z-0">
         <div className="absolute -top-[10%] left-[10%] w-[80%] h-[40%] rounded-[100%] bg-primary/15 blur-[120px] opacity-70 animate-pulse" />
         <div className="absolute top-[20%] right-[5%] w-[40%] h-[30%] rounded-[100%] bg-accent/10 blur-[100px] opacity-50" />
       </div>
 
-      <div className="container relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full">
         <div className="flex flex-col items-center text-center">
           <div className="group cursor-default">
             <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-black uppercase tracking-[0.2em] text-primary mb-12 shadow-2xl shadow-primary/10 backdrop-blur-md transition-all hover:border-primary/40 hover:bg-primary/10">
@@ -60,48 +60,65 @@ export async function Hero() {
           </div>
 
           {/* Elite Signal Feed Visualization */}
-          <div className="mt-24 w-full max-w-5xl group px-4 sm:px-0 transition-all duration-1000 delay-500 ease-out">
-            <div className="relative p-1 rounded-[2.5rem] bg-linear-to-b from-primary/20 to-transparent shadow-2xl">
-              <div className="relative glass p-6 sm:p-10 rounded-[2.25rem] border border-white/10 shadow-inner overflow-hidden bg-background/40 backdrop-blur-3xl">
-                <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-4 w-4">
+          {/* Elite Signal Feed Visualization - Compact Canonical Style */}
+          <div className="mt-20 w-full group transition-all duration-1000 delay-500 ease-out">
+            <div className="relative p-1 rounded-[2rem] bg-linear-to-b from-primary/20 to-transparent shadow-xl">
+              <div className="relative glass p-3 sm:p-6 rounded-[1.75rem] border border-white/10 shadow-inner overflow-hidden bg-background/40 backdrop-blur-3xl">
+                <div className="flex items-center justify-between mb-5 border-b border-white/5 pb-4 px-2">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-3 w-3">
                       <div className="absolute inset-0 rounded-full bg-accent animate-ping opacity-50" />
-                      <div className="relative h-4 w-4 rounded-full bg-accent" />
+                      <div className="relative h-3 w-3 rounded-full bg-accent" />
                     </div>
-                    <span className="text-sm font-black uppercase tracking-[0.3em] text-foreground/80">Autonomous Neural Feed</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/80">Neural Feed</span>
                   </div>
-                  <div className="text-[10px] font-black text-accent border border-accent/20 px-4 py-1.5 rounded-full bg-accent/5 uppercase tracking-widest">
-                    Real-Time Scan Active
+                  <div className="hidden sm:flex items-center gap-2 text-[9px] font-black text-accent border border-accent/20 px-3 py-1 rounded-full bg-accent/5 uppercase tracking-widest">
+                    <Radar className="h-2.5 w-2.5 animate-pulse" />
+                    Live Scan
                   </div>
                 </div>
                 
-                <div className="space-y-6 text-left">
+                <div className="grid grid-cols-1 gap-2.5 text-left">
                   {[
-                    { platform: "Reddit", user: "saas_pro", msg: "We're losing users to competitors. Any tool to track social signals?", time: "Just now", score: 98 },
-                    { platform: "X", user: "indie_maker", msg: "How do I find people talking about 'cold email alternatives'?", time: "1m ago", score: 94 },
+                    { platform: "REDDIT", user: "saas_founder", msg: "We're losing users to competitors. Looking for an AI tool to track social signals autonomously...", time: "JUST NOW", score: 98, intent: "BUY NOW" },
+                    { platform: "X", user: "growth_lead", msg: "Anyone know a better alternative to manual cold outreach? Need something that finds intent-based leads.", time: "1M AGO", score: 94, intent: "RESEARCHING" },
                   ].map((sig, i) => (
-                    <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl transition-all duration-500 border border-transparent hover:border-primary/10 hover:bg-primary/5 group/item">
-                       <div className="flex items-center gap-6 min-w-0">
-                         <div className="h-12 w-12 shrink-0 rounded-2xl bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-black shadow-lg text-lg group-hover/item:scale-110 transition-transform">
+                    <div key={i} className="group/card relative bg-card/40 backdrop-blur-xl rounded-xl border border-white/5 overflow-hidden shadow-sm transition-all hover:shadow-2xl hover:border-white/10 border-l-4 border-l-primary flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5">
+                       <div className="flex items-center gap-4 min-w-0">
+                         {/* Compact Avatar */}
+                         <div className="h-10 w-10 shrink-0 rounded-lg bg-linear-to-br from-primary/20 to-primary/5 border border-white/10 flex items-center justify-center text-primary font-black shadow-lg text-base group-hover/card:scale-105 transition-transform">
                            {sig.platform[0]}
                          </div>
+                         
                          <div className="min-w-0">
-                           <div className="flex items-center gap-3 mb-1.5">
-                             <span className="text-sm font-black text-foreground">@{sig.user}</span>
-                             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/30 px-2 py-0.5 rounded-md">{sig.time}</span>
+                           {/* Compact Badges */}
+                           <div className="flex items-center gap-1.5 mb-1.5">
+                             <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground bg-muted/20 px-1.5 py-0.5 rounded">
+                               {sig.platform}
+                             </span>
+                             <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border border-accent/20 bg-accent/10 text-accent">
+                               {sig.intent}
+                             </span>
+                             <span className="text-[8px] font-black px-1.5 py-0.5 bg-primary/10 text-primary rounded">
+                               ★ {sig.score}
+                             </span>
                            </div>
-                           <div className="text-sm sm:text-base font-medium text-muted-foreground group-hover/item:text-foreground transition-colors leading-relaxed">
-                             "{sig.msg}"
+                           
+                           {/* Row 2: User + Content Inline */}
+                           <div className="flex items-center gap-2 min-w-0">
+                             <span className="text-xs font-black text-foreground shrink-0">@{sig.user}</span>
+                             <div className="text-xs font-medium text-muted-foreground/80 group-hover/card:text-foreground transition-colors leading-relaxed truncate italic">
+                               "{sig.msg}"
+                             </div>
                            </div>
                          </div>
                        </div>
-                       <div className="flex items-center gap-3 px-4 py-2 bg-accent/5 rounded-2xl border border-accent/10 self-start sm:self-center">
-                          <div className="flex flex-col">
-                            <span className="text-[8px] font-black uppercase tracking-tighter text-accent/60">Intent</span>
-                            <span className="text-sm font-black text-accent">{sig.score}%</span>
+                       
+                       {/* Compact Action */}
+                       <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                          <div className="h-8 px-4 rounded-lg bg-primary text-primary-foreground text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all cursor-default">
+                             Engage <ArrowRight className="h-2.5 w-2.5" />
                           </div>
-                          <Radar className="h-4 w-4 text-accent animate-pulse" />
                        </div>
                     </div>
                   ))}

@@ -4,11 +4,8 @@ import { Check, ArrowRight } from "lucide-react"
 
 export function FinalCTA() {
   return (
-    <section className="py-20 lg:py-40 relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-3xl rounded-full pointer-events-none opacity-50" />
-
-      <div className="container mx-auto px-4 max-w-7xl relative z-10">
+    <section className="relative overflow-hidden">
+      <div className="container mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
           {/* Left: Text Content */}
           <div className="max-w-2xl text-center lg:text-left transition-all duration-700 ease-out">
