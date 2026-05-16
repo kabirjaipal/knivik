@@ -58,7 +58,7 @@ export const auth: any = betterAuth({
       }
     : undefined,
 
-  trustedOrigins: [config.FRONTEND_URL],
+  trustedOrigins: config.FRONTEND_URL.split(",").map(url => url.trim()),
 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days in seconds
