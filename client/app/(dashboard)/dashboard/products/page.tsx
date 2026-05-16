@@ -169,7 +169,7 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Products</h1>
-          <p className="text-muted-foreground mt-1">Configure what the engines should look for</p>
+          <p className="text-muted-foreground mt-1">Configure what the AI should look for</p>
         </div>
         
         <Button size={"default"} onClick={() => setIsCreating(true)}>
@@ -482,19 +482,19 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
   const isActive = product.isActive;
   
   return (
-    <div className="relative bg-card border border-border/40 rounded-[2rem] p-8 flex flex-col gap-6 group transition-all hover:border-primary/20 shadow-sm">
+    <div className="relative bg-card border border-border/40 rounded-3xl p-5 flex flex-col gap-4 group transition-all hover:border-primary/20 shadow-sm">
       
       {/* Header section */}
       <div className="flex justify-between items-start">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors">
-            <Package className="w-8 h-8" />
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors">
+            <Package className="w-6 h-6" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-2xl font-bold text-foreground tracking-tight">{product.name}</h3>
+          <div className="space-y-0.5">
+            <h3 className="text-lg font-bold text-foreground tracking-tight">{product.name}</h3>
             {product.websiteUrl && (
-              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground/40 uppercase tracking-widest">
-                <Globe className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                <Globe className="w-3 h-3" />
                 {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
               </div>
             )}
@@ -502,63 +502,63 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         </div>
 
         {isActive ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20 text-success">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
-            <span className="text-sm font-black uppercase tracking-widest">Live</span>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 border border-success/20 text-success">
+            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
-            <div className="w-2 h-2 rounded-full bg-muted-foreground/30"></div>
-            <span className="text-sm font-black uppercase tracking-widest">Paused</span>
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
+            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest">Paused</span>
           </div>
         )}
       </div>
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground/60 leading-relaxed max-w-md font-medium">
+      <p className="text-xs text-muted-foreground/60 leading-relaxed max-w-md font-medium line-clamp-2">
         {product.description || "No specific detection vectors defined for this product yet."}
       </p>
 
       {/* Signals block */}
-      <div className="bg-muted/20 border border-border/40 rounded-2xl p-5 flex items-center justify-between group/signals hover:bg-muted/30 transition-colors cursor-pointer">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-muted/40 flex items-center justify-center text-primary/80">
-            <Radar className="w-6 h-6" />
+      <div className="bg-muted/20 border border-border/40 rounded-xl p-3 flex items-center justify-between group/signals hover:bg-muted/30 transition-colors cursor-pointer">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center text-primary/80">
+            <Radar className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-bold text-muted-foreground/30 uppercase tracking-widest mb-1">Total Signals</p>
-            <p className="text-2xl font-bold text-foreground">{leadCount}</p>
+            <p className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest mb-0.5">Total Signals</p>
+            <p className="text-lg font-bold text-foreground">{leadCount}</p>
           </div>
         </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground/20 group-hover/signals:text-primary transition-colors" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/signals:text-primary transition-colors" />
       </div>
 
       {/* Footer / Actions */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-6">
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-4">
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-            className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/50 hover:text-foreground transition-colors"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-3.5 h-3.5" />
             Edit
           </button>
-          <div className="w-px h-4 bg-border/40"></div>
+          <div className="w-px h-3 bg-border/40"></div>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-            className="flex items-center gap-2 text-xs font-bold text-muted-foreground/50 hover:text-destructive transition-colors"
+            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/50 hover:text-destructive transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
             Delete
           </button>
         </div>
 
         <Link 
           href={`/dashboard/products/${product.id}`}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-bold text-xs hover:bg-primary/90 transition-all active:scale-95 shadow-md shadow-primary/20"
         >
           Open Feed
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>

@@ -23,7 +23,7 @@ export function FAQ() {
   return (
     <section id="faq" className="py-20 lg:py-32 relative overflow-hidden bg-background">
       {/* Background Decorative Element */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-[120px] rounded-full pointer-events-none opacity-50" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-3xl rounded-full pointer-events-none opacity-50" />
 
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
         <div className="flex flex-col items-center text-center mb-12 sm:mb-20">

@@ -207,12 +207,12 @@ export default function DashboardPage() {
           { label: 'AI Tasks',   value: llmUsage?.totals.requestCount ?? 0, icon: Brain, color: 'text-primary', bg: 'bg-card' },
         ]).map(({ label, value, icon: Icon, color, bg, hi }) => (
           <div key={label}
-            className={`rounded-2xl border p-4 flex flex-col gap-2 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${bg} ${!hi ? 'border-border/40 hover:border-border/60' : ''}`}>
+            className={`rounded-2xl border p-3 flex flex-col gap-1.5 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${bg} ${!hi ? 'border-border/40 hover:border-border/60' : ''}`}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{label}</span>
-              <Icon className={`w-4 h-4 ${color} opacity-80`} />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</span>
+              <Icon className={`w-3.5 h-3.5 ${color} opacity-80`} />
             </div>
-            <span className={`text-3xl font-black tracking-tighter ${color}`}>{value}</span>
+            <span className={`text-2xl font-black tracking-tighter ${color}`}>{value}</span>
           </div>
         ))}
       </div>
@@ -249,21 +249,21 @@ export default function DashboardPage() {
               <div className="divide-y divide-border/20 bg-card">
                 {products.slice(0, 6).map(p => (
                   <button key={p.id} onClick={() => router.push(`/dashboard/products/${p.id}`)}
-                    className="w-full text-left px-5 py-4 hover:bg-muted/30 transition-colors group flex items-center justify-between gap-3">
+                    className="w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors group flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-muted-foreground'}`} />
-                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className={`w-1 h-1 rounded-full ${p.isActive ? 'bg-success shadow-sm shadow-success/60' : 'bg-muted-foreground'}`} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                           {p.isActive ? 'Live' : 'Standby'}
                         </span>
                       </div>
                     </div>
-                    <div className="shrink-0 text-right bg-muted/50 px-3 py-1.5 rounded-lg border border-border/50">
-                      <span className="text-sm font-black text-foreground tabular-nums">
+                    <div className="shrink-0 text-right bg-muted/50 px-2 py-1 rounded-lg border border-border/50">
+                      <span className="text-xs font-black text-foreground tabular-nums">
                         {leadsByProduct[p.name] ?? 0}
                       </span>
-                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">leads</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">leads</p>
                     </div>
                   </button>
                 ))}
@@ -333,7 +333,7 @@ export default function DashboardPage() {
           {llmUsage && (
             <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 space-y-2 shadow-sm">
               <p className="text-xs font-black uppercase tracking-widest text-primary/80 flex items-center gap-2">
-                <Zap className="w-4 h-4" /> AI Engine
+                <Zap className="w-4 h-4" /> AI Analysis
               </p>
               <div className="flex justify-between items-end">
                 <span className="text-xs font-medium text-muted-foreground">Inferences Completed</span>
@@ -359,7 +359,7 @@ export default function DashboardPage() {
               </div>
               {last24h > 0 && (
                 <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-sm shadow-primary/80" />
                   +{last24h} Today
                 </span>
               )}

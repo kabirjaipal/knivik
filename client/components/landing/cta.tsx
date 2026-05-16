@@ -6,7 +6,7 @@ export function FinalCTA() {
   return (
     <section className="py-20 lg:py-40 relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-[120px] rounded-full pointer-events-none opacity-50" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-3xl rounded-full pointer-events-none opacity-50" />
 
       <div className="container mx-auto px-4 max-w-7xl relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16 lg:gap-24">
@@ -15,7 +15,7 @@ export function FinalCTA() {
             <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs sm:text-sm font-black uppercase tracking-widest text-primary mb-6">
               Immediate Results
             </div>
-            <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-[-0.05em] mb-8 leading-[0.9] sm:leading-[0.8] text-foreground">
+            <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter mb-8 leading-none sm:leading-none text-foreground">
               Stop Hunting. <br />
               <span className="text-primary">Start Scaling.</span>
             </h2>
@@ -24,7 +24,7 @@ export function FinalCTA() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 sm:gap-8">
               <Link href="/register" className="w-full sm:w-auto">
-                <Button size="lg" className="h-14 sm:h-16 px-10 sm:px-12 text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_20px_50px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95 rounded-2xl w-full">
+                <Button size="lg" className="h-14 sm:h-16 px-10 sm:px-12 text-xs sm:text-sm font-black uppercase tracking-widest shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 rounded-2xl w-full">
                   Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -58,7 +58,7 @@ export function FinalCTA() {
               ))}
             </div>
             {/* Decorative Blur */}
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/20 blur-[80px] -z-10" />
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/20 blur-3xl -z-10" />
           </div>
         </div>
       </div>

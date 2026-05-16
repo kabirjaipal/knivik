@@ -16,7 +16,7 @@ export default function Contact() {
       </p>
 
       <div className="grid md:grid-cols-2 gap-8 text-left">
-        <div className="p-8 rounded-md bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors group">
+        <div className="p-8 rounded-3xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors group">
           <Mail className="w-10 h-10 text-primary mb-6" />
           <h2 className="text-2xl font-bold mb-2">Email Support</h2>
           <p className="text-muted-foreground mb-6">Best for account issues and technical support. We aim to reply within 24 hours.</p>

@@ -206,7 +206,7 @@ export function ProductLeads({ productId, lastManualScanDate }: ProductLeadsProp
             {/* Lead list */}
             <div className="p-0 sm:p-4 bg-muted/5 min-h-96">
               {filteredLeads.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center gap-3 min-h-[400px]">
+                <div className="h-full flex flex-col items-center justify-center gap-3 min-h-96">
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
                     <Radar className="h-10 w-10 text-muted-foreground/30" />
                   </div>

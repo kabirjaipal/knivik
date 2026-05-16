@@ -560,7 +560,7 @@ function ProLock() {
 
 function ProOverlay() {
   return (
-    <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 text-center">
+    <div className="absolute inset-0 bg-background/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-6 text-center">
        <div className="space-y-3">
           <p className="text-xs font-black uppercase tracking-widest text-foreground">Available on Pro</p>
           <a href="/dashboard/billing" className="inline-flex h-7 items-center justify-center rounded-lg bg-primary px-3 text-xs font-black text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 transition-transform">

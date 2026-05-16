@@ -29,10 +29,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </section>
 
       <div className="space-y-6">
-        {/* Universal Engine Configuration */}
+        {/* Universal AI Configuration */}
         <section className="bg-primary/3 p-5 rounded-2xl border border-primary/10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-3 flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 fill-current" /> Universal AI Engine
+            <Zap className="w-3.5 h-3.5 fill-current" /> Universal AI System
           </h2>
           <p className="text-sm font-medium text-foreground/70 leading-relaxed mb-4">
             Global network scanning is enabled. The AI will autonomously find leads across Reddit, HackerNews, and Twitter by semantically matching their posts against your product description.

@@ -77,7 +77,7 @@ export default function AdminSettingsPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-96">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
     </div>
   )
@@ -137,7 +137,7 @@ export default function AdminSettingsPage() {
         <Card className="border-border/40">
           <CardHeader>
             <CardTitle className="text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-primary" /> AI Engine Configuration
+              <Cpu className="w-4 h-4 text-primary" /> AI Configuration
             </CardTitle>
             <CardDescription>Select default LLM models for different processing tiers.</CardDescription>
           </CardHeader>

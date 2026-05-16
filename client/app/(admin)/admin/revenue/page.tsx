@@ -122,7 +122,7 @@ export default function AdminRevenuePage() {
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-bold text-sm">{payment.user.username}</span>
-                    <span className="text-sm text-muted-foreground italic truncate max-w-[200px]">{payment.user.email}</span>
+                    <span className="text-sm text-muted-foreground italic truncate max-w-52">{payment.user.email}</span>
                   </div>
                 </TableCell>
                 <TableCell>

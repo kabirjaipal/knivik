@@ -74,7 +74,7 @@ export default function AdminPage() {
         <CardHeader className="border-b border-border/40 pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" />
-            Social Engine Health (Real-time)
+            Social Monitoring Health (Real-time)
           </CardTitle>
           <div className="text-xs font-bold text-muted-foreground">Gateway Heartbeat Active</div>
         </CardHeader>

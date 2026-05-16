@@ -103,7 +103,7 @@ export default function PricingClient() {
               </CardContent>
             </Card>
 
-            <Card className={`relative flex flex-col border-primary/40 bg-linear-to-b from-primary/10 to-transparent backdrop-blur-xl transition-all duration-500 hover:scale-[1.02] hover:border-primary/60 hover:shadow-[0_0_50px_-10px_rgba(var(--primary),0.4)] ${currentPlan === "PRO" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
+            <Card className={`relative flex flex-col border-primary/40 bg-linear-to-b from-primary/10 to-transparent backdrop-blur-xl transition-all duration-500 hover:scale-105 hover:border-primary/60 hover:shadow-2xl hover:shadow-primary/40 ${currentPlan === "PRO" ? "ring-2 ring-primary ring-offset-4 ring-offset-background" : ""}`}>
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
                 <Badge className="bg-primary text-primary-foreground border-none px-6 py-1.5 text-xs font-black uppercase tracking-widest shadow-2xl shadow-primary/40">
                   Most Popular
@@ -161,7 +161,7 @@ export default function PricingClient() {
                   name={user?.name || user?.username || ""}
                   userId={user?.id || ""}
                   planName="Pro"
-                  className="w-full h-11 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] bg-primary text-primary-foreground border-none"
+                  className="w-full h-11 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95 bg-primary text-primary-foreground border-none"
                   disabled={currentPlan !== "FREE"}
                   onSuccess={() => {
                     console.log("Payment success!");

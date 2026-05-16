@@ -48,11 +48,11 @@ export async function Hero() {
               </Button>
             </Link>
               <div className="flex flex-col items-center sm:items-start gap-2">
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-[0.1em] text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-widest text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" /> 
                 No Credit Card Required
               </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-[0.1em] text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-black uppercase tracking-widest text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" /> 
                 Instant Data Export
               </div>
@@ -98,7 +98,7 @@ export async function Hero() {
                 ))}
               </div>
               {/* Glowing decorative element */}
-              <div className="absolute -bottom-20 -right-20 h-40 w-40 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
+              <div className="absolute -bottom-20 -right-20 h-40 w-40 bg-primary/20 blur-3xl rounded-full pointer-events-none" />
             </div>
           </div>
         </div>

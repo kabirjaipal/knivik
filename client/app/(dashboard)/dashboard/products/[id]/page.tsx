@@ -95,7 +95,7 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
         <p className="text-sm font-bold text-muted-foreground">Product not found</p>
         <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/products")}
           className="rounded-xl px-4 font-bold text-xs uppercase tracking-wider">
@@ -128,7 +128,7 @@ export default function ProductDetailPage() {
 
               {product.isActive ? (
                 <span className="flex items-center gap-1.5 text-success bg-success/10 border border-success/20 px-3 py-1 rounded-full font-black uppercase tracking-widest text-sm shrink-0 shadow-sm">
-                  <span className="w-2 h-2 bg-success rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" /> Live
+                  <span className="w-2 h-2 bg-success rounded-full animate-pulse shadow-sm shadow-success/60" /> Live
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full font-black uppercase tracking-widest text-sm shrink-0">

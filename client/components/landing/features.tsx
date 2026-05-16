@@ -9,7 +9,7 @@ export function Features() {
             <Sparkles className="h-3 w-3 mr-2" />
             Capabilities
           </div>
-          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-foreground leading-[1] sm:leading-[0.9] max-w-3xl transition-all duration-700 delay-100 ease-out">
+          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-foreground leading-none sm:leading-none max-w-3xl transition-all duration-700 delay-100 ease-out">
             Everything you need to <span className="text-muted-foreground/40">own the social web.</span>
           </h2>
         </div>
@@ -30,7 +30,7 @@ export function Features() {
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-2 relative z-10">
-              {"Reddit", "X / Twitter", "HackerNews", "Dev.to"].map((t) => (
+              {["Reddit", "X / Twitter", "HackerNews", "Dev.to"].map((t) => (
                 <span key={t} className="px-3 py-1 bg-secondary/50 backdrop-blur-md text-xs sm:text-sm font-black uppercase tracking-widest rounded-full border border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors cursor-default">{t}</span>
               ))}
             </div>
@@ -44,7 +44,7 @@ export function Features() {
               <BrainCircuit className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-xl sm:text-2xl font-black mb-2 tracking-tight">AI Intent Engine</h3>
+              <h3 className="text-xl sm:text-2xl font-black mb-2 tracking-tight">AI Analysis</h3>
               <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed">
                 LLM-powered analysis filters out the noise, delivering only leads with clear buying signals.
               </p>
