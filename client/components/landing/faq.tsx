@@ -1,65 +1,98 @@
+"use client"
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { motion } from "framer-motion"
+import { Sparkles } from "lucide-react"
 
 const faqs = [
   {
-    question: "Is it legal to monitor public data from Reddit and X?",
-    answer: "Yes, Knivik only monitors publicly available data. We do not access private profiles, messages, or restricted content. Our platform complies with the Terms of Service of each social network we monitor."
+    question: "How does the AI find high-quality leads?",
+    answer: "Knivik understands the true intent behind social posts. Instead of just matching keywords, it identifies people who are actively looking for solutions, frustrated with competitors, or asking for recommendations, while filtering out irrelevant noise."
   },
   {
-    question: "How quickly do new leads appear in my dashboard?",
-    answer: "Knivik scans for new posts in real-time. Depending on the platform and your plan, leads typically appear within 60 seconds to 5 minutes of being posted."
+    question: "Where does Knivik find these leads?",
+    answer: "We monitor major social platforms including Reddit, X (Twitter), and HackerNews. We find high-intent conversations in real-time, giving you the first-mover advantage before your competitors even know they exist."
   },
   {
-    question: "What counts as a 'high-intent' lead?",
-    answer: "Our AI analysis looks for specific linguistic markers: questions about recommendations, comparisons with competitors, expressions of frustration with current tools, and clear buying signals (e.g., 'What is the best alternative to...')."
+    question: "How do I reach out without sounding like a salesperson?",
+    answer: "Every lead comes with AI-generated 'Reply Angles'—personalized suggestions based on the specific conversation. This helps you join threads naturally, provide genuine value, and build trust without sounding like a bot."
   },
   {
-    question: "Can I export my leads to my existing CRM?",
-    answer: "Yes, Pro and Growth users can export leads via CSV or JSON. We also offer Webhook support and a direct API for seamless integration with tools like HubSpot, Salesforce, or Pipedrive."
+    question: "Can I connect this to my existing workflow?",
+    answer: "Absolutely. You can automatically push your leads to Slack, Discord, or connect with 5,000+ other apps via Zapier and Make. This ensures you never miss a lead and can keep your outreach moving."
   },
   {
-    question: "Who is Knivik best for?",
-    answer: "Knivik is built for B2B SaaS founders, sales teams, and marketing agencies who want to scale their pipeline by engaging with potential customers at the exact moment they show intent."
+    question: "Is it easy to get started?",
+    answer: "Yes! You can set up your first product in minutes. We offer a free tier so you can see the quality of leads for yourself before committing to a paid plan as your business grows."
   }
 ]
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-24 bg-secondary/30">
+    <section id="faq" className="py-24 bg-secondary/10 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid opacity-5" />
       <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16 lg:mb-24">
-            <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-foreground mb-6">
+          <div className="text-center mb-16">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-6 border border-primary/20"
+            >
+              <Sparkles className="h-3 w-3" />
+              Quick Answers
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl lg:text-5xl font-black tracking-tighter text-foreground mb-6"
+            >
               Frequently Asked Questions
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Everything you need to know about Knivik and how it works.
-            </p>
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-lg text-muted-foreground font-medium"
+            >
+              Get started with Knivik in minutes.
+            </motion.p>
           </div>
 
           <Accordion type="single" collapsible className="w-full space-y-4">
             {faqs.map((faq, i) => (
-              <AccordionItem 
-                key={i} 
-                value={`item-${i}`}
-                className="bg-background px-8 py-2 rounded-3xl border border-border/50 shadow-sm"
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
               >
-                <AccordionTrigger className="text-xl font-black text-left hover:no-underline hover:text-primary transition-colors">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-lg text-muted-foreground leading-relaxed font-medium pb-6">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
+                <AccordionItem 
+                  value={`item-${i}`}
+                  className="bg-background px-6 py-1 rounded-2xl border border-border/50 shadow-sm hover:border-primary/20 transition-all overflow-hidden"
+                >
+                  <AccordionTrigger className="text-lg font-black text-left hover:no-underline hover:text-primary transition-all py-4">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-base text-muted-foreground leading-relaxed font-medium pb-6">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
             ))}
           </Accordion>
         </div>
-      </div>
     </section>
   )
 }
+
+

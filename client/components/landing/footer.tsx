@@ -1,85 +1,57 @@
 import Link from 'next/link'
 import { Logo } from "@/components/logo"
-
-const footerLinks = [
-  {
-    title: "Product",
-    links: [
-      { label: "How it works", href: "/#how-it-works" },
-      { label: "Benefits", href: "/#benefits" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "FAQ", href: "/#faq" },
-    ]
-  },
-  {
-    title: "Company",
-    links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Refund Policy", href: "/refund-policy" },
-      { label: "Contact Us", href: "/contact" },
-    ]
-  },
-  {
-    title: "Integrations",
-    links: [
-      { label: "Slack", href: "/#integrations" },
-      { label: "Discord", href: "/#integrations" },
-      { label: "API Docs", href: "/docs" },
-      { label: "Webhooks", href: "/docs/webhooks" },
-    ]
-  }
-]
+import { ShieldCheck, Heart } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="bg-secondary/30 pt-20 pb-10 border-t border-border/50">
+    <footer className="bg-background py-16 border-t border-border/40">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
-          <div className="col-span-2 lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Logo size={20} />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+          <div className="flex flex-col gap-4 lg:col-span-2">
+            <Link href="/" className="flex items-center gap-2 group">
+              <Logo size={24} />
               <span className="font-black tracking-tighter text-xl text-foreground">
                 Knivik
               </span>
             </Link>
-            <p className="text-muted-foreground text-sm font-medium max-w-xs leading-relaxed">
-              Knivik is an AI-powered lead generation tool that monitors social platforms for high-intent buying signals. Built for founders, agencies, and growth teams.
+            <p className="text-muted-foreground text-[13px] font-medium leading-relaxed max-w-xs">
+              AI-powered social lead generation. Catch high-intent conversations on Reddit and X in real-time.
             </p>
           </div>
 
-          {footerLinks.map((section) => (
-            <div key={section.title}>
-              <h4 className="font-black text-xs uppercase tracking-widest text-foreground mb-6">{section.title}</h4>
-              <ul className="space-y-4">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link 
-                      href={link.href} 
-                      className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Platform</h4>
+            <ul className="space-y-3">
+              <li><Link href="/#how-it-works" className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors">How it works</Link></li>
+              <li><Link href="/pricing" className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors">Pricing</Link></li>
+              <li><Link href="/#faq" className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors">FAQ</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground mb-6">Legal</h4>
+            <ul className="space-y-3">
+              <li><Link href="/privacy" className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors">Privacy</Link></li>
+              <li><Link href="/terms" className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors">Terms</Link></li>
+              <li><Link href="/contact" className="text-xs font-bold text-foreground/70 hover:text-primary transition-colors">Contact</Link></li>
+            </ul>
+          </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center pt-10 border-t border-border/50 gap-6">
-          <div className="text-xs font-bold text-muted-foreground">
-            © {new Date().getFullYear()} Knivik. All rights reserved.
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-border/40">
+          <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
+            © {new Date().getFullYear()} Knivik. Built for the community.
           </div>
           
-          <div className="flex items-center gap-2 opacity-60">
-             <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">All Systems Operational</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-secondary/30 border border-border/50">
+            <ShieldCheck className="h-3 w-3 text-primary/60" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Secure & Private</span>
           </div>
         </div>
       </div>
     </footer>
   )
 }
+
+
+

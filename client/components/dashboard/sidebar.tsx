@@ -86,7 +86,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/95 px-6 backdrop-blur-xl shadow-sm">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-md">
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl">
             <Logo size={24} />
           </div>
           <div className="flex flex-col">
@@ -116,7 +116,7 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Logo Container */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-border/40">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl glass shadow-md shrink-0 border border-white/10 group-hover:scale-110 transition-transform">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl shrink-0 group-hover:scale-110 transition-transform">
               <Logo size={24} />
             </div>
             {!isCollapsed && (
