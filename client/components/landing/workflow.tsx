@@ -1,57 +1,50 @@
-import { Radar, BrainCircuit, Zap, ArrowRight } from "lucide-react"
+import { Search, BrainCircuit, Bell, ArrowRight } from "lucide-react"
 
 const steps = [
   {
-    icon: <Radar className="h-6 w-6" />,
-    title: "Neural Scan",
-    description: "Knivik generates high-intent search queries and deploys them 24/7 across Reddit, X, and HackerNews to find hidden conversations."
+    icon: <Search className="h-6 w-6" />,
+    title: "1. Monitor Conversations",
+    description: "Knivik scans Reddit, X, Hacker News, and Dev.to for keywords and pain points relevant to your business."
   },
   {
     icon: <BrainCircuit className="h-6 w-6" />,
-    title: "AI Intent Engine",
-    description: "Our batch processing engine uses LLMs to score every post from 0-100, isolating the 1% of users who are ready to buy right now."
+    title: "2. Filter with AI",
+    description: "Our AI scores every post to separate casual mentions from real buying intent, so you only see the best leads."
   },
   {
-    icon: <Zap className="h-6 w-6" />,
-    title: "Smart Alerts",
-    description: "Once qualified, leads are enriched with author data and pushed instantly to your dashboard and Slack for immediate engagement."
+    icon: <Bell className="h-6 w-6" />,
+    title: "3. Get Instant Alerts",
+    description: "Qualified leads are pushed instantly to your dashboard, Slack, or email for immediate engagement."
   }
 ]
 
 export function Workflow() {
   return (
-    <section id="workflow" className="relative bg-background overflow-hidden">
-      {/* Decorative background element */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-linear-to-r from-transparent via-border to-transparent opacity-50" />
-      
-      <div className="w-full relative z-10">
-        <div className="flex flex-col items-center text-center mb-16 sm:mb-24">
-          <div className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs sm:text-sm font-black uppercase tracking-widest text-accent mb-4 sm:mb-6">
-            <BrainCircuit className="h-3 w-3 mr-2" />
-            The System
-          </div>
-          <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-foreground leading-none sm:leading-none max-w-3xl">
-            How Knivik <span className="text-muted-foreground/40">finds your customers.</span>
+    <section id="how-it-works" className="py-24 bg-background relative overflow-hidden">
+      <div className="container mx-auto px-6">
+        <div className="flex flex-col items-center text-center mb-16 lg:mb-24">
+          <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-foreground mb-6">
+            How it works
           </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl">
+            Stop manually searching for customers. Automate your social lead generation in three simple steps.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-16 pt-5">
+        <div className="grid md:grid-cols-3 gap-12 relative">
+          {/* Connector line for desktop */}
+          <div className="hidden lg:block absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 -z-10" />
+          
           {steps.map((step, i) => (
             <div 
               key={i}
-              className="relative group flex flex-col items-center text-center lg:items-start lg:text-left transition-all duration-700 ease-out"
+              className="bg-background flex flex-col items-center text-center p-8 rounded-3xl border border-border/50 shadow-sm relative z-10 hover:border-primary/30 transition-all group"
             >
-              {i < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 -right-8 text-border/30 group-hover:text-primary/30 transition-colors duration-500">
-                  <ArrowRight className="h-8 w-8" />
-                </div>
-              )}
-              
-              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary/50 border border-border/50 text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-inner group-hover:shadow-2xl group-hover:shadow-primary/20">
+              <div className="mb-6 h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 text-primary flex group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                 {step.icon}
               </div>
-              <h3 className="text-2xl font-black mb-2 tracking-tight text-foreground">{step.title}</h3>
-              <p className="text-muted-foreground font-medium leading-relaxed max-w-xs sm:max-w-none">
+              <h3 className="text-2xl font-black mb-4 tracking-tight">{step.title}</h3>
+              <p className="text-muted-foreground font-medium leading-relaxed">
                 {step.description}
               </p>
             </div>

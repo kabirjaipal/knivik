@@ -1,65 +1,42 @@
-import { Metadata } from "next"
+import { headers } from "next/headers"
+import { getSession } from "@/lib/auth-client"
 import { Hero } from "@/components/landing/hero"
-import { Features } from "@/components/landing/features"
-import { Problem } from "@/components/landing/problem"
+import { PlatformSupport } from "@/components/landing/social-proof"
 import { Workflow } from "@/components/landing/workflow"
+import { ProductPreview } from "@/components/landing/product-preview"
+import { Benefits } from "@/components/landing/benefits"
+import { Integrations } from "@/components/landing/integrations"
+import { CaseStudy } from "@/components/landing/case-study"
 import { FAQ } from "@/components/landing/faq"
 import { FinalCTA } from "@/components/landing/cta"
 
-export const metadata: Metadata = {
-  title: "Knivik | Autonomous Social Media Lead Generation",
-  description: "Find high-intent leads on Reddit, X, and HackerNews autonomously. Knivik uses AI to monitor real-time conversations and find your next customers.",
+export const metadata = {
+  title: "Knivik | AI-Powered Social Lead Generation",
+  description: "Monitor Reddit, X, Hacker News, and Dev.to for high-intent leads. Knivik uses AI to find your next customers in real-time.",
   keywords: ["lead generation", "social listening", "AI sales agent", "Reddit monitoring", "Twitter leads", "SaaS growth"],
-  openGraph: {
-    title: "Knivik | Autonomous Social Media Lead Generation",
-    description: "Scale your sales pipeline on autopilot. Find leads where they talk.",
-    url: "https://knivik.com",
-    siteName: "Knivik",
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Knivik | Find Leads on Autopilot",
-    description: "24/7 autonomous social listening for high-growth teams.",
-  },
-  alternates: {
-    canonical: "https://knivik.com",
-  },
 }
 
-export default function Home() {
-  return (
-    <main className="flex flex-col min-h-screen gap-20 lg:gap-32 pb-32 items-center">
-      {/* Schema.org JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            "name": "Knivik",
-            "applicationCategory": "BusinessApplication",
-            "operatingSystem": "Web",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            },
-            "description": "Autonomous AI sales agent for social media lead generation.",
-          }),
-        }}
-      />
+export default async function LandingPage() {
+  const { data: session } = await getSession({
+    fetchOptions: {
+      headers: await headers()
+    }
+  })
+  const user = session?.user
 
-      {/* Grid-Locked Landing Content */}
-      <div className="container mx-auto px-6 lg:px-10 flex flex-col gap-20 lg:gap-32">
-        <Hero />
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <main className="grow">
+        <Hero user={user} />
+        <PlatformSupport />
         <Workflow />
-        <Problem />
-        <Features />
+        <ProductPreview />
+        <Benefits />
+        <Integrations />
+        <CaseStudy />
         <FAQ />
-        <FinalCTA />
-      </div>
-    </main>
+        <FinalCTA user={user} />
+      </main>
+    </div>
   )
 }

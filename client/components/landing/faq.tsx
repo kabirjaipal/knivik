@@ -1,68 +1,63 @@
-import { ChevronDown, HelpCircle } from "lucide-react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 const faqs = [
   {
-    q: "Is Knivik's social listening legal?",
-    a: "Absolutely. Knivik only monitors public conversations on platforms like Reddit and X. We strictly adhere to platform terms of service and never access private data."
+    question: "Is it legal to monitor public data from Reddit and X?",
+    answer: "Yes, Knivik only monitors publicly available data. We do not access private profiles, messages, or restricted content. Our platform complies with the Terms of Service of each social network we monitor."
   },
   {
-    q: "How fast will I find my first lead?",
-    a: "Instantly. Once your Neural Radar is deployed, our system scans historical and real-time data blocks. You'll typically see your first high-intent signal in under 60 seconds."
+    question: "How quickly do new leads appear in my dashboard?",
+    answer: "Knivik scans for new posts in real-time. Depending on the platform and your plan, leads typically appear within 60 seconds to 5 minutes of being posted."
   },
   {
-    q: "What is an 'AI-Filtered Signal'?",
-    a: "Unlike simple keyword alerts, our neural engine analyzes the deep intent behind a post. It distinguishes between passive discussion and active buying intent."
+    question: "What counts as a 'high-intent' lead?",
+    answer: "Our AI analysis looks for specific linguistic markers: questions about recommendations, comparisons with competitors, expressions of frustration with current tools, and clear buying signals (e.g., 'What is the best alternative to...')."
   },
   {
-    q: "Can I export lead data to my CRM?",
-    a: "Yes. Our enterprise integration layer allows for one-click CSV exports or direct syncing with platforms like Slack and various CRMs via our API."
+    question: "Can I export my leads to my existing CRM?",
+    answer: "Yes, Pro and Growth users can export leads via CSV or JSON. We also offer Webhook support and a direct API for seamless integration with tools like HubSpot, Salesforce, or Pipedrive."
+  },
+  {
+    question: "Who is Knivik best for?",
+    answer: "Knivik is built for B2B SaaS founders, sales teams, and marketing agencies who want to scale their pipeline by engaging with potential customers at the exact moment they show intent."
   }
 ]
 
 export function FAQ() {
   return (
-    <section id="faq" className="relative">
-      <div className="w-full">
-        {/* Header - Compact */}
-        <div className="flex flex-col mb-10 sm:mb-16">
-          <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-            <HelpCircle className="h-2.5 w-2.5" />
-            Intelligence FAQ
+    <section id="faq" className="py-24 bg-secondary/30">
+      <div className="container mx-auto px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16 lg:mb-24">
+            <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-foreground mb-6">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Everything you need to know about Knivik and how it works.
+            </p>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground leading-tight">
-            Common <span className="text-muted-foreground/30">Inquiries.</span>
-          </h2>
-        </div>
 
-        {/* Minimalist Accordion - Tighter */}
-        <div className="flex flex-col">
-          {faqs.map((faq, i) => (
-            <details 
-              key={i}
-              className="group border-b border-white/5 py-5 first:border-t"
-            >
-              <summary className="list-none cursor-pointer flex items-center justify-between group-hover:text-primary transition-all duration-300">
-                <span className="text-base sm:text-lg font-black tracking-tight text-foreground group-hover:text-inherit pr-8 transition-colors">
-                  {faq.q}
-                </span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground/40 group-open:rotate-180 group-open:text-primary transition-all duration-500" />
-              </summary>
-              
-              <div className="mt-4 text-sm text-muted-foreground leading-relaxed max-w-2xl animate-in fade-in slide-in-from-top-1 duration-500">
-                {faq.a}
-              </div>
-            </details>
-          ))}
-        </div>
-        
-        {/* Simple Footer Link - Tighter */}
-        <div className="mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 italic">
-            Still unsure? Access neural docs.
-          </p>
-          <button className="text-[9px] font-black uppercase tracking-widest text-primary hover:text-accent transition-colors">
-            Engineering Support &rarr;
-          </button>
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            {faqs.map((faq, i) => (
+              <AccordionItem 
+                key={i} 
+                value={`item-${i}`}
+                className="bg-background px-8 py-2 rounded-3xl border border-border/50 shadow-sm"
+              >
+                <AccordionTrigger className="text-xl font-black text-left hover:no-underline hover:text-primary transition-colors">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-lg text-muted-foreground leading-relaxed font-medium pb-6">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </section>
