@@ -217,7 +217,7 @@ export default function DashboardPage() {
                 { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-primary' },
                 { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-success' },
               ]).map(({ label, value, icon: Icon, color }, i) => (
-                <div key={label} className="p-5 flex flex-col gap-1 transition-colors hover:bg-primary/[0.02]">
+                <div key={label} className="p-5 flex flex-col gap-1 transition-colors hover:bg-primary/2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">{label}</span>
                     <Icon className={`w-3.5 h-3.5 ${color} opacity-40`} />
@@ -247,7 +247,7 @@ export default function DashboardPage() {
               ) : (
                 products.slice(0, 5).map(p => (
                   <button key={p.id} onClick={() => router.push(`/dashboard/products/${p.id}`)}
-                    className="w-full text-left px-6 py-4 hover:bg-primary/[0.03] transition-all group flex items-center justify-between gap-4">
+                    className="w-full text-left px-6 py-4 hover:bg-primary/3 transition-all group flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
                       <div className="flex items-center gap-2 mt-1">
