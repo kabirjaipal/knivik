@@ -1,8 +1,8 @@
 "use client"
 
-import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Minus, HelpCircle } from "lucide-react"
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 const faqs = [
   {
@@ -33,65 +33,48 @@ export function FAQ() {
 
       <div className="container mx-auto px-4 max-w-4xl relative z-10">
         <div className="flex flex-col items-center text-center mb-12 sm:mb-20">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary mb-4"
-          >
+          <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary mb-4 transition-all duration-700 ease-out">
             <HelpCircle className="h-3 w-3 mr-2" />
             Support
-          </motion.div>
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground leading-[1] sm:leading-[0.9] max-w-2xl"
-          >
+          </div>
+          <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground leading-[1] sm:leading-[0.9] max-w-2xl transition-all duration-700 delay-100 ease-out">
             Everything you need to <span className="text-muted-foreground/40">know before scaling.</span>
-          </motion.h2>
+          </h2>
         </div>
 
         <div className="grid gap-4">
           {faqs.map((faq, i) => (
-            <motion.div 
+            <div 
               key={i}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className={`glass rounded-2xl sm:rounded-3xl border transition-all duration-500 overflow-hidden ${
+              className={cn(
+                "glass rounded-2xl sm:rounded-3xl border transition-all duration-500 overflow-hidden",
                 openIndex === i ? "border-primary/50 shadow-[0_0_30px_rgba(var(--primary-rgb),0.1)]" : "border-border/50"
-              }`}
+              )}
             >
               <button 
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
                 className="w-full p-6 sm:p-8 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
               >
                 <span className="text-base sm:text-xl font-black tracking-tight text-foreground pr-4">{faq.q}</span>
-                <div className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all ${
+                <div className={cn(
+                  "h-8 w-8 shrink-0 rounded-full flex items-center justify-center transition-all duration-300",
                   openIndex === i ? "bg-primary text-primary-foreground rotate-180" : "bg-secondary text-muted-foreground"
-                }`}>
+                )}>
                   {openIndex === i ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 </div>
               </button>
               
-              <AnimatePresence>
-                {openIndex === i && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                  >
-                    <div className="px-6 pb-6 sm:px-8 sm:pb-8 text-sm sm:text-base text-muted-foreground font-medium leading-relaxed max-w-2xl">
-                      {faq.a}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+              <div className={cn(
+                "grid transition-all duration-300 ease-in-out",
+                openIndex === i ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              )}>
+                <div className="overflow-hidden">
+                  <div className="px-6 pb-6 sm:px-8 sm:pb-8 text-sm sm:text-base text-muted-foreground font-medium leading-relaxed max-w-2xl">
+                    {faq.a}
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

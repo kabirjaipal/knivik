@@ -7,20 +7,21 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/context/auth-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PROJECT_NAME } from "@/lib/constants"
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
+import { cn } from "@/lib/utils"
 
 export function Navbar() {
   const { user, loading } = useAuth()
-  const { scrollY } = useScroll()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   
-  // Responsive transform hooks
-  const navWidth = useTransform(scrollY, [0, 50], ["100%", "92%"])
-  const navPadding = useTransform(scrollY, [0, 50], ["16px", "8px"])
-  const navBorderRadius = useTransform(scrollY, [0, 50], ["0px", "28px"])
-  const navTop = useTransform(scrollY, [0, 50], ["0px", "20px"])
-  const navShadow = useTransform(scrollY, [0, 50], ["0px 0px 0px rgba(0,0,0,0)", "0px 20px 40px rgba(0,0,0,0.1)"])
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const navLinks = [
     { label: "Pricing", href: "/pricing" },
@@ -41,18 +42,15 @@ export function Navbar() {
 
   return (
     <>
-      <motion.div 
-        style={{ 
-          width: typeof window !== 'undefined' && window.innerWidth < 768 ? "100%" : navWidth,
-          paddingTop: typeof window !== 'undefined' && window.innerWidth < 768 ? "12px" : navPadding,
-          paddingBottom: typeof window !== 'undefined' && window.innerWidth < 768 ? "12px" : navPadding,
-          borderRadius: typeof window !== 'undefined' && window.innerWidth < 768 ? "0px" : navBorderRadius,
-          top: typeof window !== 'undefined' && window.innerWidth < 768 ? "0px" : navTop,
-          boxShadow: navShadow
-        }}
-        className="fixed left-1/2 -translate-x-1/2 z-50 border-b md:border border-border/40 bg-background/60 backdrop-blur-xl transition-all duration-500 max-w-7xl"
+      <div 
+        className={cn(
+          "fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 max-w-7xl",
+          isScrolled 
+            ? "top-5 w-[92%] rounded-[28px] border bg-background/60 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] py-2" 
+            : "top-0 w-full border-b bg-background/60 backdrop-blur-xl py-4"
+        )}
       >
-        <header className="container mx-auto flex h-10 sm:h-12 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <header className="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo Section */}
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2.5 group relative">
@@ -130,86 +128,55 @@ export function Navbar() {
             </div>
           </div>
         </header>
-      </motion.div>
+      </div>
 
       {/* Mobile Drawer */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-2xl md:hidden"
-          >
-            <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              className="flex flex-col h-full pt-32 px-8 pb-12"
-            >
-              <nav className="flex flex-col gap-8">
-                {navLinks.map((link, i) => (
-                  <motion.div
-                    key={link.label}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <Link 
-                      href={link.href} 
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-4xl font-black tracking-tighter text-foreground hover:text-primary transition-colors flex items-center gap-4"
-                    >
-                      <span className="text-primary/20 text-xl font-mono">0{i+1}</span>
-                      {link.label}
-                    </Link>
-                  </motion.div>
-                ))}
-                
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }} 
-                  transition={{ delay: 0.4 }}
-                  className="h-px w-full bg-border/50 my-4" 
-                />
-                
-                {!user ? (
-                  <motion.div 
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="flex flex-col gap-4"
-                  >
-                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl border-2">Log in</Button>
-                    </Link>
-                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Get Started</Button>
-                    </Link>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Go to Dashboard</Button>
-                    </Link>
-                  </motion.div>
-                )}
-              </nav>
-
-              <div className="mt-auto flex justify-center">
-                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-                    <Circle className="h-2 w-2 fill-success text-success animate-pulse" />
-                    Systems Operational
-                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
+      <div 
+        className={cn(
+          "fixed inset-0 z-40 bg-background/80 backdrop-blur-2xl md:hidden transition-all duration-500 ease-in-out",
+          isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none -translate-y-4"
         )}
-      </AnimatePresence>
+      >
+        <div className="flex flex-col h-full pt-32 px-8 pb-12">
+          <nav className="flex flex-col gap-8">
+            {navLinks.map((link, i) => (
+              <Link 
+                key={link.label}
+                href={link.href} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-4xl font-black tracking-tighter text-foreground hover:text-primary transition-colors flex items-center gap-4"
+              >
+                <span className="text-primary/20 text-xl font-mono">0{i+1}</span>
+                {link.label}
+              </Link>
+            ))}
+            
+            <div className="h-px w-full bg-border/50 my-4" />
+            
+            {!user ? (
+              <div className="flex flex-col gap-4">
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl border-2">Log in</Button>
+                </Link>
+                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Get Started</Button>
+                </Link>
+              </div>
+            ) : (
+              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button className="w-full h-16 text-sm font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-primary/20">Go to Dashboard</Button>
+              </Link>
+            )}
+          </nav>
+
+          <div className="mt-auto flex justify-center">
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                <Circle className="h-2 w-2 fill-success text-success animate-pulse" />
+                Systems Operational
+             </div>
+          </div>
+        </div>
+      </div>
     </>
   )
 }

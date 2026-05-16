@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { motion } from "framer-motion"
 import { Radar, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
@@ -13,64 +12,31 @@ export function Hero() {
     <section className="relative overflow-hidden pt-20 pb-12 lg:pt-32 lg:pb-24">
       {/* Premium Atmospheric Lighting */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] pointer-events-none z-0">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.6, 0.4, 0.6]
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10%] left-[10%] w-[70%] sm:w-[50%] h-[60%] rounded-full bg-primary/10 blur-[100px] sm:blur-[140px] opacity-60" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.4, 0.3, 0.4]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute top-[20%] right-[10%] w-[60%] sm:w-[40%] h-[50%] rounded-full bg-accent/5 blur-[80px] sm:blur-[120px] opacity-40" 
-        />
+        <div className="absolute top-[-10%] left-[10%] w-[70%] sm:w-[50%] h-[60%] rounded-full bg-primary/10 blur-[100px] sm:blur-[140px] opacity-60 animate-pulse" />
+        <div className="absolute top-[20%] right-[10%] w-[60%] sm:w-[40%] h-[50%] rounded-full bg-accent/5 blur-[80px] sm:blur-[120px] opacity-40 animate-pulse [animation-delay:2s]" />
       </div>
 
       <div className="container relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="transition-all duration-1000 ease-out">
             <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 sm:px-4 sm:py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-primary mb-8 sm:mb-10 shadow-2xl shadow-primary/10 backdrop-blur-sm">
               <Sparkles className="h-3 w-3 mr-2 animate-pulse" />
               Autonomous Growth is Here
             </div>
-          </motion.div>
+          </div>
           
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl sm:text-8xl lg:text-[10rem] font-black tracking-[-0.05em] text-foreground mb-6 sm:mb-8 leading-[0.85] sm:leading-[0.75] lg:max-w-5xl"
-          >
+          <h1 className="text-5xl sm:text-8xl lg:text-[10rem] font-black tracking-[-0.05em] text-foreground mb-6 sm:mb-8 leading-[0.85] sm:leading-[0.75] lg:max-w-5xl transition-all duration-1000 ease-out">
             Scale Your <br />
             <span className="text-transparent bg-clip-text bg-linear-to-b from-primary via-primary to-primary/40 drop-shadow-sm">
               Sales Pipeline.
             </span>
-          </motion.h1>
+          </h1>
           
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="mx-auto max-w-2xl text-base sm:text-xl text-muted-foreground mb-10 sm:mb-12 leading-relaxed font-medium px-2"
-          >
+          <p className="mx-auto max-w-2xl text-base sm:text-xl text-muted-foreground mb-10 sm:mb-12 leading-relaxed font-medium px-2 transition-all duration-1000 delay-100 ease-out">
             Knivik is your 24/7 autonomous sales agent. We scan thousands of real-time threads to find buyers <span className="text-foreground font-bold">before your competitors even wake up.</span>
-          </motion.p>
+          </p>
           
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 w-full sm:w-auto px-4"
-          >
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8 w-full sm:w-auto px-4 transition-all duration-1000 delay-200 ease-out">
             <Link href={user ? "/dashboard" : "/register"} className="w-full sm:w-auto">
               <Button size="lg" className="h-14 sm:h-16 px-8 sm:px-12 text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_20px_50px_rgba(var(--primary-rgb),0.3)] transition-all hover:scale-105 active:scale-95 rounded-2xl w-full">
                 {user ? "Go to Dashboard" : "Start For Free"}
@@ -87,16 +53,11 @@ export function Hero() {
                 Instant Data Export
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Enhanced Live Signal Feed */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.6 }}
-            className="mt-16 sm:mt-24 w-full max-w-4xl group px-2 sm:px-0"
-          >
-            <div className="relative glass p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden bg-background/40 backdrop-blur-3xl">
+          <div className="mt-16 sm:mt-24 w-full max-w-4xl group px-2 sm:px-0 transition-all duration-1000 delay-500 ease-out">
+            <div className="relative glass p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden bg-background/40 backdrop-blur-3xl transition-transform duration-500 hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-4 sm:mb-6 border-b border-white/5 pb-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
@@ -112,7 +73,7 @@ export function Hero() {
                 ].map((sig, i) => (
                   <div key={i} className="flex items-center justify-between group/item hover:bg-white/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-300 border border-transparent hover:border-white/5">
                      <div className="flex items-center gap-3 sm:gap-5 min-w-0">
-                       <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-inner text-xs sm:text-sm">
+                       <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-inner text-xs sm:text-sm group-hover/item:scale-110 transition-transform">
                          {sig.platform[0]}
                        </div>
                        <div className="min-w-0">
@@ -135,7 +96,7 @@ export function Hero() {
               {/* Glowing decorative element */}
               <div className="absolute -bottom-20 -right-20 h-40 w-40 bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

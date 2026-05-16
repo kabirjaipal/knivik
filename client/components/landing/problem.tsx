@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { XCircle, Clock, TrendingDown, AlertTriangle } from "lucide-react"
 
 export function Problem() {
@@ -42,13 +41,9 @@ export function Problem() {
               description: "Generic cold outreach is dead. Without the context of a real-time problem, your messages are just noise. You need intent to break through the static."
             }
           ].map((item, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="glass p-8 sm:p-10 rounded-3xl border border-destructive/10 hover:border-destructive/30 transition-all duration-500 group"
+              className="glass p-8 sm:p-10 rounded-3xl border border-destructive/10 hover:border-destructive/30 transition-all duration-500 group hover:-translate-y-2"
             >
               <div className="mb-6 sm:mb-8 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-destructive/5 text-destructive shadow-[0_0_30px_rgba(var(--destructive-rgb),0.05)] group-hover:scale-110 group-hover:shadow-[0_0_40px_rgba(var(--destructive-rgb),0.15)] transition-all">
                 {item.icon}
@@ -57,22 +52,17 @@ export function Problem() {
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium">
                 {item.description}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Closing Statement */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mt-16 sm:mt-24 flex flex-col items-center px-4"
-        >
+        <div className="mt-16 sm:mt-24 flex flex-col items-center px-4">
           <div className="h-px w-24 bg-destructive/20 mb-8" />
           <p className="text-lg sm:text-xl font-bold italic text-foreground tracking-tight text-center">
             "The first response gets 70% of the conversions. Knivik makes you first, every time."
           </p>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

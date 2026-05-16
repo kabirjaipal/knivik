@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { Search, BrainCircuit, MessageSquareCode, ArrowRight } from "lucide-react"
 
 const steps = [
@@ -30,13 +29,9 @@ export function Workflow() {
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-16">
           {steps.map((step, i) => (
-            <motion.div 
+            <div 
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="relative group flex flex-col items-center text-center lg:items-start lg:text-left"
+              className="relative group flex flex-col items-center text-center lg:items-start lg:text-left transition-all duration-700 ease-out"
             >
               {i < steps.length - 1 && (
                 <div className="hidden lg:block absolute top-10 -right-8 text-border/30 group-hover:text-primary/30 transition-colors duration-500">
@@ -51,7 +46,7 @@ export function Workflow() {
               <p className="text-muted-foreground font-medium leading-relaxed max-w-xs sm:max-w-none">
                 {step.description}
               </p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
