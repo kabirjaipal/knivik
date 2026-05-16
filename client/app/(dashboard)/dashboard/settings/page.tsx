@@ -192,31 +192,32 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-black tracking-tight text-foreground">Settings</h1>
-        <p className="text-muted-foreground text-lg">Manage your account preferences, security, and alerts.</p>
+    <div className="space-y-8 pb-12 bg-mesh min-h-screen -m-8 p-8">
+      <div className="space-y-3">
+        <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow">Settings</h1>
+        <p className="text-muted-foreground text-lg font-medium max-w-2xl">Manage your account preferences, security, and neural alert routing protocols.</p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-12 items-start">
+      <div className="flex flex-col xl:flex-row gap-12 items-start">
         {/* Sidebar Navigation */}
-        <div className="w-full md:w-64 space-y-1 shrink-0 p-2 border rounded-2xl bg-card">
+        <div className="w-full xl:w-72 space-y-1 shrink-0 p-3 border border-border/40 rounded-3xl bg-card/50 backdrop-blur-md shadow-xl shadow-black/5">
+          <p className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Account System</p>
           <button 
             onClick={() => setActiveTab("profile")} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === 'profile' ? 'bg-primary text-primary-foreground shadow-2xl shadow-primary/20 scale-[1.02]' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
           >
             <User className="w-4 h-4" /> Profile Info
           </button>
           <button 
             onClick={() => setActiveTab("alerts")} 
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'alerts' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === 'alerts' ? 'bg-primary text-primary-foreground shadow-2xl shadow-primary/20 scale-[1.02]' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
           >
-            <Bell className="w-4 h-4" /> Alert Routing
+            <Bell className="w-4 h-4" /> Neural Alerts
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 min-w-0 w-full space-y-10">
+        <div className="flex-1 min-w-0 w-full space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {activeTab === "profile" && (
             <div className="space-y-8">
               <Card className="border overflow-hidden shadow-none rounded-2xl bg-card">
