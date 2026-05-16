@@ -17,7 +17,7 @@ async function main() {
     if (!user) {
       user = await db.client.user.create({
         data: {
-          email: 'test@knivik.ai',
+          email: 'test@knivik.xyz',
           username: 'testuser',
           password: 'dummy',
           plan: 'PRO'
