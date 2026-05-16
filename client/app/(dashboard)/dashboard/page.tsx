@@ -173,10 +173,10 @@ export default function DashboardPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="h-full flex flex-col space-y-4 overflow-hidden">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6 shrink-0">
         <div className="space-y-1.5">
           <h1 className="text-4xl font-black tracking-tighter">
             {getGreeting()}, <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/60">{user?.username}</span> 👋
@@ -185,8 +185,6 @@ export default function DashboardPage() {
             <span className="text-foreground">{products.filter(p => p.isActive).length}</span> product{products.filter(p => p.isActive).length !== 1 ? 's' : ''} live · Radar monitoring Reddit, HackerNews & Twitter.
           </p>
         </div>
-
-        {/* Scanning badge */}
         {user?.isScanning && (
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl animate-pulse shadow-lg shadow-primary/10">
             <Radar className="w-4 h-4" /> System Active
@@ -194,190 +192,141 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Stat strip ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        {([
-          { label: 'Total',      value: total,      icon: Activity,      color: 'text-foreground',    bg: 'bg-card' },
-          { label: 'High Intent',value: highIntent, icon: TrendingUp,    color: 'text-primary',       bg: 'bg-primary/5 border-primary/20', hi: true },
-          { label: 'Buy Now',    value: buyNow,     icon: Flame,         color: 'text-destructive',   bg: 'bg-card' },
-          { label: 'Competitor', value: competitor, icon: Target,        color: 'text-destructive',   bg: 'bg-card' },
-          { label: 'Last 24h',   value: last24h,    icon: Clock,         color: 'text-primary',       bg: 'bg-card' },
-          { label: 'Avg Score',  value: avgScore,   icon: BarChart2,     color: 'text-primary',       bg: 'bg-card' },
-          { label: 'Converted',  value: converted,  icon: CheckCircle2,  color: 'text-success',       bg: 'bg-card' },
-          { label: 'AI Tasks',   value: llmUsage?.totals.requestCount ?? 0, icon: Brain, color: 'text-primary', bg: 'bg-card' },
-        ]).map(({ label, value, icon: Icon, color, bg, hi }) => (
-          <div key={label}
-            className={`rounded-2xl border p-3 flex flex-col gap-1.5 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 ${bg} ${!hi ? 'border-border/40 hover:border-border/60' : ''}`}>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</span>
-              <Icon className={`w-3.5 h-3.5 ${color} opacity-80`} />
-            </div>
-            <span className={`text-2xl font-black tracking-tighter ${color}`}>{value}</span>
-          </div>
-        ))}
-      </div>
+      {/* ── Stat strip moved to sidebar ────────────────────────────────── */}
 
       {/* ── Two column: sidebar + lead stream ─────────────────────────────── */}
-      <div className="grid xl:grid-cols-[320px_1fr] gap-8">
+      <div className="flex-1 min-h-0 grid xl:grid-cols-[360px_1fr] gap-8 overflow-hidden">
 
         {/* ── Left sidebar ──────────────────────────────────────────────── */}
-        <aside className="space-y-6">
+        <aside className="space-y-6 overflow-y-auto pr-2 shrink-0 custom-scrollbar">
 
-          {/* Products panel */}
-          <div className="rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border/40 bg-card">
-              <span className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-                <Package className="w-4 h-4 text-primary" /> Active Products
+          {/* Premium Quick Stats Card */}
+          <div className="glass rounded-3xl border border-primary/10 overflow-hidden shadow-2xl shadow-primary/5">
+            <div className="px-6 py-5 border-b border-primary/5 bg-linear-to-br from-primary/5 via-transparent to-transparent">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2.5">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Live Intelligence
+              </span>
+            </div>
+            <div className="grid grid-cols-2 divide-x divide-y divide-primary/5">
+              {([
+                { label: 'Total Signals', value: total,      icon: Activity,      color: 'text-foreground' },
+                { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
+                { label: 'Hot Leads',     value: buyNow,     icon: Flame,         color: 'text-destructive' },
+                { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-destructive' },
+                { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-primary' },
+                { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-success' },
+              ]).map(({ label, value, icon: Icon, color }, i) => (
+                <div key={label} className="p-5 flex flex-col gap-1 transition-colors hover:bg-primary/[0.02]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">{label}</span>
+                    <Icon className={`w-3.5 h-3.5 ${color} opacity-40`} />
+                  </div>
+                  <span className={`text-2xl font-black tracking-tighter tabular-nums ${color}`}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Premium Products panel */}
+          <div className="glass rounded-3xl border border-border/40 overflow-hidden shadow-xl shadow-black/5">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/5">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2.5">
+                <Package className="w-4 h-4 text-primary" /> Active Radar
               </span>
               <button onClick={() => router.push('/dashboard/products')}
-                className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
                 Manage <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-            {products.length === 0 ? (
-              <div className="p-8 text-center bg-card">
-                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Package className="w-5 h-5 text-muted-foreground" />
+            <div className="divide-y divide-border/10 max-h-64 overflow-y-auto no-scrollbar">
+              {products.length === 0 ? (
+                <div className="p-10 text-center">
+                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">No Active Radar</p>
                 </div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">No products yet</p>
-                <button onClick={() => router.push('/dashboard/products/new')}
-                  className="mt-4 text-sm font-black text-primary bg-primary/10 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors w-full">
-                  Create Product
-                </button>
-              </div>
-            ) : (
-              <div className="divide-y divide-border/20 bg-card">
-                {products.slice(0, 6).map(p => (
+              ) : (
+                products.slice(0, 5).map(p => (
                   <button key={p.id} onClick={() => router.push(`/dashboard/products/${p.id}`)}
-                    className="w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors group flex items-center justify-between gap-3">
+                    className="w-full text-left px-6 py-4 hover:bg-primary/[0.03] transition-all group flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className={`w-1 h-1 rounded-full ${p.isActive ? 'bg-success shadow-sm shadow-success/60' : 'bg-muted-foreground'}`} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          {p.isActive ? 'Live' : 'Standby'}
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-muted-foreground/30'}`} />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                          {p.isActive ? 'Live Scan' : 'Standby'}
                         </span>
                       </div>
                     </div>
-                    <div className="shrink-0 text-right bg-muted/50 px-2 py-1 rounded-lg border border-border/50">
-                      <span className="text-xs font-black text-foreground tabular-nums">
-                        {leadsByProduct[p.name] ?? 0}
-                      </span>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">leads</p>
-                    </div>
+                    <span className="text-sm font-black text-primary tabular-nums bg-primary/5 px-3 py-1 rounded-xl border border-primary/10 group-hover:border-primary/30 transition-all">
+                      {leadsByProduct[p.name] ?? 0}
+                    </span>
                   </button>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
 
-          {/* Platform breakdown */}
+          {/* Premium Origins Panel */}
           {total > 0 && (
-            <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-                 <Activity className="w-4 h-4 text-primary" /> Platform Split
+            <div className="glass rounded-3xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden p-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2.5 mb-6">
+                <Activity className="w-4 h-4 text-primary" /> Platform Origins
               </p>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {(['REDDIT', 'HACKERNEWS', 'TWITTER'] as const).map(p => {
                   const count = leads.filter(l => l.platform === p).length
                   const pct = Math.round((count / total) * 100)
                   return (
-                    <div key={p} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-muted-foreground">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
-                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-xs">({pct}%)</span></span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-1000 ${p === 'REDDIT' ? 'bg-orange-500' : p === 'HACKERNEWS' ? 'bg-amber-500' : 'bg-sky-500'}`}
+                    <div key={p} className="flex items-center gap-4">
+                      <span className="text-[10px] font-black text-muted-foreground/70 w-20">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
+                      <div className="flex-1 h-1.5 bg-primary/5 rounded-full overflow-hidden border border-primary/5">
+                        <div className={`h-full rounded-full transition-all duration-1000 ${p === 'REDDIT' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]' : p === 'HACKERNEWS' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]'}`}
                           style={{ width: `${pct}%` }} />
                       </div>
+                      <span className="text-[10px] font-black tabular-nums text-foreground w-12 text-right">{count}</span>
                     </div>
                   )
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Intent breakdown */}
-          {total > 0 && (
-            <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-4 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-                 <Flame className="w-4 h-4 text-destructive" /> Intent Mix
-              </p>
-              <div className="space-y-3">
-                {([
-                  ['BUY_NOW', 'Buy Now', 'bg-destructive'],
-                  ['COMPARING', 'Comparing', 'bg-primary'],
-                  ['RESEARCHING', 'Researching', 'bg-primary/60'],
-                  ['LOW_INTENT', 'Low Intent', 'bg-muted-foreground/40'],
-                ] as const).map(([key, label, bar]) => {
-                  const count = leads.filter(l => l.intentLevel === key).length
-                  const pct = Math.round((count / total) * 100)
-                  return (
-                    <div key={key} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-muted-foreground">{label}</span>
-                        <span className="text-foreground tabular-nums">{count} <span className="text-muted-foreground text-xs">({pct}%)</span></span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-1000 ${bar}`} style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-          
-          {/* AI usage */}
-          {llmUsage && (
-            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 space-y-2 shadow-sm">
-              <p className="text-xs font-black uppercase tracking-widest text-primary/80 flex items-center gap-2">
-                <Zap className="w-4 h-4" /> AI Analysis
-              </p>
-              <div className="flex justify-between items-end">
-                <span className="text-xs font-medium text-muted-foreground">Inferences Completed</span>
-                <span className="text-2xl font-black tracking-tighter text-primary">{llmUsage.totals.requestCount}</span>
               </div>
             </div>
           )}
         </aside>
 
         {/* ── Lead stream ───────────────────────────────────────────────── */}
-        <main className="min-w-0">
-          <div className="rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
+        <main className="min-w-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/10 gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-                  <Radar className="w-6 h-6 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/5 gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <Radar className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black tracking-tight text-foreground">Live Detection Stream</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-0.5">Real-time keyword, semantic, and competitor signals</p>
+                  <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">Live Detection Stream</h2>
+                  <p className="text-xs text-muted-foreground font-medium">Real-time keyword and competitor signals</p>
                 </div>
               </div>
               {last24h > 0 && (
-                <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-sm shadow-primary/80" />
+                <span className="text-[10px] font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   +{last24h} Today
                 </span>
               )}
             </div>
 
             {/* Filter tabs */}
-            <div className="flex gap-2 px-6 py-4 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
+            <div className="flex gap-2 px-5 py-3 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
               {TABS.map(tab => (
                 <button key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`px-5 py-2.5 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
+                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border ${
                     activeTab === tab.key
-                      ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20'
+                      ? 'bg-primary border-primary text-primary-foreground'
                       : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}>
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                    <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
                       {tab.count}
                     </span>
                   )}
@@ -386,7 +335,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Lead list */}
-            <div className="p-0 sm:p-4 bg-muted/5 min-h-96">
+            <div className="flex-1 overflow-y-auto p-0 sm:p-4 bg-muted/5 min-h-0 custom-scrollbar">
               {loading ? (
                 <div className="h-full flex flex-col items-center justify-center gap-4 min-h-96">
                   <div className="relative">

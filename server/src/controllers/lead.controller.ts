@@ -13,11 +13,16 @@ export const getLeads = async (req: Request, res: Response) => {
       return;
     }
 
-    // Fetch leads for the user's products
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Fetch leads for the user's products from the last 24 hours, sorted by score
     const leads = await db.client.lead.findMany({
       where: {
         product: {
           userId: userId,
+        },
+        createdAt: {
+          gte: twentyFourHoursAgo,
         },
       },
       include: {
@@ -33,9 +38,10 @@ export const getLeads = async (req: Request, res: Response) => {
           take: 1, // Only need the most recent draft
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [
+        { intentScore: 'desc' },
+        { createdAt: 'desc' },
+      ],
       take: 100, // Limit to recent 100 leads for dashboard
     });
 

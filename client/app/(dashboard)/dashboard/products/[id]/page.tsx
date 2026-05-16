@@ -147,7 +147,7 @@ export default function ProductDetailPage() {
   const queries = Array.isArray(product.searchQueries) ? product.searchQueries : []
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="h-full flex flex-col overflow-y-auto no-scrollbar pb-12 pr-1">
       {/* ── Premium Header Section ────────────────────────────────────────── */}
       <div className="flex flex-col gap-6 border-b border-border/40 pb-8">
         

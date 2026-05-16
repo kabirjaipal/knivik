@@ -174,12 +174,12 @@ export const LeadCard = memo(({
         </div>
 
         {/* ── Row 2: title ────────────────────────────────────────────── */}
-        <h3 className="text-sm font-black text-foreground line-clamp-1 group-hover:text-primary transition-colors mb-1">
+        <h3 className="text-sm font-black text-foreground group-hover:text-primary transition-colors mb-1">
           {lead.title || 'Found Conversation Thread'}
         </h3>
 
         {/* ── Row 3: content preview ──────────────────────────────────── */}
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-2">
+        <p className="text-xs text-muted-foreground leading-relaxed mb-2 whitespace-pre-wrap">
           {lead.content}
         </p>
 
@@ -187,7 +187,7 @@ export const LeadCard = memo(({
         {lead.metadata?.qualificationReasoning && (
           <div className="flex gap-1.5 items-start mb-2 p-1.5 bg-primary/5 rounded-lg border border-primary/10">
             <div className="p-0.5"><Info className="w-3 h-3 text-primary shrink-0" /></div>
-            <p className="text-[11px] text-primary/80 leading-relaxed italic line-clamp-2">
+            <p className="text-[11px] text-primary/80 leading-relaxed italic">
               {lead.metadata.qualificationReasoning}
             </p>
           </div>
