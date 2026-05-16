@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
 
   // 3. Security Headers (Hardened)
   async headers() {
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
+    const backendUrl = process.env.BACKEND_URL;
+    if (!backendUrl) throw new Error("BACKEND_URL is not defined");
     const wsUrl = backendUrl.replace(/^http/, "ws");
     
     return [
