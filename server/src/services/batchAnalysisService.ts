@@ -100,73 +100,79 @@ export const analyzeUserPostsBatch = async (
     }))
   }));
 
-  const prompt = `
-You are an elite B2B lead qualification specialist. Your task is to analyze ${totalPosts} collected posts across ${collectedPostsByProduct.length} products and identify ALL high-quality leads for each product.
+  const systemPrompt = `
+You are an elite B2B lead qualification specialist. Your task is to analyze a batch of collected posts across multiple products and identify ALL high-quality leads for each product.
 
-PRODUCTS TO ANALYZE:
-${productsContext.map((ctx, i) => `
-PRODUCT ${i + 1} (Product ID: ${ctx.productId})
-Name: "${ctx.productName}"
-Description: ${ctx.productDescription}
-Posts to analyze: ${ctx.postCount}
-
-POSTS:
-${ctx.posts.map((post, j) => `
-Post ID: ${post.id}
-Platform: ${post.platform}
-Source: ${post.source}
-Title: "${post.title}"
-Content: "${post.content}"
-Author: ${post.author}
-Posted: ${post.postedAt}
-Detection: ${post.detectionMode}
-URL: ${post.url}
-`).join('\n---\n')}
-`).join('\n\n===\n\n')}
+EXPECTED INPUT FORMAT:
+You will receive a JSON array representing products and their candidate posts to analyze:
+[
+  {
+    "productId": "string",
+    "productName": "string",
+    "productDescription": "string",
+    "posts": [
+      {
+        "id": "string (The post ID)",
+        "platform": "string (e.g. REDDIT, HACKERNEWS, TWITTER)",
+        "source": "string (e.g. subreddit or community)",
+        "title": "string",
+        "content": "string (The post body)",
+        "author": "string",
+        "postedAt": "string (ISO Date)",
+        "detectionMode": "string (e.g. SEMANTIC, KEYWORD)",
+        "url": "string"
+      }
+    ]
+  }
+]
 
 ANALYSIS CRITERIA:
-1. BUYING INTENT STRENGTH: Look for explicit "looking for", "need", "recommendations", "alternative to"
-2. PROBLEM-FIT: The post must express a problem that THIS SPECIFIC PRODUCT solves
-3. URGENCY: Recent posts, time-sensitive language, budget mentions
-4. QUALITY FILTERS: Reject self-promotion, job posts, tutorials, general discussion
-5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (high priority)
+1. BUYING INTENT STRENGTH: Look for explicit "looking for", "need", "recommendations", "alternative to".
+2. PROBLEM-FIT: The post must express a problem that the specific product solves.
+3. URGENCY: Recent posts, time-sensitive language, budget mentions.
+4. QUALITY FILTERS: Strictly reject self-promotion, job posts, tutorials, general discussion, and spam.
+5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (highest priority).
 
 SELECTION RULES:
-- Choose ANY post that meets the criteria. You may select multiple leads if they are all good.
-- Prioritize posts with explicit buying signals for the specific product category.
+- Choose ANY post that meets the criteria. You may select multiple leads per product if they are all qualified.
 - Score 85+ for explicit buying intent, 70+ for strong research intent, and 50+ for pain-point discussions.
-- Provide detailed reasoning for each selection.
+- Provide detailed, blunt explanation reasoning for each qualified lead.
 
-Return your analysis as JSON:
+EXPECTED OUTPUT FORMAT:
+You must strictly return ONLY a valid, minified JSON object matching this structure:
 {
   "results": [
     {
-      "productId": "The exact Product ID from the prompt",
+      "productId": "The exact Product ID from the input",
       "qualifiedLeads": [
         {
-          "postId": "The exact 'Post ID' string provided in the prompt for this post (without prefix)",
+          "postId": "The exact Post ID string from the input (without platform prefix, match the input id exactly)",
           "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
           "intentScore": number (50-100),
-          "reasoning": "Detailed explanation of why this is a good lead."
+          "reasoning": "Detailed explanation of why this is a good lead or competitor poaching opportunity."
         }
       ],
       "analysisSummary": "Brief summary of why you rejected posts or why the chosen leads are valid. Be highly specific."
     }
   ],
-  "overallSummary": "Summary of the batch analysis"
-}`;
+  "overallSummary": "Summary of the entire batch analysis."
+}
 
-  logger.info(`[ANALYSIS] Prompt size: ${prompt.length} chars, sending to AI...`);
+CONSTRAINTS:
+- Return strictly ONLY JSON. Do not include markdown code block fences (e.g. \`\`\`json), trailing commas, or explaining notes.
+- Be highly selective. Reject noise.
+`;
+
+  const userPrompt = JSON.stringify(productsContext);
+
+  logger.info(`[ANALYSIS] System prompt size: ${systemPrompt.length} chars, User prompt size: ${userPrompt.length} chars, sending to AI...`);
 
   try {
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
-        { 
-          role: 'system', 
-          content: 'You are a precision lead qualification expert. You excel at identifying genuine buying signals in online conversations. You are conservative and prefer quality over quantity.' 
-        },
-        { role: 'user', content: prompt }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
       ],
       response_format: { type: 'json_object' },
       temperature: 0.1,

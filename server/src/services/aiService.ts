@@ -87,150 +87,7 @@ const groq = new OpenAI({
   baseURL: config.GROQ_BASE_URL,
 });
 
-export interface IntentAnalysisResult {
-  intentLevel: IntentLevel;
-  intentScore: number;
-  reasoning: string;
-}
 
-/**
- * Uses LLM to determine the buying intent of a give post text.
- * Simple task: Classification and Scoring.
- * Model: llama-3.1-8b-instant
- */
-export const analyzeIntent = async (
-  postText: string,
-  productName: string,
-  productDescription: string,
-  userId?: string,
-  productId?: string
-): Promise<IntentAnalysisResult> => {
-  const startTime = Date.now();
-  const prompt = `
-Analyze the buying intent of the following post relative to the product "${productName}".
-
-Target Product Profile:
-- Name: "${productName}"
-- Core Solution: "${productDescription}"
-
----
-STEP 1: IDENTITY & ROLE (STRICT FILTER)
-Is the author a "Seeker" or a "Provider"?
-- PROVIDERS (Score 0): founders selling their own tool ("Show HN", "I built X"), experts giving advice ("10 tips for Y"), or storytellers sharing growth hacks ("How I hit 10k MRR").
-- SEEKERS (Potential Lead): people asking for recommendations, complaining about a current tool's cost/difficulty, or expressing a specific pain point that "${productName}" fixes.
-
-STEP 2: AUTO-REJECTION PATTERNS (CRITICAL - SCORE 0)
-If the post fits ANY of these, it is NOISE. Give it 0:
-- "Look what I made": Posts titled "Show HN", "I built", "Check out my tool".
-- "I'm a Mentor": "Here is how to...", "My lessons after 5 years...", "The definitive guide to...".
-- "Hiring/Job Search": "Looking for a dev...", "I need a job", "Hiring for X".
-- "Generic News": "The new OpenAI update is crazy...", "Is Twitter dying?".
-- "Meta/Community": "How does everyone handle taxes?", "What's the best chair for devs?".
-
-STEP 3: INTENT CLASSIFICATION
-1. BUY_NOW (90-100): Direct "I'm looking for a tool that does X right now", "Which [Competitor] alternative should I use?", "I have $X and need a solution".
-2. RESEARCHING (70-89): "My biggest pain right now is [problem solved by ${productName}]", "How do you guys handle [specific task] without spending hours?".
-3. COMPARING (60-69): "Is [Competitor A] better than [Competitor B] for [Task]?", "Why is [Competitor] so expensive lately?".
-4. LOW_INTENT (0): Relevant topic but NO GAP or PAIN EXPRESSED.
-
----
-STRICTNESS RULE: 
-- 90% of your results should likely be 0. We only want the TOP 1% OF SIGNAL.
-- If the post is 99% relevant but is a STORY or ADVICE, you MUST give it 0.
-- If the user is SHARING A SUCCESS, they are NOT a lead today. Give them 0.
-
-Post Content:
-"""
-${postText}
-"""
-
-Return your analysis strictly as a JSON object:
-{
-  "reasoning": "A blunt explanation: why is this a REAL buyer vs just another noisy founder post?",
-  "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
-  "intentScore": number
-}
-`;
-
-  try {
-    const response = await groq.chat.completions.create({
-      model: MODELS.LITE, 
-      messages: [
-        { 
-          role: 'system', 
-          content: 'You are an elite Lead Qualification Agent. Your job is to separate "Buying Signal" from "Community Noise". You have a zero-tolerance policy for noise.' 
-        },
-        { role: 'user', content: prompt }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('No content returned from LLM');
-    }
-
-    const parsed = JSON.parse(content);
-
-    // Validate enum
-    const validLevels = ['BUY_NOW', 'RESEARCHING', 'COMPARING', 'LOW_INTENT'];
-    const assignedLevel = validLevels.includes(parsed.intentLevel)
-      ? (parsed.intentLevel as IntentLevel)
-      : 'LOW_INTENT';
-      
-    const assignedScore = typeof parsed.intentScore === 'number' ? parsed.intentScore : 0;
-
-    const elapsed = Date.now() - startTime;
-    const usage = response.usage;
-    
-    // Fire and forget telemetry
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'analyze_intent',
-        model: MODELS.LITE,
-        userId,
-        productId,
-        inputTokens: usage?.prompt_tokens || 0,
-        outputTokens: usage?.completion_tokens || 0,
-        latencyMs: elapsed
-      });
-    });
-
-    return {
-      intentLevel: assignedLevel,
-      intentScore: Math.min(Math.max(assignedScore, 0), 100),
-      reasoning: parsed.reasoning || 'No reasoning provided.',
-    };
-  } catch (error: any) {
-    logger.error({ 
-      message: error.message, 
-      status: error.status,
-      body: error.error // Groq sometimes puts details here
-    }, 'Failed to analyze intent:');
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'analyze_intent',
-        model: MODELS.LITE,
-        userId,
-        productId,
-        inputTokens: 0,
-        outputTokens: 0,
-        latencyMs: Date.now() - startTime,
-        status: 'error',
-        errorMessage: error?.message || 'Unknown error'
-      });
-    });
-
-    // Fallback if LLM fails
-    return {
-      intentLevel: 'LOW_INTENT',
-      intentScore: 0,
-      reasoning: 'Error during intent analysis.'
-    };
-  }
-};
 
 /**
  * Generates a helpful, non-spammy reply to a prospect.
@@ -245,30 +102,32 @@ export const generateReply = async (
   const startTime = Date.now();
   const customPersona = productInfo.aiConfig?.customPersona;
   
-  const prompt = `
+  const systemPrompt = `
 You are representing a product called "${productInfo.name}".
 Product description: ${productInfo.description || 'A software tool.'}
 
-Write a helpful response to this person's post.
-Goal: Suggest our product naturally as a solution. Provide genuine value, don't sound like a spam bot.
-Tone: ${tone}
+EXPECTED INPUT FORMAT:
+You will receive the prospect's social post content in the User Prompt.
 
-Post:
-"""
-${postText}
-"""
+YOUR TASK:
+Write a helpful response to this post.
+Goal: Suggest our product naturally as a solution. Provide genuine value, don't sound like a spam bot.
+Tone Constraint: ${tone}
+${customPersona ? `STRICTLY FOLLOW THIS CUSTOM PERSONA: ${customPersona}` : `Role: You are an authentic, helpful founder replying to online threads.`}
+
+CONSTRAINTS:
+- Keep the response clean and natural.
+- Avoid obvious sales pitch phrasing. Be a helpful human first.
 `;
 
-  const systemContent = customPersona 
-    ? `You are an authentic, helpful founder replying to online threads. STRICTLY FOLLOW THIS CUSTOM PERSONA: ${customPersona}`
-    : `You are an authentic, helpful founder replying to online threads.`;
+  const userPrompt = `Prospect Post:\n"""\n${postText}\n"""`;
 
   try {
     const response = await groq.chat.completions.create({
       model: MODELS.VERSATILE,
       messages: [
-        { role: 'system', content: systemContent },
-        { role: 'user', content: prompt }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
       ],
       temperature: 0.7,
     });
@@ -310,211 +169,7 @@ ${postText}
   }
 };
 
-// ─────────────────────────────────────────────
-// COMPETITOR VENTING DETECTOR
-// Fast classifier: did this person express frustration with a specific competitor?
-// Model: llama-3.1-8b-instant (fast, cheap)
-// ─────────────────────────────────────────────
-export interface CompetitorSignalResult {
-  detected: boolean;
-  competitor: string | null;
-  confidence: number; // 0-100
-  reasoning: string;
-}
 
-export const detectCompetitorSignal = async (
-  postText: string,
-  competitors: string[],
-  userId?: string,
-  productId?: string
-): Promise<CompetitorSignalResult> => {
-  if (!competitors.length) return { detected: false, competitor: null, confidence: 0, reasoning: 'No competitors for this product.' };
-  const startTime = Date.now();
-
-  const prompt = `
-You are analyzing an online post to check if the author is frustrated with, leaving, or comparing against a competitor tool.
-
-Competitors to check: ${competitors.join(', ')}
-
-Post:
-"""
-${postText}
-"""
-
-Does the author express frustration, dissatisfaction, or an intent to switch away from one of these competitors?
-
-Return ONLY a JSON object:
-{
-  "detected": true | false,
-  "competitor": "name of the competitor mentioned, or null",
-  "confidence": number (0-100, how confident you are that this is a frustration/switch signal),
-  "reasoning": "What was the signal or lack of?"
-}
-`;
-
-  try {
-    const response = await groq.chat.completions.create({
-      model: MODELS.VERSATILE,
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error('No content');
-
-    const elapsed = Date.now() - startTime;
-    const usage = response.usage;
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'detect_competitor',
-        model: MODELS.VERSATILE,
-        userId,
-        productId,
-        inputTokens: usage?.prompt_tokens || 0,
-        outputTokens: usage?.completion_tokens || 0,
-        latencyMs: elapsed
-      });
-    });
-
-    const parsed = JSON.parse(content);
-    return {
-      detected: Boolean(parsed.detected),
-      competitor: parsed.competitor || null,
-      confidence: typeof parsed.confidence === 'number' ? Math.min(Math.max(parsed.confidence, 0), 100) : 0,
-      reasoning: parsed.reasoning || '',
-    };
-  } catch (error: any) {
-    logger.error({ message: error.message, status: error.status }, 'Failed to detect competitor signal:');
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'detect_competitor',
-        model: MODELS.VERSATILE,
-        userId,
-        productId,
-        inputTokens: 0,
-        outputTokens: 0,
-        latencyMs: Date.now() - startTime,
-        status: 'error',
-        errorMessage: error?.message || 'Unknown error'
-      });
-    });
-
-    return { detected: false, competitor: null, confidence: 0, reasoning: 'Error during competitor detection.' };
-  }
-};
-
-// ─────────────────────────────────────────────
-// SEMANTIC BATCH SCANNER
-// Sends a batch of raw posts and finds implicit problem-fits.
-// No keywords required — pure AI reasoning.
-// Model: llama-3.1-8b-instant (context-window optimized)
-// ─────────────────────────────────────────────
-export interface SemanticScanPost {
-  id: string;
-  text: string;
-}
-
-export interface SemanticScanResult {
-  id: string;
-  isMatch: boolean;
-  intentScore: number;
-  reasoning: string;
-}
-
-export const semanticScan = async (
-  posts: SemanticScanPost[],
-  productDescription: string,
-  userId?: string,
-  productId?: string
-): Promise<SemanticScanResult[]> => {
-  if (!posts.length) return [];
-  const startTime = Date.now();
-
-  const postsJson = posts.map(p => `ID: ${p.id}\nText: "${p.text.substring(0, 500)}"`).join('\n\n---\n\n');
-
-  const prompt = `
-You are a Lead Qualification Specialist. Your goal is to identify HIGH-INTENT buyer signals and reject 100% of community noise.
-
-Target Product Description:
-"${productDescription}"
-
-4. "STRICT RELEVANCE": The post must express a need for THE SPECIFIC SOLUTION describe above. If the product is a "Video Editor" and the post is about "Marketing Strategy" or "Onboarding", it is a REJECT, even if the person is a SaaS founder.
-5. "BE SKEPTICAL": Most posts are founders talking to founders. They are NOT leads. Only find the 1% who are actually struggling and looking for THE SPECIFIC TOOL category.
-
-Check these ${posts.length} posts:
-${postsJson}
-
-Return a JSON object with a single key "results", containing an array:
-{
-  "results": [
-    {
-      "id": "post id",
-      "isMatch": boolean,
-      "intentScore": number (85+ for direct pain/need for THIS solution, 0 otherwise),
-      "reasoning": "A blunt reality check: why does THIS product specifically solve THIS person's actual problem? Or why is it irrelevant noise?"
-    }
-  ]
-}
-`;
-
-  try {
-    const response = await groq.chat.completions.create({
-      model: MODELS.VERSATILE,
-      messages: [{ role: 'user', content: prompt }],
-      response_format: { type: 'json_object' },
-      temperature: 0.1,
-    });
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error('No content');
-
-    const elapsed = Date.now() - startTime;
-    const usage = response.usage;
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'semantic_scan',
-        model: MODELS.VERSATILE,
-        userId,
-        productId,
-        inputTokens: usage?.prompt_tokens || 0,
-        outputTokens: usage?.completion_tokens || 0,
-        latencyMs: elapsed
-      });
-    });
-
-    const parsed = JSON.parse(content);
-    const results = Array.isArray(parsed.results) ? parsed.results : [];
-
-    return results.map((r: any) => ({
-      id: String(r.id),
-      isMatch: Boolean(r.isMatch),
-      intentScore: typeof r.intentScore === 'number' ? Math.min(Math.max(r.intentScore, 0), 100) : 0,
-      reasoning: r.reasoning || '',
-    }));
-  } catch (error: any) {
-    logger.error({ message: error.message, status: error.status }, 'Semantic scan failed:');
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'semantic_scan',
-        model: MODELS.VERSATILE,
-        userId,
-        productId,
-        inputTokens: 0,
-        outputTokens: 0,
-        latencyMs: Date.now() - startTime,
-        status: 'error',
-        errorMessage: error?.message || 'Unknown error'
-      });
-    });
-
-    return [];
-  }
-};
 
 // ─────────────────────────────────────────────
 // PRODUCT STRATEGY GENERATOR
@@ -531,6 +186,7 @@ export interface ProductStrategyResult {
   twitterHandles: string[];
   linkedinSearchFlags: string[];
   productHuntCommunities: string[];
+  searchQueries: string[];
 }
 
 /**
@@ -645,38 +301,28 @@ export const generateProductStrategy = async (
   userId?: string
 ): Promise<ProductStrategyResult> => {
   const startTime = Date.now();
-  const prompt = `
+  const systemPrompt = `
 You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS. 
 Your goal is to build a high-conversion social listening strategy for a product on "${config.PROJECT_NAME}".
 
-Product Profile:
-- Name: "${name}"
-- Core Value Prop: "${description}"
+EXPECTED INPUT FORMAT:
+You will receive a JSON object containing:
+- productName: The name of the product.
+- productDescription: Core description and value proposition of the product.
 
-Generate a 5-pillar strategy to capture high-intent leads across Reddit, HackerNews, Twitter, LinkedIn, and ProductHunt.
+YOUR TASK:
+Generate a comprehensive strategy to capture high-intent leads across Reddit, HackerNews, Twitter, LinkedIn, and ProductHunt, including exact search queries.
 
-PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 15-20)
-Focus on:
-- "Alternative Seekers": (e.g., "alternative to [competitor]", "[competitor] too expensive", "switch from [competitor]")
-- "Problem State": (e.g., "how to solve [problem]", "trouble with [task]", "tool for [use case]")
-- "Recommendation Requests": (e.g., "best tool for", "any recommendations for", "software like")
-- "Budget Hunting": (e.g., "affordable [product type]", "free version of [competitor]")
+Pillars to map:
+PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 15-20 positive keywords/intent phrases).
+PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25 terms to filter out).
+PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8 direct and indirect competitor names).
+PILLAR 4: TARGET COMMUNITIES (Reddit & ProductHunt) (6-8 relevant subreddits, 3-4 PH discussion topics).
+PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn) (5-6 target handles, 5-6 LinkedIn problem-phrases).
+PILLAR 6: FORUM SEARCH QUERIES (Generate 15-20 short 2-4 word queries optimized for social search bars).
 
-PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25)
-Filter out: hiring, job, salary, article, blog, news, career, intern, and category-specific noise.
-
-PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8)
-Include direct and indirect competitors.
-
-PILLAR 4: TARGET COMMUNITIES (Reddit & PH)
-- 6-8 relevant subreddits (e.g. "SaaS", "startups", niche industry subs).
-- 3-4 ProductHunt discussion topics (e.g. "Productivity", "Marketing Tech").
-
-PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn)
-- 5-6 Twitter handles of industry influencers, competitors, or niche accounts to monitor.
-- 5-6 Specific LinkedIn "search flags" or problem-phrases uniquely common on LinkedIn (e.g. "LinkedIn ad alternative", "Sales Navigator tips").
-
-Return your strategy strictly as a JSON object:
+EXPECTED OUTPUT FORMAT:
+You must strictly return ONLY a valid, minified JSON object matching this structure:
 {
   "keywords": ["intent phrase 1", "intent phrase 2", ...],
   "negativeKeywords": ["negative term 1", "negative term 2", ...],
@@ -684,14 +330,27 @@ Return your strategy strictly as a JSON object:
   "subreddits": ["subreddit1", "subreddit2", ...],
   "twitterHandles": ["@handle1", "@handle2", ...],
   "linkedinSearchFlags": ["flag 1", "flag 2", ...],
-  "productHuntCommunities": ["topic 1", "topic 2", ...]
+  "productHuntCommunities": ["topic 1", "topic 2", ...],
+  "searchQueries": ["query 1", "query 2", ...]
 }
+
+CONSTRAINTS:
+- Return strictly ONLY JSON. Do not include markdown code block fences (e.g. \`\`\`json), trailing commas, or explaining notes.
+- Focus on high-buying-intent, specific terms.
 `;
+
+  const userPrompt = JSON.stringify({
+    productName: name,
+    productDescription: description
+  });
 
   try {
     const response = await groq.chat.completions.create({
       model: MODELS.LITE,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
       response_format: { type: 'json_object' },
       temperature: 0.2,
     });
@@ -732,6 +391,12 @@ Return your strategy strictly as a JSON object:
       validTwitter: validTwitterHandles.length 
     }, 'Validated AI-generated communities');
 
+    // Clean generated search queries
+    const searchQueries: string[] = Array.isArray(parsed.searchQueries) ? parsed.searchQueries : [];
+    const validSearchQueries = searchQueries
+      .filter(q => typeof q === 'string' && q.length > 3 && q.length < 100)
+      .slice(0, 20);
+
     return {
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
       negativeKeywords: Array.isArray(parsed.negativeKeywords) ? parsed.negativeKeywords : [],
@@ -740,6 +405,7 @@ Return your strategy strictly as a JSON object:
       twitterHandles: validTwitterHandles,
       linkedinSearchFlags: Array.isArray(parsed.linkedinSearchFlags) ? parsed.linkedinSearchFlags : [],
       productHuntCommunities: Array.isArray(parsed.productHuntCommunities) ? parsed.productHuntCommunities : [],
+      searchQueries: validSearchQueries
     };
   } catch (error: any) {
     logger.error({ message: error.message, status: error.status }, 'Failed to generate product strategy:');
@@ -764,7 +430,8 @@ Return your strategy strictly as a JSON object:
       subreddits: [], 
       twitterHandles: [], 
       linkedinSearchFlags: [], 
-      productHuntCommunities: [] 
+      productHuntCommunities: [],
+      searchQueries: []
     };
   }
 };

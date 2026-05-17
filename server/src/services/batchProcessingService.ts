@@ -42,7 +42,6 @@ export class BatchProcessingService {
       }
 
       userId = product.userId;
-      logger.info(`[BATCH] Starting pipeline for product "${product.name}" (User: ${userId})`);
 
       // Set scanning status
       await db.client.user.update({
@@ -56,7 +55,6 @@ export class BatchProcessingService {
       const posts = await BatchCollectionService.collectProductPosts(product, sourceBreakdown);
       
       if (posts.length === 0) {
-        logger.info(`[BATCH] No posts collected for product "${product.name}"`);
         
         // Reset scanning status
         await db.client.user.update({
@@ -83,7 +81,6 @@ export class BatchProcessingService {
         posts
       }];
 
-      logger.info(`[DEEP-LOG] [AI-STAGE] Starting AI analysis for product "${product.name}" with ${posts.length} candidate posts.`);
       const analysisResult = await analyzeUserPostsBatch(userId, analysisInput);
 
       // Step 3: Save results
@@ -91,7 +88,6 @@ export class BatchProcessingService {
       for (const result of analysisResult.results) {
         if (result.leads.length > 0) {
           for (const lead of result.leads) {
-            logger.info(`[DEEP-LOG] [AI-STAGE] AI found a high-quality lead for "${product.name}"! Score: ${lead.intentScore}`);
             const saved = await this.saveBestLead({ ...lead, product }, userId);
             if (saved) leadsGenerated++;
           }
@@ -107,7 +103,6 @@ export class BatchProcessingService {
 
       // Finalize
       const processingTime = Date.now() - startTime;
-      logger.info(`[BATCH] Product "${product.name}" complete: ${posts.length} posts → ${leadsGenerated} lead in ${processingTime}ms`);
 
       return {
         success: true,
@@ -150,13 +145,10 @@ export class BatchProcessingService {
     const startTime = Date.now();
     
     try {
-      logger.info(`[BATCH] Starting batch processing for user ${userId}`);
-
       // Step 1: Collect all posts for the user
       const collectionResult = await BatchCollectionService.collectUserPosts(userId);
       
       if (collectionResult.totalPostsCollected === 0) {
-        logger.info(`[BATCH] No posts collected for user ${userId}`);
         return {
           success: true,
           postsCollected: 0,
@@ -191,17 +183,12 @@ export class BatchProcessingService {
             const saved = await this.saveBestLead({ ...lead, product }, userId);
             if (saved) {
               leadsGenerated++;
-              logger.info(`[BATCH] Saved high-quality lead for product: ${result.productName} (Score: ${lead.intentScore})`);
             }
           }
-        } else {
-          logger.info(`[BATCH] No quality lead found for product: ${result.productName}`);
         }
       }
 
       const processingTime = Date.now() - startTime;
-      
-      logger.info(`[BATCH] User ${userId} completed: ${collectionResult.totalPostsCollected} posts → ${leadsGenerated} leads in ${processingTime}ms`);
 
       // Update user's scanning status
       await db.client.user.update({
@@ -264,7 +251,6 @@ export class BatchProcessingService {
       });
 
       if (existing) {
-        logger.debug(`[BATCH] Lead already exists: ${post.externalPostId}`);
         return false;
       }
 
@@ -273,7 +259,7 @@ export class BatchProcessingService {
       const user = await db.client.user.findUnique({ where: { id: userId } });
       
       if (!user || !(await checkLeadQuota(userId, user.plan as any))) {
-        logger.warn({ userId, productId: bestLead.product.id }, '[BATCH] Lead limit reached. Skipping save.');
+        logger.warn({ userId, productId: bestLead.product.id }, 'Lead limit reached. Skipping save.');
         return false;
       }
 
@@ -302,8 +288,6 @@ export class BatchProcessingService {
 
       // Increment usage
       await incrementLeadUsage(userId);
-
-      logger.info(`[BATCH] New lead saved: ${newLead.id} (Score: ${intentScore})`);
 
 
 
@@ -372,7 +356,6 @@ export class BatchProcessingService {
       }
     });
 
-    logger.info(`[BATCH] Cleaned up ${deleted.count} old batch leads for user ${userId}`);
     return deleted.count;
   }
 }

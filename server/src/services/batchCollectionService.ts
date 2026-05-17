@@ -186,7 +186,7 @@ export class BatchCollectionService {
         posts.push(...twitterPosts);
         break;
       default:
-        logger.warn(`[BATCH] Unsupported platform: ${platform}`);
+        // Unsupported platform
     }
 
     return posts;
@@ -227,8 +227,6 @@ export class BatchCollectionService {
         // Always search globally across all of Reddit for maximum lead discovery
         const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=new&limit=15&type=link,comment`;
 
-        logger.info(`[DEEP-LOG] [REDDIT] Searching: "${query}" | URL: ${url}`);
-
         const response = await fetch(url, {
           headers: {
             'User-Agent': this.getRandomUserAgent(),
@@ -238,13 +236,11 @@ export class BatchCollectionService {
         });
 
         if (response.status === 429) {
-          logger.warn(`[DEEP-LOG] [REDDIT] 🚨 Rate limit hit (429)! Reddit restricts to 10 req/minute. Sleeping for 30s...`);
           await new Promise(resolve => setTimeout(resolve, 30000));
           continue;
         }
 
         if (response.status === 404) {
-          logger.warn(`[DEEP-LOG] [REDDIT] Search endpoint not found (404). Retrying...`);
           // Fallback to global search with same query
           try {
             const globalUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=15&type=link,comment`;
@@ -259,7 +255,6 @@ export class BatchCollectionService {
               const globalData = (await globalResponse.json()) as any;
               const globalChildren = globalData?.data?.children;
               if (Array.isArray(globalChildren) && globalChildren.length > 0) {
-                logger.info(`[DEEP-LOG] [REDDIT] Global search fallback succeeded for: "${query}"`);
                 // Process global results (simplified - reuse same logic below)
                 for (const child of globalChildren) {
                   const postData = child.data;
@@ -290,24 +285,20 @@ export class BatchCollectionService {
               }
             }
           } catch (fallbackError: any) {
-            logger.debug(`[DEEP-LOG] [REDDIT] Global fallback also failed: ${fallbackError.message}`);
+            // ignore fallback error silently
           }
           continue;
         }
 
         if (!response.ok) {
-          logger.warn(`[DEEP-LOG] [REDDIT] Fetch failed (${response.status} ${response.statusText}) for query: ${query}`);
           continue;
         }
 
         const data = (await response.json()) as any;
         const children = data?.data?.children;
         if (!Array.isArray(children)) {
-          logger.debug(`[DEEP-LOG] [REDDIT] No children array in response for query: ${query}`);
           continue;
         }
-
-        logger.debug(`[DEEP-LOG] [REDDIT] Found ${children.length} raw items for query: "${query}"`);
 
         let queryMatches = 0;
         for (const child of children) {
@@ -316,7 +307,6 @@ export class BatchCollectionService {
 
           const postedAt = new Date(postData.created_utc * 1000);
           if (postedAt < oneMonthAgo) {
-            logger.debug(`[DEEP-LOG] [REDDIT] Skipping post ${postData.id}: Too old (${postedAt.toISOString()})`);
             continue;
           }
 
@@ -326,7 +316,6 @@ export class BatchCollectionService {
 
           const filterResult = this.passesBasicFiltersWithReason(combinedText, product);
           if (!filterResult.passed) {
-            logger.debug(`[DEEP-LOG] [REDDIT] Filter rejected ${postData.id}: ${filterResult.reason}`);
             continue;
           }
 
@@ -348,16 +337,12 @@ export class BatchCollectionService {
           });
           queryMatches++;
         }
-        
-        if (queryMatches > 0) {
-          logger.info(`[DEEP-LOG] [REDDIT] Query "${query}" yielded ${queryMatches} valid potential leads.`);
-        }
 
         // Rate limiting: Relax to ~2.5 seconds between requests (critical for unauthenticated limits)
         await new Promise(resolve => setTimeout(resolve, 2500));
 
       } catch (error: any) {
-        logger.warn(`[DEEP-LOG] [REDDIT] Query "${query}" error: ${error.message}`);
+        // ignore error silently
       }
     }
 
@@ -387,15 +372,12 @@ export class BatchCollectionService {
         try {
           const algoliaUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=(story,comment)&hitsPerPage=20`;
           
-          logger.info(`[DEEP-LOG] [HACKERNEWS] Searching Algolia: "${query}"`);
-          
           const response = await fetch(algoliaUrl, { 
             headers: { 'Accept': 'application/json' },
             signal: AbortSignal.timeout(10000) 
           });
           
           if (!response.ok) {
-            logger.warn(`[DEEP-LOG] [HACKERNEWS] Algolia search failed: ${response.status}`);
             continue;
           }
 
@@ -434,15 +416,11 @@ export class BatchCollectionService {
             });
           }
 
-          if (hits.length > 0) {
-            logger.info(`[DEEP-LOG] [HACKERNEWS] Query "${query}" found ${hits.length} results`);
-          }
-
           // Rate limiting: be nice to Algolia
           await new Promise(resolve => setTimeout(resolve, 1000));
           
         } catch (error: any) {
-          logger.warn(`[DEEP-LOG] [HACKERNEWS] Algolia search error for "${query}": ${error.message}`);
+          // ignore error
         }
       }
     }
@@ -558,8 +536,6 @@ export class BatchCollectionService {
         // Yahoo Search: site:x.com query — no auth, no API key needed
         const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:x.com ${query}`)}`;
 
-        logger.info(`[DEEP-LOG] [TWITTER] Yahoo search: "${query}"`);
-
         const response = await fetch(searchUrl, {
           headers: {
             'User-Agent': this.getRandomUserAgent(),
@@ -570,7 +546,6 @@ export class BatchCollectionService {
         });
 
         if (!response.ok) {
-          logger.warn(`[DEEP-LOG] [TWITTER] Yahoo returned ${response.status} for query: ${query}`);
           continue;
         }
 
@@ -626,15 +601,11 @@ export class BatchCollectionService {
           queryMatches++;
         });
 
-        if (queryMatches > 0) {
-          logger.info(`[DEEP-LOG] [TWITTER] Query "${query}" yielded ${queryMatches} potential leads`);
-        }
-
         // Rate limiting: 4 seconds between Yahoo requests
         await new Promise(resolve => setTimeout(resolve, 4000));
 
       } catch (error: any) {
-        logger.warn(`[DEEP-LOG] [TWITTER] Query "${query}" error: ${error.message}`);
+        // ignore error
       }
     }
 
