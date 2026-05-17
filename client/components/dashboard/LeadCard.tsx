@@ -4,7 +4,7 @@ import { memo, useState, useCallback } from "react"
 import {
   ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, ChevronDown,
   RotateCw, Linkedin, Twitter, Github, Brain, Flame, Tags,
-  ThumbsUp, ThumbsDown, Info, Clock, Users
+  ThumbsUp, ThumbsDown, Info, Clock, Users, Lock
 } from "lucide-react"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -104,6 +104,7 @@ export interface LeadCardProps {
   draftedReply?: string
   isExpanded?: boolean
   showProductName?: boolean
+  isFreePlan?: boolean
   onDraftReply: (id: string) => void
   onToggleExpand: (id: string) => void
   onStatusChange: (id: string, status: LeadStatus) => void
@@ -115,7 +116,7 @@ export interface LeadCardProps {
 
 export const LeadCard = memo(({
   lead, draftingLeadId, draftedReply, isExpanded,
-  showProductName = true,
+  showProductName = true, isFreePlan = false,
   onDraftReply, onToggleExpand, onStatusChange, onNotesChange, onFeedbackChange,
 }: LeadCardProps) => {
   const [showNotes, setShowNotes] = useState(false)
@@ -290,10 +291,32 @@ export const LeadCard = memo(({
           <h4 className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-black text-primary mb-3">
             <Zap className="w-3.5 h-3.5" /> AI Draft
           </h4>
-          <textarea readOnly
-            className="w-full h-28 text-sm text-foreground bg-card border border-border/60 rounded-lg p-3 outline-none resize-none focus:border-primary/40 transition-colors shadow-sm"
-            value={draftedReply}
-          />
+          
+          {isFreePlan ? (
+            <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm p-4 bg-card flex flex-col items-center justify-center text-center py-8">
+              {/* Blurred dummy text backdrop */}
+              <div className="absolute inset-0 filter blur-[5px] opacity-[0.15] select-none pointer-events-none p-4 text-xs font-bold leading-relaxed text-left">
+                Hey growth_hacker_dan! I totally feel your pain—most traditional social listening tools are built for huge PR agencies and scan only once a day. We actually built Knivik precisely for this. It runs continuous, rapid-scanning loops on Reddit and pushes new high-intent threads directly to Slack within minutes. You can set up a keyword like 'CRM tools' in under 60 seconds and try it completely free. Happy to set you up with extra scan credits if you want to stress-test it! Let me know if you want to check it out!
+              </div>
+              <div className="relative z-10 flex flex-col items-center max-w-sm">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-full mb-3 shadow-inner">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <h5 className="text-xs font-black uppercase tracking-wider text-foreground mb-1">AI Outreach Draft Locked</h5>
+                <p className="text-[11px] text-muted-foreground mb-4">
+                  Upgrade to Pro to unlock unlimited, instant personalized AI outreach replies matched to your brand persona.
+                </p>
+                <a href="/dashboard/billing" className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest py-1.5 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20">
+                  Go Pro <ChevronRight className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          ) : (
+            <textarea readOnly
+              className="w-full h-28 text-sm text-foreground bg-card border border-border/60 rounded-lg p-3 outline-none resize-none focus:border-primary/40 transition-colors shadow-sm"
+              value={draftedReply}
+            />
+          )}
         </div>
       )}
 

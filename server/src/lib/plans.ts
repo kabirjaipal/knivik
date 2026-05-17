@@ -21,7 +21,7 @@ export const PLANS = {
       "1 Product Tracking",
       "50 leads per month",
       "Reddit & HackerNews scanning",
-      `${INTERVAL_TEXT} Auto-Search (Global)`,
+      "Manual scans only (1/day limit)",
       "Basic intent detection",
       "Standard dashboard analytics",
       "No automated alerts (Dashboard only)",
@@ -29,7 +29,7 @@ export const PLANS = {
     limits: {
       products: 1,
       leadsPerMonth: 50,
-      manualScansPerDay: 0,
+      manualScansPerDay: 1,
     },
     capabilities: {
       canAccessTwitter: false,
@@ -47,8 +47,8 @@ export const PLANS = {
       "Track up to 5 Products",
       "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
-      `${INTERVAL_TEXT} Auto-Search (Global)`,
-      "3 Manual Force Scans / day per product",
+      "Automated scans every 2 hours (24/7 background)",
+      "10 Manual Force Scans / day per product",
       "Semantic AI Discovery (No keywords)",
       "Advanced ROI & Intent Analytics",
       "Zapier, Make & Custom Webhooks",
@@ -60,7 +60,7 @@ export const PLANS = {
     limits: {
       products: 5,
       leadsPerMonth: 1000,
-      manualScansPerDay: 3,
+      manualScansPerDay: 10,
     },
     monthly: { 
       productId: config.DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || "prod_monthly",

@@ -366,6 +366,7 @@ export default function DashboardPage() {
                       draftingLeadId={draftingLeadId}
                       draftedReply={draftedReplies[lead.id]}
                       isExpanded={expandedReplies[lead.id]}
+                      isFreePlan={user?.plan?.toUpperCase() !== 'PRO'}
                       onDraftReply={handleDraftReply}
                       onToggleExpand={id => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }))}
                       onStatusChange={handleStatusChange}

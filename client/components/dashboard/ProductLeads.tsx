@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react"
 import { AlertCircle, MessageSquare, TrendingUp, Radar } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/context/auth-context"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
 import { ProductStats } from "./ProductStats"
 
@@ -15,6 +16,9 @@ interface ProductLeadsProps {
 }
 
 export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0 }: ProductLeadsProps) {
+  const { user } = useAuth()
+  const isFreePlan = user?.plan?.toUpperCase() !== 'PRO'
+
   const [leads, setLeads] = useState<LeadCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -237,6 +241,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                       draftingLeadId={draftingLeadId}
                       draftedReply={draftedReplies[lead.id]}
                       isExpanded={expandedReplies[lead.id]}
+                      isFreePlan={isFreePlan}
                       onDraftReply={handleDraftReply}
                       onToggleExpand={handleToggleExpand}
                       onStatusChange={handleStatusChange}

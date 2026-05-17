@@ -196,7 +196,10 @@ async function startServer() {
       try {
         logger.info(`🛰 Dispatching scraper jobs to the queue...`);
         const activeProducts = await db.client.product.findMany({
-          where: { isActive: true },
+          where: { 
+            isActive: true,
+            user: { plan: 'PRO' }
+          },
           select: { id: true, userId: true },
         });
 

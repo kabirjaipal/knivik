@@ -288,9 +288,10 @@ export const scanProduct = async (req: Request, res: Response): Promise<void> =>
 
     if (lastScanDate === todayStr) {
       if (scansToday >= maxScans) {
-        res.status(429).json({ 
-          error: `Daily force scan quota reached (${maxScans}/${maxScans}) for this product. Scans automatically run globally every 24 hours.` 
-        });
+        const errorMsg = user && user.plan === 'PRO'
+          ? `Daily manual scan quota reached (${maxScans}/${maxScans}) for this product.`
+          : `Daily manual scan quota reached (1/1) on Free tier. Upgrade to Pro to unlock 10 manual scans/day + 2-hour automated background scans!`;
+        res.status(429).json({ error: errorMsg });
         return;
       }
       scansToday++;
