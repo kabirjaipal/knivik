@@ -87,38 +87,20 @@ import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { FeedbackWidget } from "@/components/feedback-widget";
 
+import { SchemaService } from "@/lib/seo/application/schema.service";
+import { SchemaScript } from "@/components/seo/schema-script";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const softwareSchema = SchemaService.generateSoftwareApplicationSchema();
+
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              "name": siteConfig.name,
-              "description": siteConfig.description,
-              "applicationCategory": "BusinessApplication",
-              "operatingSystem": "Web",
-              "url": siteConfig.url,
-              "author": {
-                "@type": "Organization",
-                "name": siteConfig.name,
-                "url": siteConfig.url,
-              },
-              "offers": {
-                "@type": "Offer",
-                "price": "0.00",
-                "priceCurrency": "USD",
-              },
-            }),
-          }}
-        />
+        <SchemaScript schema={softwareSchema} />
       </head>
       <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} >
         <ThemeProvider

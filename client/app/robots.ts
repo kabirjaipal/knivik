@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next";
-import { PROJECT_URL } from "@/lib/constants";
+import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = EnvConfig.getBaseUrl();
   return {
     rules: [
       {
@@ -10,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/dashboard/", "/admin/", "/api/"],
       },
     ],
-    sitemap: `${PROJECT_URL}/sitemap.xml`,
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
+

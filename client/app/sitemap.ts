@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { PROJECT_URL } from "@/lib/constants";
+import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
@@ -12,11 +12,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/login",
     "/register",
   ].map((route) => ({
-    url: `${PROJECT_URL}${route}`,
+    url: EnvConfig.resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
     changeFrequency: "weekly" as const,
-    priority: route === "" ? 1 : 0.8,
+    priority: route === "" ? 1.0 : 0.8,
   }));
 
   return routes;
 }
+

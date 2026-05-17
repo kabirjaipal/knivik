@@ -8,10 +8,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Logo } from "@/components/logo"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { usePathname } from "next/navigation"
 
 export function Navbar({ user }: { user: any }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,14 +22,45 @@ export function Navbar({ user }: { user: any }) {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
-  
+
+  // Smooth scroll handler for anchor links (handles both cross-page and same-page clicks)
+  useEffect(() => {
+    const handleHashScroll = () => {
+      const hash = window.location.hash
+      if (hash) {
+        const id = hash.replace("#", "")
+        const element = document.getElementById(id)
+        if (element) {
+          // 300ms delay to allow route changes and framer-motion page animations to render
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: "smooth", block: "start" })
+          }, 300)
+        }
+      }
+    }
+
+    // Trigger scroll check on mount and pathname changes
+    handleHashScroll()
+
+    // Listen for hashchange events when already on the same page
+    window.addEventListener("hashchange", handleHashScroll)
+    return () => window.removeEventListener("hashchange", handleHashScroll)
+  }, [pathname])
+
   const navLinks = [
     { label: "How it works", href: "/#how-it-works" },
     { label: "Product", href: "/#benefits" },
     { label: "Integrations", href: "/#integrations" },
     { label: "Pricing", href: "/pricing" },
     { label: "FAQ", href: "/#faq" },
+    { label: "Contact", href: "/contact" },
   ]
+
+  const isLinkActive = (href: string) => {
+    if (href === pathname) return true
+    if (href.startsWith("/#") && pathname === "/") return false
+    return false
+  }
 
   return (
     <header 
@@ -48,16 +81,23 @@ export function Navbar({ user }: { user: any }) {
         </Link>
 
         <nav className="hidden lg:flex items-center gap-10">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.label} 
-              href={link.href} 
-              className="text-sm font-bold text-muted-foreground hover:text-primary transition-all duration-300 relative group"
-            >
-              {link.label}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isLinkActive(link.href)
+            return (
+              <Link 
+                key={link.label} 
+                href={link.href} 
+                className={`text-sm font-bold transition-all duration-300 relative group ${
+                  active ? "text-primary" : "text-muted-foreground hover:text-primary"
+                }`}
+              >
+                {link.label}
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
+                  active ? "w-full" : "w-0 group-hover:w-full"
+                }`} />
+              </Link>
+            )
+          })}
         </nav>
         
         <div className="flex items-center gap-4">
@@ -111,16 +151,21 @@ export function Navbar({ user }: { user: any }) {
           >
             <div className="container mx-auto px-6 py-12 flex flex-col gap-8">
               <nav className="flex flex-col gap-6">
-                {navLinks.map((link) => (
-                  <Link 
-                    key={link.label}
-                    href={link.href} 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-4xl font-black tracking-tighter text-foreground hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navLinks.map((link) => {
+                  const active = isLinkActive(link.href)
+                  return (
+                    <Link 
+                      key={link.label}
+                      href={link.href} 
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`text-4xl font-black tracking-tighter transition-colors ${
+                        active ? "text-primary" : "text-foreground hover:text-primary"
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                })}
               </nav>
               
               <div className="h-px w-full bg-border/50" />

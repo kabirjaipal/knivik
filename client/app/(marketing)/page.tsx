@@ -9,11 +9,25 @@ import { Integrations } from "@/components/landing/integrations"
 import { FAQ } from "@/components/landing/faq"
 import { FinalCTA } from "@/components/landing/cta"
 
-export const metadata = {
-  title: "Knivik | AI-Powered Social Lead Generation",
-  description: "Monitor Reddit, X, Hacker News for high-intent leads. Knivik uses AI to find your next customers in real-time.",
-  keywords: ["lead generation", "social listening", "AI sales agent", "Reddit monitoring", "Twitter leads", "SaaS growth"],
-}
+import { MetadataService } from "@/lib/seo/application/metadata.service"
+
+export const metadata = MetadataService.constructPageMetadata({
+  title: "Real-time AI-Powered Social Lead Generation",
+  description: "Monitor Reddit, HackerNews, and X (Twitter) for high-intent B2B sales leads. Knivik uses state-of-the-art AI to spot potential customers in real-time.",
+  path: "/",
+  keywords: [
+    "lead generation",
+    "social listening",
+    "AI sales agent",
+    "Reddit monitoring",
+    "Twitter leads",
+    "SaaS growth",
+    "HackerNews monitoring",
+    "social selling tool",
+    "B2B intent data"
+  ]
+})
+
 
 export default async function LandingPage() {
   const { data: session } = await getSession({

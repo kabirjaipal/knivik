@@ -32,9 +32,12 @@ const faqs = [
   }
 ]
 
+import { DynamicFaqJsonLd } from "@/components/seo/dynamic-faq-json-ld"
+
 export function FAQ() {
   return (
     <section id="faq" className="py-16 md:py-24 bg-secondary/10 relative overflow-hidden">
+      <DynamicFaqJsonLd />
       <div className="absolute inset-0 bg-grid opacity-5" />
       <div className="container mx-auto px-6">
           <div className="text-center mb-12 md:mb-16">
