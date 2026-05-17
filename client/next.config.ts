@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // Security: Minimize fingerprinting
   compress: true,        // Performance: Enable Gzip compression
+  skipTrailingSlashRedirect: true, // PostHog Rewrite compatibility
 
   // 2. Experimental & Performance
   experimental: {
@@ -36,7 +37,7 @@ const nextConfig: NextConfig = {
           { key: "X-XSS-Protection", value: "1; mode=block" },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            value: "camera=(), microphone=(), geolocation=()",
           },
           {
             key: "Strict-Transport-Security",
@@ -46,12 +47,12 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
               "style-src 'self' 'unsafe-inline' https://*.dodopayments.com",
-              "img-src 'self' data: https: blob:",
+              "img-src 'self' data: https: blob: https://*.posthog.com",
               "font-src 'self' data:",
               "frame-src 'self' https://*.dodopayments.com",
-              "connect-src 'self' " + backendUrl + " " + wsUrl + " https://*.dodopayments.com https://va.vercel-scripts.com",
+              "connect-src 'self' " + backendUrl + " " + wsUrl + " https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -74,6 +75,18 @@ const nextConfig: NextConfig = {
       {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
+      },
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+      {
+        source: "/ingest/decide",
+        destination: "https://us.i.posthog.com/decide",
       },
     ];
   },

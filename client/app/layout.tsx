@@ -86,6 +86,7 @@ export const metadata: Metadata = {
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { FeedbackWidget } from "@/components/feedback-widget";
+import { PostHogProvider } from "@/components/posthog-provider";
 
 import { SchemaService } from "@/lib/seo/application/schema.service";
 import { SchemaScript } from "@/components/seo/schema-script";
@@ -103,23 +104,25 @@ export default function RootLayout({
         <SchemaScript schema={softwareSchema} />
       </head>
       <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-        >
-          <AuthProvider>
-            <BillingProvider>
-              <TooltipProvider>
-                {children}
-                <FeedbackWidget />
-              </TooltipProvider>
-            </BillingProvider>
-          </AuthProvider>
-        </ThemeProvider>
-        <Toaster position="top-right" richColors closeButton />
-        <Analytics />
-        <SpeedInsights />
+        <PostHogProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+          >
+            <AuthProvider>
+              <BillingProvider>
+                <TooltipProvider>
+                  {children}
+                  <FeedbackWidget />
+                </TooltipProvider>
+              </BillingProvider>
+            </AuthProvider>
+          </ThemeProvider>
+          <Toaster position="top-right" richColors closeButton />
+          <Analytics />
+          <SpeedInsights />
+        </PostHogProvider>
       </body>
     </html>
   );
