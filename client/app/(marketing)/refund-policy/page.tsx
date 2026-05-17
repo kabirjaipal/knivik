@@ -1,10 +1,12 @@
 import { SUPPORT_EMAIL, PROJECT_NAME } from "@/lib/constants"
 import { Metadata } from "next";
+import { MetadataService } from "@/lib/seo/application/metadata.service";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Refund Policy",
   description: `Understand the refund policy for ${PROJECT_NAME}. We strive for customer satisfaction and transparency in our billing.`,
-};
+  path: "/refund-policy",
+});
 
 export default function RefundPolicy() {
   return (

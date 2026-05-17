@@ -1,11 +1,13 @@
 import { Metadata } from "next";
 import { Mail, Twitter } from "lucide-react";
 import { SUPPORT_EMAIL } from "@/lib/constants";
+import { MetadataService } from "@/lib/seo/application/metadata.service";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Contact Us",
   description: "Have questions about Knivik? Get in touch with our team for support or business inquiries. We're here to help you find your next customer.",
-};
+  path: "/contact",
+});
 
 export default function Contact() {
   return (
