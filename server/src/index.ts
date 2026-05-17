@@ -52,8 +52,29 @@ app.get('/', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Security middleware
-app.use((helmet as any)());
+// Security middleware: Hardened Helmet setup for a pure JSON API server
+app.use(
+  (helmet as any)({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        sandbox: ["allow-same-origin", "allow-forms"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: {
+      policy: 'strict-origin-when-cross-origin',
+    },
+    frameguard: {
+      action: 'deny',
+    },
+  })
+);
 app.use(
   cors({
     origin: config.CORS_ORIGIN.split(',').map((origin: string) => origin.trim()),

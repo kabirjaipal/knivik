@@ -51,9 +51,16 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
               "frame-src 'self' https://*.dodopayments.com",
-              "connect-src 'self' " + backendUrl + " " + wsUrl + " https://*.dodopayments.com https://va.vercel-scripts.com"
+              "connect-src 'self' " + backendUrl + " " + wsUrl + " https://*.dodopayments.com https://va.vercel-scripts.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests"
             ].join("; "),
           },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 
         ],
       },
