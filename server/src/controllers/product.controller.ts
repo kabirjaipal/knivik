@@ -98,6 +98,10 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    const cleanAiConfig = { ...(data.aiConfig || {}) };
+    delete cleanAiConfig['lastManualScanDate'];
+    delete cleanAiConfig['manualScansToday'];
+
     const product = await db.client.product.create({
       data: {
         userId,
@@ -105,7 +109,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         description: data.description || null,
         websiteUrl: data.websiteUrl || null,
         isActive: data.isActive,
-        aiConfig: data.aiConfig || {},
+        aiConfig: cleanAiConfig,
       },
     });
 
@@ -154,9 +158,17 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const user = await db.client.user.findUnique({ where: { id: userId } });
     const { hasCapability: hasCap } = await import('../lib/plans.js');
     
-    if (data.aiConfig?.['customPersona'] && (!user || !hasCap(user.plan as any, 'canAccessCustomPersonas'))) {
+    const existingAiConfig = (existing.aiConfig as Record<string, any>) || {};
+    const finalAiConfig = {
+      ...(data.aiConfig || {}),
+      // Preserve internal scan-tracking properties to prevent manual scan quota bypass
+      lastManualScanDate: existingAiConfig['lastManualScanDate'],
+      manualScansToday: existingAiConfig['manualScansToday'],
+    };
+
+    if (finalAiConfig['customPersona'] && (!user || !hasCap(user.plan as any, 'canAccessCustomPersonas'))) {
       // Strip out the custom persona if they don't have the capability, fail silently
-      delete data.aiConfig['customPersona'];
+      delete finalAiConfig['customPersona'];
     }
 
     // We'll use a transaction to cleanly overwrite the relations
@@ -169,7 +181,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           description: data.description || null,
           websiteUrl: data.websiteUrl || null,
           isActive: data.isActive,
-          aiConfig: data.aiConfig || {},
+          aiConfig: finalAiConfig,
           // Clear old queries - will regenerate
           searchQueries: [],
         },

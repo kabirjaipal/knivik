@@ -268,6 +268,15 @@ export class BatchProcessingService {
         return false;
       }
 
+      // Check lead limit quota
+      const { checkLeadQuota, incrementLeadUsage } = await import('../lib/plans.js');
+      const user = await db.client.user.findUnique({ where: { id: userId } });
+      
+      if (!user || !(await checkLeadQuota(userId, user.plan as any))) {
+        logger.warn({ userId, productId: bestLead.product.id }, '[BATCH] Lead limit reached. Skipping save.');
+        return false;
+      }
+
       // Create the lead
       const newLead = await db.client.lead.create({
         data: {
@@ -290,6 +299,9 @@ export class BatchProcessingService {
           }
         }
       });
+
+      // Increment usage
+      await incrementLeadUsage(userId);
 
       logger.info(`[BATCH] New lead saved: ${newLead.id} (Score: ${intentScore})`);
 
