@@ -11,7 +11,7 @@ interface CTAProps {
 
 export function FinalCTA({ user }: CTAProps) {
   return (
-    <section className="py-32 bg-background relative overflow-hidden border-t border-border/50">
+    <section className="py-20 md:py-32 bg-background relative overflow-hidden border-t border-border/50">
       {/* Background ambient glows that are section-wide, not card-contained */}
       <div className="absolute inset-0 bg-grid opacity-[0.03] -z-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none -z-10 overflow-hidden">
@@ -35,7 +35,7 @@ export function FinalCTA({ user }: CTAProps) {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl lg:text-7xl font-black tracking-tighter mb-8 leading-[1.05] text-foreground"
+            className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter mb-6 md:mb-8 leading-[1.05] text-foreground"
           >
             Ready to find qualified <br />
             <span className="text-primary italic">social leads?</span>

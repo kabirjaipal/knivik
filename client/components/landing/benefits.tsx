@@ -38,10 +38,10 @@ const benefits = [
 
 export function Benefits() {
   return (
-    <section id="benefits" className="py-32 bg-background relative overflow-hidden">
+    <section id="benefits" className="py-20 md:py-32 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-grid opacity-5" />
       <div className="container mx-auto px-6">
-        <div className="flex flex-col items-center text-center mb-20 lg:mb-32">
+        <div className="flex flex-col items-center text-center mb-12 md:mb-20 lg:mb-32">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -56,7 +56,7 @@ export function Benefits() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-4xl lg:text-7xl font-black tracking-tighter text-foreground mb-8 leading-tight"
+            className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter text-foreground mb-6 md:mb-8 leading-tight"
           >
             Built for growth teams <br />
             <span className="text-muted-foreground/30">who move fast.</span>
@@ -66,7 +66,7 @@ export function Benefits() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-muted-foreground max-w-2xl font-medium"
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl font-medium"
           >
             Practical lead generation that saves you time and increases your revenue without the marketing fluff.
           </motion.p>

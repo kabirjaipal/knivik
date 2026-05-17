@@ -23,10 +23,10 @@ const steps = [
 
 export function Workflow() {
   return (
-    <section id="how-it-works" className="py-32 bg-background relative overflow-hidden">
+    <section id="how-it-works" className="py-20 md:py-32 bg-background relative overflow-hidden">
       <div className="absolute inset-0 bg-grid opacity-5" />
       <div className="container mx-auto px-6">
-        <div className="flex flex-col items-center text-center mb-20 lg:mb-32">
+        <div className="flex flex-col items-center text-center mb-12 md:mb-20 lg:mb-32">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -41,7 +41,7 @@ export function Workflow() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-4xl lg:text-7xl font-black tracking-tighter text-foreground mb-8"
+            className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter text-foreground mb-6 md:mb-8"
           >
             How it works
           </motion.h2>
@@ -50,13 +50,13 @@ export function Workflow() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-muted-foreground max-w-2xl font-medium"
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl font-medium"
           >
             Stop manually searching for customers. Automate your social lead generation in three simple steps.
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-10 relative">
+        <div className="grid md:grid-cols-3 gap-8 md:gap-10 relative">
           {/* Connector line for desktop */}
           <div className="hidden lg:block absolute top-[2.5rem] left-[15%] w-[70%] h-[2px] bg-gradient-to-r from-transparent via-border to-transparent -z-10" />
           

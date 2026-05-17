@@ -34,10 +34,10 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-24 bg-secondary/10 relative overflow-hidden">
+    <section id="faq" className="py-16 md:py-24 bg-secondary/10 relative overflow-hidden">
       <div className="absolute inset-0 bg-grid opacity-5" />
       <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -52,7 +52,7 @@ export function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-3xl lg:text-5xl font-black tracking-tighter text-foreground mb-6"
+              className="text-2xl md:text-3xl lg:text-5xl font-black tracking-tighter text-foreground mb-4 md:mb-6"
             >
               Frequently Asked Questions
             </motion.h2>
@@ -61,35 +61,37 @@ export function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-lg text-muted-foreground font-medium"
+              className="text-base md:text-lg text-muted-foreground font-medium"
             >
               Get started with Knivik in minutes.
             </motion.p>
           </div>
 
-          <Accordion type="single" collapsible className="w-full space-y-4">
-            {faqs.map((faq, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <AccordionItem 
-                  value={`item-${i}`}
-                  className="bg-background px-6 py-1 rounded-2xl border border-border/50 shadow-sm hover:border-primary/20 transition-all overflow-hidden"
+          <div className="max-w-3xl mx-auto">
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {faqs.map((faq, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
                 >
-                  <AccordionTrigger className="text-lg font-black text-left hover:no-underline hover:text-primary transition-all py-4">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-base text-muted-foreground leading-relaxed font-medium pb-6">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              </motion.div>
-            ))}
-          </Accordion>
+                  <AccordionItem 
+                    value={`item-${i}`}
+                    className="bg-background px-6 py-1 rounded-2xl border border-border/50 shadow-sm hover:border-primary/20 transition-all overflow-hidden"
+                  >
+                    <AccordionTrigger className="text-base md:text-lg font-black text-left hover:no-underline hover:text-primary transition-all py-4">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-sm md:text-base text-muted-foreground leading-relaxed font-medium pb-6">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              ))}
+            </Accordion>
+          </div>
         </div>
     </section>
   )
