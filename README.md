@@ -18,7 +18,7 @@ Example conversations:
 * “Best CRM for freelancers?”
 * “Alternative to Notion?”
 
-Knivik detects these signals and alerts businesses.
+Knivik detects these warm leads and alerts businesses.
 
 ---
 
@@ -63,7 +63,7 @@ Each product has:
 
 # 2. Intent Detection
 
-AI detects buying signals.
+AI detects buying intent in conversations.
 
 Example phrases:
 

@@ -15,11 +15,14 @@ export const getLeads = async (req: Request, res: Response) => {
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+    const productId = req.query['productId'] as string | undefined;
+
     // Fetch leads for the user's products from the last 24 hours, sorted by score
     const leads = await db.client.lead.findMany({
       where: {
         product: {
           userId: userId,
+          ...(productId && { id: productId }),
         },
         createdAt: {
           gte: twentyFourHoursAgo,

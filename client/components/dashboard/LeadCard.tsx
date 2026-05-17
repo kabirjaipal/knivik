@@ -6,6 +6,13 @@ import {
   RotateCw, Linkedin, Twitter, Github, Brain, Flame, Tags,
   ThumbsUp, ThumbsDown, Info, Clock, Users, Lock
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -121,7 +128,11 @@ export const LeadCard = memo(({
 }: LeadCardProps) => {
   const [showNotes, setShowNotes] = useState(false)
   const [localNotes, setLocalNotes] = useState(lead.notes || '')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const currentStatus = STATUS_OPTIONS.find(s => s.value === lead.status) ?? STATUS_OPTIONS[0]!
+
+  const isTruncated = lead.content.length > 260
+  const displayContent = isTruncated ? `${lead.content.slice(0, 260)}...` : lead.content
 
   const handleNotesBlur = useCallback(() => {
     if (localNotes !== (lead.notes || '')) onNotesChange(lead.id, localNotes)
@@ -181,7 +192,15 @@ export const LeadCard = memo(({
 
         {/* ── Row 3: content preview ──────────────────────────────────── */}
         <p className="text-xs text-muted-foreground leading-relaxed mb-2 whitespace-pre-wrap">
-          {lead.content}
+          {displayContent}
+          {isTruncated && (
+            <button
+              onClick={() => setIsDialogOpen(true)}
+              className="ml-1.5 text-primary hover:text-primary/80 font-black cursor-pointer hover:underline focus:outline-none"
+            >
+              Read more
+            </button>
+          )}
         </p>
 
         {/* ── Row 4: AI reasoning (if present) ───────────────────────── */}
@@ -333,6 +352,40 @@ export const LeadCard = memo(({
           <p className="text-xs text-muted-foreground mt-1.5 font-medium">Auto-saved on blur</p>
         </div>
       )}
+
+      {/* ── Dialog for Full Content ───────────────────────────────────────── */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[80vh] flex flex-col p-6 rounded-2xl border border-border bg-card shadow-2xl">
+          <DialogHeader className="pb-3 border-b border-border/40">
+            <DialogTitle className="text-base font-bold text-foreground">
+              {lead.title || 'Conversation Content'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Scrollable Content Body */}
+          <div className="flex-1 overflow-y-auto py-4 text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed font-medium">
+            {lead.content}
+          </div>
+
+          {/* Footer actions */}
+          <div className="pt-3 border-t border-border/40 flex justify-end gap-3 shrink-0">
+            <button
+              onClick={() => setIsDialogOpen(false)}
+              className="text-xs font-bold py-2 px-4 border border-border hover:bg-muted rounded-xl transition-all cursor-pointer"
+            >
+              Close
+            </button>
+            <a
+              href={lead.url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-xs font-bold py-2 px-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all cursor-pointer"
+            >
+              Open Post <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 })

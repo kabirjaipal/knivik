@@ -155,7 +155,7 @@ export default function DashboardPage() {
   // ─── Tabs & filtering ─────────────────────────────────────────────────────
 
   const TABS: { key: FilterTab; label: string; count: number }[] = [
-    { key: 'ALL',        label: 'All Signals',    count: total },
+    { key: 'ALL',        label: 'All Leads',      count: total },
     { key: 'BUY_NOW',    label: '🔥 Buy Now',     count: buyNow },
     { key: 'COMPETITOR', label: '⚔️ Competitor',  count: competitor },
     { key: 'SEMANTIC',   label: '🧠 Semantic',    count: leads.filter(l => l.detectedBy === 'SEMANTIC').length },
@@ -210,7 +210,7 @@ export default function DashboardPage() {
             </div>
             <div className="grid grid-cols-2 divide-x divide-y divide-primary/5">
               {([
-                { label: 'Total Signals', value: total,      icon: Activity,      color: 'text-foreground' },
+                { label: 'Total Leads',   value: total,      icon: Activity,      color: 'text-foreground' },
                 { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
                 { label: 'Hot Leads',     value: buyNow,     icon: Flame,         color: 'text-destructive' },
                 { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-destructive' },
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">Live Detection Stream</h2>
-                  <p className="text-xs text-muted-foreground font-medium">Real-time keyword and competitor signals</p>
+                  <p className="text-xs text-muted-foreground font-medium">Real-time keyword and competitor leads</p>
                 </div>
               </div>
               {last24h > 0 && (
@@ -356,7 +356,7 @@ export default function DashboardPage() {
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
                     <Radar className="h-10 w-10 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xl font-black text-foreground">No signals detected</p>
+                  <p className="text-xl font-black text-foreground">No leads detected</p>
                   <p className="text-sm font-medium text-muted-foreground max-w-sm text-center">Adjust your filters or wait for the next AI scan cycle.</p>
                 </div>
               ) : (

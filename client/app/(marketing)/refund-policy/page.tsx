@@ -1,10 +1,12 @@
 import { SUPPORT_EMAIL, PROJECT_NAME } from "@/lib/constants"
 import { Metadata } from "next";
+import { MetadataService } from "@/lib/seo/application/metadata.service";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Refund Policy",
   description: `Understand the refund policy for ${PROJECT_NAME}. We strive for customer satisfaction and transparency in our billing.`,
-};
+  path: "/refund-policy",
+});
 
 export default function RefundPolicy() {
   return (
@@ -18,7 +20,7 @@ export default function RefundPolicy() {
             We offer a 14-day money-back guarantee for new subscriptions. If you're not satisfied with {PROJECT_NAME}, you can request a full refund within the first <strong>14 days</strong> of your initial purchase.
           </p>
           <p className="mt-4 bg-primary/5 border border-primary/20 p-4 rounded-sm text-sm italic">
-            <strong>Usage Limit:</strong> To prevent abuse of our AI resources, refunds are only eligible if you have used <strong>less than 10%</strong> of your monthly signal quota (e.g., fewer than 100 signals for Pro plans).
+            <strong>Usage Limit:</strong> To prevent abuse of our AI resources, refunds are only eligible if you have used <strong>less than 10%</strong> of your monthly lead quota (e.g., fewer than 100 leads for Pro plans).
           </p>
           <p className="mt-4">
             After the 14-day period or if the usage limit is exceeded, all sales are final. Please carefully review our features and the Free plan before upgrading. To request a refund, please email <strong>{SUPPORT_EMAIL}</strong>.

@@ -140,7 +140,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   const saved = leads.filter(l => l.status === 'SAVED').length
 
   const TABS: { key: FilterTab; label: string; count: number }[] = [
-    { key: 'ALL',        label: 'All Signals',    count: leads.length },
+    { key: 'ALL',        label: 'All Leads',      count: leads.length },
     { key: 'BUY_NOW',    label: '🔥 Buy Now',     count: buyNow },
     { key: 'COMPETITOR', label: '⚔️ Competitor',  count: competitor },
     { key: 'SEMANTIC',   label: '🧠 Semantic',    count: semantic },
@@ -159,7 +159,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
     return (
       <div className="py-12 flex flex-col items-center justify-center gap-3">
         <div className="w-7 h-7 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Syncing Signal Stream...</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Syncing Lead Stream...</p>
       </div>
     )
   }
@@ -182,7 +182,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
         <div className="py-16 text-center bg-muted/5 rounded-xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-3">
           <Radar className="w-8 h-8 text-muted-foreground/20" />
           <div>
-            <p className="text-sm font-bold text-foreground">No Signals Detected</p>
+            <p className="text-sm font-bold text-foreground">No Leads Detected</p>
             <p className="text-xs text-muted-foreground mt-1">Trigger a scan or wait for the global 24h sweep.</p>
           </div>
         </div>
@@ -197,7 +197,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                 </div>
                 <div>
                   <h2 className="text-xl font-black tracking-tight text-foreground">Product Feed</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-0.5">Real-time signals filtered by intent</p>
+                  <p className="text-sm text-muted-foreground font-medium mt-0.5">Real-time leads filtered by intent</p>
                 </div>
               </div>
             </div>
@@ -228,7 +228,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
                     <Radar className="h-10 w-10 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xl font-black text-foreground">No signals in this view</p>
+                  <p className="text-xl font-black text-foreground">No leads in this view</p>
                   <p className="text-sm font-medium text-muted-foreground max-w-sm text-center">Adjust filters or wait for the next scan cycle.</p>
                 </div>
               ) : (
@@ -257,7 +257,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
           {filteredLeads.length > 5 && (
             <p className="text-center text-xs text-muted-foreground/40 font-medium pt-2">
               <MessageSquare className="inline w-3 h-3 mr-1" />
-              Showing all {filteredLeads.length} signals for this view
+              Showing all {filteredLeads.length} leads for this view
             </p>
           )}
         </div>

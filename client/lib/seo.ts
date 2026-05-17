@@ -25,7 +25,7 @@ export const siteConfig = {
     "Warm Leads",
     "Automated Outreach",
     "Customer Discovery",
-    "Market Signals",
+    "Market Leads",
   ],
   authors: [
     {

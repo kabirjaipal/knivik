@@ -1,10 +1,12 @@
 import { PROJECT_NAME, SUPPORT_EMAIL } from "@/lib/constants"
 import { Metadata } from "next";
+import { MetadataService } from "@/lib/seo/application/metadata.service";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Privacy Policy",
   description: `Learn how ${PROJECT_NAME} collects, uses, and protects your data. We are committed to maintaining your privacy and transparency in our AI operations.`,
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

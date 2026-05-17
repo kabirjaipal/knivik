@@ -19,7 +19,7 @@ export class MetadataService {
     "Warm Leads",
     "Automated Outreach",
     "Customer Discovery",
-    "Market Signals",
+    "Market Leads",
   ];
 
   private static readonly defaultOgImage = "/og-image.png";

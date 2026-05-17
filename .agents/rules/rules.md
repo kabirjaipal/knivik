@@ -17,6 +17,7 @@ GLOBAL ENFORCEMENT RULES:
 - Always use Tailwind CSS v4 utility classes; never use older version syntax or deprecated classes.
 - Prefer standard libraries over external dependencies unless justified.
 - All outputs must be deterministic, consistent, and reproducible.
+- Never run project build commands (such as npm run build, next build, tsc, or other compilation/build pipelines) in terminal executions.
 
 ARCHITECTURE (MANDATORY DECLARATION):
 

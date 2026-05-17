@@ -8,7 +8,7 @@ const COMPARISON_FEATURES = [
     category: "Monitoring",
     features: [
       { name: "Monitored Topics", free: "1", pro: "5" },
-      { name: "Signals per Month", free: "50", pro: "1,000" },
+      { name: "Leads per Month", free: "50", pro: "1,000" },
       { name: "Global Auto Search", free: false, pro: "Every 2h (24/7)" },
       { name: "Manual Force Scans", free: "1 / day", pro: "10 / day / product" },
       { name: "Reddit Support", free: true, pro: true },

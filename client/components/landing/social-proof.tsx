@@ -37,7 +37,7 @@ export function PlatformSupport() {
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="flex flex-col items-center gap-8 md:gap-10">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 text-center">
-            Monitoring High-Intent Signals Across
+            Monitoring High-Intent Leads Across
           </p>
 
           <div className="w-full overflow-hidden relative py-2">

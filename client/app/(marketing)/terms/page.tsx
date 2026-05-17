@@ -1,10 +1,12 @@
 import { PROJECT_NAME } from "@/lib/constants"
 import { Metadata } from "next";
+import { MetadataService } from "@/lib/seo/application/metadata.service";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Terms of Service",
   description: `Read the terms of service for ${PROJECT_NAME}. Understand your rights and responsibilities when using our AI social intelligence platform.`,
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

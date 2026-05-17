@@ -35,7 +35,7 @@ export function ProductStats({ leads }: ProductStatsProps) {
       {/* ── Compact single-row stat strip ─────────────────────────────────── */}
       <div className="flex items-center gap-0 divide-x divide-border/40">
         {([
-          { label: 'Signals', value: total, icon: Activity, color: 'text-primary' },
+          { label: 'Leads', value: total, icon: Activity, color: 'text-primary' },
           { label: 'High Intent', value: highIntent, icon: Flame, color: 'text-destructive' },
           { label: 'Buy Now', value: buyNow, icon: Flame, color: 'text-orange-500' },
           { label: 'Avg Score', value: avgScore, icon: BarChart2, color: 'text-primary' },

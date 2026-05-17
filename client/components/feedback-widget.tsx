@@ -11,8 +11,8 @@ type FeedbackCategory = "UI/UX" | "Scraping" | "AI Accuracy" | "Pricing" | "Othe
 export function FeedbackWidget() {
   const { user } = useAuth()
 
-  // Hide feedback widget for administrators
-  if (user?.role === "admin") {
+  // Hide feedback widget if user is not logged in or is an administrator
+  if (!user || user.role === "admin") {
     return null
   }
 
