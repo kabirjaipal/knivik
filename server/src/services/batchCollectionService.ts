@@ -160,6 +160,35 @@ export class BatchCollectionService {
     // Remove duplicates and apply final filtering
     const uniquePosts = this.deduplicateAndFilter(allPosts, product);
     
+    // Filter out already processed posts in scrapeCache to protect Groq API costs
+    if (uniquePosts.length > 0) {
+      try {
+        const postKeys = uniquePosts.map(p => p.externalPostId);
+        const alreadyScanned = await db.client.scrapeCache.findMany({
+          where: {
+            externalPostId: { in: postKeys },
+          },
+          select: {
+            externalPostId: true,
+            platform: true,
+          }
+        });
+
+        // Create a fast-lookup Set of platform-externalPostId strings
+        const scannedSet = new Set(alreadyScanned.map(s => `${s.platform}-${s.externalPostId}`));
+
+        // Keep only posts that have NOT been scanned before
+        const filteredPosts = uniquePosts.filter(p => !scannedSet.has(`${p.platform}-${p.externalPostId}`));
+        
+        logger.info(`[COLLECTION] Filtered out ${uniquePosts.length - filteredPosts.length} already scanned posts from scrapeCache for product "${product.name}".`);
+        
+        // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
+        return filteredPosts.slice(0, 25);
+      } catch (cacheError: any) {
+        logger.error({ err: cacheError.message }, 'Failed to query scrapeCache. Proceeding without cache filtering.');
+      }
+    }
+
     // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
     return uniquePosts.slice(0, 25);
   }

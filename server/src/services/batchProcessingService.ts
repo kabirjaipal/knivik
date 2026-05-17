@@ -94,6 +94,19 @@ export class BatchProcessingService {
         }
       }
 
+      // Step 3.5: Cache all processed posts globally in scrapeCache
+      if (posts.length > 0) {
+        await db.client.scrapeCache.createMany({
+          data: posts.map(p => ({
+            platform: p.platform as any,
+            externalPostId: p.externalPostId,
+          })),
+          skipDuplicates: true
+        }).catch(err => {
+          logger.error({ err: err.message }, 'Failed to save processed posts to scrapeCache');
+        });
+      }
+
       // Reset scanning status
       await db.client.user.update({
         where: { id: userId },
@@ -188,6 +201,20 @@ export class BatchProcessingService {
         }
       }
 
+      // Step 3.5: Cache all processed posts globally in scrapeCache
+      const allProcessedPosts = collectionResult.productsWithPosts.flatMap(item => item.posts);
+      if (allProcessedPosts.length > 0) {
+        await db.client.scrapeCache.createMany({
+          data: allProcessedPosts.map(p => ({
+            platform: p.platform as any,
+            externalPostId: p.externalPostId,
+          })),
+          skipDuplicates: true
+        }).catch(err => {
+          logger.error({ err: err.message }, 'Failed to save processed posts to scrapeCache');
+        });
+      }
+
       const processingTime = Date.now() - startTime;
 
       // Update user's scanning status
@@ -198,8 +225,6 @@ export class BatchProcessingService {
           lastScanStatus: 'SUCCESS'
         }
       });
-
-
 
       return {
         success: true,
