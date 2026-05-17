@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, LayoutDashboard, Radar, Zap, Activity } from "lucide-react"
+import { Users, LayoutDashboard, Radar, Zap, Activity, Star, MessageSquare } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface AdminStats {
@@ -15,21 +15,25 @@ interface AdminStats {
 export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [health, setHealth] = useState<any[]>([])
+  const [feedbacks, setFeedbacks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, healthRes] = await Promise.all([
+        const [statsRes, healthRes, feedbackRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/stats`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/health`, { credentials: 'include' })
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/health`, { credentials: 'include' }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/feedback`, { credentials: 'include' })
         ])
         
         const statsData = await statsRes.json()
         const healthData = await healthRes.json()
+        const feedbackData = await feedbackRes.json()
         
         if (statsData.success) setStats(statsData.data)
         if (healthData.success) setHealth(healthData.data)
+        if (feedbackData.success) setFeedbacks(feedbackData.feedbacks)
       } catch (err) {
         console.error('Failed to fetch admin data:', err)
       } finally {
@@ -79,7 +83,7 @@ export default function AdminPage() {
           <div className="text-xs font-bold text-muted-foreground">Gateway Heartbeat Active</div>
         </CardHeader>
         <CardContent className="p-0 bg-transparent">
-          <div className="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-border/40">
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/40">
             {(health.length > 0 ? health : [
               { name: 'Reddit', status: 'Checking...' },
               { name: 'HackerNews', status: 'Checking...' },
@@ -103,6 +107,74 @@ export default function AdminPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* User Feedback Analytics */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Rating Summary Card */}
+        <Card className="border-border/40 bg-card/30">
+          <CardHeader>
+            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              Platform Satisfaction
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-4">
+            <div className="text-5xl font-black text-foreground">
+              {feedbacks.length > 0
+                ? (feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length).toFixed(1)
+                : "0.0"}
+            </div>
+            <div className="flex items-center gap-0.5 mt-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`w-5 h-5 ${
+                    star <= Math.round(
+                      feedbacks.length > 0
+                        ? feedbacks.reduce((acc, f) => acc + f.rating, 0) / feedbacks.length
+                        : 0
+                    )
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-muted fill-muted/30"
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 font-semibold">
+              Based on {feedbacks.length} user reviews
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Category Breakdown Card */}
+        <Card className="col-span-2 border-border/40 bg-card/30">
+          <CardHeader>
+            <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+              Issues & Praise Categories
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {["UI/UX", "Scraping", "AI Accuracy", "Pricing", "Other"].map((cat) => {
+              const count = feedbacks.filter((f) => f.category === cat).length;
+              const percentage = feedbacks.length > 0 ? (count / feedbacks.length) * 100 : 0;
+              return (
+                <div key={cat} className="space-y-1">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span>{cat}</span>
+                    <span className="text-muted-foreground">{count} ({Math.round(percentage)}%)</span>
+                  </div>
+                  <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-primary h-full rounded-full transition-all duration-500" 
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

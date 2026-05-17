@@ -36,6 +36,7 @@ model User {
   sessions           Session[]
   subscriptions      Subscription[]
   usages             UsageRecord[]
+  feedbacks          SiteFeedback[]
 
   @@index([plan])
   @@map("ir_users")
@@ -421,4 +422,17 @@ enum OAuthProvider {
   GITHUB
   TWITTER
   DISCORD
+}
+
+model SiteFeedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  rating    Int      // Rating from 1 to 5
+  comment   String?
+  category  String?  // e.g., "UI/UX", "Scraping", "AI Accuracy", "Pricing", "Other"
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("ir_site_feedbacks")
 }

@@ -192,8 +192,6 @@ export const getEngineHealth = async (_req: Request, res: Response) => {
       { name: 'Reddit', url: 'https://www.reddit.com/r/saas/.rss' },
       { name: 'HackerNews', url: 'https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage=1' },
       { name: 'Twitter/X', url: 'https://nitter.net/search/rss?f=tweets&q=saas' },
-      { name: 'LinkedIn', url: 'https://html.duckduckgo.com/html/?q=site:linkedin.com/posts' },
-      { name: 'ProductHunt', url: 'https://html.duckduckgo.com/html/?q=site:producthunt.com/discussions' },
     ];
 
     const results = await Promise.all(checks.map(async (c) => {

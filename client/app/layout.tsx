@@ -85,6 +85,7 @@ export const metadata: Metadata = {
 
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { FeedbackWidget } from "@/components/feedback-widget";
 
 export default function RootLayout({
   children,
@@ -129,6 +130,7 @@ export default function RootLayout({
             <BillingProvider>
               <TooltipProvider>
                 {children}
+                <FeedbackWidget />
               </TooltipProvider>
             </BillingProvider>
           </AuthProvider>

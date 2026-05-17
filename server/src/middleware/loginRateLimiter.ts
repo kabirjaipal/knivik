@@ -54,3 +54,15 @@ export const registerLimiter = rateLimit({
   },
 });
 
+/** Strict limiter for submitting feedback (5 submissions per hour per IP). */
+export const feedbackLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many feedback submissions. Please try again later.',
+  },
+});
+
