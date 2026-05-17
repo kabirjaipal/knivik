@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useMemo } from 'react'
+import posthog from 'posthog-js'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from '@/lib/auth-client'
 import { disconnectSocket } from '@/lib/socket'
@@ -91,6 +92,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       lastScanStatus: extendedUser.lastScanStatus,
     }
   }, [session])
+
+  // Link PostHog sessions to our authenticated users (identify on login, reset on logout)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      if (!user) {
+        posthog.reset()
+        return
+      }
+
+      posthog.identify(user.id, {
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        role: user.role,
+        plan: user.plan,
+      })
+    } catch (e) {
+      // avoid throwing in the app if PostHog isn't available or fails
+      // eslint-disable-next-line no-console
+      console.warn('PostHog identify/reset failed', e)
+    }
+  }, [user])
 
   const value = useMemo(() => ({
     user,
