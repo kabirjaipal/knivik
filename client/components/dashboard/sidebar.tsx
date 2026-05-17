@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Menu,
   LayoutDashboard,
-  Zap
+  Zap,
+  Terminal
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -69,6 +70,7 @@ export function Sidebar({ className }: SidebarProps) {
     { href: "/admin/revenue", label: "Revenue", icon: CreditCard },
     { href: "/admin/settings", label: "Global Settings", icon: Settings },
     { href: "/admin/usage", label: "LLM Usage", icon: Activity },
+    { href: "/admin/logs", label: "API Request Logs", icon: Terminal },
   ], [])
 
   const links = useMemo(() => isAtAdmin ? adminLinks : userLinks, [isAtAdmin, adminLinks, userLinks])

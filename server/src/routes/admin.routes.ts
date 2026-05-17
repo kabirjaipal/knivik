@@ -12,7 +12,8 @@ import {
   getModels,
   updatePlan, 
   toggleUserStatus, 
-  deleteUser 
+  deleteUser,
+  getLogs
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
 
@@ -31,6 +32,7 @@ router.get('/config', getConfig);
 router.post('/config', updateConfig);
 router.get('/models', getModels);
 router.get('/llm-usage', getLlmUsage);
+router.get('/logs', getLogs);
 
 // User Management Actions
 router.post('/users/:id/update-plan', updatePlan);

@@ -557,3 +557,108 @@ export const getModels = async (_req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 };
+
+export const getLogs = async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const skip = (page - 1) * limit;
+    
+    const { search, method, statusCode, onlyErrors, userId } = req.query;
+
+    const where: any = {};
+
+    if (userId && typeof userId === 'string') {
+      where.userId = userId;
+    }
+
+    if (method && typeof method === 'string') {
+      where.method = { equals: method, mode: 'insensitive' };
+    }
+
+    if (statusCode && typeof statusCode === 'string') {
+      if (statusCode === '4xx') {
+        where.statusCode = { gte: 400, lte: 499 };
+      } else if (statusCode === '5xx') {
+        where.statusCode = { gte: 500, lte: 599 };
+      } else {
+        const codeNum = parseInt(statusCode);
+        if (!isNaN(codeNum)) {
+          where.statusCode = codeNum;
+        }
+      }
+    }
+
+    if (onlyErrors === 'true') {
+      where.OR = [
+        { statusCode: { gte: 400 } },
+        { error: { not: null } }
+      ];
+    }
+
+    if (search && typeof search === 'string') {
+      const searchFilter = { contains: search, mode: 'insensitive' as const };
+      
+      const matchingUsers = await db.client.user.findMany({
+        where: {
+          OR: [
+            { username: searchFilter },
+            { email: searchFilter }
+          ]
+        },
+        select: { id: true }
+      });
+      const matchingUserIds = matchingUsers.map(u => u.id);
+
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            { url: searchFilter },
+            { ip: searchFilter },
+            { userAgent: searchFilter },
+            { error: searchFilter },
+            { userId: searchFilter },
+            ...(matchingUserIds.length > 0 ? [{ userId: { in: matchingUserIds } }] : [])
+          ]
+        }
+      ];
+    }
+
+    const [logs, totalCount] = await Promise.all([
+      db.client.requestLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      db.client.requestLog.count({ where })
+    ]);
+
+    const userIds = Array.from(new Set(logs.map(log => log.userId).filter(Boolean))) as string[];
+    const users = await db.client.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, username: true, email: true }
+    });
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    const logsWithUsers = logs.map(log => ({
+      ...log,
+      user: log.userId ? userMap.get(log.userId) || null : null
+    }));
+
+    res.json({
+      success: true,
+      data: logsWithUsers,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit)
+      }
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Admin Logs Error');
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+};
