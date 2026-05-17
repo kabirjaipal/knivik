@@ -87,8 +87,10 @@ export default function ProductDetailPage() {
       
       if (data.isScanning) {
         setLocalScanning(true);
+        refresh();
       } else {
         setLocalScanning(false);
+        refresh();
         // Refresh product data and leads list
         fetchProduct();
         setRefreshTrigger(prev => prev + 1);
@@ -99,7 +101,7 @@ export default function ProductDetailPage() {
       socket.off('connect', joinRoom);
       socket.off('scan-status');
     };
-  }, [productId, fetchProduct]);
+  }, [productId, fetchProduct, refresh]);
 
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return

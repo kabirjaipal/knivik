@@ -135,26 +135,48 @@ async function sendWebhookAlert(alertSetting: any, lead: any) {
     }
     
     // Log successful alert
-    await db.client.alertLog.create({
-      data: {
+    await db.client.alertLog.upsert({
+      where: {
+        alertSettingId_leadId_channel: {
+          alertSettingId: lead.product.user.alertSetting.id,
+          leadId: lead.id,
+          channel: AlertChannel.SLACK,
+        }
+      },
+      create: {
         alertSettingId: lead.product.user.alertSetting.id,
         leadId: lead.id,
         channel: AlertChannel.SLACK,
         status: 'sent'
       },
+      update: {
+        status: 'sent',
+        errorMessage: null,
+      }
     });
   } catch (error: any) {
     logger.error({ error: error.message, url }, 'Webhook alert failed');
     
     // Log failed alert
-    await db.client.alertLog.create({
-      data: {
+    await db.client.alertLog.upsert({
+      where: {
+        alertSettingId_leadId_channel: {
+          alertSettingId: lead.product.user.alertSetting.id,
+          leadId: lead.id,
+          channel: AlertChannel.SLACK,
+        }
+      },
+      create: {
         alertSettingId: lead.product.user.alertSetting.id,
         leadId: lead.id,
         channel: AlertChannel.SLACK,
         status: 'failed',
         errorMessage: error.message
       },
+      update: {
+        status: 'failed',
+        errorMessage: error.message
+      }
     });
   }
 }
@@ -192,26 +214,48 @@ async function sendEmailAlert(email: string, lead: any) {
     });
 
     // Create success log record
-    await db.client.alertLog.create({
-      data: {
+    await db.client.alertLog.upsert({
+      where: {
+        alertSettingId_leadId_channel: {
+          alertSettingId: lead.product.user.alertSetting.id,
+          leadId: lead.id,
+          channel: AlertChannel.EMAIL,
+        }
+      },
+      create: {
         alertSettingId: lead.product.user.alertSetting.id,
         leadId: lead.id,
         channel: AlertChannel.EMAIL,
         status: 'sent'
       },
+      update: {
+        status: 'sent',
+        errorMessage: null,
+      }
     });
   } catch (error: any) {
     logger.error({ error: error.message, email }, 'Email alert failed');
     
     // Create failure log record
-    await db.client.alertLog.create({
-      data: {
+    await db.client.alertLog.upsert({
+      where: {
+        alertSettingId_leadId_channel: {
+          alertSettingId: lead.product.user.alertSetting.id,
+          leadId: lead.id,
+          channel: AlertChannel.EMAIL,
+        }
+      },
+      create: {
         alertSettingId: lead.product.user.alertSetting.id,
         leadId: lead.id,
         channel: AlertChannel.EMAIL,
         status: 'failed',
         errorMessage: error.message
       },
+      update: {
+        status: 'failed',
+        errorMessage: error.message
+      }
     });
   }
 }

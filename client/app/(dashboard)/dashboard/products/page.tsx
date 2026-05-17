@@ -464,63 +464,74 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
   const isActive = product.isActive;
   
   return (
-    <div className="relative bg-card border border-border/40 rounded-3xl p-5 flex flex-col gap-4 group transition-all hover:border-primary/20 shadow-sm">
+    <div className="relative bg-card border border-border/40 rounded-3xl p-5 flex flex-col justify-between gap-4 group transition-all hover:border-primary/20 shadow-sm min-w-0">
       
-      {/* Header section */}
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors">
-            <Package className="w-6 h-6" />
+      <div className="space-y-4">
+        {/* Header section */}
+        <div className="flex justify-between items-start gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-11 h-11 rounded-xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors shrink-0">
+              <Package className="w-5.5 h-5.5" />
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <h3 className="text-base font-bold text-foreground tracking-tight truncate" title={product.name}>
+                {product.name}
+              </h3>
+              {product.websiteUrl && (
+                <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest truncate">
+                  <Globe className="w-2.5 h-2.5 shrink-0" />
+                  <span className="truncate">
+                    {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="space-y-0.5">
-            <h3 className="text-lg font-bold text-foreground tracking-tight">{product.name}</h3>
-            {product.websiteUrl && (
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
-                <Globe className="w-3 h-3" />
-                {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+
+          <div className="shrink-0">
+            {isActive ? (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-success/10 border border-success/20 text-success">
+                <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
+                <span className="text-[9px] font-black uppercase tracking-widest">Live</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30"></div>
+                <span className="text-[9px] font-black uppercase tracking-widest">Paused</span>
               </div>
             )}
           </div>
         </div>
 
-        {isActive ? (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 border border-success/20 text-success">
-            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Live</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
-            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30"></div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Paused</span>
-          </div>
-        )}
-      </div>
+        {/* Description */}
+        <p className="text-xs text-muted-foreground/60 leading-relaxed font-medium line-clamp-2" title={product.description || ""}>
+          {product.description || "No specific detection vectors defined for this product yet."}
+        </p>
 
-      {/* Description */}
-      <p className="text-xs text-muted-foreground/60 leading-relaxed max-w-md font-medium line-clamp-2">
-        {product.description || "No specific detection vectors defined for this product yet."}
-      </p>
-
-      {/* Signals block */}
-      <div className="bg-muted/20 border border-border/40 rounded-xl p-3 flex items-center justify-between group/signals hover:bg-muted/30 transition-colors cursor-pointer">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center text-primary/80">
-            <Radar className="w-5 h-5" />
+        {/* Signals block */}
+        <Link
+          href={`/dashboard/products/${product.id}`}
+          className="bg-muted/20 border border-border/40 rounded-xl p-3 flex items-center justify-between group/signals hover:bg-muted/30 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center text-primary/80 shrink-0">
+              <Radar className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest mb-0.5">Total Signals</p>
+              <p className="text-base font-bold text-foreground leading-none">{leadCount}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest mb-0.5">Total Signals</p>
-            <p className="text-lg font-bold text-foreground">{leadCount}</p>
-          </div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/signals:text-primary transition-colors" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/signals:text-primary transition-colors shrink-0" />
+        </Link>
       </div>
 
       {/* Footer / Actions */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border/20">
+        <div className="flex items-center gap-3.5 shrink-0">
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/50 hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/50 hover:text-foreground transition-colors cursor-pointer"
           >
             <Edit className="w-3.5 h-3.5" />
             Edit
@@ -528,7 +539,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           <div className="w-px h-3 bg-border/40"></div>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-            className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground/50 hover:text-destructive transition-colors"
+            className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/50 hover:text-destructive transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete
@@ -537,10 +548,10 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
 
         <Link 
           href={`/dashboard/products/${product.id}`}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-bold text-xs hover:bg-primary/90 transition-all active:scale-95 shadow-md shadow-primary/20"
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3.5 py-1.5 rounded-lg font-bold text-[11px] hover:bg-primary/90 transition-all active:scale-95 shadow-md shadow-primary/20 shrink-0 uppercase tracking-wider"
         >
           Open Feed
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3 h-3" />
         </Link>
       </div>
     </div>

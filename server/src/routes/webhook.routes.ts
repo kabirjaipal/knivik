@@ -115,7 +115,7 @@ async function processDodoEvent(eventName: string, data: any) {
 }
 
 async function handleCheckoutCompleted(data: any) {
-  const userId = data.metadata?.userId;
+  let userId = data.metadata?.userId;
   // Dodo can put product_id at top level or inside product_cart
   const productId = data.product_id || data.product_cart?.[0]?.product_id;
   const customerId = data.customer?.customer_id;
@@ -123,9 +123,36 @@ async function handleCheckoutCompleted(data: any) {
   const amount = data.total_amount || data.amount;
   const currency = data.currency;
   const status = data.status;
+  const email = data.customer?.email;
 
   if (!userId) {
-    logger.error({ paymentId }, 'No userId found in payment metadata');
+    if (customerId) {
+      const userByCustomer = await db.client.user.findUnique({
+        where: { dodoCustomerId: customerId }
+      });
+      if (userByCustomer) {
+        userId = userByCustomer.id;
+      }
+    }
+    
+    if (!userId && email) {
+      const userByEmail = await db.client.user.findUnique({
+        where: { email: email }
+      });
+      if (userByEmail) {
+        userId = userByEmail.id;
+        if (customerId && !userByEmail.dodoCustomerId) {
+          await db.client.user.update({
+            where: { id: userByEmail.id },
+            data: { dodoCustomerId: customerId }
+          });
+        }
+      }
+    }
+  }
+
+  if (!userId) {
+    logger.error({ paymentId, email, customerId }, 'No userId found in payment metadata or resolved via customerId/email');
     return;
   }
 
@@ -160,7 +187,8 @@ async function handleSubscriptionEvent(data: any) {
   const productId = data.product_id;
   const status = data.status; // 'active', 'canceled', etc.
   const currentPeriodEnd = data.next_billing_date ? new Date(data.next_billing_date) : null;
-  const userId = data.metadata?.userId;
+  let userId = data.metadata?.userId;
+  const email = data.customer?.email;
 
   const planMapping = getPlanFromProductId(productId);
   if (!planMapping) {
@@ -169,7 +197,33 @@ async function handleSubscriptionEvent(data: any) {
   }
 
   if (!userId) {
-    logger.error({ dodoSubscriptionId }, 'No userId found in subscription metadata');
+    if (dodoCustomerId) {
+      const userByCustomer = await db.client.user.findUnique({
+        where: { dodoCustomerId: dodoCustomerId }
+      });
+      if (userByCustomer) {
+        userId = userByCustomer.id;
+      }
+    }
+    
+    if (!userId && email) {
+      const userByEmail = await db.client.user.findUnique({
+        where: { email: email }
+      });
+      if (userByEmail) {
+        userId = userByEmail.id;
+        if (dodoCustomerId && !userByEmail.dodoCustomerId) {
+          await db.client.user.update({
+            where: { id: userByEmail.id },
+            data: { dodoCustomerId }
+          });
+        }
+      }
+    }
+  }
+
+  if (!userId) {
+    logger.error({ dodoSubscriptionId, email, dodoCustomerId }, 'No userId found in subscription metadata or resolved via dodoCustomerId/email');
     return;
   }
 

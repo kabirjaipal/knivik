@@ -4,6 +4,7 @@ import logger from './logger.js';
 import config from './config.js';
 import { auth } from './auth.js';
 import { db } from './db.js';
+import { fromNodeHeaders } from 'better-auth/node';
 
 let io: Server | null = null;
 
@@ -26,7 +27,7 @@ export const initSocket = (httpServer: HttpServer) => {
     try {
       // Add a 10s timeout to session check to prevent hanging handshakes during heavy DB load
       const sessionPromise = auth.api.getSession({
-        headers: socket.request.headers
+        headers: fromNodeHeaders(socket.request.headers)
       });
 
       const timeoutPromise = new Promise((_, reject) => 
