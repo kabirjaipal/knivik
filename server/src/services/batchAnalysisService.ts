@@ -135,7 +135,7 @@ ANALYSIS CRITERIA:
 
 SELECTION RULES:
 - Choose ANY post that meets the criteria. You may select multiple leads per product if they are all qualified.
-- Score 85+ for explicit buying intent, 70+ for strong research intent, and 50+ for pain-point discussions.
+- Score 85+ for explicit buying intent, 75+ for competitor comparisons, and 60+ for pain-point discussions.
 - Provide detailed, blunt explanation reasoning for each qualified lead.
 
 EXPECTED OUTPUT FORMAT:
@@ -147,7 +147,7 @@ You must strictly return ONLY a valid, minified JSON object matching this struct
       "qualifiedLeads": [
         {
           "postId": "The exact Post ID string from the input (without platform prefix, match the input id exactly)",
-          "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING" | "LOW_INTENT",
+          "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING",
           "intentScore": number (50-100),
           "reasoning": "Detailed explanation of why this is a good lead or competitor poaching opportunity."
         }

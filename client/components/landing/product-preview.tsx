@@ -17,7 +17,7 @@ interface MockLead {
   content: string
   url: string
   authorUsername: string
-  intentLevel: 'BUY_NOW' | 'RESEARCHING' | 'COMPARING' | 'LOW_INTENT'
+  intentLevel: 'BUY_NOW' | 'RESEARCHING' | 'COMPARING'
   intentScore: number
   status: LeadStatus
   detectedBy: DetectedBy
