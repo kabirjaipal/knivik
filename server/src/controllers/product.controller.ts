@@ -22,6 +22,11 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
 
     const products = await db.client.product.findMany({
       where: { userId },
+      include: {
+        _count: {
+          select: { leads: true }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     });
     
@@ -53,6 +58,11 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
 
     const product = await db.client.product.findUnique({
       where: { id: productId },
+      include: {
+        _count: {
+          select: { leads: true }
+        }
+      },
     });
 
     if (!product || product.userId !== userId) {
@@ -109,6 +119,11 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         websiteUrl: data.websiteUrl || null,
         isActive: data.isActive,
         aiConfig: cleanAiConfig,
+      },
+      include: {
+        _count: {
+          select: { leads: true }
+        }
       },
     });
 
@@ -183,6 +198,11 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           aiConfig: finalAiConfig,
           // Clear old queries - will regenerate
           searchQueries: [],
+        },
+        include: {
+          _count: {
+            select: { leads: true }
+          }
         },
       });
     });
