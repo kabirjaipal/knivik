@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import config from '../lib/config.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
 import { getPlanFromProductId } from '../lib/plans.js';
 import { dodo } from '../lib/dodo.js';
+import { getFrontendUrl } from '../lib/url.js';
 
 const router = Router();
 
@@ -68,7 +68,7 @@ router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
       metadata: {
         userId: userId,
       },
-      return_url: `${config.FRONTEND_URL}/dashboard/billing`,
+      return_url: `${getFrontendUrl(req)}/dashboard/billing`,
     });
 
     res.json({

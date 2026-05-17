@@ -8,6 +8,7 @@ import { config } from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { sendEmail } from '../lib/mailer.js';
 import { z } from 'zod';
+import { getFrontendUrl } from '../lib/url.js';
 
 // ─────────────────────────────────────────────
 // CONSTANTS
@@ -141,7 +142,7 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+    const verifyUrl = `${getFrontendUrl(req)}/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
 
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
@@ -306,7 +307,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       },
     });
 
-    const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
+    const resetUrl = `${getFrontendUrl(req)}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
 
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
@@ -520,12 +521,12 @@ export const googleCallback = async (req: Request, res: Response) => {
 
   if (!isValidState) {
     logger.warn('🚨 Potential CSRF attack detected in Google OAuth callback');
-    res.redirect(`${config.FRONTEND_URL}/login?error=Invalid+state+parameter`);
+    res.redirect(`${getFrontendUrl(req)}/login?error=Invalid+state+parameter`);
     return;
   }
 
   if (!code) {
-    res.redirect(`${config.FRONTEND_URL}/login?error=Missing+Google+Auth+Code`);
+    res.redirect(`${getFrontendUrl(req)}/login?error=Missing+Google+Auth+Code`);
     return;
   }
 
@@ -599,9 +600,9 @@ export const googleCallback = async (req: Request, res: Response) => {
     // issueSession() is the secure transport mechanism.
     await issueSession(res, user.id);
 
-    res.redirect(`${config.FRONTEND_URL}/dashboard`);
+    res.redirect(`${getFrontendUrl(req)}/dashboard`);
   } catch (error) {
     logger.error({ error }, 'Google OAuth Error');
-    res.redirect(`${config.FRONTEND_URL}/login?error=Google+Authentication+Failed`);
+    res.redirect(`${getFrontendUrl(req)}/login?error=Google+Authentication+Failed`);
   }
 };
