@@ -310,7 +310,7 @@ export default function ProductsPage() {
             <Radar className="w-12 h-12 text-muted-foreground/20 mb-4" />
             <h3 className="text-xl font-bold text-foreground">No products found</h3>
             <p className="text-muted-foreground mt-1 text-sm text-center max-w-xs">
-              Click the "New Product" button above to start tracking social signals.
+              Click the "New Product" button above to start scanning for high-intent customer leads.
             </p>
           </div>
         ) : (
@@ -508,21 +508,21 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           {product.description || "No specific detection vectors defined for this product yet."}
         </p>
 
-        {/* Signals block */}
+        {/* Leads block */}
         <Link
           href={`/dashboard/products/${product.id}`}
-          className="bg-muted/20 border border-border/40 rounded-xl p-3 flex items-center justify-between group/signals hover:bg-muted/30 transition-colors cursor-pointer"
+          className="bg-muted/20 border border-border/40 rounded-xl p-3 flex items-center justify-between group/leads hover:bg-muted/30 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center text-primary/80 shrink-0">
               <Radar className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest mb-0.5">Total Signals</p>
+              <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest mb-0.5">Total Leads</p>
               <p className="text-base font-bold text-foreground leading-none">{leadCount}</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/signals:text-primary transition-colors shrink-0" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/leads:text-primary transition-colors shrink-0" />
         </Link>
       </div>
 

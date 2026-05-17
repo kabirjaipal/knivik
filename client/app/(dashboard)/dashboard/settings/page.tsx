@@ -396,7 +396,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <CardTitle>Alert Routing</CardTitle>
-                      <CardDescription>Configure how radar detects and delivers high-value signals.</CardDescription>
+                      <CardDescription>Configure how radar detects and delivers high-value leads.</CardDescription>
                     </div>
                   </div>
                 </CardHeader>

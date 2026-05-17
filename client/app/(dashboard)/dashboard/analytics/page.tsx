@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
         
         {/* Resource Consumption Pulse */}
         <div className="flex flex-wrap items-center gap-4 lg:gap-6">
-           {/* Signal Quota */}
+           {/* Lead Quota */}
            <div className="min-w-44 p-4 rounded-2xl bg-card border border-border/50 shadow-sm relative overflow-hidden group">
               <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex justify-between items-center mb-3">
@@ -382,12 +382,12 @@ export default function AnalyticsPage() {
          </Card>
       </div>
 
-      {/* Row 3: Signal Sources (Full Width) */}
+      {/* Row 3: Lead Sources (Full Width) */}
       <div className="grid grid-cols-1 gap-6">
-         {/* Signal Sources */}
+         {/* Lead Sources */}
          <Card className="border-none bg-card shadow-xl shadow-black/5">
               <CardHeader className="py-3 px-6 border-b border-border/40 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Signal Distribution & Efficiency</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Lead Distribution & Efficiency</CardTitle>
               <Globe className="w-3 h-3 text-muted-foreground/30" />
             </CardHeader>
             <CardContent className="p-5">
@@ -414,7 +414,7 @@ export default function AnalyticsPage() {
                             {icons[source.platform]}
                           </div>
                           <span className="text-xs font-black tracking-widest text-muted-foreground">
-                            {source.count} SIGNALS
+                            {source.count} LEADS
                           </span>
                         </div>
                         <div>
