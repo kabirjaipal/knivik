@@ -2,17 +2,6 @@ import { UserPlan } from "@prisma/client";
 import config from "./config.js";
 import { db } from "./db.js";
 
-const getIntervalText = () => {
-  const ms = config.SCRAPER_INTERVAL_MS;
-  if (ms <= 0) return "Manual Only";
-  if (ms === 3600000) return "Hourly";
-  if (ms === 86400000) return "Daily";
-  if (ms % 3600000 === 0) return `Every ${ms / 3600000}h`;
-  return `Every ${Math.round(ms / 60000)}m`;
-};
-
-const INTERVAL_TEXT = getIntervalText();
-
 export const PLANS = {
   FREE: { 
     name: "Free",

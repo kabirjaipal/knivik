@@ -1,6 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../lib/db.js';
-import { config } from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { auth } from '../lib/auth.js';
 import { fromNodeHeaders } from "better-auth/node";
@@ -42,7 +40,7 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
   next();
 };
 
-export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
+export const optionalAuth = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     const sessionData = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers)

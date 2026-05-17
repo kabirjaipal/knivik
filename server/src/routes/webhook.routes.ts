@@ -1,7 +1,5 @@
 import { Router } from 'express';
-import crypto from 'crypto';
 import { db } from '../lib/db.js';
-import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { 
   updateUserPlan, 
@@ -45,7 +43,7 @@ router.post('/dodopayments', async (req: any, res: any) => {
     logger.info({ eventName, payload }, 'Verified Dodo Payments webhook received');
 
     // IDEMPOTENCY CHECK
-    const eventId = payload.event_id || (req.headers['webhook-signature'] as string);
+    const eventId = (payload as any).event_id || (req.headers['webhook-signature'] as string);
     const existingEvent = await db.client.webhookEvent.findUnique({
       where: { eventId }
     });
@@ -60,7 +58,7 @@ router.post('/dodopayments', async (req: any, res: any) => {
       data: {
         eventId,
         eventName,
-        payload: payload,
+        payload: payload as any,
         processed: false
       }
     });

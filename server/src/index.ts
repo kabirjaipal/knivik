@@ -48,7 +48,7 @@ app.disable('x-powered-by');
 app.set('trust proxy', config.TRUST_PROXY);
 
 // Health check for Render/Cloud
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

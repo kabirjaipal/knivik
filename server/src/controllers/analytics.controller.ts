@@ -270,12 +270,7 @@ export const getLlmUsage = asyncHandler(async (req: AuthenticatedRequest, res: R
     _count: { id: true },
   });
 
-  // Get models for cost calculation
-  const models = await db.client.llmModel.findMany();
-  const modelMap = new Map(models.map(m => [m.id, m]));
-
   const data = usageStats.map(stat => {
-    const model = modelMap.get(stat.modelId);
     return {
       modelId: stat.modelId,
       action: stat.action,

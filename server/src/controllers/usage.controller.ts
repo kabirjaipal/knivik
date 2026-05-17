@@ -4,10 +4,11 @@ import { PLANS, PlanKey } from '../lib/plans.js';
 import logger from '../lib/logger.js';
 
 export class UsageController {
-  static async getUsageStats(req: Request, res: Response) {
+  static async getUsageStats(req: Request, res: Response): Promise<void> {
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     try {
@@ -128,9 +129,12 @@ export class UsageController {
     }
   }
 
-  static async getUsageHistory(req: Request, res: Response) {
+  static async getUsageHistory(req: Request, res: Response): Promise<void> {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     try {
       const logs = await db.client.llmUsageLog.findMany({

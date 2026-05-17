@@ -56,7 +56,7 @@ export const createFeedback = async (req: Request, res: Response): Promise<void>
  * Retrieve all user feedbacks (Admin only)
  * GET /api/feedback
  */
-export const getFeedbacks = async (req: Request, res: Response): Promise<void> => {
+export const getFeedbacks = async (_req: Request, res: Response): Promise<void> => {
   try {
     const feedbacks = await db.client.siteFeedback.findMany({
       orderBy: {

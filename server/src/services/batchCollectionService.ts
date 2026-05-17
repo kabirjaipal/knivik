@@ -204,7 +204,6 @@ export class BatchCollectionService {
     
     // ALWAYS use global Reddit search for broader coverage
     // Subreddit-specific search is too limiting - we want to find leads anywhere on Reddit
-    const isGlobal = true;
 
     if (searchQueries.length === 0) {
       logger.warn(`[COLLECTION] No search queries available for Reddit scan of "${product.name}"`);
@@ -434,14 +433,14 @@ export class BatchCollectionService {
   /**
    * Basic filtering to remove obvious noise before AI analysis
    */
-  private static passesBasicFilters(text: string, product: ProductWithDetails): boolean {
-    return this.passesBasicFiltersWithReason(text, product).passed;
+  private static passesBasicFilters(text: string, _product: ProductWithDetails): boolean {
+    return this.passesBasicFiltersWithReason(text, _product).passed;
   }
 
   /**
    * Detailed filtering with reason for deep logging
    */
-  private static passesBasicFiltersWithReason(text: string, product: ProductWithDetails): { passed: boolean; reason?: string } {
+  private static passesBasicFiltersWithReason(text: string, _product: ProductWithDetails): { passed: boolean; reason?: string } {
     const lower = text.toLowerCase();
 
     // Minimum content length
@@ -512,7 +511,7 @@ export class BatchCollectionService {
    */
   private static async collectFromTwitter(
     product: ProductWithDetails,
-    oneMonthAgo: Date,
+    _oneMonthAgo: Date,
     searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
@@ -566,22 +565,22 @@ export class BatchCollectionService {
             try { url = decodeURIComponent(ruMatch[1]); } catch { /* ignore */ }
           }
 
-          if (!(url.includes('x.com/') || url.includes('twitter.com/'))) return;
-          if (!url.includes('/status/')) return;
+          if (!(url.includes('x.com/') || url.includes('twitter.com/'))) return true;
+          if (!url.includes('/status/')) return true;
 
           const idMatch = url.match(/\/status\/(\d+)/);
-          if (!idMatch) return;
+          if (!idMatch) return true;
           const tweetId = idMatch[1];
 
           const authorMatch = url.match(/(?:twitter\.com|x\.com)\/([^/]+)/);
           const author = authorMatch ? authorMatch[1] : 'unknown';
-          if (author === 'unknown' || author === 'i') return;
+          if (author === 'unknown' || author === 'i') return true;
 
           // Remove the date prefix Yahoo sometimes prepends
           const content = rawText.replace(/^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d+,\s\d{4}\s[·\-]\s*/i, '').trim();
 
-          if (!content || content.length < 30) return;
-          if (!this.passesBasicFilters(content, product)) return;
+          if (!content || content.length < 30) return true;
+          if (!this.passesBasicFilters(content, product)) return true;
 
           // Pure semantic detection based on AI search query
           const detectionMode: 'SEMANTIC' = 'SEMANTIC';
@@ -599,6 +598,7 @@ export class BatchCollectionService {
             detectionMode
           });
           queryMatches++;
+          return true;
         });
 
         // Rate limiting: 4 seconds between Yahoo requests
@@ -610,16 +610,6 @@ export class BatchCollectionService {
     }
 
     return posts;
-  }
-
-  /**
-   * Strip HTML tags from text
-   */
-  private static stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
   }
 
   /**

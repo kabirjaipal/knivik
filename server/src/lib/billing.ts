@@ -19,7 +19,7 @@ export async function getPrices() {
       id: product.product_id,
       productId: product.product_id,
       name: product.name,
-      amount: product.price / 100, 
+      amount: (product.price ?? 0) / 100, 
       currency: product.currency || "USD",
       interval: product.is_recurring ? "month" : null,
       intervalCount: 1,

@@ -4,7 +4,6 @@ import logger from '../lib/logger.js';
 import { z } from 'zod';
 import { generateProductStrategy } from '../services/aiService.js';
 import { SearchQueryService } from '../services/searchQueryService.js';
-import { BatchProcessingService } from '../services/batchProcessingService.js';
 import { pipelineQueue } from '../lib/queue.js';
 
 const productSchema = z.object({
@@ -159,7 +158,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const { hasCapability: hasCap } = await import('../lib/plans.js');
     
     const existingAiConfig = (existing.aiConfig as Record<string, any>) || {};
-    const finalAiConfig = {
+    const finalAiConfig: Record<string, any> = {
       ...(data.aiConfig || {}),
       // Preserve internal scan-tracking properties to prevent manual scan quota bypass
       lastManualScanDate: existingAiConfig['lastManualScanDate'],

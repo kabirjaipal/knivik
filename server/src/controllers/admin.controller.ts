@@ -237,13 +237,14 @@ export const getEngineHealth = async (_req: Request, res: Response) => {
  * POST /api/admin/users/:id/update-plan
  * Manually changes a user's subscription tier.
  */
-export const updatePlan = async (req: Request, res: Response) => {
+export const updatePlan = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
     const { plan } = req.body; // 'FREE' or 'PRO'
 
     if (!['FREE', 'PRO'].includes(plan)) {
-      return res.status(400).json({ success: false, error: 'Invalid plan tier' });
+      res.status(400).json({ success: false, error: 'Invalid plan tier' });
+      return;
     }
 
     await db.client.user.update({
@@ -263,13 +264,14 @@ export const updatePlan = async (req: Request, res: Response) => {
  * POST /api/admin/users/:id/toggle-status
  * Suspends or activates a user.
  */
-export const toggleUserStatus = async (req: Request, res: Response) => {
+export const toggleUserStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
     const user = await db.client.user.findUnique({ where: { id } });
 
     if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
     }
 
     // Use metadata to store suspension status if not in schema, 
@@ -304,13 +306,14 @@ export const toggleUserStatus = async (req: Request, res: Response) => {
  * DELETE /api/admin/users/:id
  * Permanently deletes a user and all their data.
  */
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
 
     // Safety: Don't allow deleting yourself
     if (id === (req as any).user?.id) {
-      return res.status(400).json({ success: false, error: 'You cannot delete your own account' });
+      res.status(400).json({ success: false, error: 'You cannot delete your own account' });
+      return;
     }
 
     await db.client.user.delete({ where: { id } });
@@ -516,16 +519,18 @@ export const getConfig = async (_req: Request, res: Response) => {
  * POST /api/admin/config
  * Updates global system configuration.
  */
-export const updateConfig = async (req: Request, res: Response) => {
+export const updateConfig = async (req: Request, res: Response): Promise<void> => {
   try {
     const { key, value } = req.body;
 
     // Validate key and value are present and sane types
     if (!key || typeof key !== 'string' || key.length > 128) {
-      return res.status(400).json({ success: false, error: 'Invalid config key' });
+      res.status(400).json({ success: false, error: 'Invalid config key' });
+      return;
     }
     if (value === undefined || value === null) {
-      return res.status(400).json({ success: false, error: 'Config value is required' });
+      res.status(400).json({ success: false, error: 'Config value is required' });
+      return;
     }
 
     await db.client.systemConfig.upsert({
