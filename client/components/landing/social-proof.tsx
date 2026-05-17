@@ -33,7 +33,7 @@ export function PlatformSupport() {
 
   return (
     <section className="py-12 md:py-16 border-y border-border/50 bg-secondary/5 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-5" />
+      <div className="absolute inset-0 bg-grid opacity-5 pointer-events-none select-none transform-gpu" />
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="flex flex-col items-center gap-8 md:gap-10">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 text-center">
@@ -46,7 +46,7 @@ export function PlatformSupport() {
             <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
             
             <motion.div 
-              className="flex items-center gap-8 md:gap-16 whitespace-nowrap w-max"
+              className="flex items-center gap-8 md:gap-16 whitespace-nowrap w-max transform-gpu will-change-transform"
               animate={{ x: ["0%", "-50%"] }}
               transition={{
                 duration: 20,

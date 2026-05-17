@@ -15,7 +15,7 @@ const integrations = [
 export function Integrations() {
   return (
     <section id="integrations" className="py-20 md:py-32 bg-secondary/20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-5" />
+      <div className="absolute inset-0 bg-grid opacity-5 pointer-events-none select-none transform-gpu" />
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
           <motion.div 
@@ -49,7 +49,7 @@ export function Integrations() {
 
           <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 relative w-full">
              {/* Decorative background glow */}
-             <div className="absolute inset-0 bg-primary/5 blur-[100px] rounded-full -z-10" />
+             <div className="absolute inset-0 bg-primary/5 blur-[100px] rounded-full -z-10 pointer-events-none select-none transform-gpu" />
              
             {integrations.map((integration, i) => (
               <motion.div 

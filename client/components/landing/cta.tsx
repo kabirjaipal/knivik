@@ -13,10 +13,10 @@ export function FinalCTA({ user }: CTAProps) {
   return (
     <section className="py-20 md:py-32 bg-background relative overflow-hidden border-t border-border/50">
       {/* Background ambient glows that are section-wide, not card-contained */}
-      <div className="absolute inset-0 bg-grid opacity-[0.03] -z-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-[20%] left-[10%] w-[80%] h-[60%] rounded-full bg-primary/5 blur-[120px]" />
-        <div className="absolute bottom-[10%] right-[10%] w-[60%] h-[40%] rounded-full bg-accent/5 blur-[100px]" />
+      <div className="absolute inset-0 bg-grid opacity-[0.03] -z-10 pointer-events-none select-none transform-gpu" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none select-none -z-10 overflow-hidden">
+        <div className="absolute top-[20%] left-[10%] w-[80%] h-[60%] rounded-full bg-primary/5 blur-[120px] transform-gpu" />
+        <div className="absolute bottom-[10%] right-[10%] w-[60%] h-[40%] rounded-full bg-accent/5 blur-[100px] transform-gpu" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">

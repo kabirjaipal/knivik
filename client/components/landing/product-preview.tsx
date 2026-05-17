@@ -30,17 +30,17 @@ const initialSampleLeads: MockLead[] = [
   {
     id: "lead-1",
     platform: "Reddit",
-    title: "Alternative for social monitoring",
-    content: "We're currently using [Competitor] but their API limits are killing our workflow. Anyone know an alternative that handles high-volume social monitoring?",
-    url: "https://reddit.com",
-    authorUsername: "tech_founder_92",
+    title: "Tool to monitor Reddit keywords in real-time?",
+    content: "Honestly frustrated with Google Alerts and Brand24. They are either super delayed or way too expensive. Does anyone know a fast tool that can monitor Reddit keywords in real-time and push alerts straight to Slack? I want to reply to people looking for CRM tools as soon as they post.",
+    url: "https://reddit.com/r/SaaS/comments/realtime_monitoring",
+    authorUsername: "growth_hacker_dan",
     intentLevel: "BUY_NOW",
-    intentScore: 98,
+    intentScore: 99,
     status: "QUALIFIED",
     detectedBy: "COMPETITOR",
-    qualificationReasoning: "Explicitly looking for an alternative to a competitor due to scaling/rate limits.",
-    suggestedAngle: "Highlight Knivik's robust monitoring capabilities, high-volume limits, and seamless Slack integrations.",
-    draftedReply: "Hey tech_founder_92, fully understand the API limit struggle! Knivik actually supports high-volume scraping loops with dedicated enterprise proxy queues, meaning zero limits. We also send direct notifications to Slack. Drop me a DM, would love to set you up with some free credits to test it out!"
+    qualificationReasoning: "Prospect is actively seeking a real-time Reddit keyword monitoring solution that integrates with Slack, and explicitly expresses frustration with Google Alerts/Brand24 pricing and delays.",
+    suggestedAngle: "Highlight Knivik's rapid scanning loops, 60-second direct Slack integration, and flexible free tier.",
+    draftedReply: "Hey growth_hacker_dan! I totally feel your pain—most traditional social listening tools are built for huge PR agencies and scan only once a day.\n\nWe actually built Knivik precisely for this. It runs continuous, rapid-scanning loops on Reddit and pushes new high-intent threads directly to Slack within minutes. You can set up a keyword like 'CRM tools' in under 60 seconds and try it completely free. Happy to set you up with extra scan credits if you want to stress-test it! Let me know if you want to check it out!"
   }
 ]
 
@@ -122,7 +122,7 @@ export function ProductPreview() {
 
   return (
     <section id="sample-leads" className="py-16 md:py-24 bg-secondary/20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-5" />
+      <div className="absolute inset-0 bg-grid opacity-5 pointer-events-none select-none transform-gpu" />
       <div className="container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           
@@ -181,8 +181,8 @@ export function ProductPreview() {
             className="flex-1 w-full space-y-8 relative"
           >
             {/* Ambient Background Glows */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-[80px] -z-10" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-accent/20 rounded-full blur-[80px] -z-10" />
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-[80px] -z-10 pointer-events-none select-none transform-gpu" />
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-accent/20 rounded-full blur-[80px] -z-10 pointer-events-none select-none transform-gpu" />
 
             {leads.map((lead, i) => {
               const currentStatus = STATUS_OPTIONS.find(s => s.value === lead.status) ?? STATUS_OPTIONS[0]!

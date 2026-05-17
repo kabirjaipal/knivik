@@ -13,26 +13,24 @@ export function Hero({ user }: HeroProps) {
   return (
     <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-28 overflow-hidden min-h-[90vh] flex items-center">
       {/* Background patterns */}
-      <div className="absolute inset-0 bg-grid opacity-15 -z-10" />
+      <div className="absolute inset-0 bg-grid opacity-15 -z-10 pointer-events-none select-none transform-gpu" />
       
       {/* Animated Ambient Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none -z-10 overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none -z-10 overflow-hidden select-none">
         <motion.div 
           animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.1, 0.15, 0.1],
+            opacity: [0.08, 0.16, 0.08],
           }}
           transition={{
             duration: 8,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute top-[-10%] left-[10%] w-[80%] h-[40%] rounded-[100%] bg-primary/20 blur-[120px]" 
+          className="absolute top-[-10%] left-[10%] w-[80%] h-[40%] rounded-[100%] bg-primary/20 blur-[120px] transform-gpu will-change-transform" 
         />
         <motion.div 
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.05, 0.1, 0.05],
+            opacity: [0.04, 0.09, 0.04],
           }}
           transition={{
             duration: 10,
@@ -40,7 +38,7 @@ export function Hero({ user }: HeroProps) {
             ease: "easeInOut",
             delay: 1
           }}
-          className="absolute bottom-[10%] right-[10%] w-[60%] h-[40%] rounded-[100%] bg-accent/10 blur-[100px]" 
+          className="absolute bottom-[10%] right-[10%] w-[60%] h-[40%] rounded-[100%] bg-accent/10 blur-[100px] transform-gpu will-change-transform" 
         />
       </div>
 
