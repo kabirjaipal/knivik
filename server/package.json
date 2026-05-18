@@ -28,7 +28,7 @@
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
     "argon2": "^0.44.0",
-    "axios": "^1.14.0",
+    "axios": "^1.15.1",
     "axios-retry": "^4.5.0",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.6.6",
@@ -82,6 +82,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "overrides": {
-    "lodash": "^4.18.1"
+    "lodash": "^4.18.1",
+    "mysql2": "^3.17.0"
   }
 }
