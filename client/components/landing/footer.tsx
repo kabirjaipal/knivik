@@ -4,9 +4,9 @@ import { ShieldCheck, Heart } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="bg-background py-16 border-t border-border/40">
+    <footer className="bg-background py-10 border-t border-border/40">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div className="flex flex-col gap-4 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 group">
               <Logo size={24} />
@@ -38,7 +38,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-border/40">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 border-t border-border/40">
           <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50">
             © {new Date().getFullYear()} Knivik. Built for the community.
           </div>

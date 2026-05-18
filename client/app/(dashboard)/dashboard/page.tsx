@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { LeadCard, type LeadCardData, type LeadStatus } from "@/components/dashboard/LeadCard"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -103,7 +104,8 @@ export default function DashboardPage() {
       const data = await res.json()
       setDraftedReplies(prev => ({ ...prev, [leadId]: data.generatedText }))
       setExpandedReplies(prev => ({ ...prev, [leadId]: true }))
-    } catch (e) { console.error(e) }
+      toast.success('Your AI reply draft is ready!')
+    } catch (e) { toast.error('We could not generate a draft reply right now. Please try again.') }
     finally { setDraftingLeadId(null) }
   }
 

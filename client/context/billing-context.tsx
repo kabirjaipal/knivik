@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./auth-context";
+import { toast } from "sonner";
 
 interface BillingUser {
   id: string;
@@ -49,7 +50,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
         setBillingData(result.data);
       }
     } catch (error) {
-      console.error("Failed to fetch billing hub:", error);
+      toast.error("Could not load your billing information at this time.");
     } finally {
       setIsLoading(false);
     }

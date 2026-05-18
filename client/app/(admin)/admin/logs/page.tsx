@@ -17,6 +17,7 @@ import {
   Activity,
   Layers
 } from "lucide-react"
+import { toast } from "sonner"
 
 interface RequestLog {
   id: string;
@@ -89,7 +90,7 @@ export default function AdminLogsPage() {
         setPagination(result.pagination)
       }
     } catch (err) {
-      console.error('Failed to fetch request logs:', err)
+      toast.error("We couldn't load the request logs. Please try again.")
     } finally {
       setLoading(false)
     }

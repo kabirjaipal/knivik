@@ -29,7 +29,6 @@ export default function ProductsPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<any | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
   const [editingProductId, setEditingProductId] = useState<string | null>(null)
   const hasFetchedProducts = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
@@ -58,7 +57,7 @@ export default function ProductsPage() {
       const data = await res.json()
       setProducts(data.products)
     } catch (e: any) {
-      console.error('Failed to fetch products:', e)
+      toast.error("We couldn't load your products right now. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -78,7 +77,6 @@ export default function ProductsPage() {
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault()
-    setFormError(null)
     setIsSubmitting(true)
 
     try {
@@ -106,7 +104,7 @@ export default function ProductsPage() {
         } catch (parseErr) {
           errorMessage = res.statusText || errorMessage;
         }
-        setFormError(errorMessage);
+        toast.error(errorMessage);
         setIsSubmitting(false);
         return; // Exit early without throwing
       }
@@ -121,7 +119,7 @@ export default function ProductsPage() {
       toast.success(actionLabel)
       await fetchProducts()
     } catch (e: any) {
-      setFormError("A network error occurred. Please try again.");
+      toast.error("A network error occurred. Please try again.");
     } finally {
       setIsSubmitting(false)
     }
@@ -201,7 +199,6 @@ export default function ProductsPage() {
               <ProductForm 
                 formData={formData}
                 setFormData={setFormData}
-                formError={formError}
                 isSubmitting={isSubmitting}
                 isAiLoading={isAiLoading}
                 setIsAiLoading={setIsAiLoading}
@@ -267,7 +264,6 @@ export default function ProductsPage() {
               <ProductForm 
                 formData={formData}
                 setFormData={setFormData}
-                formError={formError}
                 isSubmitting={isSubmitting}
                 isAiLoading={isAiLoading}
                 setIsAiLoading={setIsAiLoading}
@@ -368,7 +364,6 @@ interface ProductFormProps {
     isActive: boolean;
   };
   setFormData: React.Dispatch<React.SetStateAction<any>>;
-  formError: string | null;
   isSubmitting: boolean;
   isAiLoading: boolean;
   setIsAiLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -376,15 +371,9 @@ interface ProductFormProps {
   onSubmit: (e: React.FormEvent) => void;
 }
 
-function ProductForm({ formData, setFormData, formError, isSubmitting, isAiLoading, setIsAiLoading, formId, onSubmit }: ProductFormProps) {
+function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAiLoading, formId, onSubmit }: ProductFormProps) {
   return (
     <form id={formId} onSubmit={onSubmit} className="space-y-4">
-      {formError && (
-        <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm">
-          {formError}
-        </div>
-      )}
-
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-foreground">Product Name</label>

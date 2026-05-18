@@ -4,6 +4,7 @@ import { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 function AuthCallbackContent() {
   const router = useRouter()
@@ -27,11 +28,11 @@ function AuthCallbackContent() {
           router.push("/dashboard")
         })
         .catch((err) => {
-          console.error("[AuthCallback] Refresh failed:", err)
+          toast.error("We couldn't complete your sign in. Please try again.")
           router.push("/login?error=Refresh+Failed")
         })
     } else {
-      console.warn("[AuthCallback] No token found in URL, redirecting to login")
+      toast.error("Authentication failed. Please log in again.")
       router.push("/login?error=Authentication+Failed")
     }
   }, [searchParams, router, refresh])

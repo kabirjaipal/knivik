@@ -50,7 +50,7 @@ export default function ProductDetailPage() {
       const data = await res.json()
       setProduct(data.product)
     } catch (e: any) {
-      console.error("Failed to fetch product:", e)
+      toast.error("Could not load the product details right now.")
       lastFetchedId.current = null // Reset on error to allow retry
     } finally {
       setLoading(false)

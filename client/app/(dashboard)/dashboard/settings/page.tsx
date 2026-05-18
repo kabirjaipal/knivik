@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { User, Lock, Save, AlertCircle, CheckCircle2, Loader2, ShieldCheck, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code } from "lucide-react"
+import { User, Lock, Save, AlertCircle, Loader2, ShieldCheck, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code } from "lucide-react"
 import { useState, useEffect, useCallback, useRef } from "react"
-import { FaSlack } from "react-icons/fa"
+import { FaSlack, FaDiscord } from "react-icons/fa"
+import { SiZapier, SiMake } from "react-icons/si"
+import { toast } from "sonner"
 
 export default function SettingsPage() {
   const { user, loading: authLoading, refresh } = useAuth()
@@ -17,8 +19,6 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   const hasFetchedAlerts = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
@@ -30,14 +30,10 @@ export default function SettingsPage() {
     company: ""
   })
   const [savingProfile, setSavingProfile] = useState(false)
-  const [profileError, setProfileError] = useState<string | null>(null)
-  const [profileSuccess, setProfileSuccess] = useState<string | null>(null)
 
   // Alerts State
   const [loadingSettings, setLoadingSettings] = useState(true)
   const [savingAlerts, setSavingAlerts] = useState(false)
-  const [alertError, setAlertError] = useState<string | null>(null)
-  const [alertSuccess, setAlertSuccess] = useState<string | null>(null)
   
   const [alertSettings, setAlertSettings] = useState({
     emailEnabled: false,
@@ -65,8 +61,7 @@ export default function SettingsPage() {
         })
       }
     } catch (e: any) {
-      console.error(e)
-      setAlertError("Could not load alert configuration.")
+      toast.error("Could not load alert configuration.")
     } finally {
       setLoadingSettings(false)
     }
@@ -94,13 +89,11 @@ export default function SettingsPage() {
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match")
+      toast.error("New passwords do not match")
       return
     }
 
     setLoading(true)
-    setError(null)
-    setSuccess(null)
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
@@ -114,12 +107,12 @@ export default function SettingsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error?.message || "Failed to update password")
 
-      setSuccess("Password updated successfully")
+      toast.success("Password updated successfully")
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
     } catch (err: any) {
-      setError(err.message)
+      toast.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -128,8 +121,6 @@ export default function SettingsPage() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setSavingProfile(true)
-    setProfileError(null)
-    setProfileSuccess(null)
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
@@ -149,11 +140,10 @@ export default function SettingsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error?.message || "Failed to update profile")
 
-      setProfileSuccess("Profile updated successfully")
+      toast.success("Profile updated successfully")
       await refresh()
-      setTimeout(() => setProfileSuccess(null), 3000)
     } catch (err: any) {
-      setProfileError(err.message)
+      toast.error(err.message)
     } finally {
       setSavingProfile(false)
     }
@@ -162,8 +152,6 @@ export default function SettingsPage() {
   const handleSaveAlerts = async (e: React.FormEvent) => {
     e.preventDefault()
     setSavingAlerts(true)
-    setAlertError(null)
-    setAlertSuccess(null)
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -175,10 +163,9 @@ export default function SettingsPage() {
       })
 
       if (!res.ok) throw new Error('Failed to update settings')
-      setAlertSuccess("Alert settings saved successfully.")
-      setTimeout(() => setAlertSuccess(null), 3000)
+      toast.success("Alert settings saved successfully.")
     } catch (e: any) {
-      setAlertError(e.message)
+      toast.error(e.message)
     } finally {
       setSavingAlerts(false)
     }
@@ -235,16 +222,6 @@ export default function SettingsPage() {
                 </CardHeader>
                 <form onSubmit={handleUpdateProfile}>
                   <CardContent className="pt-6 pb-8 space-y-6">
-                    {profileError && (
-                      <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
-                        <AlertCircle className="w-4 h-4 shrink-0" /> {profileError}
-                      </div>
-                    )}
-                    {profileSuccess && (
-                      <div className="p-4 bg-success/10 border border-success/20 text-success rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" /> {profileSuccess}
-                      </div>
-                    )}
                     <div className="grid gap-2">
                       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address</Label>
                       <div className="px-4 py-3 bg-muted/50 rounded-xl border border-border/50 font-medium text-muted-foreground flex justify-between items-center">
@@ -309,17 +286,6 @@ export default function SettingsPage() {
                 </CardHeader>
                 <form onSubmit={handleUpdatePassword}>
                   <CardContent className="pt-6 pb-8 space-y-4">
-                    {error && (
-                      <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
-                        <AlertCircle className="w-4 h-4 shrink-0" /> {error}
-                      </div>
-                    )}
-                    {success && (
-                      <div className="p-4 bg-success/10 border border-success/20 text-success rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" /> {success}
-                      </div>
-                    )}
-
                     <div className="space-y-2">
                       <Label htmlFor="currentPassword">Current Password</Label>
                       <Input 
@@ -403,17 +369,6 @@ export default function SettingsPage() {
                 </CardHeader>
                 <form onSubmit={handleSaveAlerts}>
                   <CardContent className="pt-6 pb-8 space-y-6">
-                    {alertError && (
-                      <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
-                        <AlertCircle className="w-4 h-4 shrink-0" /> {alertError}
-                      </div>
-                    )}
-                    {alertSuccess && (
-                      <div className="p-4 bg-success/10 border border-success/20 text-success rounded-xl flex items-center gap-3 text-sm font-medium animate-in fade-in zoom-in duration-300">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" /> {alertSuccess}
-                      </div>
-                    )}
-
                     <div className="space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60">
                       <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center gap-2">
@@ -464,9 +419,9 @@ export default function SettingsPage() {
                           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                             {[
                               { id: 'SLACK', name: 'Slack', icon: FaSlack },
-                              { id: 'DISCORD', name: 'Discord', icon: MessageSquare },
-                              { id: 'ZAPIER', name: 'Zapier', icon: Zap },
-                              { id: 'MAKE', name: 'Make', icon: Workflow },
+                              { id: 'DISCORD', name: 'Discord', icon: FaDiscord },
+                              { id: 'ZAPIER', name: 'Zapier', icon: SiZapier },
+                              { id: 'MAKE', name: 'Make', icon: SiMake },
                               { id: 'CUSTOM', name: 'Raw JSON', icon: Code }
                             ].map(({ id, name, icon: Icon }) => (
                               <div 

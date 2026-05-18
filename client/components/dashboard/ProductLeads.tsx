@@ -49,7 +49,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
       setDraftedReplies(initialDrafts)
     } catch (e: any) {
       setError(e.message)
-      toast.error(`Error loading leads: ${e.message}`)
+      toast.error('Could not load your leads. Please refresh the page to try again.')
       lastFetchRef.current = { id: null, trigger: -1 } // Reset on error
     } finally {
       setLoading(false)
@@ -73,10 +73,9 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
       const data = await res.json()
       setDraftedReplies(prev => ({ ...prev, [leadId]: data.generatedText }))
       setExpandedReplies(prev => ({ ...prev, [leadId]: true }))
-      toast.success('AI draft generated')
+      toast.success('Your AI reply draft is ready!')
     } catch (e: any) {
-      console.error('Draft reply failed:', e)
-      toast.error(e.message || 'Draft generation failed')
+      toast.error('We could not generate a draft reply right now. Please try again.')
     } finally {
       setDraftingLeadId(null)
     }
@@ -95,10 +94,9 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      toast.success(`Status updated to ${status.toLowerCase()}`)
+      toast.success(`Lead status has been updated to ${status.toLowerCase()}`)
     } catch (e: any) {
-      console.error('Failed to update status')
-      toast.error('Failed to update status')
+      toast.error('We could not update the lead status. Please check your connection.')
     }
   }, [])
 
@@ -111,10 +109,9 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes }),
       })
-      toast.success('Notes saved')
+      toast.success('Your notes have been saved successfully.')
     } catch {
-      console.error('Failed to update notes')
-      toast.error('Failed to save notes')
+      toast.error('We could not save your notes. Please check your connection and try again.')
     }
   }, [])
 
@@ -128,7 +125,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
         body: JSON.stringify({ feedback }),
       })
     } catch {
-      console.error('Failed to update feedback')
+      toast.error('We could not update the feedback right now.')
     }
   }, [])
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface CheckoutButtonProps {
   productId: string;
@@ -80,8 +81,8 @@ export function CheckoutButton({
       window.location.href = checkoutUrl;
       
     } catch (error: any) {
-      setIsLoading(true);
-      console.error("Checkout failed:", error);
+      setIsLoading(false);
+      toast.error("Checkout failed. Please try again.");
       onError?.(error instanceof Error ? error : new Error("Payment failed"));
     }
   };

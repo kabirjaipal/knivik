@@ -2,6 +2,7 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
+import { toast } from "sonner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   TrendingUp, 
@@ -98,7 +99,7 @@ export default function AnalyticsPage() {
       const result = await res.json()
       setLlmUsage(result.data)
     } catch (err: any) {
-      console.error(err.message)
+      toast.error("We couldn't load your AI usage data right now.")
     }
   }, [])
 
@@ -111,7 +112,7 @@ export default function AnalyticsPage() {
         setUsageStats(result.data)
       }
     } catch (err: any) {
-      console.error("Failed to fetch usage stats:", err.message)
+      toast.error("We couldn't load your usage statistics right now.")
     }
   }, [])
 

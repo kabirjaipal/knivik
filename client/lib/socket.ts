@@ -38,8 +38,7 @@ export const getSocket = () => {
     });
 
     socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error.message);
-      console.error('Socket attempted URL:', socketUrl);
+      // Intentionally not logging to avoid spam
     });
   }
   return socket;

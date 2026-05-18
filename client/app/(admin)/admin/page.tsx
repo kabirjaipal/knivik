@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, LayoutDashboard, Radar, Zap, Activity, Star, MessageSquare } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 interface AdminStats {
   userCount: number;
@@ -35,7 +36,7 @@ export default function AdminPage() {
         if (healthData.success) setHealth(healthData.data)
         if (feedbackData.success) setFeedbacks(feedbackData.feedbacks)
       } catch (err) {
-        console.error('Failed to fetch admin data:', err)
+        toast.error("Could not load the admin dashboard data. Please try again.")
       } finally {
         setLoading(false)
       }

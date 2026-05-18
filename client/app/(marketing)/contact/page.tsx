@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { FaTwitter } from "react-icons/fa";
+import { FaTwitter, FaInstagram } from "react-icons/fa";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
@@ -11,31 +11,64 @@ export const metadata: Metadata = MetadataService.constructPageMetadata({
 });
 
 export default function Contact() {
+  const contactMethods = [
+    {
+      icon: Mail,
+      iconColor: "text-primary",
+      title: "Email Support",
+      description: "Best for account issues and technical support. We aim to reply within 24 hours.",
+      link: `mailto:${SUPPORT_EMAIL}`,
+      linkText: `${SUPPORT_EMAIL} →`,
+      linkColor: "text-primary",
+      isExternal: false,
+    },
+    {
+      icon: FaTwitter,
+      iconColor: "text-sky-400",
+      title: "Twitter / X",
+      description: "Best for quick questions and daily updates. Follow us for the latest AI news.",
+      link: "https://twitter.com/knivik",
+      linkText: "@knivik →",
+      linkColor: "text-sky-400",
+      isExternal: true,
+    },
+    {
+      icon: FaInstagram,
+      iconColor: "text-pink-500",
+      title: "Instagram",
+      description: "Best for behind the scenes and feature previews. Reach out via direct message.",
+      link: "https://instagram.com/knivik",
+      linkText: "@knivik →",
+      linkColor: "text-pink-500",
+      isExternal: true,
+    }
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-24 max-w-4xl text-center">
+    <div className="container mx-auto px-4 py-24 text-center">
       <h1 className="text-3xl sm:text-4xl font-black tracking-tighter mb-4">Get in touch.</h1>
       <p className="text-base sm:text-lg text-muted-foreground mb-16 max-w-2xl mx-auto">
         Need help? Have a feature request? Or just want to talk about lead generation? We're here.
       </p>
 
-      <div className="grid md:grid-cols-2 gap-8 text-left">
-        <div className="p-8 rounded-3xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors group">
-          <Mail className="w-10 h-10 text-primary mb-6" />
-          <h2 className="text-2xl font-bold mb-2">Email Support</h2>
-          <p className="text-muted-foreground mb-6">Best for account issues and technical support. We aim to reply within 24 hours.</p>
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary font-bold hover:underline">
-            {SUPPORT_EMAIL} →
-          </a>
-        </div>
-
-        <div className="p-8 rounded-2xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors group">
-          <FaTwitter className="w-10 h-10 text-sky-400 mb-6" />
-          <h2 className="text-2xl font-bold mb-2">Social / DM</h2>
-          <p className="text-muted-foreground mb-6">Best for quick questions and updates. Follow us for the latest on AI lead gen.</p>
-          <a href="https://twitter.com/knivik_io" target="_blank" className="text-sky-400 font-bold hover:underline">
-            @knivik_io →
-          </a>
-        </div>
+      <div className="grid md:grid-cols-3 gap-8 text-left">
+        {contactMethods.map((method, index) => {
+          const Icon = method.icon;
+          return (
+            <div key={index} className="p-8 rounded-3xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors group">
+              <Icon className={`w-10 h-10 ${method.iconColor} mb-6`} />
+              <h2 className="text-2xl font-bold mb-2">{method.title}</h2>
+              <p className="text-muted-foreground mb-6">{method.description}</p>
+              <a 
+                href={method.link} 
+                target={method.isExternal ? "_blank" : undefined}
+                className={`${method.linkColor} font-bold hover:underline`}
+              >
+                {method.linkText}
+              </a>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
