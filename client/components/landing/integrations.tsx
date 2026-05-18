@@ -1,10 +1,11 @@
 "use client"
 
-import { MessageSquare, Mail, Database, Slack, Sparkles, Zap } from "lucide-react"
+import { MessageSquare, Mail, Database, Sparkles, Zap } from "lucide-react"
 import { motion } from "framer-motion"
+import { FaSlack } from "react-icons/fa"
 
 const integrations = [
-  { name: "Slack", icon: <Slack className="h-12 w-12 md:h-16 md:w-16 text-[#4A154B]" /> },
+  { name: "Slack", icon: <FaSlack className="h-12 w-12 md:h-16 md:w-16 text-[#4A154B]" /> },
   { name: "Discord", icon: <MessageSquare className="h-12 w-12 md:h-16 md:w-16 text-[#5865F2]" /> },
   { name: "Email", icon: <Mail className="h-12 w-12 md:h-16 md:w-16 text-primary" /> },
   { name: "Zapier", icon: <Zap className="h-12 w-12 md:h-16 md:w-16 text-[#FF6F00]" /> },

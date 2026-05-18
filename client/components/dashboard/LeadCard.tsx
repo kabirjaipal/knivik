@@ -3,9 +3,10 @@
 import { memo, useState, useCallback } from "react"
 import {
   ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, ChevronDown,
-  RotateCw, Linkedin, Twitter, Github, Brain, Flame, Tags,
+  RotateCw, Brain, Flame, Tags,
   ThumbsUp, ThumbsDown, Info, Clock, Users, Lock
 } from "lucide-react"
+import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
 import {
   Dialog,
   DialogContent,
@@ -84,19 +85,19 @@ const EnrichmentIcons = ({ enrichment }: { enrichment?: LeadEnrichment | null })
       {enrichment.linkedinUrl && (
         <a href={enrichment.linkedinUrl} target="_blank" rel="noreferrer" title="LinkedIn"
           className="text-blue-400 hover:text-blue-300 transition-colors">
-          <Linkedin className="w-3 h-3" />
+          <FaLinkedin className="w-3 h-3" />
         </a>
       )}
       {enrichment.twitterUrl && (
         <a href={enrichment.twitterUrl} target="_blank" rel="noreferrer" title="Twitter"
           className="text-sky-400 hover:text-sky-300 transition-colors">
-          <Twitter className="w-3 h-3" />
+          <FaTwitter className="w-3 h-3" />
         </a>
       )}
       {enrichment.githubUrl && (
         <a href={enrichment.githubUrl} target="_blank" rel="noreferrer" title="GitHub"
           className="text-foreground/60 hover:text-foreground transition-colors">
-          <Github className="w-3 h-3" />
+          <FaGithub className="w-3 h-3" />
         </a>
       )}
     </span>

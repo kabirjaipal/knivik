@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { User, Lock, Save, AlertCircle, CheckCircle2, Loader2, ShieldCheck, Slack, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code } from "lucide-react"
+import { User, Lock, Save, AlertCircle, CheckCircle2, Loader2, ShieldCheck, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code } from "lucide-react"
 import { useState, useEffect, useCallback, useRef } from "react"
+import { FaSlack } from "react-icons/fa"
 
 export default function SettingsPage() {
   const { user, loading: authLoading, refresh } = useAuth()
@@ -462,7 +463,7 @@ export default function SettingsPage() {
                           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Platform</Label>
                           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                             {[
-                              { id: 'SLACK', name: 'Slack', icon: Slack },
+                              { id: 'SLACK', name: 'Slack', icon: FaSlack },
                               { id: 'DISCORD', name: 'Discord', icon: MessageSquare },
                               { id: 'ZAPIER', name: 'Zapier', icon: Zap },
                               { id: 'MAKE', name: 'Make', icon: Workflow },

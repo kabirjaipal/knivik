@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, CheckCircle2, Mail, Slack, Info, Clock, User } from "lucide-react"
+import { AlertCircle, CheckCircle2, Mail, Info, Clock, User } from "lucide-react"
+import { FaSlack } from "react-icons/fa"
 import { 
   Tooltip,
   TooltipContent,
@@ -104,7 +105,7 @@ export default function AdminAlertsPage() {
                     {log.channel === 'EMAIL' ? (
                       <Mail className="w-4 h-4 text-primary" />
                     ) : (
-                      <Slack className="w-4 h-4 text-primary" />
+                      <FaSlack className="w-4 h-4 text-primary" />
                     )}
                     <span className="text-xs font-bold">{log.channel}</span>
                   </div>

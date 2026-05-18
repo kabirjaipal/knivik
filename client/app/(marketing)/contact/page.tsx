@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import { Mail, Twitter } from "lucide-react";
+import { Mail } from "lucide-react";
+import { FaTwitter } from "react-icons/fa";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
@@ -28,7 +29,7 @@ export default function Contact() {
         </div>
 
         <div className="p-8 rounded-2xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors group">
-          <Twitter className="w-10 h-10 text-sky-400 mb-6" />
+          <FaTwitter className="w-10 h-10 text-sky-400 mb-6" />
           <h2 className="text-2xl font-bold mb-2">Social / DM</h2>
           <p className="text-muted-foreground mb-6">Best for quick questions and updates. Follow us for the latest on AI lead gen.</p>
           <a href="https://twitter.com/knivik_io" target="_blank" className="text-sky-400 font-bold hover:underline">

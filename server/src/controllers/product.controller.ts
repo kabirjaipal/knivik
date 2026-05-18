@@ -11,7 +11,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
   isActive: z.boolean().default(true),
-  aiConfig: z.record(z.any()).optional(),
+  aiConfig: z.record(z.string(), z.any()).optional(),
 });
 
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
@@ -107,7 +107,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const cleanAiConfig = { ...(data.aiConfig || {}) };
+    const cleanAiConfig: Record<string, any> = { ...(data.aiConfig || {}) };
     delete cleanAiConfig['lastManualScanDate'];
     delete cleanAiConfig['manualScansToday'];
 

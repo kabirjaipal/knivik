@@ -1,8 +1,9 @@
 "use client"
 
-import { Activity, Flame, BarChart2, CheckCircle2, Twitter, Rss, Hash, ChevronDown, ChevronUp } from "lucide-react"
+import { Activity, Flame, BarChart2, CheckCircle2, Rss, Hash, ChevronDown, ChevronUp } from "lucide-react"
 import { useState } from "react"
 import type { LeadCardData } from "./LeadCard"
+import { FaTwitter } from "react-icons/fa"
 
 interface ProductStatsProps {
   leads: LeadCardData[]
@@ -67,7 +68,7 @@ export function ProductStats({ leads }: ProductStatsProps) {
             {([
               { key: 'REDDIT', label: 'Reddit', icon: Rss, bar: 'bg-orange-500/80' },
               { key: 'HACKERNEWS', label: 'HackerNews', icon: Hash, bar: 'bg-amber-500/80' },
-              { key: 'TWITTER', label: 'Twitter', icon: Twitter, bar: 'bg-sky-500/80' },
+              { key: 'TWITTER', label: 'Twitter', icon: FaTwitter, bar: 'bg-sky-500/80' },
             ] as const).map(({ key, label, icon: Icon, bar }) => {
               const count = byPlatform[key]
               const pct = Math.round((count / total) * 100)
