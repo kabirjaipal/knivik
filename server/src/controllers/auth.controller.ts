@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
+import { hashPassword, verifyPassword } from 'better-auth/crypto';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { db } from '../lib/db.js';
 import { config } from '../lib/config.js';
 import logger from '../lib/logger.js';
-import { sendEmail } from '../lib/mailer.js';
+import { sendEmail, renderBaseEmail } from '../lib/mailer.js';
 import { z } from 'zod';
 import { getFrontendUrl } from '../lib/url.js';
 
@@ -46,13 +46,11 @@ const forgotPasswordSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-  email: z.string().email(),
   token: z.string().min(1),
   newPassword: z.string().min(8),
 });
 
 const verifyEmailSchema = z.object({
-  email: z.string().email(),
   token: z.string().min(1),
 });
 
@@ -128,7 +126,7 @@ export const register = async (req: Request, res: Response) => {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
+    const hashedPassword = await hashPassword(password);
 
     const user = await db.client.user.create({
       data: {
@@ -140,7 +138,7 @@ export const register = async (req: Request, res: Response) => {
 
     // Generate and store a hashed email-verification token
     const verifyToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(verifyToken, config.BCRYPT_ROUNDS);
+    const hashedToken = crypto.createHash('sha256').update(verifyToken).digest('hex');
 
     await db.client.otpCode.create({
       data: {
@@ -152,17 +150,17 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    const verifyUrl = `${getFrontendUrl(req)}/verify-email?token=${verifyToken}&email=${encodeURIComponent(user.email)}`;
+    const verifyUrl = `${getFrontendUrl(req)}/verify-email?token=${verifyToken}`;
 
-    const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
-        <h2 style="color: #0f172a;">Welcome to ${config.PROJECT_NAME}!</h2>
-        <p>Please confirm your email address so you can log into your dashboard.</p>
-        <br/>
-        <a href="${verifyUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Verify Email Address</a>
-        <br/>
-      </div>
-    `;
+    const htmlTemplate = renderBaseEmail({
+      title: 'Confirm your email',
+      preheader: 'Welcome to Knivik! Confirm your email address to get started.',
+      bodyHtml: `<p>Welcome to <strong>${config.PROJECT_NAME}</strong>! Click the button below to confirm your email address and unlock your workspace.</p>
+                 <p style="margin-top: 12px; font-size: 13px; color: #64748b;">This link expires in 24 hours.</p>`,
+      ctaText: 'Verify Email',
+      ctaUrl: verifyUrl,
+      footerText: `Sent to ${user.email}. If you didn't sign up for Knivik, you can safely ignore this email.`
+    });
 
     await sendEmail(user.email, `Verify Your ${config.PROJECT_NAME} Account`, htmlTemplate);
 
@@ -209,19 +207,21 @@ export const login = async (req: Request, res: Response) => {
 
     // Guard: user must exist and have a password (i.e. is not OAuth-only)
     if (!user || !user.password) {
-      // Constant-time check to prevent timing attacks that reveal whether an
-      // email exists in the DB (run a throwaway bcrypt compare regardless).
-      await bcrypt.compare(
+      // Run a throwaway compare to prevent timing attacks
+      await verifyPassword({
+        hash: 'invalid_salt:invalid_key',
         password,
-        '$2b$12$invalidhashpadding000000000000000000000000000000000000000'
-      );
+      });
       res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
     // Validate password before checking email verification so we don't leak
     // whether an unverified account exists via the different error message.
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await verifyPassword({
+      hash: user.password,
+      password,
+    });
     if (!isValidPassword) {
       res.status(401).json({ error: 'Invalid email or password' });
       return;
@@ -305,7 +305,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = await bcrypt.hash(resetToken, config.BCRYPT_ROUNDS);
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     await db.client.otpCode.create({
       data: {
@@ -317,18 +317,17 @@ export const forgotPassword = async (req: Request, res: Response) => {
       },
     });
 
-    const resetUrl = `${getFrontendUrl(req)}/reset-password?token=${resetToken}&email=${encodeURIComponent(user.email)}`;
+    const resetUrl = `${getFrontendUrl(req)}/reset-password?token=${resetToken}`;
 
-    const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
-        <h2 style="color: #0f172a;">Password Reset Request</h2>
-        <p>You requested to reset your password for ${config.PROJECT_NAME}. Please click the button below to choose a new password. This link will expire in 20 minutes.</p>
-        <br/>
-        <a href="${resetUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Reset Your Password</a>
-        <br/>
-        <p style="margin-top: 30px; font-size: 12px; color: #64748b;">If you didn't request this, you can safely ignore this email.</p>
-      </div>
-    `;
+    const htmlTemplate = renderBaseEmail({
+      title: 'Reset your password',
+      preheader: 'Click the link to set a new password for your Knivik account.',
+      bodyHtml: `<p>Click the button below to set a new password for your <strong>${config.PROJECT_NAME}</strong> account.</p>
+                 <p style="margin-top: 12px; font-size: 13px; color: #ef4444; font-weight: 600;">This link expires in 20 minutes.</p>`,
+      ctaText: 'Reset Password',
+      ctaUrl: resetUrl,
+      footerText: `Sent to ${user.email}. If you did not request a password reset, you can safely ignore this email.`
+    });
 
     await sendEmail(user.email, `Reset your ${config.PROJECT_NAME} Password`, htmlTemplate);
 
@@ -355,52 +354,50 @@ export const resetPassword = async (req: Request, res: Response) => {
       return;
     }
 
-    const { email, token, newPassword } = parsed.data;
-    const normalisedEmail = email.toLowerCase().trim();
+    const { token, newPassword } = parsed.data;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const otpCodes = await db.client.otpCode.findMany({
+    const otpRecord = await db.client.otpCode.findFirst({
       where: {
-        email: normalisedEmail,
+        code: hashedToken,
         type: 'RESET_PASSWORD',
         usedAt: null,
         expiresAt: { gt: new Date() },
       },
     });
 
-    if (otpCodes.length === 0) {
-      res.status(400).json({ error: 'Token is invalid or expired' });
-      return;
-    }
-
-    let matchingOtp = null;
-    for (const otp of otpCodes) {
-      if (await bcrypt.compare(token, otp.code)) {
-        matchingOtp = otp;
-        break; // Stop on first match — no need to check the rest
-      }
-    }
-
-    if (!matchingOtp) {
+    if (!otpRecord) {
       res.status(400).json({ error: 'Token is invalid or expired' });
       return;
     }
 
     // Mark token as used first (prevents a race-condition replay attack)
     await db.client.otpCode.update({
-      where: { id: matchingOtp.id },
+      where: { id: otpRecord.id },
       data: { usedAt: new Date() },
     });
 
-    const hashedPassword = await bcrypt.hash(newPassword, config.BCRYPT_ROUNDS);
+    const hashedPassword = await hashPassword(newPassword);
 
-    await db.client.user.update({
-      where: { email: normalisedEmail },
+    const updatedUser = await db.client.user.update({
+      where: { email: otpRecord.email },
       data: { password: hashedPassword },
     });
 
+    // Sync credentials inside Better Auth's Account table so standard email sign-in works
+    await db.client.account.updateMany({
+      where: {
+        userId: updatedUser.id,
+        providerId: 'credential',
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
     // Invalidate ALL existing sessions for the user on password reset for security.
-    if (matchingOtp.userId && typeof matchingOtp.userId === 'string') {
-      await db.client.session.deleteMany({ where: { userId: matchingOtp.userId } });
+    if (otpRecord.userId && typeof otpRecord.userId === 'string') {
+      await db.client.session.deleteMany({ where: { userId: otpRecord.userId } });
     }
 
     res.status(200).json({ success: true, message: 'Password reset successfully' });
@@ -422,44 +419,31 @@ export const verifyEmail = async (req: Request, res: Response) => {
       return;
     }
 
-    const { email, token } = parsed.data;
-    const normalisedEmail = email.toLowerCase().trim();
+    const { token } = parsed.data;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const otpCodes = await db.client.otpCode.findMany({
+    const otpRecord = await db.client.otpCode.findFirst({
       where: {
-        email: normalisedEmail,
+        code: hashedToken,
         type: 'VERIFY_EMAIL',
         usedAt: null,
         expiresAt: { gt: new Date() },
       },
     });
 
-    if (otpCodes.length === 0) {
-      res.status(400).json({ error: 'Verification link is invalid or expired' });
-      return;
-    }
-
-    let matchingOtp = null;
-    for (const otp of otpCodes) {
-      if (await bcrypt.compare(token, otp.code)) {
-        matchingOtp = otp;
-        break;
-      }
-    }
-
-    if (!matchingOtp) {
+    if (!otpRecord) {
       res.status(400).json({ error: 'Verification link is invalid or expired' });
       return;
     }
 
     // Mark token as used before updating the user (prevents replay attacks)
     await db.client.otpCode.update({
-      where: { id: matchingOtp.id },
+      where: { id: otpRecord.id },
       data: { usedAt: new Date() },
     });
 
     await db.client.user.update({
-      where: { email: normalisedEmail },
+      where: { email: otpRecord.email },
       data: { emailVerified: true },
     });
 

@@ -45,13 +45,13 @@ router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
     }
 
     let checkoutEmail = email || req.user?.email;
-    let checkoutName = name || req.user?.name || req.user?.username;
+    let checkoutName = name || req.user?.displayUsername || req.user?.username;
 
     // Fallback: Fetch from DB if email is missing
     if (!checkoutEmail && userId) {
       const user = await db.client.user.findUnique({ where: { id: userId } });
       checkoutEmail = user?.email || '';
-      if (!checkoutName) checkoutName = user?.name || user?.username || '';
+      if (!checkoutName) checkoutName = user?.displayUsername || user?.username || '';
     }
 
     logger.info(

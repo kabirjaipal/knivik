@@ -173,7 +173,7 @@ export default function PricingClient() {
                     : PLANS.PRO.yearly.productId
                 }
                 email={user?.email || ""}
-                name={user?.name || user?.username || ""}
+                name={(user as any)?.displayUsername || user?.username || ""}
                 userId={user?.id || ""}
                 planName="Pro"
                 className={`w-full h-14 text-base font-bold rounded-2xl transition-all ${

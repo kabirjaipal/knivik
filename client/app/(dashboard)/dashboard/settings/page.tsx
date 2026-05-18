@@ -10,8 +10,11 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { FaSlack, FaDiscord } from "react-icons/fa"
 import { SiZapier, SiMake } from "react-icons/si"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
 
 export default function SettingsPage() {
+  const router = useRouter()
   const { user, loading: authLoading, refresh } = useAuth()
   const [activeTab, setActiveTab] = useState<"profile" | "alerts">("profile")
   const [currentPassword, setCurrentPassword] = useState("")
@@ -19,6 +22,33 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   
   const [loading, setLoading] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/users/me`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete account");
+      }
+
+      toast.success("Your account has been deleted successfully.");
+      setShowDeleteModal(false);
+      await authClient.signOut();
+      router.push('/login');
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred while deleting your account.");
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
 
   const hasFetchedAlerts = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
@@ -345,7 +375,11 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground mb-6">
                     Once you delete your account, all your products, leads, and settings will be permanently removed. This action cannot be undone.
                   </p>
-                  <Button variant="destructive" className="w-full sm:w-auto font-bold uppercase tracking-widest text-xs h-10 px-6">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full sm:w-auto font-bold uppercase tracking-widest text-xs h-10 px-6 gap-2"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
                     Delete Account
                   </Button>
                 </CardContent>
@@ -498,6 +532,44 @@ export default function SettingsPage() {
 
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="relative w-full max-w-sm bg-card border border-destructive/20 rounded-2xl p-6 shadow-2xl space-y-6 animate-in zoom-in-95 duration-300">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-destructive/10 rounded-xl text-destructive">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-black text-foreground tracking-tight">Delete Account?</h3>
+            </div>
+
+            <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+              Are you sure you want to permanently delete your account? This action is irreversible and cannot be undone.
+            </p>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-sm h-10 text-xs font-bold border-border/60 hover:bg-muted/50"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deletingAccount}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1 rounded-sm h-10 text-xs font-black uppercase tracking-wider gap-2"
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+              >
+                {deletingAccount ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -14,14 +14,13 @@ function VerifyEmailLogic() {
   const router = useRouter()
   
   const token = searchParams.get("token")
-  const email = searchParams.get("email")
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (!token || !email) {
+    if (!token) {
       setError("Invalid or missing verification link.")
       setLoading(false)
       return
@@ -33,7 +32,7 @@ function VerifyEmailLogic() {
         const response = await fetch(`${apiUrl}/auth/verify-email`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, token })
+          body: JSON.stringify({ token })
         })
 
         const data = await response.json()
@@ -54,7 +53,7 @@ function VerifyEmailLogic() {
     }
 
     verify()
-  }, [email, token, router])
+  }, [token, router])
 
   return (
     <div className="text-center">

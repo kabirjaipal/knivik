@@ -4,6 +4,7 @@ import config from '../lib/config.js';
 import { AlertChannel } from '@prisma/client';
 import nodemailer from 'nodemailer';
 import { hasCapability } from '../lib/plans.js';
+import { renderBaseEmail } from '../lib/mailer.js';
 
 export const sendLeadAlert = async (leadId: string) => {
   try {
@@ -193,24 +194,37 @@ async function sendEmailAlert(email: string, lead: any) {
       },
     });
 
-    const body = `
-      <h1>New High-Intent Lead!</h1>
-      <p>A new lead has been detected for <strong>${lead.product.name}</strong>.</p>
-      <ul>
-        <li><strong>Intent Score:</strong> ${lead.intentScore}%</li>
-        <li><strong>Intent Level:</strong> ${lead.intentLevel}</li>
-        <li><strong>Platform:</strong> ${lead.platform}</li>
-      </ul>
-      <p><em>"${lead.title || 'Conversation thread'}"</em></p>
-      <p><a href="${lead.url}">View Source Post</a></p>
-      <p><a href="${config.FRONTEND_URL}/dashboard">Open ${config.PROJECT_NAME} Dashboard</a></p>
+    const bodyHtml = `
+      <p>A new high-intent lead matching your search rules was detected on <strong>${lead.platform}</strong>.</p>
+      <div style="background-color: #f8fafc; border-left: 4px solid #5b3df5; padding: 16px; margin: 20px 0; border-radius: 8px; font-style: italic; color: #334155; font-size: 14px; border: 1px solid #e2e8f0;">
+        "${lead.title || 'Conversation thread'}"
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f1f5f9;">Product:</td>
+          <td style="padding: 8px 0; font-weight: 700; color: #0b0f19; text-align: right; border-bottom: 1px solid #f1f5f9;">${lead.product.name}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: 500; border-bottom: 1px solid #f1f5f9;">Intent Score:</td>
+          <td style="padding: 8px 0; font-weight: 700; color: #00dfdf; text-align: right; border-bottom: 1px solid #f1f5f9;">${lead.intentScore}% (${lead.intentLevel})</td>
+        </tr>
+      </table>
     `;
+
+    const htmlTemplate = renderBaseEmail({
+      title: 'New Lead Found',
+      preheader: `Knivik alert: a new high-intent lead was found for ${lead.product.name}.`,
+      bodyHtml,
+      ctaText: 'View Source Post',
+      ctaUrl: lead.url,
+      footerText: `Sent to ${email} based on your keyword tracking settings for ${lead.product.name}.`
+    });
 
     await transporter.sendMail({
       from: config.SMTP_FROM,
       to: email,
-      subject: `🚀 [${config.PROJECT_NAME}] New High-Intent Lead for ${lead.product.name} (${lead.intentScore}%)`,
-      html: body,
+      subject: `🚀 [${config.PROJECT_NAME}] New Lead: ${lead.product.name} (${lead.intentScore}%)`,
+      html: htmlTemplate,
     });
 
     // Create success log record

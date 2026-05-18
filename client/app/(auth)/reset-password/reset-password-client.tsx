@@ -16,14 +16,13 @@ function ResetPasswordForm() {
   const router = useRouter()
   
   const token = searchParams.get("token")
-  const email = searchParams.get("email")
 
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
 
-  if (!token || !email) {
+  if (!token) {
     return (
       <div className="text-center space-y-4">
         <h3 className="font-semibold text-destructive text-lg">Invalid or Missing Link</h3>
@@ -49,7 +48,7 @@ function ResetPasswordForm() {
       const response = await fetch(`${apiUrl}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, token, newPassword: password })
+        body: JSON.stringify({ token, newPassword: password })
       })
 
       const data = await response.json()
@@ -113,14 +112,11 @@ function ResetPasswordForm() {
 }
 
 function ResetPasswordHeader() {
-  const searchParams = useSearchParams()
-  const email = searchParams.get("email")
-  
   return (
     <div className="space-y-1">
       <CardTitle className="text-xl font-black tracking-tight">Set New Password</CardTitle>
       <CardDescription className="text-sm">
-        Securing account for <span className="font-semibold text-foreground">{email || "your account"}</span>.
+        Securing access and updating your account security keys.
       </CardDescription>
     </div>
   )

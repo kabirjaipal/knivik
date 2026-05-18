@@ -1,5 +1,5 @@
 import { db } from '../src/lib/db.js';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from 'better-auth/crypto';
 
 // Get the pre-configured PrismaClient instance
 const prisma = db.client;
@@ -41,8 +41,8 @@ async function main() {
     prisma.systemConfig.deleteMany({}),
   ]);
 
-  // Hash passwords using bcryptjs (matches server/src/lib/auth.ts)
-  const hashedPassword = await bcrypt.hash('KniOw2032!', 12);
+  // Hash passwords using Better Auth standard scrypt algorithm
+  const hashedPassword = await hashPassword('KniOw2032!');
 
   console.log('👥 Creating owner user...');
 
@@ -50,7 +50,7 @@ async function main() {
   const owner = await prisma.user.create({
     data: {
       email: 'owner@knivik.xyz',
-      name: 'owner',
+      displayUsername: 'owner',
       username: 'owner',
       password: hashedPassword,
       role: 'admin',

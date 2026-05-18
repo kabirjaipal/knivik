@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Loader2, CheckCircle2, Radar, Mail } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,8 +39,10 @@ export default function ForgotPasswordClient() {
       }
 
       setSuccess(true)
+      toast.success("Password reset instructions sent to your email!")
     } catch (err: any) {
       setError(err.message)
+      toast.error(err.message || "Failed to send reset link")
     } finally {
       setLoading(false)
     }

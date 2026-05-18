@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
+import { hashPassword as baHashPassword, verifyPassword as baVerifyPassword } from 'better-auth/crypto';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { db } from '../lib/db.js';
@@ -142,11 +142,11 @@ export const requireRole = (roles: string[]) => {
 };
 
 export const hashPassword = async (password: string): Promise<string> => {
-  return bcrypt.hash(password, config.BCRYPT_ROUNDS);
+  return baHashPassword(password);
 };
 
 export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
-  return bcrypt.compare(password, hash);
+  return baVerifyPassword({ hash, password });
 };
 
 export const generateToken = (userId: string): string => {

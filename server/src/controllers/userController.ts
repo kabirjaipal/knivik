@@ -123,6 +123,26 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response): Prom
   res.status(204).send();
 });
 
+export const deleteMe = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({
+      success: false,
+      error: {
+        status: 401,
+        code: 'UNAUTHORIZED',
+        message: 'User session expired or invalid',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
+  await UserService.deleteUser(req.user.id, req.requestId as string | undefined);
+  
+  res.status(204).send();
+});
+
 export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { currentPassword, newPassword } = req.body;
   
