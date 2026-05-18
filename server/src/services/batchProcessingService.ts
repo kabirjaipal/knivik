@@ -366,6 +366,9 @@ export class BatchProcessingService {
    * Clean up old batch-processed leads (optional maintenance)
    */
   static async cleanupOldBatchLeads(userId: string, daysToKeep: number = 30) {
+    if (typeof userId !== 'string') {
+      throw new Error('Invalid user ID type');
+    }
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 

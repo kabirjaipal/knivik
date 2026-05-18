@@ -263,7 +263,7 @@ export const logout = async (req: Request, res: Response) => {
   try {
     const token = req.cookies?.['token'] ?? req.headers.authorization?.split(' ')[1];
 
-    if (token) {
+    if (token && typeof token === 'string') {
       await db.client.session.deleteMany({ where: { token } });
     }
 
@@ -399,7 +399,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
 
     // Invalidate ALL existing sessions for the user on password reset for security.
-    if (matchingOtp.userId) {
+    if (matchingOtp.userId && typeof matchingOtp.userId === 'string') {
       await db.client.session.deleteMany({ where: { userId: matchingOtp.userId } });
     }
 
