@@ -120,8 +120,12 @@ export default function RootLayout({
             </AuthProvider>
           </ThemeProvider>
           <Toaster position="top-right" richColors closeButton />
-          <Analytics />
-          <SpeedInsights />
+          {process.env.NODE_ENV === "production" && (
+            <>
+              <Analytics />
+              <SpeedInsights />
+            </>
+          )}
         </PostHogProvider>
       </body>
     </html>
