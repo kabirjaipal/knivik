@@ -5,7 +5,7 @@ import posthog from 'posthog-js'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession, signOut } from '@/lib/auth-client'
 import { disconnectSocket } from '@/lib/socket'
-import { Wrench } from 'lucide-react'
+import { Wrench, Loader2 } from 'lucide-react'
 
 // Keep same User interface for backward compatibility
 interface User {
@@ -173,6 +173,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           </p>
         </div>
       </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <AuthContext.Provider value={value}>
+        <div className="fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-background text-foreground z-[99999]">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        </div>
+      </AuthContext.Provider>
     );
   }
 
