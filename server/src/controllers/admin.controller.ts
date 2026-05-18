@@ -536,7 +536,11 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
     await db.client.systemConfig.upsert({
       where: { key },
       update: { value },
-      create: { key, value }
+      create: {
+        id: `config-${key}`,
+        key,
+        value
+      }
     });
 
     logger.info({ adminId: (req as any).user?.id, key, value }, 'Admin updated system configuration');

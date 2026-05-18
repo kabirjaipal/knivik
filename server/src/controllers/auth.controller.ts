@@ -97,6 +97,16 @@ const issueSession = async (res: Response, userId: string): Promise<string> => {
 
 export const register = async (req: Request, res: Response) => {
   try {
+    // Check if user registration is enabled globally
+    const regConfig = await db.client.systemConfig.findUnique({
+      where: { key: 'registrationEnabled' },
+    });
+    const isRegistrationEnabled = regConfig ? (regConfig.value as boolean) : true;
+    if (!isRegistrationEnabled) {
+      res.status(403).json({ error: 'User registration is temporarily disabled.' });
+      return;
+    }
+
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: 'Invalid input parameters', details: parsed.error.issues });

@@ -15,7 +15,7 @@ import { PROJECT_NAME } from "@/lib/constants"
 
 export default function RegisterClient() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, registrationEnabled } = useAuth()
   
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
@@ -98,7 +98,20 @@ export default function RegisterClient() {
           </CardHeader>
           
           <CardContent className="pb-3">
-            {success ? (
+            {!registrationEnabled ? (
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-md p-6 flex flex-col items-center text-center space-y-3.5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 mb-1">
+                  <UserPlus className="h-6 w-6 stroke-[2.5]" />
+                </div>
+                <h3 className="font-black text-base text-foreground tracking-tight">Onboarding Closed</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed max-w-[280px]">
+                  New account registrations are temporarily paused while we optimize workspace queues. Please check back shortly!
+                </p>
+                <Button variant="outline" size="sm" className="mt-2 rounded-xl font-bold" onClick={() => router.push('/')}>
+                  Return Home
+                </Button>
+              </div>
+            ) : success ? (
               <div className="bg-success/5 border border-success/20 rounded-sm p-6 flex flex-col items-center text-center space-y-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success mb-1">
                   <CheckCircle2 className="h-6 w-6" />

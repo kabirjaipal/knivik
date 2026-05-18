@@ -59,3 +59,24 @@ export const getRequestLogs = asyncHandler(async (req: Request, res: Response) =
     requestId: req.requestId,
   });
 });
+
+export const getPublicConfig = asyncHandler(async (req: Request, res: Response) => {
+  const configs = await db.client.systemConfig.findMany({
+    where: {
+      key: {
+        in: ['maintenanceMode', 'registrationEnabled']
+      }
+    }
+  });
+
+  const configMap = configs.reduce<Record<string, any>>((acc, c) => ({ ...acc, [c.key]: c.value }), {});
+
+  res.status(200).json({
+    success: true,
+    data: {
+      maintenanceMode: configMap.maintenanceMode ?? false,
+      registrationEnabled: configMap.registrationEnabled ?? true,
+    },
+    requestId: req.requestId,
+  });
+});

@@ -11,17 +11,17 @@ type FeedbackCategory = "UI/UX" | "Scraping" | "AI Accuracy" | "Pricing" | "Othe
 export function FeedbackWidget() {
   const { user } = useAuth()
 
-  // Hide feedback widget if user is not logged in or is an administrator
-  if (!user || user.role === "admin") {
-    return null
-  }
-
   const [isOpen, setIsOpen] = useState(false)
   const [rating, setRating] = useState<number>(0)
   const [hoveredRating, setHoveredRating] = useState<number>(0)
   const [comment, setComment] = useState("")
   const [category, setCategory] = useState<FeedbackCategory>("Other")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Hide feedback widget if user is not logged in or is an administrator
+  if (!user || user.role === "admin") {
+    return null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

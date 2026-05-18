@@ -4,8 +4,28 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 import type { AuthenticatedRequest } from '../types/index.js';
 import { getPaymentHistory, getActiveSubscription, getPrices } from '../lib/billing.js';
 import logger from '../lib/logger.js';
+import { db } from '../lib/db.js';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
+  // Check if user registration is enabled globally
+  const regConfig = await db.client.systemConfig.findUnique({
+    where: { key: 'registrationEnabled' },
+  });
+  const isRegistrationEnabled = regConfig ? (regConfig.value as boolean) : true;
+  if (!isRegistrationEnabled) {
+    res.status(403).json({
+      success: false,
+      error: {
+        status: 403,
+        code: 'REGISTRATION_DISABLED',
+        message: 'User registration is temporarily disabled.',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
   const user = await UserService.createUser(req.body, req.requestId);
   
   res.status(201).json({

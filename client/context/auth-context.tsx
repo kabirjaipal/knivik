@@ -2,9 +2,10 @@
 
 import React, { createContext, useContext, useMemo } from 'react'
 import posthog from 'posthog-js'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useSession, signOut } from '@/lib/auth-client'
 import { disconnectSocket } from '@/lib/socket'
+import { Wrench } from 'lucide-react'
 
 // Keep same User interface for backward compatibility
 interface User {
@@ -42,6 +43,8 @@ interface AuthContextType {
   loading: boolean
   logout: () => Promise<void>
   refresh: () => Promise<void>
+  maintenanceMode: boolean
+  registrationEnabled: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -52,6 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isClientLoaded, setIsClientLoaded] = React.useState(false);
   const [hasInitialFetch, setHasInitialFetch] = React.useState(false);
 
+  // Expose public configs
+  const [publicConfig, setPublicConfig] = React.useState<{ maintenanceMode: boolean; registrationEnabled: boolean }>({
+    maintenanceMode: false,
+    registrationEnabled: true,
+  });
+
   const { data: session, isPending, error, refetch } = useSession()
 
   React.useEffect(() => {
@@ -59,6 +68,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // After a short delay, we assume the initial fetch state is settled
     const timer = setTimeout(() => setHasInitialFetch(true), 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch public configuration on mount and set up lightweight polling
+  React.useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('/api/config/public');
+        const result = await response.json();
+        if (result.success && result.data) {
+          setPublicConfig(result.data);
+        }
+      } catch (err) {
+        // Silently log/ignore config fetch errors in console
+      }
+    };
+    fetchConfig();
+    
+    // Check for config updates every 15 seconds dynamically
+    const interval = setInterval(fetchConfig, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   // It's loading if we haven't loaded the client, it's pending, or we haven't passed the initial fetch window
@@ -122,7 +151,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     logout,
     refresh: refetch,
-  }), [user, loading, logout, refetch])
+    maintenanceMode: publicConfig.maintenanceMode,
+    registrationEnabled: publicConfig.registrationEnabled,
+  }), [user, loading, logout, refetch, publicConfig])
+
+  const pathname = usePathname();
+
+  // Render a gorgeous glassmorphism full-screen block overlay if Maintenance Mode is active (except for admins, and allowing login path)
+  const showMaintenanceBlocker = publicConfig.maintenanceMode && user?.role !== 'admin' && pathname !== '/login';
+
+  if (showMaintenanceBlocker) {
+    return (
+      <div className="fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-background text-foreground p-6 select-none z-[99999] font-sans">
+        <div className="max-w-md w-full text-center space-y-4">
+          <div className="flex justify-center mb-2">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
+              <Wrench className="w-5 h-5" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+            We'll be back shortly.
+          </h1>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+            Knivik is currently undergoing scheduled platform upgrades to improve scan throughput. We appreciate your patience and will be online shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>

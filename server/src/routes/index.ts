@@ -12,6 +12,7 @@ import billingRoutes from './billing.routes.js';
 import usageRoutes from './usage.routes.js';
 import feedbackRoutes from './feedback.routes.js';
 import { optionalAuth } from '../middleware/auth.middleware.js';
+import { checkMaintenanceMode } from '../middleware/maintenance.middleware.js';
 
 const router = Router();
 
@@ -20,6 +21,9 @@ router.use('/api', healthRoutes);
 
 // Auth middleware
 router.use(optionalAuth);
+
+// Maintenance Mode middleware (intercepts all non-admin routes if active)
+router.use(checkMaintenanceMode);
 
 router.use('/api/users', userRoutes);
 router.use('/api/auth', authRoutes);
