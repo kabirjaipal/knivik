@@ -90,6 +90,7 @@ import { PostHogProvider } from "@/components/posthog-provider";
 
 import { SchemaService } from "@/lib/seo/application/schema.service";
 import { SchemaScript } from "@/components/seo/schema-script";
+import NextTopLoader from 'nextjs-toploader';
 
 export default function RootLayout({
   children,
@@ -104,6 +105,7 @@ export default function RootLayout({
         <SchemaScript schema={softwareSchema} />
       </head>
       <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} suppressHydrationWarning>
+        <NextTopLoader showSpinner={false} color="var(--primary)" />
         <PostHogProvider>
           <ThemeProvider
             attribute="class"
