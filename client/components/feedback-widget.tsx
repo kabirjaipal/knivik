@@ -90,7 +90,7 @@ export function FeedbackWidget() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-background/40 backdrop-blur-xs z-50"
+              className="fixed inset-0 bg-background/80 z-50"
             />
 
             {/* Modal Card */}

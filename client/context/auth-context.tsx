@@ -89,12 +89,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // It's loading if we haven't loaded the client, it's pending, or we haven't passed the initial fetch window
   const loading = !isClientLoaded || isPending || (!hasInitialFetch && !session && !error);
 
-  const logout = async () => {
+  const logout = React.useCallback(async () => {
     disconnectSocket()
     await signOut()
     router.push('/login')
     router.refresh()
-  }
+  }, [router])
 
   // Map Better Auth session to our existing User interface
   const user: User | null = useMemo(() => {

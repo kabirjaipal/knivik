@@ -19,7 +19,7 @@ export function Navbar({ user }: { user: any }) {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
     }
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
@@ -66,7 +66,7 @@ export function Navbar({ user }: { user: any }) {
     <header 
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         isScrolled 
-          ? "py-3 bg-background/60 backdrop-blur-xl border-b border-border/50 shadow-sm" 
+          ? "py-3 bg-background/95 border-b border-border/50 shadow-sm" 
           : "py-6 bg-transparent"
       }`}
     >
@@ -147,7 +147,7 @@ export function Navbar({ user }: { user: any }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background/95 backdrop-blur-2xl border-b border-border/50 overflow-hidden"
+            className="lg:hidden bg-background border-b border-border/50 overflow-hidden"
           >
             <div className="container mx-auto px-6 py-12 flex flex-col gap-8">
               <nav className="flex flex-col gap-6">

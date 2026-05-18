@@ -15,8 +15,8 @@ export function FinalCTA({ user }: CTAProps) {
       {/* Background ambient glows that are section-wide, not card-contained */}
       <div className="absolute inset-0 bg-grid opacity-[0.03] -z-10 pointer-events-none select-none transform-gpu" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full pointer-events-none select-none -z-10 overflow-hidden">
-        <div className="absolute top-[20%] left-[10%] w-[80%] h-[60%] rounded-full bg-primary/5 blur-[120px] transform-gpu" />
-        <div className="absolute bottom-[10%] right-[10%] w-[60%] h-[40%] rounded-full bg-accent/5 blur-[100px] transform-gpu" />
+        <div className="absolute top-[20%] left-[10%] w-[80%] h-[60%] rounded-full bg-primary/5 blur-[120px] transform-gpu will-change-transform" />
+        <div className="absolute bottom-[10%] right-[10%] w-[60%] h-[40%] rounded-full bg-accent/5 blur-[100px] transform-gpu will-change-transform" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
@@ -25,7 +25,7 @@ export function FinalCTA({ user }: CTAProps) {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-10 border border-primary/20 backdrop-blur-md"
+            className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-10 border border-primary/20"
           >
             <Zap className="h-3.5 w-3.5 mr-2 fill-primary" />
             Start Scaling Today

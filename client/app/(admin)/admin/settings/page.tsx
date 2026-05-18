@@ -113,7 +113,7 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Compact Grid Card adapting fully to standard application theme settings */}
-      <div className="glass grid md:grid-cols-2 rounded-2xl border border-border/40 overflow-hidden shadow-lg">
+      <div className="bg-background/95 grid md:grid-cols-2 rounded-2xl border border-border/40 overflow-hidden shadow-lg">
         
         {/* Left Side: Access Controls */}
         <div className="p-4 space-y-3.5 border-b md:border-b-0 md:border-r border-border/30">

@@ -103,7 +103,7 @@ export default function RootLayout({
       <head>
         <SchemaScript schema={softwareSchema} />
       </head>
-      <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} >
+      <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} suppressHydrationWarning>
         <PostHogProvider>
           <ThemeProvider
             attribute="class"

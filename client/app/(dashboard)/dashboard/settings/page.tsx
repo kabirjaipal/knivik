@@ -201,7 +201,7 @@ export default function SettingsPage() {
 
       <div className="flex flex-col xl:flex-row gap-12 items-start">
         {/* Sidebar Navigation */}
-        <div className="w-full xl:w-72 space-y-1 shrink-0 p-3 border border-border/40 rounded-3xl bg-card/50 backdrop-blur-md shadow-xl shadow-black/5">
+        <div className="w-full xl:w-72 space-y-1 shrink-0 p-3 border border-border/40 rounded-3xl bg-card shadow-xl shadow-black/5">
           <p className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Account System</p>
           <button 
             onClick={() => setActiveTab("profile")} 

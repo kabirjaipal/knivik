@@ -52,7 +52,7 @@ export default function PricingClient() {
             </p>
 
             {/* Billing Toggle */}
-            <div className="flex items-center gap-4 bg-secondary/50 p-1.5 rounded-2xl border border-border/50 backdrop-blur-md">
+            <div className="flex items-center gap-4 bg-secondary p-1.5 rounded-2xl border border-border/50">
               <button 
                 onClick={() => setBillingCycle("monthly")}
                 className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${

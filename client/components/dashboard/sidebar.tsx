@@ -90,7 +90,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background/95 px-6 backdrop-blur-xl shadow-sm">
+      <div className="lg:hidden sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-border/40 bg-background px-6 shadow-sm">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="relative flex h-9 w-9 items-center justify-center rounded-xl">
             <Logo size={24} />
@@ -107,7 +107,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Mobile Sidebar Overlay */}
       {isMobileOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-background/90 lg:hidden"
           onClick={toggleMobile}
         />
       )}

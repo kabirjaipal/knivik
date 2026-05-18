@@ -43,7 +43,7 @@ export function PricingComparison() {
         <h2 className="text-lg font-black uppercase tracking-widest text-muted-foreground/50">Full Feature Breakdown</h2>
       </div>
 
-      <div className="rounded-xl border border-border/40 bg-card/20 backdrop-blur-sm overflow-hidden">
+      <div className="rounded-xl border border-border/40 bg-card/70 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-border/40">

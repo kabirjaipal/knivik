@@ -69,8 +69,14 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, fetchBillingHub]);
 
+  const value = React.useMemo(() => ({
+    billingData,
+    isLoading,
+    refreshBilling: fetchBillingHub
+  }), [billingData, isLoading, fetchBillingHub]);
+
   return (
-    <BillingContext.Provider value={{ billingData, isLoading, refreshBilling: fetchBillingHub }}>
+    <BillingContext.Provider value={value}>
       {children}
     </BillingContext.Provider>
   );

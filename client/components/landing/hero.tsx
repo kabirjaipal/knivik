@@ -48,7 +48,7 @@ export function Hero({ user }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary mb-8 border border-primary/20 backdrop-blur-md"
+            className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary mb-8 border border-primary/20"
           >
             <Zap className="h-3.5 w-3.5 mr-2 fill-primary animate-pulse" />
             Real-time Social Lead Generation
@@ -91,7 +91,7 @@ export function Hero({ user }: HeroProps) {
               </Button>
             </Link>
             <Link href="#sample-leads" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="h-14 px-8 text-base font-black rounded-2xl border-2 hover:bg-secondary/50 transition-all w-full backdrop-blur-sm">
+              <Button variant="outline" size="lg" className="h-14 px-8 text-base font-black rounded-2xl border-2 hover:bg-secondary/50 transition-all w-full">
                 See sample leads
               </Button>
             </Link>

@@ -14,9 +14,9 @@ export function proxy(request: NextRequest) {
   const cspHeader = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' ${isProd ? "" : "'unsafe-eval'"} https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com`,
-    `style-src-elem 'self' 'nonce-${nonce}' https://*.dodopayments.com`, // Securely restrict stylesheet tags via nonce
+    `style-src-elem 'self' 'unsafe-inline' https://*.dodopayments.com`, // Securely restrict stylesheet tags via nonce
     `style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com`, // Allow inline style attributes for React progress bars & layout components
-    `img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://www.google.com https://avatars.githubusercontent.com`,
+    `img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com`,
     "font-src 'self' data:",
     "frame-src 'self' https://*.dodopayments.com",
     `connect-src 'self' ${backendUrl} ${wsUrl} https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com`,

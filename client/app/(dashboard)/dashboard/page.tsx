@@ -201,7 +201,7 @@ export default function DashboardPage() {
         <aside className="space-y-6 overflow-y-auto pr-2 shrink-0 custom-scrollbar">
 
           {/* Premium Quick Stats Card */}
-          <div className="glass rounded-3xl border border-primary/10 overflow-hidden shadow-2xl shadow-primary/5">
+          <div className="bg-background/95 rounded-3xl border border-primary/10 overflow-hidden shadow-2xl shadow-primary/5">
             <div className="px-6 py-5 border-b border-primary/5 bg-linear-to-br from-primary/5 via-transparent to-transparent">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2.5">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -229,7 +229,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Premium Products panel */}
-          <div className="glass rounded-3xl border border-border/40 overflow-hidden shadow-xl shadow-black/5">
+          <div className="bg-background/95 rounded-3xl border border-border/40 overflow-hidden shadow-xl shadow-black/5">
             <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/5">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2.5">
                 <Package className="w-4 h-4 text-primary" /> Active Radar
@@ -268,7 +268,7 @@ export default function DashboardPage() {
 
           {/* Premium Origins Panel */}
           {total > 0 && (
-            <div className="glass rounded-3xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden p-6">
+            <div className="bg-background/95 rounded-3xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden p-6">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2.5 mb-6">
                 <Activity className="w-4 h-4 text-primary" /> Platform Origins
               </p>

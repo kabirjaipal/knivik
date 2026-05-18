@@ -59,7 +59,7 @@ export function PlatformSupport() {
                   key={`${platform.name}-${i}`}
                   className="flex items-center gap-3 md:gap-4 opacity-75 hover:opacity-100 transition-all duration-300 group cursor-default"
                 >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-background/50 backdrop-blur-md flex items-center justify-center p-1.5 md:p-2 border border-border group-hover:border-primary/40 group-hover:shadow-2xl group-hover:shadow-primary/10 transition-all transform group-hover:scale-105">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-muted/85 flex items-center justify-center p-1.5 md:p-2 border border-border group-hover:border-primary/40 group-hover:shadow-2xl group-hover:shadow-primary/10 transition-all transform group-hover:scale-105">
                     <img
                       src={platform.icon}
                       alt={platform.name}

@@ -1,7 +1,7 @@
 "use client"
 
 import { Activity, Flame, BarChart2, CheckCircle2, Rss, Hash, ChevronDown, ChevronUp } from "lucide-react"
-import { useState } from "react"
+import { memo, useState } from "react"
 import type { LeadCardData } from "./LeadCard"
 import { FaTwitter } from "react-icons/fa"
 
@@ -9,7 +9,7 @@ interface ProductStatsProps {
   leads: LeadCardData[]
 }
 
-export function ProductStats({ leads }: ProductStatsProps) {
+export const ProductStats = memo(function ProductStats({ leads }: ProductStatsProps) {
   const [expanded, setExpanded] = useState(false)
 
   const total = leads.length
@@ -115,4 +115,4 @@ export function ProductStats({ leads }: ProductStatsProps) {
       )}
     </div>
   )
-}
+})

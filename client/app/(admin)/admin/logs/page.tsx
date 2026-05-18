@@ -174,7 +174,7 @@ export default function AdminLogsPage() {
       </div>
 
       {/* Filters Card */}
-      <Card className="border-border/40 bg-card/50 backdrop-blur-xs">
+      <Card className="border-border/40 bg-card">
         <CardContent className="p-4">
           <form onSubmit={handleSearchSubmit} className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -267,7 +267,7 @@ export default function AdminLogsPage() {
       </Card>
 
       {/* Logs Table Container */}
-      <Card className="border-border/40 overflow-hidden bg-card/50">
+      <Card className="border-border/40 overflow-hidden bg-card">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
@@ -393,7 +393,7 @@ export default function AdminLogsPage() {
           {/* Backdrop overlay */}
           <div 
             onClick={() => setSelectedLog(null)}
-            className="absolute inset-0 bg-background/50 backdrop-blur-xs transition-opacity"
+            className="absolute inset-0 bg-background/90 transition-opacity"
           />
           
           {/* Drawer slide-in panel */}
