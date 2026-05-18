@@ -8,6 +8,18 @@ class InMemoryQueue {
   private processing = false;
   private jobs = new Map<string, any>(); // Track jobs by ID
 
+  getQueueJobs() {
+    return this.queue;
+  }
+
+  getJobsMap() {
+    return Array.from(this.jobs.values());
+  }
+
+  isProcessing() {
+    return this.processing;
+  }
+
   process(handler: any) { this.handlers.push(handler); }
 
   async add(name: string, data: any, options?: any) {
@@ -52,6 +64,7 @@ class InMemoryQueue {
       }
     }
     this.processing = false;
+    await this.clean(); // Auto-prune on completion to keep RAM clean
   }
 
   on() { return this; }
@@ -60,11 +73,12 @@ class InMemoryQueue {
     return this.jobs.get(jobId) || undefined; 
   }
   
-  async clean() {
-    // Clean up old completed jobs (older than 1 hour)
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+  async clean(grace?: number) {
+    // Clean up completed/finished jobs older than 2 minutes to keep memory clean
+    const retention = grace && grace > 0 ? grace : 2 * 60 * 1000; // 2 mins default
+    const cutoff = Date.now() - retention;
     for (const [id, job] of this.jobs.entries()) {
-      if (job.finishedOn && job.finishedOn < oneHourAgo) {
+      if (job.finishedOn && job.finishedOn < cutoff) {
         this.jobs.delete(id);
       }
     }

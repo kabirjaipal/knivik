@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch public configuration on mount and set up lightweight polling
+  // Fetch public configuration on mount
   React.useEffect(() => {
     const fetchConfig = async () => {
       try {
@@ -84,10 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     fetchConfig();
-    
-    // Check for config updates every 15 seconds dynamically
-    const interval = setInterval(fetchConfig, 15000);
-    return () => clearInterval(interval);
   }, []);
 
   // It's loading if we haven't loaded the client, it's pending, or we haven't passed the initial fetch window

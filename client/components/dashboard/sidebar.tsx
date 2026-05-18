@@ -3,20 +3,23 @@
 import { useAuth } from "@/context/auth-context"
 import { 
   Radar, 
-  BarChart3, 
-  Settings, 
   CreditCard, 
-  User, 
   LogOut, 
-  ShieldAlert, 
   Users, 
-  Activity,
   ChevronLeft,
   ChevronRight,
   Menu,
   LayoutDashboard,
-  Zap,
-  Terminal
+  Terminal,
+  Cpu,
+  LineChart,
+  Database,
+  Coins,
+  Brain,
+  BellRing,
+  Sliders,
+  ShieldAlert,
+  Settings,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -56,21 +59,22 @@ export function Sidebar({ className }: SidebarProps) {
 
   const userLinks: NavLink[] = useMemo(() => [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/products", label: "Products", icon: Settings },
-    { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/dashboard/products", label: "Products", icon: Radar },
+    { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
     { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-    { href: "/dashboard/settings", label: "Settings", icon: User },
+    { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ], [])
 
   const adminLinks: NavLink[] = useMemo(() => [
     { href: "/admin", label: "System Overview", icon: LayoutDashboard },
-    { href: "/admin/users", label: "User Directory", icon: Users },
-    { href: "/admin/leads", label: "Global Leads", icon: Zap },
-    { href: "/admin/alerts", label: "Alert Logs", icon: ShieldAlert },
-    { href: "/admin/revenue", label: "Revenue", icon: CreditCard },
-    { href: "/admin/settings", label: "Global Settings", icon: Settings },
-    { href: "/admin/usage", label: "LLM Usage", icon: Activity },
-    { href: "/admin/logs", label: "API Request Logs", icon: Terminal },
+    { href: "/admin/leads", label: "Global Leads", icon: Database },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/revenue", label: "Revenue", icon: Coins },
+    { href: "/admin/usage", label: "LLM Usage", icon: Brain },
+    { href: "/admin/alerts", label: "Alert Logs", icon: BellRing },
+    { href: "/admin/logs", label: "API Logs", icon: Terminal },
+    { href: "/admin/memory", label: "Memory Monitor", icon: Cpu },
+    { href: "/admin/settings", label: "Global Settings", icon: Sliders },
   ], [])
 
   const links = useMemo(() => isAtAdmin ? adminLinks : userLinks, [isAtAdmin, adminLinks, userLinks])

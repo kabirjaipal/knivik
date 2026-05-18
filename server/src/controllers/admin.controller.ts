@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
+import { pipelineQueue } from '../lib/queue.js';
+import { getSocketStats } from '../lib/socket.js';
+import { getGlobalIPHealth } from '../utils/ipProtection.js';
 
 /**
  * GET /api/admin/stats
@@ -668,6 +671,84 @@ export const getLogs = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Admin Logs Error');
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+};
+
+/**
+ * GET /api/admin/memory
+ * Returns detailed diagnostics on all in-memory structures (Queue, Sockets, Rate Limiting).
+ */
+export const getMemoryStats = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    // 1. Queue Status
+    const queueLength = pipelineQueue.getQueueJobs().length;
+    const allJobs = pipelineQueue.getJobsMap();
+    const isQueueProcessing = pipelineQueue.isProcessing();
+
+    const productIds = Array.from(new Set(allJobs.map((j: any) => j.data?.productId).filter(Boolean)));
+    const userIds = Array.from(new Set(allJobs.map((j: any) => j.data?.userId).filter(Boolean)));
+
+    const [products, users] = await Promise.all([
+      db.client.product.findMany({
+        where: { id: { in: productIds as string[] } },
+        select: { id: true, name: true }
+      }),
+      db.client.user.findMany({
+        where: { id: { in: userIds as string[] } },
+        select: { id: true, username: true, email: true }
+      })
+    ]);
+
+    const productMap = new Map(products.map(p => [p.id, p]));
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    // Map queue job states for UI consumption
+    const jobs = allJobs.map((j: any) => {
+      const p = j.data?.productId ? productMap.get(j.data.productId) : null;
+      const u = j.data?.userId ? userMap.get(j.data.userId) : null;
+      return {
+        id: j.id,
+        name: j.name,
+        data: {
+          productId: j.data?.productId || null,
+          productName: p ? p.name : 'System',
+          userId: j.data?.userId || null,
+          userName: u ? u.username || 'System' : 'System',
+          userEmail: u ? u.email : null,
+        },
+        addedAt: j.addedAt,
+        finishedOn: j.finishedOn,
+        status: j.finishedOn ? 'completed' : 'processing'
+      };
+    });
+
+    // 2. WebSocket connection status
+    const socketStats = getSocketStats();
+
+    // 3. Third-party scraping rate limiter health
+    const ipHealth = getGlobalIPHealth();
+
+    const activeCount = allJobs.filter((j: any) => !j.finishedOn).length;
+
+    res.json({
+      success: true,
+      data: {
+        queue: {
+          length: queueLength,
+          activeCount,
+          isProcessing: isQueueProcessing,
+          jobs
+        },
+        sockets: {
+          activeConnections: socketStats.activeConnections,
+          clients: socketStats.clients
+        },
+        ipProtection: ipHealth
+      }
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Admin Memory Stats Error');
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 };

@@ -124,3 +124,21 @@ export const emitScanStatus = (userId: string, productId: string, isScanning: bo
     status
   });
 };
+
+export const getSocketStats = () => {
+  if (!io) {
+    return { activeConnections: 0, clients: [] };
+  }
+  const sockets = Array.from(io.sockets.sockets.values());
+  const clients = sockets.map(s => ({
+    id: s.id,
+    userId: s.data?.user?.id || 'anonymous',
+    username: s.data?.user?.username || 'anonymous',
+    email: s.data?.user?.email || 'anonymous',
+    rooms: Array.from(s.rooms).filter(r => r !== s.id) // Filter out the socket ID itself which acts as a default room
+  }));
+  return {
+    activeConnections: sockets.length,
+    clients
+  };
+};
