@@ -66,9 +66,18 @@ export function CheckoutButton({
         throw new Error(data.error || "Failed to create checkout");
       }
 
-      // For Dodo Payments, we can simply redirect to the checkoutUrl
-      // It will open their highly optimized checkout page
-      window.location.href = data.checkoutUrl;
+      // Validate checkout URL strictly to prevent XSS (javascript:) and open redirect vectors
+      const checkoutUrl = data.checkoutUrl;
+      if (typeof checkoutUrl !== "string") {
+        throw new Error("Invalid checkout URL format");
+      }
+
+      const parsedUrl = new URL(checkoutUrl, window.location.origin);
+      if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+        throw new Error("Forbidden protocol scheme in checkout URL");
+      }
+
+      window.location.href = checkoutUrl;
       
     } catch (error: any) {
       setIsLoading(true);
