@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     const backendUrl = process.env.BACKEND_URL;
     if (!backendUrl) throw new Error("BACKEND_URL is not defined");
     const wsUrl = backendUrl.replace(/^http/, "ws");
+    const isProd = process.env.NODE_ENV === "production";
     
     return [
       {
@@ -47,9 +48,9 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
+              "script-src 'self' 'unsafe-inline' " + (isProd ? "" : "'unsafe-eval' ") + "https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
               "style-src 'self' 'unsafe-inline' https://*.dodopayments.com",
-              "img-src 'self' data: https: blob: https://*.posthog.com",
+              "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://www.google.com https://avatars.githubusercontent.com",
               "font-src 'self' data:",
               "frame-src 'self' https://*.dodopayments.com",
               "connect-src 'self' " + backendUrl + " " + wsUrl + " https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
