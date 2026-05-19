@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { FaTwitter, FaInstagram } from "react-icons/fa";
+import { FaInstagram, FaTwitter } from "react-icons/fa";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
@@ -27,8 +27,8 @@ export default function Contact() {
       iconColor: "text-sky-400",
       title: "Twitter / X",
       description: "Best for quick questions and daily updates. Follow us for the latest AI news.",
-      link: "https://twitter.com/knivik",
-      linkText: "@knivik →",
+      link: "https://x.com/knivikai",
+      linkText: "@knivikai →",
       linkColor: "text-sky-400",
       isExternal: true,
     },
@@ -37,8 +37,8 @@ export default function Contact() {
       iconColor: "text-pink-500",
       title: "Instagram",
       description: "Best for behind the scenes and feature previews. Reach out via direct message.",
-      link: "https://instagram.com/knivik",
-      linkText: "@knivik →",
+      link: "https://instagram.com/knivikai",
+      linkText: "@knivikai →",
       linkColor: "text-pink-500",
       isExternal: true,
     }

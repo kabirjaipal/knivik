@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-6 min-h-screen">
+      <div className="flex flex-col items-center justify-center space-y-6">
         <div className="p-6 rounded-full bg-destructive/5 border border-destructive/10">
           <AlertCircle className="w-12 h-12 text-destructive" />
         </div>
@@ -163,7 +163,7 @@ export default function AnalyticsPage() {
   // GLOBAL EMPTY STATE: No Products
   if (data.activeProductsCount === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in duration-700">
         <div className="relative">
            <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-full animate-pulse" />
            <div className="relative w-24 h-24 bg-card border border-border/50 rounded-3xl flex items-center justify-center shadow-2xl">

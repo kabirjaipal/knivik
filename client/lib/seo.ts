@@ -6,7 +6,7 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://knivik.xyz",
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
-    twitter: "https://twitter.com/knivik",
+    twitter: "https://x.com/knivikai",
     github: "https://github.com/knivik",
   },
   keywords: [

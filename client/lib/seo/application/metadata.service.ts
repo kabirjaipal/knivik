@@ -96,7 +96,7 @@ export class MetadataService {
         title: `${options.title} | Knivik`,
         description: options.description,
         images: [absoluteOgImageUrl],
-        creator: "@knivik",
+        creator: "@knivikai",
       },
       icons: {
         icon: "/favicon.svg",
