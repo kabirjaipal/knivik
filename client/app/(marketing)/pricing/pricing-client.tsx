@@ -20,17 +20,30 @@ export default function PricingClient() {
   const livePrices = billingData?.prices || [];
   const currentPlan = (billingData?.user?.plan || user?.plan || "FREE").toUpperCase();
 
-  const getPrice = (planKey: keyof typeof PLANS, cycle: 'monthly' | 'yearly') => {
-    if (planKey === "FREE") return 0;
+  const formatPrice = (planKey: keyof typeof PLANS, cycle: 'monthly' | 'yearly') => {
+    const currency = livePrices[0]?.currency;
+    if (!currency) return "--";
+
+    const formatValue = (val: number, curr?: string) => 
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: curr || currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(val);
+
+    if (planKey === "FREE") return formatValue(0);
 
     const plan = PLANS[planKey];
-    if (!("monthly" in plan)) return 0;
+    if (!("monthly" in plan)) return formatValue(0);
 
     const productId = (plan as any)[cycle].productId;
     const livePrice = livePrices.find(p => String(p.id) === String(productId));
     
-    if (livePrice) return livePrice.amount;
-    return "--";
+    if (livePrice) {
+      return formatValue(livePrice.amount, livePrice.currency);
+    }
+    return formatValue(0).replace("0", "--");
   };
 
   return (
@@ -92,7 +105,9 @@ export default function PricingClient() {
                   {PLANS.FREE.description}
                 </p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-black tracking-tighter">$0</span>
+                  <span className="text-5xl font-black tracking-tighter">
+                    {formatPrice("FREE", "monthly")}
+                  </span>
                   <span className="text-muted-foreground font-bold">/forever</span>
                 </div>
               </div>
@@ -144,12 +159,14 @@ export default function PricingClient() {
                   ) : (
                     <>
                       <span className="text-5xl font-black tracking-tighter text-primary">
-                        ${getPrice("PRO", billingCycle)}
+                        {formatPrice("PRO", billingCycle)}
                       </span>
                       <div className="flex flex-col">
                         <span className="text-muted-foreground font-bold leading-none text-sm">/{billingCycle === "monthly" ? "mo" : "yr"}</span>
-                        {billingCycle === "yearly" && (
+                        {billingCycle === "yearly" ? (
                           <span className="text-[10px] font-black text-primary uppercase mt-1">Best Value</span>
+                        ) : (
+                          <span className="text-[10px] font-black text-primary uppercase mt-1">7-Day Free Trial</span>
                         )}
                       </div>
                     </>
@@ -187,7 +204,10 @@ export default function PricingClient() {
                 }}
                 onError={(error) => toast.error(error.message)}
               >
-                {currentPlan === "PRO" ? "Active" : "Get Started Now"}
+                {currentPlan === "PRO" 
+                  ? "Active" 
+                  : (billingCycle === "monthly" ? "Start 7-Day Free Trial" : "Get Started Now")
+                }
               </CheckoutButton>
             </div>
           </div>

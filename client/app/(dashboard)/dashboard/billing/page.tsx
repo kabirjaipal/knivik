@@ -24,7 +24,12 @@ export default function BillingPage() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const searchParams = useSearchParams();
-  const showSuccess = searchParams.get("status") === "success";
+  const statusParam = searchParams.get("status");
+  const subscriptionIdParam = searchParams.get("subscription_id");
+  const emailParam = searchParams.get("email");
+  const [showSuccess, setShowSuccess] = useState(
+    statusParam === "success" || statusParam === "active"
+  );
 
   const payments = billingData?.payments || [];
   const billingInfo = billingData?.user;
@@ -32,6 +37,10 @@ export default function BillingPage() {
   const planConfig = PLANS[currentPlan as keyof typeof PLANS] || PLANS.FREE;
   const isProPlan = currentPlan === "PRO";
   const subscriptionStatus = billingInfo?.subscriptionStatus || (isProPlan ? "active" : "inactive");
+  const isActiveOrTrial = subscriptionStatus === "active" || subscriptionStatus === "trialing";
+  const isNewTrialPeriod = isProPlan && subscriptionStatus === "active" && billingInfo?.currentPeriodEnd && payments.length === 0;
+  const showTrialPeriod = subscriptionStatus === "trialing" || isNewTrialPeriod;
+  const billingDateLabel = showTrialPeriod ? "Trial Ends" : "Next Billing";
 
   useEffect(() => {
     if (!user) {
@@ -55,6 +64,13 @@ export default function BillingPage() {
       }
     }
   }, [user, router, showSuccess, billingData?.user?.plan, refreshBilling]);
+
+  useEffect(() => {
+    if (!showSuccess) return;
+    if (statusParam || subscriptionIdParam || emailParam) {
+      router.replace("/dashboard/billing");
+    }
+  }, [showSuccess, statusParam, subscriptionIdParam, emailParam, router]);
 
   const handleOpenCustomerPortal = async () => {
     if (isRedirecting) return;
@@ -152,10 +168,15 @@ export default function BillingPage() {
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Current Plan</CardTitle>
                 <div className="flex items-center gap-2">
                   <PlanBadge plan={currentPlan} className="text-xs" />
-                  {subscriptionStatus === "active"
-                    ? <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">Active</Badge>
-                    : <Badge variant="secondary" className="text-xs">{subscriptionStatus ?? "Inactive"}</Badge>
-                  }
+                  {subscriptionStatus === "active" && !showTrialPeriod && (
+                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">Active</Badge>
+                  )}
+                  {showTrialPeriod && (
+                    <Badge className="bg-primary/10 text-primary border-primary/20 text-xs capitalize">Trialing</Badge>
+                  )}
+                  {subscriptionStatus !== "active" && subscriptionStatus !== "trialing" && (
+                    <Badge variant="secondary" className="text-xs capitalize">{subscriptionStatus ?? "Inactive"}</Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -183,17 +204,23 @@ export default function BillingPage() {
                 )}
               </div>
 
-              {/* Billing details row — only for active subscriptions */}
-              {subscriptionStatus === "active" && (
-                <div className="flex items-center gap-6 mt-4 pt-4 border-t border-border/40">
-                  <div>
-                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Next Billing</p>
-                    <p className="text-sm font-bold mt-0.5">{formatDate(billingInfo?.currentPeriodEnd!)}</p>
+              {/* Billing details row — only for active or trialing subscriptions */}
+              {isActiveOrTrial && (
+                <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-border/40">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                    <div>
+                      <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">{billingDateLabel}</p>
+                      <p className="text-sm font-bold mt-0.5">{formatDate(billingInfo?.currentPeriodEnd!)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Cycle</p>
+                      <p className="text-sm font-bold mt-0.5 capitalize">{billingInfo?.billingCycle ?? "—"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Cycle</p>
-                    <p className="text-sm font-bold mt-0.5 capitalize">{billingInfo?.billingCycle ?? "—"}</p>
-                  </div>
+
+                  {isNewTrialPeriod && (
+                    <p className="text-sm text-muted-foreground">You are still in your free trial period. Your first paid cycle starts when this trial ends.</p>
+                  )}
                 </div>
               )}
             </CardContent>

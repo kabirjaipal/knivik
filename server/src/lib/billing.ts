@@ -68,6 +68,9 @@ export function getSubscriptionStatusDisplay(user: User): string {
   if (user.subscriptionStatus === "active") {
     return `${user.plan} (Active)`;
   }
+  if (user.subscriptionStatus === "trialing") {
+    return `${user.plan} (Trialing)`;
+  }
   if (user.subscriptionStatus === "past_due") {
     return `${user.plan} (Past Due)`;
   }
