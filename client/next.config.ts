@@ -26,12 +26,48 @@ const nextConfig: NextConfig = {
     const backendUrl = process.env.BACKEND_URL;
     if (!backendUrl) throw new Error("BACKEND_URL is not defined");
     const wsUrl = backendUrl.replace(/^http/, "ws");
-    const isProd = process.env.NODE_ENV === "production";
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || wsUrl;
+    const socketWsUrl = socketUrl.replace(/^http/, "ws");
+
+    const connectSources = [
+      "'self'",
+      "https://*.dodopayments.com",
+      "https://va.vercel-scripts.com",
+      "https://*.posthog.com",
+      "https://*.i.posthog.com"
+    ];
+
+    if (backendUrl && (backendUrl.startsWith("http://") || backendUrl.startsWith("https://"))) {
+      connectSources.push(backendUrl);
+    }
+    if (socketUrl && (socketUrl.startsWith("http://") || socketUrl.startsWith("https://"))) {
+      connectSources.push(socketUrl);
+    }
+    if (socketWsUrl && (socketWsUrl.startsWith("ws://") || socketWsUrl.startsWith("wss://"))) {
+      connectSources.push(socketWsUrl);
+    }
+
+    const cspHeader = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
+      "style-src-elem 'self' 'unsafe-inline' https://*.dodopayments.com",
+      "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
+      "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
+      "font-src 'self' data:",
+      "frame-src 'self' https://*.dodopayments.com",
+      `connect-src ${connectSources.join(" ")}`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "upgrade-insecure-requests"
+    ].join("; ");
     
     return [
       {
         source: "/(.*)",
         headers: [
+          { key: "Content-Security-Policy", value: cspHeader },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
