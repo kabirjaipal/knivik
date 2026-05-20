@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { db } from '../lib/db.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import type { AuthenticatedRequest } from '../types/index.js';
+import { PLANS, PlanKey } from '../lib/plans.js';
 
 export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   if (!req.user) {
@@ -13,7 +14,7 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
   }
 
   const userId = req.user.id;
-  const range = req.query['range'] === '30d' ? 30 : 7;
+  const range = 30;
 
   // 1. Get all products for this user
   const products = await db.client.product.findMany({
@@ -26,6 +27,83 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
   // 7. Advanced ROI Analytics (Pro feature flag) - check this early
   const user = await db.client.user.findUnique({ where: { id: userId } });
   const isAdvancedAnalyticsEnabled = user?.plan !== 'FREE';
+  const plan = (user?.plan || 'FREE') as PlanKey;
+  const planLimits = PLANS[plan].limits;
+
+  // 2. Fetch Usage Stats Monthly Leads
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const leadUsage = await db.client.usageRecord.findUnique({
+    where: {
+      userId_type_month_year: {
+        userId,
+        type: 'leads',
+        month,
+        year
+      }
+    }
+  });
+
+  // 3. LLM Usage Log aggregation
+  const llmUsageLogs = await db.client.llmUsageLog.groupBy({
+    by: ['modelId', 'action'],
+    where: { userId },
+    _count: { id: true },
+  });
+  const llmBreakdown = llmUsageLogs.map(stat => ({
+    modelId: stat.modelId,
+    action: stat.action,
+    requestCount: stat._count.id,
+  }));
+  const totalRequestCount = llmBreakdown.reduce((sum, curr) => sum + curr.requestCount, 0);
+  const llmUsage = {
+    breakdown: llmBreakdown,
+    totals: { requestCount: totalRequestCount }
+  };
+
+  // 4. Source Distribution (Reddit, Twitter, HN leads from the current month)
+  const startOfMonth = new Date(year, month - 1, 1);
+  const sourceDistribution: Record<string, number> = {
+    'REDDIT': 0,
+    'TWITTER': 0,
+    'HACKERNEWS': 0,
+  };
+
+  if (productIds.length > 0) {
+    const leadsCurrentMonth = await db.client.lead.findMany({
+      where: {
+        productId: { in: productIds },
+        createdAt: { gte: startOfMonth }
+      },
+      select: { platform: true }
+    });
+
+    leadsCurrentMonth.forEach(l => {
+      if (sourceDistribution[l.platform] !== undefined) {
+        sourceDistribution[l.platform]++;
+      }
+    });
+  }
+
+  const leadsCurrentMonthCount = Object.values(sourceDistribution).reduce((sum, count) => sum + count, 0);
+
+  const usageStats = {
+    plan: {
+      name: plan,
+      limits: planLimits
+    },
+    leads: {
+      used: leadUsage?.count || 0,
+      limit: planLimits.leadsPerMonth,
+      remaining: Math.max(0, planLimits.leadsPerMonth - (leadUsage?.count || 0)),
+      bySource: Object.entries(sourceDistribution).map(([platform, count]) => ({
+        platform,
+        count,
+        percentage: leadsCurrentMonthCount > 0 ? Math.round((count / leadsCurrentMonthCount) * 100) : 0
+      }))
+    }
+  };
 
   if (productIds.length === 0) {
     return res.status(200).json({
@@ -45,7 +123,9 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
         topProduct: null,
         activeProductsCount: 0,
         isAdvancedAnalyticsEnabled,
-        leadConversionRate: 0
+        leadConversionRate: 0,
+        llmUsage,
+        usageStats
       }
     });
   }
@@ -243,7 +323,9 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
       topProduct,
       activeProductsCount: products.length,
       isAdvancedAnalyticsEnabled,
-      leadConversionRate
+      leadConversionRate,
+      llmUsage,
+      usageStats
     },
     requestId: req.requestId
   });
