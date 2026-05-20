@@ -135,6 +135,18 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       logger.error({ err, productId: product.id }, 'Failed to generate search queries');
     }
 
+    // Set user.isScanning to true and trigger initial background scan
+    try {
+      await db.client.user.update({
+        where: { id: userId },
+        data: { isScanning: true }
+      });
+      await pipelineQueue.add('initial-scan', { userId, productId: product.id });
+      logger.info({ productId: product.id, userId }, 'Queued initial scan for new product');
+    } catch (err) {
+      logger.error({ err, productId: product.id }, 'Failed to queue initial scan for new product');
+    }
+
     // Remove searchQueries from response to keep it backend-only
     // @ts-ignore
     const { searchQueries: _, ...sanitizedProduct } = product;

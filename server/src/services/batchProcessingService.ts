@@ -43,11 +43,25 @@ export class BatchProcessingService {
 
       userId = product.userId;
 
-      // Set scanning status
+      // Set scanning status and update product lastBackgroundScanAt timestamp
       await db.client.user.update({
         where: { id: userId },
         data: { isScanning: true }
       });
+      try {
+        const currentConfig = (product.aiConfig as Record<string, any>) || {};
+        await db.client.product.update({
+          where: { id: productId },
+          data: {
+            aiConfig: {
+              ...currentConfig,
+              lastBackgroundScanAt: new Date().toISOString()
+            }
+          }
+        });
+      } catch (err) {
+        logger.error({ err, productId }, 'Failed to update lastBackgroundScanAt for product');
+      }
       emitScanStatus(userId, productId, true, 'STARTED');
 
       // Step 1: Collect posts for this product

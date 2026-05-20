@@ -2,6 +2,7 @@ import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { Platform } from '@prisma/client';
 import { CollectedPost } from './batchAnalysisService.js';
+import { hasCapability } from '../lib/plans.js';
 
 // Define ProductWithDetails interface locally
 interface ProductWithDetails {
@@ -141,7 +142,16 @@ export class BatchCollectionService {
     const searchQueries = await SearchQueryService.getStoredQueries(product.id);
     logger.info(`[COLLECTION] Starting scan for product "${product.name}" using ${searchQueries.length} pre-loaded queries globally.`);
 
-    const platforms = [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER];
+    // Determine which platforms this user can access based on their plan
+    const user = await db.client.user.findUnique({ where: { id: product.userId }, select: { plan: true } });
+    const canUseTwitter = user ? hasCapability(user.plan as any, 'canAccessTwitter') : false;
+    const platforms = canUseTwitter
+      ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER]
+      : [Platform.REDDIT, Platform.HACKERNEWS];
+
+    if (!canUseTwitter) {
+      logger.info(`[COLLECTION] Twitter scanning skipped for product "${product.name}" — plan does not include Twitter access.`);
+    }
 
     // Collect from each platform globally
     for (const platform of platforms) {

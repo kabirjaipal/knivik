@@ -17,7 +17,6 @@ import {
   Loader2,
   AlertCircle,
   Brain,
-  Lock,
   BadgeDollarSign,
   Percent,
   Flame,
@@ -383,34 +382,42 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-6 pb-6 pt-4 flex items-center justify-center relative">
-            {Array.isArray(data.leadsOverTime) && data.totalLeads > 0 ? (
-              <ModernAreaChart
-                points={(timeRange === "7d"
-                  ? data.leadsOverTime.slice(-7)
-                  : data.leadsOverTime
-                ).map((d) => ({
-                  label:
-                    timeRange === "7d"
-                      ? new Date(d.date).toLocaleDateString(undefined, {
-                          weekday: "short",
-                        })
-                      : new Date(d.date).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        }),
-                  value: d.count,
-                  originalDate: d.date,
-                }))}
-                labelInterval={timeRange === "7d" ? 1 : 5}
-                strokeColor="hsl(var(--primary))"
-                gradientColor="hsl(var(--primary))"
-                gradientId="lead-volume-grad"
-                height={200}
-              />
-            ) : (
-              <EmptyChartPlaceholder message="Awaiting data..." />
-            )}
+          <CardContent className="px-4 pb-4 pt-2">
+            {(() => {
+              const filtered = (timeRange === "7d"
+                ? data.leadsOverTime.slice(-7)
+                : data.leadsOverTime
+              ).filter(d => d.count > 0);
+              const rows = timeRange === "7d"
+                ? data.leadsOverTime.slice(-7)
+                : data.leadsOverTime;
+              const maxCount = Math.max(...rows.map(d => d.count), 1);
+              return (
+                <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1">
+                  {rows.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic py-4 text-center">Awaiting data...</p>
+                  ) : (
+                    rows.map((d, i) => (
+                      <div key={i} className="flex items-center gap-3 py-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 w-14 shrink-0">
+                          {new Date(d.date).toLocaleDateString(undefined, timeRange === "7d" ? { weekday: "short", month: "short", day: "numeric" } : { month: "short", day: "numeric" })}
+                        </span>
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(d.count / maxCount) * 100}%` }}
+                            className="h-full rounded-full bg-primary"
+                          />
+                        </div>
+                        <span className="text-xs font-black w-6 text-right tabular-nums">
+                          {d.count}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 
@@ -476,23 +483,48 @@ export default function AnalyticsPage() {
               Hour (24h)
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-center relative">
-            {Array.isArray(data.peakActivityHours) &&
-            data.peakActivityHours.length > 0 ? (
-              <ModernAreaChart
-                points={data.peakActivityHours.map((h) => ({
-                  label: `${h.hour}h`,
-                  value: h.count,
-                }))}
-                labelInterval={4}
-                strokeColor="rgb(245, 158, 11)"
-                gradientColor="rgb(245, 158, 11)"
-                gradientId="peak-activity-grad"
-                height={140}
-              />
-            ) : (
-              <EmptyChartPlaceholder message="Awaiting data..." />
-            )}
+          <CardContent className="p-4">
+            {(() => {
+              const hours = data.peakActivityHours;
+              const totalLeads = hours.reduce((s, h) => s + h.count, 0);
+              const blocks = [
+                { label: "00–05", desc: "Night", hours: hours.slice(0, 6) },
+                { label: "06–11", desc: "Morning", hours: hours.slice(6, 12) },
+                { label: "12–17", desc: "Afternoon", hours: hours.slice(12, 18) },
+                { label: "18–23", desc: "Evening", hours: hours.slice(18, 24) },
+              ];
+              if (totalLeads === 0) {
+                return <p className="text-xs text-muted-foreground italic py-4 text-center">Awaiting ingestion data...</p>;
+              }
+              return (
+                <div className="space-y-2">
+                  {blocks.map((block) => {
+                    const blockCount = block.hours.reduce((s, h) => s + h.count, 0);
+                    const peakHour = block.hours.reduce((a, b) => b.count > a.count ? b : a, block.hours[0]);
+                    return (
+                      <div key={block.label} className="flex items-center gap-3">
+                        <div className="w-20 shrink-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground/70">{block.label}</p>
+                          <p className="text-[9px] text-muted-foreground font-bold">{block.desc}</p>
+                        </div>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(blockCount / totalLeads) * 100}%` }}
+                            className="h-full rounded-full bg-amber-500/80"
+                          />
+                        </div>
+                        <span className="text-xs font-black w-6 text-right tabular-nums">{blockCount}</span>
+                        {blockCount > 0 && (
+                          <span className="text-[9px] text-muted-foreground font-bold w-12 shrink-0">peak {peakHour.hour}h</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <p className="text-[9px] text-muted-foreground/50 font-bold uppercase tracking-widest pt-1">{totalLeads} total ingestion events tracked</p>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 
@@ -600,32 +632,15 @@ export default function AnalyticsPage() {
       {/* Row 4: Advanced Intelligence & ROI */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* ROI - Intent Precision */}
-        <Card
-          className={cn(
-            "border border-border/40 overflow-hidden relative group min-h-[160px] bg-card/60 shadow-xl shadow-black/5 flex flex-col justify-between",
-          )}
-        >
-          {!data.isAdvancedAnalyticsEnabled && (
-            <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] uppercase tracking-widest font-black absolute top-4 right-4 z-10">
-              PRO FEATURE
-            </Badge>
-          )}
+        <Card className="border border-border/40 overflow-hidden relative group min-h-[160px] bg-card/60 shadow-xl shadow-black/5 flex flex-col justify-between">
           <CardContent className="p-6 flex flex-col justify-between h-full">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
                 Intent Precision Score
               </p>
-              <div
-                className={cn(
-                  "flex items-baseline gap-1 transition-all",
-                  !data.isAdvancedAnalyticsEnabled &&
-                    "blur-[4px] opacity-40 select-none pointer-events-none",
-                )}
-              >
+              <div className="flex items-baseline gap-1 transition-all">
                 <h3 className="text-4xl font-black tracking-tighter">
-                  {data.isAdvancedAnalyticsEnabled
-                    ? `${data.averageIntentScore}%`
-                    : "89.4%"}
+                  {data.averageIntentScore}%
                 </h3>
               </div>
             </div>
@@ -635,37 +650,19 @@ export default function AnalyticsPage() {
                 AI Match accuracy score rating
               </p>
             </div>
-            {!data.isAdvancedAnalyticsEnabled && <ProOverlay />}
           </CardContent>
         </Card>
 
         {/* ROI - Conv Rate */}
-        <Card
-          className={cn(
-            "border border-border/40 overflow-hidden relative group min-h-[160px] bg-card/60 shadow-xl shadow-black/5 flex flex-col justify-between",
-          )}
-        >
-          {!data.isAdvancedAnalyticsEnabled && (
-            <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] uppercase tracking-widest font-black absolute top-4 right-4 z-10">
-              PRO FEATURE
-            </Badge>
-          )}
+        <Card className="border border-border/40 overflow-hidden relative group min-h-[160px] bg-card/60 shadow-xl shadow-black/5 flex flex-col justify-between">
           <CardContent className="p-6 flex flex-col justify-between h-full">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
                 Outreach Conversion Rate
               </p>
-              <div
-                className={cn(
-                  "flex items-baseline gap-1 transition-all",
-                  !data.isAdvancedAnalyticsEnabled &&
-                    "blur-[4px] opacity-40 select-none pointer-events-none",
-                )}
-              >
+              <div className="flex items-baseline gap-1 transition-all">
                 <h3 className="text-4xl font-black tracking-tighter">
-                  {data.isAdvancedAnalyticsEnabled
-                    ? `${data.leadConversionRate}%`
-                    : "4.8%"}
+                  {data.leadConversionRate}%
                 </h3>
               </div>
             </div>
@@ -675,41 +672,23 @@ export default function AnalyticsPage() {
                 Conversions from hot reply drafts
               </p>
             </div>
-            {!data.isAdvancedAnalyticsEnabled && <ProOverlay />}
           </CardContent>
         </Card>
 
         {/* ROI - Marketing Budget Saved */}
-        <Card
-          className={cn(
-            "border border-border/40 overflow-hidden relative group min-h-[160px] bg-card/60 shadow-xl shadow-black/5 flex flex-col justify-between",
-          )}
-        >
-          {!data.isAdvancedAnalyticsEnabled && (
-            <Badge className="bg-primary/20 text-primary border-primary/30 text-[9px] uppercase tracking-widest font-black absolute top-4 right-4 z-10">
-              PRO FEATURE
-            </Badge>
-          )}
+        <Card className="border border-border/40 overflow-hidden relative group min-h-[160px] bg-card/60 shadow-xl shadow-black/5 flex flex-col justify-between">
           <CardContent className="p-6 flex flex-col justify-between h-full">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
                 Estimated Marketing Value ROI
               </p>
-              <div
-                className={cn(
-                  "flex items-baseline gap-1 transition-all",
-                  !data.isAdvancedAnalyticsEnabled &&
-                    "blur-[4px] opacity-40 select-none pointer-events-none",
-                )}
-              >
+              <div className="flex items-baseline gap-1 transition-all">
                 <h3 className="text-4xl font-black tracking-tighter">
                   $
-                  {data.isAdvancedAnalyticsEnabled
-                    ? Math.round(
-                        (data.usageStats?.leads?.used || 0) * 15 +
-                          (data.llmUsage?.totals?.requestCount || 0) * 0.5,
-                      )
-                    : "225"}
+                  {Math.round(
+                    (data.usageStats?.leads?.used || 0) * 15 +
+                      (data.llmUsage?.totals?.requestCount || 0) * 0.5,
+                  )}
                 </h3>
               </div>
             </div>
@@ -719,7 +698,6 @@ export default function AnalyticsPage() {
                 Estimated USD marketing spend saved
               </p>
             </div>
-            {!data.isAdvancedAnalyticsEnabled && <ProOverlay />}
           </CardContent>
         </Card>
       </div>

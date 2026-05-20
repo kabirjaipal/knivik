@@ -231,16 +231,36 @@ async function startServer() {
       try {
         logger.info(`🛰 Dispatching scraper jobs to the queue...`);
         const activeProducts = await db.client.product.findMany({
-          where: { 
-            isActive: true,
-            user: { plan: 'PRO' }
+          where: { isActive: true },
+          select: { 
+            id: true, 
+            userId: true, 
+            aiConfig: true,
+            user: {
+              select: { plan: true }
+            }
           },
-          select: { id: true, userId: true },
+        });
+
+        // Filter: PRO products are scanned every cycle. FREE products are scanned once every 24 hours.
+        const productsToScan = activeProducts.filter((product) => {
+          if (product.user?.plan === 'PRO') {
+            return true;
+          }
+          // Free tier scanning logic: 1 scan every 24 hours
+          const aiConfig = (product.aiConfig as Record<string, any>) || {};
+          const lastBgScan = aiConfig['lastBackgroundScanAt'];
+          if (!lastBgScan) {
+            return true; // Scan if it has never been scanned
+          }
+          const lastScanTime = new Date(lastBgScan).getTime();
+          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+          return lastScanTime < oneDayAgo;
         });
 
         // Group products by user
         const productsByUser = new Map<string, string[]>();
-        for (const product of activeProducts) {
+        for (const product of productsToScan) {
           if (!productsByUser.has(product.userId)) {
             productsByUser.set(product.userId, []);
           }
@@ -248,7 +268,7 @@ async function startServer() {
         }
 
         logger.info(
-          `📊 Found ${activeProducts.length} products across ${productsByUser.size} users`
+          `📊 Found ${productsToScan.length} products to scan across ${productsByUser.size} active users`
         );
 
         // Process each user's products sequentially, but users in parallel

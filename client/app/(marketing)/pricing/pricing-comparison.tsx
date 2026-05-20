@@ -2,41 +2,91 @@
 
 import { Check, X } from "lucide-react";
 import { Fragment } from "react";
+import { PLANS, INTERVAL_TEXT } from "@/lib/plans";
 
-const COMPARISON_FEATURES = [
+const getComparisonFeatures = () => [
   {
     category: "Monitoring",
     features: [
-      { name: "Monitored Topics", free: "1", pro: "5" },
-      { name: "Leads per Month", free: "50", pro: "1,000" },
-      { name: "Global Auto Search", free: false, pro: "Every 2h (24/7)" },
-      { name: "Manual Force Scans", free: "1 / day", pro: "10 / day / product" },
+      { 
+        name: "Monitored Topics", 
+        free: String(PLANS.FREE.limits.products), 
+        pro: String(PLANS.PRO.limits.products) 
+      },
+      { 
+        name: "Leads per Month", 
+        free: PLANS.FREE.limits.leadsPerMonth.toLocaleString(), 
+        pro: PLANS.PRO.limits.leadsPerMonth.toLocaleString() 
+      },
+      { 
+        name: "Global Auto Search", 
+        free: "Every 24h", 
+        pro: `${INTERVAL_TEXT} (24/7)` 
+      },
+      { 
+        name: "Manual Force Scans", 
+        free: `${PLANS.FREE.limits.manualScansPerDay} / day`, 
+        pro: `${PLANS.PRO.limits.manualScansPerDay} / day / product` 
+      },
       { name: "Reddit Support", free: true, pro: true },
       { name: "Hacker News Support", free: true, pro: true },
-      { name: "Twitter (X) Support", free: false, pro: true },
-      { name: "Real-time Alerts", free: false, pro: true },
+      { 
+        name: "Twitter (X) Support", 
+        free: PLANS.FREE.capabilities.canAccessTwitter, 
+        pro: PLANS.PRO.capabilities.canAccessTwitter 
+      },
+      { 
+        name: "Real-time Alerts", 
+        free: PLANS.FREE.capabilities.canAccessAlerts, 
+        pro: PLANS.PRO.capabilities.canAccessAlerts 
+      },
     ],
   },
   {
     category: "AI Intelligence",
     features: [
       { name: "Basic Intent Detection", free: true, pro: true },
-      { name: "Advanced Intent Scoring", free: false, pro: true },
-      { name: "Custom AI Personas", free: false, pro: true },
-      { name: "Advanced AI Insight Models", free: false, pro: true },
+      { 
+        name: "Analytics Dashboard", 
+        free: "Standard",
+        pro: "Advanced ROI & Intent"
+      },
+      { 
+        name: "Advanced Intent Scoring", 
+        free: PLANS.FREE.capabilities.canAccessAdvancedAI, 
+        pro: PLANS.PRO.capabilities.canAccessAdvancedAI 
+      },
+      { 
+        name: "Custom AI Personas", 
+        free: PLANS.FREE.capabilities.canAccessCustomPersonas, 
+        pro: PLANS.PRO.capabilities.canAccessCustomPersonas 
+      },
     ],
   },
   {
     category: "Integrations & Support",
     features: [
-      { name: "Email Alerts", free: false, pro: true },
-      { name: "Slack & Discord", free: false, pro: true },
-      { name: "Priority Support", free: false, pro: true },
+      { 
+        name: "Email Alerts", 
+        free: PLANS.FREE.capabilities.canAccessAlerts, 
+        pro: PLANS.PRO.capabilities.canAccessAlerts 
+      },
+      { 
+        name: "Slack & Discord", 
+        free: PLANS.FREE.capabilities.canAccessAlerts, 
+        pro: PLANS.PRO.capabilities.canAccessAlerts 
+      },
+      { 
+        name: "Priority Support", 
+        free: "Community",
+        pro: "Priority" 
+      },
     ],
   },
 ];
 
 export function PricingComparison() {
+  const comparisonFeatures = getComparisonFeatures();
   return (
     <div className="mt-24 w-full max-w-4xl mx-auto hidden md:block">
       <div className="text-center mb-8">
@@ -53,7 +103,7 @@ export function PricingComparison() {
             </tr>
           </thead>
           <tbody>
-            {COMPARISON_FEATURES.map((section) => (
+            {comparisonFeatures.map((section) => (
               <Fragment key={section.category}>
                 <tr className="bg-muted/30">
                   <td colSpan={3} className="p-4 text-xs font-black uppercase tracking-wider text-foreground/70">

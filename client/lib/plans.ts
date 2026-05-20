@@ -9,7 +9,7 @@ const getIntervalText = () => {
   return `Every ${Math.round(ms / 60000)}m`;
 };
 
-const INTERVAL_TEXT = getIntervalText();
+export const INTERVAL_TEXT = getIntervalText();
 
 export const PLANS = {
   FREE: { 
@@ -19,7 +19,8 @@ export const PLANS = {
       "Track 1 Product",
       "50 leads per month",
       "Reddit & HackerNews scanning",
-      "Manual scans only (1/day limit)",
+      "Automated scans every 24 hours",
+      "1 manual force scan per day",
       "Basic intent detection",
       "Standard dashboard analytics",
       "No automated alerts (Dashboard only)",
@@ -48,11 +49,9 @@ export const PLANS = {
       "Track up to 5 Products",
       "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
-      "Automated scans (24/7 background)",
+      "Automated scans every 2 hours (24/7 background)",
       "10 Manual Force Scans / day per product",
-      "Semantic AI Discovery (No keywords)",
       "Advanced ROI & Intent Analytics",
-      "Zapier, Make & Custom Webhooks",
       "Advanced AI Intent Scoring",
       "Custom AI Personas for replies",
       "Email, Slack & Discord alerts",
@@ -75,7 +74,7 @@ export const PLANS = {
       canAccessEnrichment: true,
       canAccessCustomPersonas: true,
       canAccessAdvancedAI: true,
-      priorityProcessing: false,
+      priorityProcessing: true,
     }
   },
 } as const;
