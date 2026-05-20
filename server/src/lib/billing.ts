@@ -4,18 +4,28 @@ import { db } from "./db.js";
 import logger from "./logger.js";
 import { dodo } from "./dodo.js";
 
+let cachedPrices: any = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour cache
+
 /**
  * Get prices from Dodo Payments
  */
 export async function getPrices() {
+  const now = Date.now();
+  if (cachedPrices && (now - cacheTimestamp < CACHE_TTL_MS)) {
+    logger.debug("Returning cached prices from Dodo Payments");
+    return cachedPrices;
+  }
+
   try {
-    logger.info("Fetching prices from Dodo Payments");
+    logger.info("Fetching fresh prices from Dodo Payments");
     const products = await dodo.products.list({
       page_size: 10,
     });
 
     // Map Dodo products to the format expected by the frontend
-    return (products.items || []).map((product: DodoPayments.ProductListResponse) => ({
+    const mapped = (products.items || []).map((product: DodoPayments.ProductListResponse) => ({
       id: product.product_id,
       productId: product.product_id,
       name: product.name,
@@ -24,9 +34,14 @@ export async function getPrices() {
       interval: product.is_recurring ? "month" : null,
       intervalCount: 1,
     }));
+
+    cachedPrices = mapped;
+    cacheTimestamp = now;
+    return mapped;
   } catch (error) {
     logger.error({ error }, "Error in getPrices from Dodo");
-    return [];
+    // Fallback to stale cached prices if fetch fails, to prevent API errors
+    return cachedPrices || [];
   }
 }
 

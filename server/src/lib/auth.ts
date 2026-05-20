@@ -97,6 +97,12 @@ export const auth: any = betterAuth({
 
   callbacks: {
     async session({ session, user }: any) {
+      // Better Auth already queries the database and populates user additionalFields.
+      // We check if the fields are already present on the user object to avoid a redundant DB query.
+      if (user && user.role !== undefined && user.plan !== undefined) {
+        return { session, user };
+      }
+
       const userData = await db.client.user.findUnique({
         where: { id: user.id },
         select: {

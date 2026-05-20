@@ -156,6 +156,20 @@ async function startServer() {
   try {
     await db.connect();
 
+    // Start Neon database keep-alive ping in production (runs every 4 minutes to prevent scale-to-zero)
+    if (config.NODE_ENV === 'production') {
+      const KEEP_ALIVE_INTERVAL_MS = 4 * 60 * 1000; 
+      setInterval(async () => {
+        try {
+          await db.client.$queryRaw`SELECT 1`;
+          logger.debug('Database keep-alive ping successful');
+        } catch (error) {
+          logger.error({ error }, 'Database keep-alive ping failed');
+        }
+      }, KEEP_ALIVE_INTERVAL_MS);
+      logger.info('🛰️ Database keep-alive ping scheduled every 4 minutes');
+    }
+
     // Reset stale scanning states from any previous crashed/interrupted run.
     // Without this, users remain stuck in 'SCANNING' state after a server crash/restart.
     try {

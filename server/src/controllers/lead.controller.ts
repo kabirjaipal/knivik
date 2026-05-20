@@ -19,6 +19,7 @@ export const getLeads = async (req: Request, res: Response) => {
 
     // Fetch leads for the user's products from the last 24 hours, sorted by score
     const leads = await db.client.lead.findMany({
+      relationLoadStrategy: 'join',
       where: {
         product: {
           userId: userId,
