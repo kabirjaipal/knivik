@@ -13,86 +13,60 @@ export function proxy(request: NextRequest) {
     "https://*.dodopayments.com",
     "https://va.vercel-scripts.com",
     "https://*.posthog.com",
-    "https://*.i.posthog.com"
+    "https://*.i.posthog.com",
+    backendUrl,
+    socketUrl,
+    socketWsUrl
   ];
 
-  if (backendUrl && (backendUrl.startsWith("http://") || backendUrl.startsWith("https://"))) {
-    connectSources.push(backendUrl);
+  // Generate a unique nonce for every request
+  const nonce = btoa(crypto.randomUUID());
+
+  // In development mode, React requires 'unsafe-eval' for debugging & callstack mapping.
+  const isProd = process.env.NODE_ENV === "production";
+  const scriptSources = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'strict-dynamic'",
+    "'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg='",
+    "'sha256-J9cZHZf5nVZbsm7Pqxc8RsURv1AIXkMgbhfrZvoOs/A='",
+    "https://*.dodopayments.com",
+    "https://va.vercel-scripts.com",
+    "https://*.posthog.com",
+    "https://*.i.posthog.com"
+  ];
+  if (!isProd) {
+    scriptSources.push("'unsafe-eval'");
   }
-  if (socketUrl && (socketUrl.startsWith("http://") || socketUrl.startsWith("https://"))) {
-    connectSources.push(socketUrl);
-  }
-  if (socketWsUrl) {
-    if (process.env.NODE_ENV === "production") {
-      if (socketWsUrl.startsWith("wss://")) {
-        connectSources.push(socketWsUrl);
-      }
-    } else {
-      const wsPrefix = "ws" + "://";
-      if (socketWsUrl.startsWith(wsPrefix) || socketWsUrl.startsWith("wss://")) {
-        connectSources.push(socketWsUrl);
-      }
-    }
-  }
 
-  // Enforce strict CSP with nonce on all HTML pages in production
-  const isStrictCspPath = process.env.NODE_ENV === "production";
+  const cspHeader = [
+    "default-src 'self'",
+    `script-src ${scriptSources.join(" ")}`,
+    "style-src 'self' 'unsafe-inline' https://*.dodopayments.com",
+    "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
+    "font-src 'self' data:",
+    "frame-src 'self' https://*.dodopayments.com",
+    `connect-src ${connectSources.join(" ")}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests"
+  ].join("; ");
 
-  if (isStrictCspPath) {
-    // Generate a unique nonce
-    const nonce = btoa(crypto.randomUUID());
+  // Set request headers so Next.js runtime extracts the nonce
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", cspHeader);
 
-    const cspHeader = [
-      "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg=' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com`,
-      `style-src-elem 'self' 'nonce-${nonce}' https://*.dodopayments.com`,
-      "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
-      "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
-      "font-src 'self' data:",
-      "frame-src 'self' https://*.dodopayments.com",
-      `connect-src ${connectSources.join(" ")}`,
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
-    ].join("; ");
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
-    // Set request headers so Next.js runtime extracts the nonce
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-nonce", nonce);
-    requestHeaders.set("Content-Security-Policy", cspHeader);
-
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-
-    response.headers.set("Content-Security-Policy", cspHeader);
-    return response;
-  } else {
-    // Static/marketing pages fallback CSP (with unsafe-inline)
-    const cspHeader = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
-      "style-src-elem 'self' 'unsafe-inline' https://*.dodopayments.com",
-      "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
-      "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
-      "font-src 'self' data:",
-      "frame-src 'self' https://*.dodopayments.com",
-      `connect-src ${connectSources.join(" ")}`,
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
-    ].join("; ");
-
-    const response = NextResponse.next();
-    response.headers.set("Content-Security-Policy", cspHeader);
-    return response;
-  }
+  response.headers.set("Content-Security-Policy", cspHeader);
+  return response;
 }
 
 export const config = {
