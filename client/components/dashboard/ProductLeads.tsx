@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { AlertCircle, MessageSquare, TrendingUp, Radar } from "lucide-react"
+import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
-import { ProductStats } from "./ProductStats"
 
 type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
 
@@ -170,56 +169,119 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
     )
   }
 
-  return (
-    <div className="space-y-0">
-      {/* Stats above the lead stream — always shown even with 0 leads */}
-      <ProductStats leads={leads} />
+  const total = leads.length
+  const highIntent = leads.filter(l => l.intentScore >= 80).length
+  const last24h = leads.filter(l => Date.now() - new Date(l.createdAt).getTime() < 86_400_000).length
+  const converted = leads.filter(l => l.status === 'CONVERTED').length
 
-      {leads.length === 0 ? (
-        <div className="py-16 text-center bg-muted/5 rounded-xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-3">
-          <Radar className="w-8 h-8 text-muted-foreground/20" />
-          <div>
-            <p className="text-sm font-bold text-foreground">No Leads Detected</p>
-            <p className="text-xs text-muted-foreground mt-1">Trigger a scan or wait for the global 24h sweep.</p>
+  return (
+    <div className="flex-1 min-h-0 flex flex-col xl:grid xl:grid-cols-[350px_1fr] gap-6 xl:overflow-hidden mt-4">
+      
+      {/* ── Left sidebar: Flat Layout (No Cards) ─────────────────────────────── */}
+      <aside className="w-full shrink-0 xl:overflow-y-auto xl:max-h-[calc(100vh-180px)] pr-2 custom-scrollbar space-y-10">
+        
+        {/* Section 1: Live Intelligence Stats */}
+        <div className="space-y-5">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            Live Intelligence
+          </h3>
+          <div className="space-y-1">
+            {([
+              { label: 'Total Leads',   value: total,      icon: Activity,      color: 'text-foreground' },
+              { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
+              { label: 'Hot Leads',     value: buyNow,     icon: Flame,         color: 'text-destructive' },
+              { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-amber-500' },
+              { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-indigo-500' },
+              { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-emerald-500' },
+            ]).map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${color} opacity-80`} />
+                  <span className="text-sm font-semibold text-muted-foreground/90">{label}</span>
+                </div>
+                <span className={`text-sm font-black tracking-tight tabular-nums ${color}`}>{value}</span>
+              </div>
+            ))}
           </div>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
+
+        {/* Section 2: Platform Origins */}
+        {total > 0 && (
+          <div className="space-y-5">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" /> Platform Origins
+            </h3>
+            <div className="space-y-3">
+              {(['REDDIT', 'HACKERNEWS', 'TWITTER'] as const).map(p => {
+                const count = leads.filter(l => l.platform === p).length
+                const pct = Math.round((count / total) * 100)
+                return (
+                  <div key={p} className="flex items-center gap-4">
+                    <span className="text-xs font-bold text-muted-foreground/60 w-24 truncate">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
+                    <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-1000 ${
+                        p === 'REDDIT' ? 'bg-orange-500' : 
+                        p === 'HACKERNEWS' ? 'bg-amber-500' : 
+                        'bg-sky-500'
+                      }`}
+                        style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs font-bold tabular-nums text-foreground/80 w-12 text-right">{count}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </aside>
+
+      {/* ── Right Column: Lead Stream ────────────────────────────────────────── */}
+      <main className="min-w-0 flex flex-col xl:overflow-hidden xl:max-h-[calc(100vh-180px)]">
+        {leads.length === 0 ? (
+          <div className="h-full py-16 text-center bg-muted/5 rounded-2xl border border-dashed border-border/50 flex flex-col items-center justify-center gap-3">
+            <Radar className="w-8 h-8 text-muted-foreground/20" />
+            <div>
+              <p className="text-sm font-bold text-foreground">No Leads Detected</p>
+              <p className="text-xs text-muted-foreground mt-1">Trigger a scan or wait for the global 24h sweep.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
             {/* Header / Tabs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/10 gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
-                  <TrendingUp className="w-6 h-6 text-primary" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/5 gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <TrendingUp className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black tracking-tight text-foreground">Product Feed</h2>
-                  <p className="text-sm text-muted-foreground font-medium mt-0.5">Real-time leads filtered by intent</p>
+                  <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">Product Feed</h2>
+                  <p className="text-xs text-muted-foreground font-medium">Real-time leads filtered by intent</p>
                 </div>
               </div>
             </div>
-            
-            <div className="flex gap-2 px-6 py-4 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
-                {TABS.map(tab => (
-                  <button key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`px-5 py-2.5 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-xl border ${
-                      activeTab === tab.key
-                        ? 'bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20'
-                        : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
-                    }`}>
-                    {tab.label}
-                    {tab.count > 0 && (
-                      <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
+
+            <div className="flex gap-2 px-5 py-3 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
+              {TABS.map(tab => (
+                <button key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border ${
+                    activeTab === tab.key
+                      ? 'bg-primary border-primary text-primary-foreground'
+                      : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}>
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
 
             {/* Lead list */}
-            <div className="p-0 sm:p-4 bg-muted/5 min-h-96">
+            <div className="flex-1 overflow-y-auto p-0 sm:p-4 bg-muted/5 min-h-0 custom-scrollbar">
               {filteredLeads.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center gap-3 min-h-96">
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
@@ -250,15 +312,8 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
               )}
             </div>
           </div>
-
-          {filteredLeads.length > 5 && (
-            <p className="text-center text-xs text-muted-foreground/40 font-medium pt-2">
-              <MessageSquare className="inline w-3 h-3 mr-1" />
-              Showing all {filteredLeads.length} leads for this view
-            </p>
-          )}
-        </div>
-      )}
+        )}
+      </main>
     </div>
   )
 }

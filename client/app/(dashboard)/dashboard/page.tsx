@@ -193,73 +193,61 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* ── Stat strip moved to sidebar ────────────────────────────────── */}
-
       {/* ── Two column: sidebar + lead stream ─────────────────────────────── */}
-      <div className="flex-1 min-h-0 grid xl:grid-cols-[360px_1fr] gap-8 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col xl:grid xl:grid-cols-[350px_1fr] gap-6 xl:overflow-hidden">
 
-        {/* ── Left sidebar ──────────────────────────────────────────────── */}
-        <aside className="space-y-6 overflow-y-auto pr-2 shrink-0 custom-scrollbar">
-
-          {/* Premium Quick Stats Card */}
-          <div className="bg-background/95 rounded-3xl border border-primary/10 overflow-hidden shadow-2xl shadow-primary/5">
-            <div className="px-6 py-5 border-b border-primary/5 bg-linear-to-br from-primary/5 via-transparent to-transparent">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2.5">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Live Intelligence
-              </span>
-            </div>
-            <div className="grid grid-cols-2 divide-x divide-y divide-primary/5">
+        {/* ── Left sidebar: Flat Layout (No Cards) ─────────────────────────────── */}
+        <aside className="w-full shrink-0 xl:overflow-y-auto xl:max-h-[calc(100vh-200px)] pr-2 custom-scrollbar space-y-10">
+          
+          {/* Section 1: Live Intelligence Stats */}
+          <div className="space-y-5">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              Live Intelligence
+            </h3>
+            <div className="space-y-1">
               {([
                 { label: 'Total Leads',   value: total,      icon: Activity,      color: 'text-foreground' },
                 { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
                 { label: 'Hot Leads',     value: buyNow,     icon: Flame,         color: 'text-destructive' },
-                { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-destructive' },
-                { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-primary' },
-                { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-success' },
-              ]).map(({ label, value, icon: Icon, color }, i) => (
-                <div key={label} className="p-5 flex flex-col gap-1 transition-colors hover:bg-primary/2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">{label}</span>
-                    <Icon className={`w-3.5 h-3.5 ${color} opacity-40`} />
+                { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-amber-500' },
+                { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-indigo-500' },
+                { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-emerald-500' },
+              ]).map(({ label, value, icon: Icon, color }) => (
+                <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${color} opacity-80`} />
+                    <span className="text-sm font-semibold text-muted-foreground/90">{label}</span>
                   </div>
-                  <span className={`text-2xl font-black tracking-tighter tabular-nums ${color}`}>{value}</span>
+                  <span className={`text-sm font-black tracking-tight tabular-nums ${color}`}>{value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Premium Products panel */}
-          <div className="bg-background/95 rounded-3xl border border-border/40 overflow-hidden shadow-xl shadow-black/5">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-border/40 bg-muted/5">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2.5">
+          {/* Section 2: Active Radar (Products) */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" /> Active Radar
-              </span>
+              </h3>
               <button onClick={() => router.push('/dashboard/products')}
-                className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
+                className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all flex items-center gap-0.5">
                 Manage <ChevronRight className="w-3 h-3" />
               </button>
             </div>
-            <div className="divide-y divide-border/10 max-h-64 overflow-y-auto no-scrollbar">
+            <div className="space-y-1 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
               {products.length === 0 ? (
-                <div className="p-10 text-center">
-                  <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">No Active Radar</p>
-                </div>
+                <p className="text-xs text-muted-foreground/50 font-bold uppercase tracking-widest py-2">No Active Radar</p>
               ) : (
-                products.slice(0, 5).map(p => (
+                products.slice(0, 8).map(p => (
                   <button key={p.id} onClick={() => router.push(`/dashboard/products/${p.id}`)}
-                    className="w-full text-left px-6 py-4 hover:bg-primary/3 transition-all group flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors truncate">{p.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${p.isActive ? 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-muted-foreground/30'}`} />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                          {p.isActive ? 'Live Scan' : 'Standby'}
-                        </span>
-                      </div>
+                    className="w-full text-left py-2 px-2 hover:bg-muted/40 rounded-xl transition-all group flex items-center justify-between gap-3 text-sm">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${p.isActive ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]' : 'bg-muted-foreground/30'}`} />
+                      <span className="font-bold text-muted-foreground/90 group-hover:text-primary transition-colors truncate">{p.name}</span>
                     </div>
-                    <span className="text-sm font-black text-primary tabular-nums bg-primary/5 px-3 py-1 rounded-xl border border-primary/10 group-hover:border-primary/30 transition-all">
+                    <span className="text-xs font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10 group-hover:border-primary/20 transition-all">
                       {leadsByProduct[p.name] ?? 0}
                     </span>
                   </button>
@@ -268,24 +256,28 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Premium Origins Panel */}
+          {/* Section 3: Platform Origins */}
           {total > 0 && (
-            <div className="bg-background/95 rounded-3xl border border-border/40 shadow-xl shadow-black/5 overflow-hidden p-6">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2.5 mb-6">
+            <div className="space-y-5">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                 <Activity className="w-4 h-4 text-primary" /> Platform Origins
-              </p>
-              <div className="space-y-4">
+              </h3>
+              <div className="space-y-3">
                 {(['REDDIT', 'HACKERNEWS', 'TWITTER'] as const).map(p => {
                   const count = leads.filter(l => l.platform === p).length
                   const pct = Math.round((count / total) * 100)
                   return (
                     <div key={p} className="flex items-center gap-4">
-                      <span className="text-[10px] font-black text-muted-foreground/70 w-20">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
-                      <div className="flex-1 h-1.5 bg-primary/5 rounded-full overflow-hidden border border-primary/5">
-                        <div className={`h-full rounded-full transition-all duration-1000 ${p === 'REDDIT' ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]' : p === 'HACKERNEWS' ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]'}`}
+                      <span className="text-xs font-bold text-muted-foreground/60 w-24 truncate">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
+                      <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-1000 ${
+                          p === 'REDDIT' ? 'bg-orange-500' : 
+                          p === 'HACKERNEWS' ? 'bg-amber-500' : 
+                          'bg-sky-500'
+                        }`}
                           style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-[10px] font-black tabular-nums text-foreground w-12 text-right">{count}</span>
+                      <span className="text-xs font-bold tabular-nums text-foreground/80 w-12 text-right">{count}</span>
                     </div>
                   )
                 })}
@@ -295,7 +287,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Lead stream ───────────────────────────────────────────────── */}
-        <main className="min-w-0 flex flex-col overflow-hidden">
+        <main className="min-w-0 flex flex-col xl:overflow-hidden xl:max-h-[calc(100vh-200px)]">
           <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/5 gap-3">
