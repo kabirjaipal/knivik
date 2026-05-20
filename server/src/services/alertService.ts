@@ -87,38 +87,101 @@ async function sendWebhookAlert(alertSetting: any, lead: any) {
   try {
     let payload: any = {};
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const metadata = (lead.metadata as any) || {};
+    const qualificationReasoning = metadata.qualificationReasoning || '';
 
     switch (webhookType) {
-      case 'SLACK':
-        payload = {
-          text: `🚀 *New High-Intent Lead Detected!*\n*Product:* ${lead.product.name}\n*Intent Score:* ${lead.intentScore}%\n*Content:* ${lead.title || 'Conversation thread'}\n<${lead.url}|View Post> | <${config.FRONTEND_URL}/dashboard|Open Dashboard>`,
-        };
+      case 'SLACK': {
+        const truncatedContent = lead.content && lead.content.length > 500
+          ? `${lead.content.slice(0, 500)}...`
+          : lead.content;
+
+        let slackText = `🚀 *New High-Intent Lead Detected!*\n`;
+        slackText += `*Product:* ${lead.product.name}\n`;
+        slackText += `*Platform:* ${lead.platform}\n`;
+        slackText += `*Intent Score:* ${lead.intentScore}% (${lead.intentLevel})\n`;
+        if (lead.authorUsername) {
+          slackText += `*Author:* u/${lead.authorUsername}\n`;
+        }
+        if (lead.title) {
+          slackText += `*Title:* *${lead.title}*\n`;
+        }
+        slackText += `\n*Content:*\n>>>${truncatedContent}\n\n`;
+        if (qualificationReasoning) {
+          slackText += `💡 *AI Reasoning:* _${qualificationReasoning}_\n\n`;
+        }
+        slackText += `<${lead.url}|View Post> | <${config.FRONTEND_URL}/dashboard|Open Dashboard>`;
+
+        payload = { text: slackText };
         break;
-      case 'DISCORD':
+      }
+      case 'DISCORD': {
+        const discContent = lead.content && lead.content.length > 1024
+          ? `${lead.content.slice(0, 1024)}...`
+          : lead.content;
+
         payload = {
           content: null,
           embeds: [{
-            title: `🚀 New Lead: ${lead.product.name}`,
-            description: `**Intent Score:** ${lead.intentScore}%\n**Platform:** ${lead.platform}\n\n${lead.title || 'Conversation thread'}`,
+            title: `🚀 New Lead Detected for ${lead.product.name}`,
             url: lead.url,
-            color: 5814783,
+            color: 5814783, // blurple color
+            fields: [
+              {
+                name: 'Intent Score',
+                value: `${lead.intentScore}% (${lead.intentLevel})`,
+                inline: true,
+              },
+              {
+                name: 'Platform',
+                value: lead.platform,
+                inline: true,
+              },
+              {
+                name: 'Author',
+                value: lead.authorUsername ? `u/${lead.authorUsername}` : 'Unknown',
+                inline: true,
+              },
+              {
+                name: lead.title || 'Post Content',
+                value: discContent || '_No content_',
+              },
+              ...(qualificationReasoning ? [{
+                name: '💡 AI Reasoning',
+                value: qualificationReasoning,
+              }] : []),
+            ],
+            footer: {
+              text: `Knivik Alerts`,
+            },
+            timestamp: new Date().toISOString()
           }]
         };
         break;
+      }
       case 'ZAPIER':
       case 'MAKE':
       case 'CUSTOM':
       default:
         payload = {
           event: 'lead.detected',
+          timestamp: new Date().toISOString(),
           data: {
             id: lead.id,
+            productId: lead.productId,
+            productName: lead.product.name,
+            platform: lead.platform,
+            externalPostId: lead.externalPostId,
+            title: lead.title || null,
+            content: lead.content || '',
+            url: lead.url,
+            authorUsername: lead.authorUsername || null,
             intentScore: lead.intentScore,
             intentLevel: lead.intentLevel,
-            platform: lead.platform,
-            title: lead.title,
-            url: lead.url,
-            productName: lead.product.name,
+            detectedBy: lead.detectedBy,
+            qualificationReasoning: qualificationReasoning || null,
+            postedAt: lead.postedAt ? new Date(lead.postedAt).toISOString() : null,
+            createdAt: new Date(lead.createdAt).toISOString(),
             dashboardUrl: `${config.FRONTEND_URL}/dashboard`
           }
         };

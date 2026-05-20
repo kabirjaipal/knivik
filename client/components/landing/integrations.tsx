@@ -40,7 +40,7 @@ export function Integrations() {
             </p>
             
             <div className="flex flex-wrap gap-4">
-              {["Slack Alerts", "Email Notifications", "Webhook Support", "CSV Export"].map((item) => (
+              {["Slack Alerts", "Email Notifications", "Webhook Support", "Discord Alerts"].map((item) => (
                 <div key={item} className="px-5 py-2.5 bg-background rounded-2xl border border-border text-sm font-black shadow-sm flex items-center gap-2 hover:border-primary/40 transition-colors cursor-default">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   {item}
