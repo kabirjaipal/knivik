@@ -5,27 +5,15 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 export const healthCheck = asyncHandler(async (req: Request, res: Response) => {
   const dbHealth = await db.healthCheck();
   
-  const uptime = process.uptime();
-  const memoryUsage = process.memoryUsage();
-  
-  const health = {
-    status: dbHealth ? 'healthy' : 'unhealthy',
-    timestamp: new Date().toISOString(),
-    uptime: `${Math.floor(uptime)} seconds`,
-    database: dbHealth ? 'connected' : 'disconnected',
-    memory: {
-      used: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
-      total: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
-      external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`,
-    },
-    node: process.version,
-    mode: 'in-memory',
-  };
+  if (!dbHealth) {
+    res.status(503).json({
+      status: 'unhealthy'
+    });
+    return;
+  }
 
   res.status(200).json({
-    success: true,
-    data: health,
-    requestId: req.requestId,
+    status: 'healthy'
   });
 });
 
