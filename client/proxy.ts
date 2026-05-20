@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
+  const backendUrl = process.env.BACKEND_URL;
+  if (!backendUrl) throw new Error("BACKEND_URL is not defined");
   const wsUrl = backendUrl.replace(/^http/, "ws");
   const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || wsUrl;
   const socketWsUrl = socketUrl.replace(/^http/, "ws");
@@ -46,7 +45,7 @@ export function proxy(request: NextRequest) {
     const cspHeader = [
       "default-src 'self'",
       `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg=' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com`,
-      "style-src-elem 'self' 'unsafe-inline' https://*.dodopayments.com",
+      `style-src-elem 'self' 'nonce-${nonce}' https://*.dodopayments.com`,
       "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
       "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
       "font-src 'self' data:",
