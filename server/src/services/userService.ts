@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { db } from '../lib/db.js';
-import { hashPassword, comparePassword, generateToken } from '../middleware/auth.js';
+import { auth } from '../lib/auth.js';
+import { fromNodeHeaders } from 'better-auth/node';
 import { AppError } from '../middleware/errorHandler.js';
 import type { CreateUserInput, LoginInput, User } from '../types/index.js';
 
@@ -39,14 +40,26 @@ export class UserService {
       throw new AppError('User already exists', 409, 'USER_EXISTS', requestId);
     }
 
-    const hashedPassword = await hashPassword(password);
-
-    const user = await db.client.user.create({
-      data: {
+    // Create user properly via Better Auth API
+    const signUpResult = await auth.api.signUpEmail({
+      body: {
         email,
+        password,
+        name: username,
         username,
-        password: hashedPassword,
+      },
+    });
+
+    if (!signUpResult || !signUpResult.user) {
+      throw new AppError('Failed to create user via authentication service', 500, 'AUTH_ERROR', requestId);
+    }
+
+    // Update role and set email verified to true for created users
+    const user = await db.client.user.update({
+      where: { id: signUpResult.user.id },
+      data: {
         role: role as any,
+        emailVerified: true,
       },
       select: {
         id: true,
@@ -75,33 +88,38 @@ export class UserService {
 
     const { email, password } = validation.data;
 
-    const user = await db.client.user.findUnique({
-      where: { email },
-    });
+    try {
+      const result = await auth.api.signInEmail({
+        body: {
+          email,
+          password,
+        },
+      });
 
-    if (!user || !user.password || !(await comparePassword(password, user.password))) {
+      if (!result || !result.user || !result.token) {
+        throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS', requestId);
+      }
+
+      return {
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          username: result.user.username || '',
+          role: result.user.role as any,
+          plan: result.user.plan as any,
+          metadata: result.user.metadata,
+          subscriptionStatus: result.user.subscriptionStatus || null,
+          billingCycle: null,
+          currentPeriodEnd: null,
+          dodoCustomerId: null,
+          createdAt: new Date(result.user.createdAt),
+          updatedAt: new Date(result.user.updatedAt),
+        },
+        token: result.token,
+      };
+    } catch {
       throw new AppError('Invalid credentials', 401, 'INVALID_CREDENTIALS', requestId);
     }
-
-    const token = generateToken(user.id);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-        plan: user.plan,
-        metadata: user.metadata,
-        subscriptionStatus: user.subscriptionStatus,
-        billingCycle: user.billingCycle,
-        currentPeriodEnd: user.currentPeriodEnd,
-        dodoCustomerId: user.dodoCustomerId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      token,
-    };
   }
 
   static async getUserById(id: string, _requestId?: string): Promise<User | null> {
@@ -160,21 +178,19 @@ export class UserService {
     });
   }
 
-  static async updatePassword(userId: string, currentPassword: string, newPassword: string, requestId?: string): Promise<void> {
-    const user = await db.client.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user || !user.password || !(await comparePassword(currentPassword, user.password))) {
-      throw new AppError('Invalid current password', 401, 'INVALID_PASSWORD', requestId);
+  static async updatePassword(headers: any, currentPassword: string, newPassword: string, requestId?: string): Promise<void> {
+    try {
+      await auth.api.changePassword({
+        body: {
+          currentPassword,
+          newPassword,
+          revokeOtherSessions: true,
+        },
+        headers: fromNodeHeaders(headers),
+      });
+    } catch (err: any) {
+      throw new AppError(err.message || 'Failed to update password', 400, 'PASSWORD_UPDATE_FAILED', requestId);
     }
-
-    const hashedNewPassword = await hashPassword(newPassword);
-
-    await db.client.user.update({
-      where: { id: userId },
-      data: { password: hashedNewPassword },
-    });
   }
 
   static async updateProfile(userId: string, input: { username?: string, metadata?: any }, _requestId?: string): Promise<User> {

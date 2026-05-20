@@ -99,6 +99,7 @@ Every line of code you write must conform to these modern design principles:
 
 ### 🔴 NEVER
 *   Never run background development servers, dev tasks, or build processes (e.g., `npm run dev`, `npm run build`, `next dev`, `npm start`). The USER will manage and execute all active dev/build commands.
+*   Never run heavy compiler, type-checking, builder, or lint commands (such as `tsc --noEmit`, `npm run build`, or `npm run lint`) yourself. Always tell the user to run them in their terminal.
 *   Never commit `.env` or sensitive security credentials to git.
 *   Never force-push or skip git pre-commit hook checks.
 *   Never bypass TypeScript checks with `// @ts-ignore` or `any` unless explicitly instructed with a detailed comment explaining why it is unavoidable.

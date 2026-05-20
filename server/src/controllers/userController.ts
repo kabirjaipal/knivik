@@ -174,7 +174,7 @@ export const updatePassword = asyncHandler(async (req: AuthenticatedRequest, res
     return;
   }
 
-  await UserService.updatePassword(req.user.id, currentPassword, newPassword, req.requestId);
+  await UserService.updatePassword(req.headers, currentPassword, newPassword, req.requestId);
   
   res.status(200).json({
     success: true,

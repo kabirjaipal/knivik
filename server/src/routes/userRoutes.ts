@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { registerUser, loginUser, getMe, getAllUsers, getUserById, deleteUser, deleteMe, updatePassword, getBillingHub, getCustomerPortalUrl, updateProfile } from '../controllers/userController.js';
+import { getMe, getAllUsers, getUserById, deleteUser, deleteMe, updatePassword, getBillingHub, getCustomerPortalUrl, updateProfile } from '../controllers/userController.js';
 import { requireAuth } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/billing-hub', getBillingHub as any); // Public hybrid endpoint
+// Public hybrid endpoint — works without auth (returns prices), richer with auth
+router.get('/billing-hub', getBillingHub as any);
 
 // Protected routes
 router.get('/me', requireAuth as any, getMe as any);

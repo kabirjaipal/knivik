@@ -21,20 +21,6 @@ const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 // VALIDATION SCHEMAS
 // ─────────────────────────────────────────────
 
-const registerSchema = z.object({
-  email: z.string().email(),
-  // Usernames: alphanumeric + underscores + hyphens only. Prevents injection / path weirdness.
-  username: z
-    .string()
-    .min(3)
-    .max(30)
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      'Username may only contain letters, numbers, underscores, and hyphens'
-    ),
-  password: z.string().min(8),
-});
-
 const loginSchema = z.object({
   email: z.string().email(),
   // Keep password validation minimal on login — never expose what the rules are on failure.
@@ -89,103 +75,6 @@ const issueSession = async (res: Response, userId: string): Promise<string> => {
   return token;
 };
 
-// ─────────────────────────────────────────────
-// REGISTER
-// ─────────────────────────────────────────────
-
-export const register = async (req: Request, res: Response) => {
-  try {
-    // Check if user registration is enabled globally
-    const regConfig = await db.client.systemConfig.findUnique({
-      where: { key: 'registrationEnabled' },
-    });
-    const isRegistrationEnabled = regConfig ? (regConfig.value as boolean) : true;
-    if (!isRegistrationEnabled) {
-      res.status(403).json({ error: 'User registration is temporarily disabled.' });
-      return;
-    }
-
-    const parsed = registerSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: 'Invalid input parameters', details: parsed.error.issues });
-      return;
-    }
-
-    const { email, username, password } = parsed.data;
-
-    // Normalise email to avoid duplicate accounts from case differences
-    const normalisedEmail = email.toLowerCase().trim();
-
-    // Check if user exists
-    const existingUser = await db.client.user.findFirst({
-      where: { OR: [{ email: normalisedEmail }, { username }] },
-    });
-
-    if (existingUser) {
-      res.status(409).json({ error: 'User with this email or username already exists' });
-      return;
-    }
-
-    const hashedPassword = await hashPassword(password);
-
-    const user = await db.client.user.create({
-      data: {
-        email: normalisedEmail,
-        username,
-        password: hashedPassword,
-      },
-    });
-
-    // Generate and store a hashed email-verification token
-    const verifyToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(verifyToken).digest('hex');
-
-    await db.client.otpCode.create({
-      data: {
-        userId: user.id,
-        email: user.email,
-        code: hashedToken,
-        type: 'VERIFY_EMAIL',
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      },
-    });
-
-    const verifyUrl = `${getFrontendUrl(req)}/verify-email?token=${verifyToken}`;
-
-    const htmlTemplate = renderBaseEmail({
-      title: 'Confirm your email',
-      preheader: 'Welcome to Knivik! Confirm your email address to get started.',
-      bodyHtml: `<p>Welcome to <strong>${config.PROJECT_NAME}</strong>! Click the button below to confirm your email address and unlock your workspace.</p>
-                 <p style="margin-top: 12px; font-size: 13px; color: #64748b;">This link expires in 24 hours.</p>`,
-      ctaText: 'Verify Email',
-      ctaUrl: verifyUrl,
-      footerText: `Sent to ${user.email}. If you didn't sign up for Knivik, you can safely ignore this email.`
-    });
-
-    await sendEmail(user.email, `Verify Your ${config.PROJECT_NAME} Account`, htmlTemplate);
-
-    // Only log verify links in non-production environments
-    if (config.NODE_ENV !== 'production') {
-      logger.info(`🚨 DEV VERIFY LINK: ${verifyUrl}`);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'Account created. Please check your email to verify your address.',
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        role: user.role,
-        isScanning: user.isScanning,
-        lastScanStatus: user.lastScanStatus,
-      },
-    });
-  } catch (error) {
-    logger.error({ error }, 'Registration error');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
 
 // ─────────────────────────────────────────────
 // LOGIN
@@ -377,25 +266,26 @@ export const resetPassword = async (req: Request, res: Response) => {
       data: { usedAt: new Date() },
     });
 
+    // Hash via Better Auth's own algorithm so login verification works correctly
     const hashedPassword = await hashPassword(newPassword);
 
+    // Update both tables atomically:
+    // 1. user.password — read by our custom login flow
+    // 2. account.password — read by Better Auth's sign-in/email handler
     const updatedUser = await db.client.user.update({
       where: { email: otpRecord.email },
       data: { password: hashedPassword },
     });
 
-    // Sync credentials inside Better Auth's Account table so standard email sign-in works
     await db.client.account.updateMany({
       where: {
         userId: updatedUser.id,
         providerId: 'credential',
       },
-      data: {
-        password: hashedPassword,
-      },
+      data: { password: hashedPassword },
     });
 
-    // Invalidate ALL existing sessions for the user on password reset for security.
+    // Invalidate ALL existing sessions for security on password reset.
     if (otpRecord.userId && typeof otpRecord.userId === 'string') {
       await db.client.session.deleteMany({ where: { userId: otpRecord.userId } });
     }

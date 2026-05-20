@@ -1,5 +1,5 @@
 import { db } from '../src/lib/db.js';
-import { hashPassword } from 'better-auth/crypto';
+import { auth } from '../src/lib/auth.js';
 
 // Get the pre-configured PrismaClient instance
 const prisma = db.client;
@@ -41,30 +41,25 @@ async function main() {
     prisma.systemConfig.deleteMany({}),
   ]);
 
-  // Hash passwords using Better Auth standard scrypt algorithm
-  const hashedPassword = await hashPassword('KniOw2032!');
-
   console.log('👥 Creating owner user...');
 
-  // Owner user with Better Auth Account
-  const owner = await prisma.user.create({
-    data: {
+  // Owner user with Better Auth Account using Better Auth API
+  await auth.api.signUpEmail({
+    body: {
       email: 'owner@knivik.xyz',
-      displayUsername: 'owner',
+      password: 'KniOw2032!',
+      name: 'owner',
       username: 'owner',
-      password: hashedPassword,
+    },
+  });
+
+  // Update roles and metadata to match seed expectations
+  await prisma.user.update({
+    where: { email: 'owner@knivik.xyz' },
+    data: {
       role: 'admin',
       plan: 'PRO',
       emailVerified: true,
-      isScanning: false,
-      lastScanStatus: null,
-      accounts: {
-        create: {
-          providerId: 'credential',
-          accountId: 'owner@knivik.xyz',
-          password: hashedPassword,
-        },
-      },
     },
   });
 

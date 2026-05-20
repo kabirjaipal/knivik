@@ -30,8 +30,7 @@ You have access to unique and powerful tools. Use them to their full potential:
 ---
 
 ## 💎 3. Code Quality & Integration Rules
-
-*   **Continuous Linting:** Ask the USER to run local build or linting checks. NEVER run background development servers or build tasks (e.g. `npm run dev`, `npm run build`, `next dev`) yourself. Treat warnings as opportunities to polish.
+*   **Continuous Linting:** Ask the USER to run local build, type-checking, or linting checks (e.g., `tsc --noEmit`, `npm run build`, `npm run lint`). NEVER run background development servers, build tasks, typecheck/compiler tasks, or lint tools yourself. Treat warnings as opportunities to polish.
 *   **Adherence to AGENTS.md:** Always follow the style, architecture, and coding conventions defined in `AGENTS.md`.
 *   **Theme Colors:** Always use the established HSL theme color tokens for any CSS/styling edits. Do not hardcode arbitrary hex values or basic colors.
 *   **Zero Placeholders:** When asked to write UI or server functions, never write comments like `// TODO: Implement later`. Implement robust, complete code with real features and data validation. Use the image generator tool if assets are needed.

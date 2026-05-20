@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { User, Lock, Save, AlertCircle, Loader2, ShieldCheck, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code } from "lucide-react"
+import { User, Lock, Save, AlertCircle, Loader2, ShieldCheck, Mail, Sliders, Info, Bell, Zap, MessageSquare, Workflow, Code, Eye, EyeOff, Send, MailCheck } from "lucide-react"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { FaSlack, FaDiscord } from "react-icons/fa"
 import { SiZapier, SiMake } from "react-icons/si"
@@ -24,6 +24,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
 
   const handleDeleteAccount = async () => {
     setDeletingAccount(true);
@@ -49,6 +54,30 @@ export default function SettingsPage() {
       setDeletingAccount(false);
     }
   };
+
+  const handleResendVerification = async () => {
+    if (!user?.email || resendCooldown > 0) return
+    setResendLoading(true)
+    try {
+      await authClient.sendVerificationEmail({
+        email: user.email,
+        callbackURL: `${window.location.origin}/dashboard`,
+      })
+      toast.success('Verification email sent! Check your inbox.')
+      // Start 60s cooldown
+      setResendCooldown(60)
+      const interval = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { clearInterval(interval); return 0 }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send verification email')
+    } finally {
+      setResendLoading(false)
+    }
+  }
 
   const hasFetchedAlerts = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
@@ -256,10 +285,39 @@ export default function SettingsPage() {
                       <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address</Label>
                       <div className="px-4 py-3 bg-muted/50 rounded-xl border border-border/50 font-medium text-muted-foreground flex justify-between items-center">
                         {user?.email}
-                        <div className="flex items-center gap-1.5 px-1 text-xs text-success font-bold uppercase">
-                          <ShieldCheck className="w-3 h-3" /> Verified
-                        </div>
+                        {user?.emailVerified ? (
+                          <div className="flex items-center gap-1.5 px-1 text-xs text-success font-bold uppercase">
+                            <ShieldCheck className="w-3 h-3" /> Verified
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 px-1 text-xs font-bold uppercase text-amber-500">
+                            <AlertCircle className="w-3 h-3" /> Unverified
+                          </div>
+                        )}
                       </div>
+                      {!user?.emailVerified && (
+                        <div className="flex items-center justify-between px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                          <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+                            <MailCheck className="w-3.5 h-3.5 shrink-0" />
+                            <span className="font-medium">Check your inbox or resend the verification link.</span>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handleResendVerification}
+                            disabled={resendLoading || resendCooldown > 0}
+                            className="ml-3 shrink-0 text-xs h-7 px-3 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 gap-1.5"
+                          >
+                            {resendLoading ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Send className="w-3 h-3" />
+                            )}
+                            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Email'}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="username" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Username</Label>
@@ -318,36 +376,66 @@ export default function SettingsPage() {
                   <CardContent className="pt-6 pb-8 space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="currentPassword">Current Password</Label>
-                      <Input 
-                        id="currentPassword" 
-                        type="password" 
-                        value={currentPassword}
-                        onChange={e => setCurrentPassword(e.target.value)}
-                        className="bg-background border-border/60"
-                        required
-                      />
+                      <div className="relative">
+                        <Input 
+                          id="currentPassword" 
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={currentPassword}
+                          onChange={e => setCurrentPassword(e.target.value)}
+                          className="bg-background border-border/60 pr-10"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                        >
+                          {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">New Password</Label>
-                      <Input 
-                        id="newPassword" 
-                        type="password"
-                        value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
-                        className="bg-background border-border/60"
-                        required
-                      />
+                      <div className="relative">
+                        <Input 
+                          id="newPassword" 
+                          type={showNewPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          className="bg-background border-border/60 pr-10"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showNewPassword ? "Hide password" : "Show password"}
+                        >
+                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <Input 
-                        id="confirmPassword" 
-                        type="password"
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        className="bg-background border-border/60"
-                        required
-                      />
+                      <div className="relative">
+                        <Input 
+                          id="confirmPassword" 
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          className="bg-background border-border/60 pr-10"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="border-t border-border/40 py-4">

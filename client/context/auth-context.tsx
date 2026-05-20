@@ -17,6 +17,7 @@ interface User {
   role?: string
   plan?: string
   metadata?: any
+  emailVerified?: boolean
   subscriptionStatus?: string | null
   dodoCustomerId?: string | null
   isScanning?: boolean
@@ -32,6 +33,7 @@ interface ExtendedUser {
   username?: string
   role?: string
   plan?: string
+  emailVerified?: boolean
   subscriptionStatus?: string | null
   dodoCustomerId?: string | null
   isScanning?: boolean
@@ -111,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       image: extendedUser.image ?? undefined,
       role: extendedUser.role || 'user',
       plan: extendedUser.plan || 'FREE',
+      emailVerified: extendedUser.emailVerified ?? false,
       subscriptionStatus: extendedUser.subscriptionStatus || null,
       dodoCustomerId: extendedUser.dodoCustomerId || null,
       isScanning: extendedUser.isScanning,

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { signIn } from "@/lib/auth-client"
 import { Radar, Loader2, KeyRound, Eye, EyeOff } from "lucide-react"
 import { FcGoogle } from "react-icons/fc"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ import { QUOTES, type Quote } from "@/lib/quotes"
 
 export default function LoginClient() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -32,6 +34,21 @@ export default function LoginClient() {
       router.push('/dashboard')
     }
   }, [user, authLoading, router])
+
+  // Handle URL query parameters (e.g., from email verification redirect)
+  useEffect(() => {
+    const verified = searchParams.get("verified")
+    const errorParam = searchParams.get("error")
+
+    if (verified === "true") {
+      toast.success("Email verified successfully! You can now sign in to your workspace.")
+      // Clean up the URL query parameters
+      router.replace("/login")
+    } else if (errorParam === "invalid_token") {
+      toast.error("The verification link is invalid or has expired.")
+      router.replace("/login")
+    }
+  }, [searchParams, router])
 
   // Select a random quote on mount to avoid hydration mismatch
   useEffect(() => {
@@ -53,6 +70,9 @@ export default function LoginClient() {
       })
 
       if (result.error) {
+        if (result.error.status === 403 || result.error.code === "EMAIL_NOT_VERIFIED") {
+          throw new Error("Your email address is not verified yet. A verification link has been sent to your inbox.")
+        }
         throw new Error(result.error.message || "Failed to login")
       }
 

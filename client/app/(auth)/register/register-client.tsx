@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { authClient, signIn } from "@/lib/auth-client"
-import { Radar, Loader2, CheckCircle2, UserPlus, Eye, EyeOff } from "lucide-react"
+import { Radar, Loader2, UserPlus, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { FcGoogle } from "react-icons/fc"
 import { motion } from "framer-motion"
@@ -26,7 +26,6 @@ export default function RegisterClient() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [activeQuote, setActiveQuote] = useState<Quote>(QUOTES[0])
 
@@ -53,7 +52,7 @@ export default function RegisterClient() {
         password,
         name: username,
         username: username,
-        callbackURL: window.location.origin + "/dashboard",
+        callbackURL: window.location.origin + '/login?verified=true',
       })
 
       if (result.error) {
@@ -65,7 +64,7 @@ export default function RegisterClient() {
         return
       }
 
-      toast.success("Account created successfully! Please log in to your workspace.")
+      toast.success("Account created successfully! Please check your email to verify your account.")
       router.push('/login')
     } catch (err: any) {
       setError(err.message)
@@ -195,23 +194,6 @@ export default function RegisterClient() {
                     Return Home
                   </Button>
                 </motion.div>
-              ) : success ? (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-success/5 border border-success/15 rounded-lg p-6 flex flex-col items-center text-center space-y-4"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success mb-1">
-                    <CheckCircle2 className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-foreground tracking-tight">Check your inbox</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    We've sent a verification link to your email. Please click it to activate your workspace.
-                  </p>
-                  <Button variant="outline" size="sm" className="mt-2 rounded-lg font-bold cursor-pointer" onClick={() => router.push('/login')}>
-                    Back to Sign In
-                  </Button>
-                </motion.div>
               ) : (
                 <form onSubmit={handleRegister} className="space-y-4.5">
                   <div className="grid grid-cols-1 gap-3.5">
@@ -236,7 +218,7 @@ export default function RegisterClient() {
                         type="email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="name@company.com" 
+                        placeholder="name@example.com" 
                         required 
                         disabled={loading}
                         className="h-11 bg-background/35 border-border/70 focus-visible:ring-primary/25 rounded-lg transition-all"
@@ -244,14 +226,16 @@ export default function RegisterClient() {
                     </div>
                     
                     <div className="space-y-1.5">
-                      <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 ml-0.5">Password</Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 ml-0.5">Password</Label>
+                      </div>
                       <div className="relative">
                         <Input 
                           id="password" 
                           type={showPassword ? "text" : "password"} 
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="••••••••" 
                           required 
                           disabled={loading}
                           className="h-11 bg-background/35 border-border/70 focus-visible:ring-primary/25 rounded-lg transition-all pr-10"
@@ -259,22 +243,17 @@ export default function RegisterClient() {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          disabled={loading}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/75 hover:text-foreground focus:outline-none disabled:opacity-50 transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
                         >
-                          {showPassword ? (
-                            <EyeOff className="h-4.5 w-4.5" />
-                          ) : (
-                            <Eye className="h-4.5 w-4.5" />
-                          )}
+                          {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                         </button>
                       </div>
                     </div>
                   </div>
-
+                  
                   {error && (
                     <motion.div 
-                      initial={{ opacity: 0, y: -5 }}
+                      initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-xs font-bold text-destructive px-3.5 py-2.5 bg-destructive/10 rounded-lg border border-destructive/15"
                     >
