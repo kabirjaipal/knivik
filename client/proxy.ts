@@ -36,10 +36,8 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // Paths requiring strict CSP with nonce (enforced in production only)
-  const isStrictCspPath =
-    process.env.NODE_ENV === "production" &&
-    (pathname.startsWith("/dashboard") || pathname.startsWith("/admin"));
+  // Enforce strict CSP with nonce on all HTML pages in production
+  const isStrictCspPath = process.env.NODE_ENV === "production";
 
   if (isStrictCspPath) {
     // Generate a unique nonce
