@@ -277,10 +277,13 @@ export const resetPassword = async (req: Request, res: Response) => {
       data: { password: hashedPassword },
     });
 
+    // Validate and cast userId to prevent NoSQL/query injection via object/operator passing
+    const targetUserId = String(updatedUser.id);
+
     await db.client.account.updateMany({
       where: {
-        userId: updatedUser.id,
-        providerId: 'credential',
+        userId: { equals: targetUserId },
+        providerId: { equals: 'credential' },
       },
       data: { password: hashedPassword },
     });
