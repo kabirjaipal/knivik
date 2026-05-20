@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ComparisonService } from "@/lib/seo/application/comparison.service";
+import { SchemaScript } from "@/components/seo/schema-script";
 
 interface PageProps {
   params: Promise<{ competitor: string }>;
@@ -53,14 +54,8 @@ export default async function CompetitorAlternativePage({ params }: PageProps) {
   return (
     <article className="relative w-full min-h-screen pt-28 pb-12 md:pt-36 md:pb-16 bg-background text-foreground">
       {/* Search Engine Structured Schema Scripts */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <SchemaScript schema={breadcrumbsSchema} />
+      <SchemaScript schema={faqSchema} />
 
       <div className="container mx-auto px-6 leading-relaxed">
         
