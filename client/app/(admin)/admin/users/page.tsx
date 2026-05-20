@@ -7,14 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu"
-import { 
   AlertDialog, 
   AlertDialogAction, 
   AlertDialogCancel, 
@@ -24,15 +16,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog"
-import { MoreHorizontal, Search, ShieldAlert, UserCog, UserMinus, Zap } from "lucide-react"
+import { Search, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 import { AdminPagination } from "@/components/admin/admin-pagination"
 
@@ -63,7 +47,6 @@ export default function AdminUsersPage() {
   // Action states
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false)
 
   const fetchUsers = () => {
     setLoading(true)
@@ -77,7 +60,12 @@ export default function AdminUsersPage() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          setUsers(data.data)
+          const sorted = [...data.data].sort((a, b) => {
+            if (a.role === "admin" && b.role !== "admin") return -1
+            if (a.role !== "admin" && b.role === "admin") return 1
+            return 0
+          })
+          setUsers(sorted)
           setTotalPages(data.pagination.totalPages)
         }
         setLoading(false)
@@ -89,11 +77,11 @@ export default function AdminUsersPage() {
     fetchUsers()
   }, [page, searchQuery])
 
-  const handleUpdatePlan = async (plan: string) => {
-    if (!selectedUser) return
+  const handleUpdatePlan = async (user: User, plan: string) => {
+    if (user.plan === plan) return
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${selectedUser.id}/update-plan`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${user.id}/update-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
@@ -102,9 +90,8 @@ export default function AdminUsersPage() {
       
       const data = await res.json()
       if (data.success) {
-        toast.success(`User plan updated to ${plan}`)
+        toast.success(`Plan for ${user.username} updated to ${plan}`)
         fetchUsers()
-        setIsPlanDialogOpen(false)
       } else {
         toast.error(data.error || "Failed to update plan")
       }
@@ -165,11 +152,11 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-black text-foreground">User Directory</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all registered accounts and their performance.</p>
         </div>
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground/70" />
           <Input 
             placeholder="Search by email or username..." 
-            className="pl-9 bg-card/50 border-border/40"
+            className="pl-10 h-11 bg-card/45 border-border/40 focus-visible:ring-1 focus-visible:ring-primary/40 rounded-xl text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -182,10 +169,11 @@ export default function AdminUsersPage() {
             <TableRow>
               <TableHead className="font-bold">User</TableHead>
               <TableHead className="font-bold">Plan</TableHead>
-              <TableHead className="font-bold text-center">Topics</TableHead>
+              <TableHead className="font-bold text-center">Products</TableHead>
+              <TableHead className="font-bold text-center">Leads</TableHead>
               <TableHead className="font-bold">Status</TableHead>
               <TableHead className="font-bold">Joined</TableHead>
-              <TableHead className="w-20"></TableHead>
+              <TableHead className="text-right font-bold w-48">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,21 +185,48 @@ export default function AdminUsersPage() {
                     <div className="flex flex-col">
                       <span className="font-bold flex items-center gap-1.5">
                         {user.username}
-                        {user.role === 'admin' && <Badge variant="outline" className="text-sm h-4 px-1 uppercase border-primary/40 text-primary">Admin</Badge>}
+                        {user.role === 'admin' && (
+                          <Badge variant="outline" className="text-xs h-4 px-1 uppercase border-primary/40 text-primary">Admin</Badge>
+                        )}
                       </span>
                       <span className="text-xs text-muted-foreground">{user.email}</span>
                     </div>
                   </TableCell>
+                  
                   <TableCell>
-                    <Badge variant={user.plan === 'PRO' ? 'default' : 'secondary'} className="font-black uppercase tracking-widest text-sm">
-                      {user.plan}
-                    </Badge>
+                    <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePlan(user, 'FREE')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                          user.plan === 'FREE'
+                            ? "bg-background text-foreground shadow-xs border border-border/10"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Free
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdatePlan(user, 'PRO')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                          user.plan === 'PRO'
+                            ? "bg-primary text-primary-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Pro
+                      </button>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-center font-bold">{user._count.products}</TableCell>
+                  
+                  <TableCell className="text-center font-bold">{user._count?.products ?? 0}</TableCell>
+                  <TableCell className="text-center font-bold">{user._count?.leads ?? 0}</TableCell>
+                  
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {isSuspended ? (
-                        <Badge variant="destructive" className="text-sm uppercase font-black tracking-widest">Suspended</Badge>
+                        <Badge variant="destructive" className="text-xs uppercase font-bold">Suspended</Badge>
                       ) : user.isScanning ? (
                         <span className="text-xs text-success font-bold flex items-center gap-1.5">
                           <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse shadow-lg shadow-success/50" /> 
@@ -222,46 +237,39 @@ export default function AdminUsersPage() {
                       )}
                     </div>
                   </TableCell>
+                  
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="cursor-pointer gap-2"
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setIsPlanDialogOpen(true)
-                          }}
-                        >
-                          <Zap className="w-4 h-4 text-primary" /> Change Plan
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="cursor-pointer gap-2"
-                          onClick={() => handleToggleStatus(user)}
-                        >
-                          <UserCog className="w-4 h-4" /> {isSuspended ? "Activate Account" : "Suspend Account"}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="cursor-pointer gap-2 text-destructive focus:text-destructive"
-                          onClick={() => {
-                            setSelectedUser(user)
-                            setIsDeleteDialogOpen(true)
-                          }}
-                        >
-                          <UserMinus className="w-4 h-4" /> Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer ${
+                          isSuspended 
+                            ? "text-success hover:text-success/90 hover:bg-success/10 border-success/20" 
+                            : "text-warning hover:text-warning/90 hover:bg-warning/10 border-warning/20"
+                        }`}
+                        onClick={() => handleToggleStatus(user)}
+                      >
+                        {isSuspended ? "Activate" : "Suspend"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs font-semibold text-destructive hover:text-destructive/90 hover:bg-destructive/10 border-destructive/20 cursor-pointer"
+                        onClick={() => {
+                          setSelectedUser(user)
+                          setIsDeleteDialogOpen(true)
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )
@@ -280,39 +288,6 @@ export default function AdminUsersPage() {
         totalPages={totalPages} 
         onPageChange={setPage} 
       />
-
-      {/* Plan Update Dialog */}
-      <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Update User Plan</DialogTitle>
-            <DialogDescription>
-              Modify the subscription tier for <strong>{selectedUser?.username}</strong>.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <Button 
-              variant={selectedUser?.plan === 'FREE' ? 'default' : 'outline'} 
-              className="w-full"
-              onClick={() => handleUpdatePlan('FREE')}
-            >
-              FREE Plan
-            </Button>
-            <Button 
-              variant={selectedUser?.plan === 'PRO' ? 'default' : 'outline'} 
-              className="w-full"
-              onClick={() => handleUpdatePlan('PRO')}
-            >
-              PRO Plan
-            </Button>
-          </div>
-          <DialogFooter className="sm:justify-start">
-            <Button type="button" variant="secondary" onClick={() => setIsPlanDialogOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Alert */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

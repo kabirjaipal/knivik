@@ -67,7 +67,6 @@ export function Sidebar({ className }: SidebarProps) {
 
   const adminLinks: NavLink[] = useMemo(() => [
     { href: "/admin", label: "System Overview", icon: LayoutDashboard },
-    { href: "/admin/leads", label: "Global Leads", icon: Database },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/revenue", label: "Revenue", icon: Coins },
     { href: "/admin/usage", label: "LLM Usage", icon: Brain },

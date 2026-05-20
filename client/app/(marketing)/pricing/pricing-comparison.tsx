@@ -9,7 +9,7 @@ const getComparisonFeatures = () => [
     category: "Monitoring",
     features: [
       { 
-        name: "Monitored Topics", 
+        name: "Monitored Products", 
         free: String(PLANS.FREE.limits.products), 
         pro: String(PLANS.PRO.limits.products) 
       },

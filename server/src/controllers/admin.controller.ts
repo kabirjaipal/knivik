@@ -330,50 +330,6 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 };
 
 /**
- * GET /api/admin/leads
- * Returns a global list of recent leads for oversight.
- */
-export const getLeads = async (req: Request, res: Response) => {
-  try {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20)); // Cap at 100
-    const skip = (page - 1) * limit;
-
-    const [leads, totalCount] = await Promise.all([
-      db.client.lead.findMany({
-        take: limit,
-        skip,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          product: {
-            include: {
-              user: {
-                select: { username: true, email: true }
-              }
-            }
-          }
-        }
-      }),
-      db.client.lead.count()
-    ]);
-
-    res.json({ 
-      success: true, 
-      data: leads,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit)
-      }
-    });
-  } catch (error: any) {
-    logger.error({ error: error.message }, 'Admin Global Leads Error');
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
-  }
-};
-
-/**
  * GET /api/admin/alerts
  * Returns a global list of alert delivery attempts.
  */

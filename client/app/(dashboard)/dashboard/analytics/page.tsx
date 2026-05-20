@@ -528,12 +528,12 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Trending Topics - Chips */}
+        {/* Trending Keywords - Chips */}
         <Card className="lg:col-span-5 border border-border/40 bg-card/60 shadow-xl shadow-black/5">
           <CardHeader className="py-3 px-6 border-b border-border/40">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
               <Search className="w-3.5 h-3.5 text-primary" /> Trending Search
-              Topics
+              Keywords
             </CardTitle>
           </CardHeader>
           <CardContent className="p-5">

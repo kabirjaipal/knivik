@@ -293,15 +293,23 @@ export default function BillingPage() {
 
           {/* Upgrade CTA — only for Free users */}
           {!isProPlan && (
-            <div className="relative overflow-hidden p-5 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 space-y-3">
-              <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/5 blur-xl" />
-              <Sparkles className="h-6 w-6 fill-primary-foreground/20" />
-              <div>
-                <p className="font-black text-base leading-tight">Go Pro</p>
-                <p className="text-xs opacity-80 mt-1 leading-relaxed">5 products, 1,000 leads/mo, AI scoring, alerts & more.</p>
+            <div className="relative overflow-hidden p-6 rounded-2xl border border-primary/20 bg-primary/5 transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(91,61,245,0.05)] space-y-4 group">
+              {/* Glowing decorative background effect */}
+              <div className="absolute -right-10 -top-10 w-28 h-28 rounded-full bg-primary/10 blur-2xl group-hover:bg-primary/15 transition-all duration-500 pointer-events-none" />
+              
+              <div className="flex items-center gap-2.5 relative z-10">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <Sparkles className="h-5 w-5 fill-primary/20 animate-pulse" />
+                </div>
+                <p className="font-black text-base tracking-tight text-foreground">Upgrade to Pro</p>
               </div>
-              <Button variant="secondary" className="w-full font-black text-xs h-9" asChild>
-                <Link href="/pricing">See Pricing</Link>
+              
+              <p className="text-xs text-muted-foreground leading-relaxed relative z-10">
+                Unlock 5 products, 1,000 leads/month, instant alerts, and advanced AI intent scoring.
+              </p>
+              
+              <Button className="w-full font-black text-xs h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 relative z-10" asChild>
+                <Link href="/pricing">See Pricing Plans</Link>
               </Button>
             </div>
           )}

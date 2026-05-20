@@ -4,7 +4,6 @@ import {
   getUsers, 
   getLlmUsage, 
   getEngineHealth, 
-  getLeads,
   getAlertLogs,
   getRevenue,
   getConfig,
@@ -26,7 +25,6 @@ router.use(requireAuth, requireAdmin);
 router.get('/stats', getStats);
 router.get('/health', getEngineHealth);
 router.get('/users', getUsers);
-router.get('/leads', getLeads);
 router.get('/alerts', getAlertLogs);
 router.get('/revenue', getRevenue);
 router.get('/config', getConfig);
