@@ -88,8 +88,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { FeedbackWidget } from "@/components/feedback-widget";
 import { PostHogProvider } from "@/components/posthog-provider";
 
-import { SchemaService } from "@/lib/seo/application/schema.service";
-import { SchemaScript } from "@/components/seo/schema-script";
 import NextTopLoader from 'nextjs-toploader';
 
 export default function RootLayout({
@@ -97,13 +95,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const softwareSchema = SchemaService.generateSoftwareApplicationSchema();
-
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <head>
-        <SchemaScript schema={softwareSchema} />
-      </head>
       <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} suppressHydrationWarning>
         <NextTopLoader showSpinner={false} color="var(--primary)" />
         <PostHogProvider>
