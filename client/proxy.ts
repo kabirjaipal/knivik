@@ -45,7 +45,7 @@ export function proxy(request: NextRequest) {
 
     const cspHeader = [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' 'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg=' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com`,
+      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'sha256-UnthrFpGFotkvMOTp/ghVMSXoZZj9Y6epaMsaBAbUtg=' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com`,
       "style-src-elem 'self' 'unsafe-inline' https://*.dodopayments.com",
       "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
       "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
