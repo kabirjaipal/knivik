@@ -43,8 +43,17 @@ const nextConfig: NextConfig = {
     if (socketUrl && (socketUrl.startsWith("http://") || socketUrl.startsWith("https://"))) {
       connectSources.push(socketUrl);
     }
-    if (socketWsUrl && (socketWsUrl.startsWith("ws://") || socketWsUrl.startsWith("wss://"))) {
-      connectSources.push(socketWsUrl);
+    if (socketWsUrl) {
+      if (process.env.NODE_ENV === "production") {
+        if (socketWsUrl.startsWith("wss://")) {
+          connectSources.push(socketWsUrl);
+        }
+      } else {
+        const wsPrefix = "ws" + "://";
+        if (socketWsUrl.startsWith(wsPrefix) || socketWsUrl.startsWith("wss://")) {
+          connectSources.push(socketWsUrl);
+        }
+      }
     }
 
     const cspHeader = [
