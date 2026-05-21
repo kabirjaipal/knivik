@@ -8,14 +8,12 @@ import { db } from './lib/db.js';
 import config from './lib/config.js';
 import logger from './lib/logger.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
-
 import { httpLogger, dbLogger } from './middleware/logging.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import routes from './routes/index.js';
 import authRoutes from './routes/auth.routes.js';
 import { createServer } from 'http';
 import { initSocket } from './lib/socket.js';
-
 import { pipelineQueue } from './lib/queue.js';
 import { startWorkers, stopWorkers } from './workers/index.js';
 

@@ -5,18 +5,19 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { signIn } from "@/lib/auth-client"
-import { Radar, Loader2, KeyRound, Eye, EyeOff } from "lucide-react"
+import { Loader2, KeyRound, Eye, EyeOff } from "lucide-react"
 import { FcGoogle } from "react-icons/fc"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-
+ 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { PROJECT_NAME } from "@/lib/constants"
 import { QUOTES, type Quote } from "@/lib/quotes"
-
+import { Logo } from "@/components/logo"
+ 
 export default function LoginClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -28,18 +29,18 @@ export default function LoginClient() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [activeQuote, setActiveQuote] = useState<Quote>(QUOTES[0])
-
+ 
   useEffect(() => {
     if (!authLoading && user) {
       router.push('/dashboard')
     }
   }, [user, authLoading, router])
-
+ 
   // Handle URL query parameters (e.g., from email verification redirect)
   useEffect(() => {
     const verified = searchParams.get("verified")
     const errorParam = searchParams.get("error")
-
+ 
     if (verified === "true") {
       toast.success("Email verified successfully! You can now sign in to your workspace.")
       // Clean up the URL query parameters
@@ -49,18 +50,18 @@ export default function LoginClient() {
       router.replace("/login")
     }
   }, [searchParams, router])
-
+ 
   // Select a random quote on mount to avoid hydration mismatch
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * QUOTES.length)
     setActiveQuote(QUOTES[randomIndex])
   }, [])
-
+ 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
-
+ 
     try {
       const result = await signIn.email({
         email,
@@ -68,14 +69,14 @@ export default function LoginClient() {
         rememberMe,
         callbackURL: window.location.origin + "/dashboard",
       })
-
+ 
       if (result.error) {
         if (result.error.status === 403 || result.error.code === "EMAIL_NOT_VERIFIED") {
           throw new Error("Your email address is not verified yet. A verification link has been sent to your inbox.")
         }
         throw new Error(result.error.message || "Failed to login")
       }
-
+ 
       router.push("/dashboard")
     } catch (err: any) {
       setError(err.message)
@@ -83,11 +84,11 @@ export default function LoginClient() {
       setLoading(false)
     }
   }
-
+ 
   const handleGoogleLogin = async () => {
     setLoading(true)
     setError("")
-
+ 
     try {
       await signIn.social({
         provider: "google",
@@ -98,7 +99,7 @@ export default function LoginClient() {
       setLoading(false)
     }
   }
-
+ 
   return (
     <div className="min-h-screen w-full lg:grid lg:grid-cols-2 bg-background relative overflow-hidden">
       
@@ -116,15 +117,13 @@ export default function LoginClient() {
             backgroundSize: "24px 24px"
           }}
         />
-
+ 
         {/* Header */}
         <div className="relative z-10 flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20">
-            <Radar className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <Logo size={28} />
           <span className="font-black text-xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
         </div>
-
+ 
         {/* Quote Block */}
         <div className="relative z-10 max-w-md my-auto space-y-6">
           <blockquote className="space-y-4">
@@ -142,13 +141,13 @@ export default function LoginClient() {
             </footer>
           </blockquote>
         </div>
-
+ 
         {/* Footer info */}
         <div className="relative z-10 text-xs text-muted-foreground/60">
           &copy; {new Date().getFullYear()} {PROJECT_NAME}. All rights reserved.
         </div>
       </div>
-
+ 
       {/* Right Side: Form Container */}
       <div className="flex items-center justify-center p-4 sm:p-8 relative overflow-hidden bg-background">
         {/* Mobile Background Shimmer Glows */}
@@ -156,7 +155,7 @@ export default function LoginClient() {
           <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 dark:bg-primary/5 blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 dark:bg-accent/5 blur-[120px]" />
         </div>
-
+ 
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -168,11 +167,11 @@ export default function LoginClient() {
               <div className="flex flex-col items-center lg:hidden">
                 <Link href="/" className="group flex items-center gap-2.5">
                   <motion.div 
-                    whileHover={{ scale: 1.05, rotate: 12 }}
+                    whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                    className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary shadow-lg shadow-primary/20"
+                    className="shrink-0"
                   >
-                    <Radar className="h-6 w-6 text-primary-foreground" />
+                    <Logo size={36} />
                   </motion.div>
                   <span className="font-black text-2xl tracking-tighter text-foreground bg-gradient-to-r from-foreground via-foreground/90 to-foreground/75 bg-clip-text">
                     {PROJECT_NAME}

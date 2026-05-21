@@ -3,25 +3,26 @@
 import { useState, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Loader2, Radar, CheckCircle2 } from "lucide-react"
-
+import { Loader2, CheckCircle2 } from "lucide-react"
+ 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PROJECT_NAME } from "@/lib/constants"
-
+import { Logo } from "@/components/logo"
+ 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
   const token = searchParams.get("token")
-
+ 
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-
+ 
   if (!token) {
     return (
       <div className="text-center space-y-4">
@@ -33,30 +34,30 @@ function ResetPasswordForm() {
       </div>
     )
   }
-
+ 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
-
+ 
     try {
       if (password.length < 8) {
         throw new Error("Password must be at least 8 characters long.")
       }
-
+ 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
       const response = await fetch(`${apiUrl}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: password })
       })
-
+ 
       const data = await response.json()
-
+ 
       if (!response.ok) {
         throw new Error(data.error || "Failed to reset password")
       }
-
+ 
       setSuccess(true)
       setTimeout(() => {
         router.push("/login")
@@ -67,7 +68,7 @@ function ResetPasswordForm() {
       setLoading(false)
     }
   }
-
+ 
   if (success) {
     return (
       <div className="bg-success/10 border border-success/30 rounded-lg p-6 flex flex-col items-center text-center space-y-3">
@@ -79,7 +80,7 @@ function ResetPasswordForm() {
       </div>
     )
   }
-
+ 
   return (
     <form onSubmit={handleReset} className="space-y-6">
       <div className="space-y-3">
@@ -110,7 +111,7 @@ function ResetPasswordForm() {
     </form>
   )
 }
-
+ 
 function ResetPasswordHeader() {
   return (
     <div className="space-y-1">
@@ -121,7 +122,7 @@ function ResetPasswordHeader() {
     </div>
   )
 }
-
+ 
 export default function ResetPasswordClient() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
@@ -130,9 +131,7 @@ export default function ResetPasswordClient() {
           <CardHeader className="space-y-4 pb-4 pt-6 text-center">
             <div className="flex flex-col items-center">
               <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-md">
-                  <Radar className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <Logo size={40} className="shrink-0" />
                 <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
               </Link>
             </div>

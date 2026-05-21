@@ -125,6 +125,14 @@ async function handleCheckoutCompleted(data: any) {
   const status = data.status;
   const email = data.customer?.email;
 
+  if (userId) {
+    const userExists = await db.client.user.findUnique({ where: { id: userId } });
+    if (!userExists) {
+      logger.warn({ userId }, 'User ID from payment metadata not found in database, clearing for fallback lookup');
+      userId = undefined;
+    }
+  }
+
   if (!userId) {
     if (customerId) {
       const userByCustomer = await db.client.user.findUnique({
@@ -183,7 +191,7 @@ async function handleCheckoutCompleted(data: any) {
 
 async function handleSubscriptionEvent(data: any) {
   const dodoSubscriptionId = data.subscription_id;
-  const dodoCustomerId = data.customer_id;
+  const dodoCustomerId = data.customer?.customer_id;
   const productId = data.product_id;
   const status = data.status; // 'active', 'canceled', etc.
   const currentPeriodEnd = data.next_billing_date ? new Date(data.next_billing_date) : null;
@@ -194,6 +202,14 @@ async function handleSubscriptionEvent(data: any) {
   if (!planMapping) {
     logger.error({ productId }, 'Unknown product ID in subscription');
     return;
+  }
+
+  if (userId) {
+    const userExists = await db.client.user.findUnique({ where: { id: userId } });
+    if (!userExists) {
+      logger.warn({ userId }, 'User ID from subscription metadata not found in database, clearing for fallback lookup');
+      userId = undefined;
+    }
   }
 
   if (!userId) {

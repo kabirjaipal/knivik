@@ -25,11 +25,7 @@ export default function BillingPage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const searchParams = useSearchParams();
   const statusParam = searchParams.get("status");
-  const subscriptionIdParam = searchParams.get("subscription_id");
-  const emailParam = searchParams.get("email");
-  const [showSuccess, setShowSuccess] = useState(
-    statusParam === "success" || statusParam === "active"
-  );
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const payments = billingData?.payments || [];
   const billingInfo = billingData?.user;
@@ -66,11 +62,11 @@ export default function BillingPage() {
   }, [user, router, showSuccess, billingData?.user?.plan, refreshBilling]);
 
   useEffect(() => {
-    if (!showSuccess) return;
-    if (statusParam || subscriptionIdParam || emailParam) {
+    if (statusParam === "success" || statusParam === "active") {
+      setShowSuccess(true);
       router.replace("/dashboard/billing");
     }
-  }, [showSuccess, statusParam, subscriptionIdParam, emailParam, router]);
+  }, [statusParam, router]);
 
   const handleOpenCustomerPortal = async () => {
     if (isRedirecting) return;
@@ -184,19 +180,13 @@ export default function BillingPage() {
               <div className="flex items-center justify-between gap-4">
                 <p className="text-4xl font-black tracking-tighter">{planConfig.name}</p>
                 {isProPlan ? (
-                  (billingInfo?.dodoCustomerId || billingData?.user?.dodoCustomerId) ? (
-                    <Button variant="outline" className="font-bold gap-2 shrink-0"
-                      onClick={handleOpenCustomerPortal} disabled={isRedirecting}>
-                      {isRedirecting
-                        ? <><Loader2 className="h-4 w-4 animate-spin" /> Redirecting…</>
-                        : <><ExternalLink className="h-4 w-4" /> Manage Billing</>
-                      }
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="font-bold gap-2 shrink-0" asChild>
-                      <a href={'mailto:'+ SUPPORT_EMAIL}>Contact Support</a>
-                    </Button>
-                  )
+                  <Button variant="outline" className="font-bold gap-2 shrink-0"
+                    onClick={handleOpenCustomerPortal} disabled={isRedirecting}>
+                    {isRedirecting
+                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Redirecting…</>
+                      : <><ExternalLink className="h-4 w-4" /> Manage Billing</>
+                    }
+                  </Button>
                 ) : (
                   <Button asChild className="font-bold shadow-lg shadow-primary/20 shrink-0">
                     <Link href="/pricing">Upgrade to Pro</Link>

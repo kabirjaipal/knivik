@@ -26,6 +26,7 @@ export function Footer() {
             <ul className="flex flex-wrap items-center gap-4 text-xs font-bold text-foreground/70">
               <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link></li>
               <li><Link href="/terms" className="hover:text-primary transition-colors">Terms</Link></li>
+              <li><Link href="/refund-policy" className="hover:text-primary transition-colors">Refunds</Link></li>
               <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
             </ul>
           </div>

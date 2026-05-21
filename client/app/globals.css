@@ -54,118 +54,118 @@
 }
 
 :root {
-  /* Background: Ceramic White - clean, premium, and professional */
-  --background: hsl(240 10% 98.5%);
-  --foreground: hsl(240 10% 4%);
+  /* Background: Ceramic Cool White - premium slate-white tint */
+  --background: hsl(220 25% 98%);
+  --foreground: hsl(220 40% 8%);
   
-  /* Cards: Floating surfaces with soft elevation */
+  /* Cards: Floating white surfaces with cool shadows */
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 4%);
+  --card-foreground: hsl(220 40% 8%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(240 10% 4%);
+  --popover-foreground: hsl(220 40% 8%);
   
-  /* Primary: Electric Ultramarine - a sharper, more energetic blue-violet */
-  --primary: hsl(250 90% 60%);
+  /* Primary: Deep Tech Teal - dark enough for WCAG accessibility (4.5+:1 contrast) on light backgrounds */
+  --primary: hsl(175 100% 25%);
   --primary-foreground: hsl(0 0% 100%);
   
-  /* Secondary: Soft Neutral Cloud */
-  --secondary: hsl(240 5% 94%);
-  --secondary-foreground: hsl(240 10% 10%);
+  /* Secondary: Cool Light Slate */
+  --secondary: hsl(220 15% 94%);
+  --secondary-foreground: hsl(220 40% 8%);
   
-  /* Muted: De-emphasized metadata */
-  --muted: hsl(240 5% 94%);
-  --muted-foreground: hsl(240 5% 45%);
+  /* Muted: De-emphasized details */
+  --muted: hsl(220 15% 94%);
+  --muted-foreground: hsl(220 15% 45%);
   
-  /* Accent: Sharp Teal - represents the 'Razor Edge' of precision leads */
-  --accent: hsl(180 100% 40%);
-  --accent-foreground: hsl(240 10% 4%);
+  /* Accent: Deep Violet for rich contrast */
+  --accent: hsl(250 85% 55%);
+  --accent-foreground: hsl(0 0% 100%);
   
-  /* Status Colors: High-definition tones */
-  --success: hsl(150 100% 32%);
+  /* Status Colors: Clear high-contrast tones */
+  --success: hsl(150 100% 28%);
   --success-foreground: hsl(0 0% 100%);
-  --warning: hsl(42 100% 50%);
-  --warning-foreground: hsl(24 95% 12%);
-  --destructive: hsl(0 84% 60%);
+  --warning: hsl(35 100% 40%);
+  --warning-foreground: hsl(35 100% 8%);
+  --destructive: hsl(353 90% 55%);
   --destructive-foreground: hsl(0 0% 100%);
   
   /* Borders & UI Chrome */
-  --border: hsl(240 5% 90%);
-  --input: hsl(240 5% 90%);
-  --ring: hsl(250 90% 60%);
+  --border: hsl(220 15% 89%);
+  --input: hsl(220 15% 89%);
+  --ring: hsl(175 100% 25%);
   --radius: 0.85rem;
 
-  /* Sidebar: Refined separation */
+  /* Sidebar: Light cool sidebar */
   --sidebar: hsl(0 0% 100%);
-  --sidebar-foreground: hsl(240 10% 20%);
-  --sidebar-primary: hsl(250 90% 60%);
+  --sidebar-foreground: hsl(220 25% 20%);
+  --sidebar-primary: hsl(175 100% 25%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 5% 96%);
-  --sidebar-accent-foreground: hsl(250 90% 60%);
-  --sidebar-border: hsl(240 5% 92%);
-  --sidebar-ring: hsl(250 90% 60%);
+  --sidebar-accent: hsl(220 15% 96%);
+  --sidebar-accent-foreground: hsl(175 100% 25%);
+  --sidebar-border: hsl(220 15% 92%);
+  --sidebar-ring: hsl(175 100% 25%);
 
-  /* RGB variants for transparency effects (91, 61, 245) */
-  --primary-rgb: 91, 61, 245;
+  /* RGB variants for transparency effects */
+  --primary-rgb: 0, 128, 115;
   --destructive-rgb: 239, 68, 68;
 }
 
 .dark {
-  /* Background: Obsidian Ink - Deep, infinite black with subtle blue-violet undertone */
-  --background: hsl(240 10% 2.5%);
-  --foreground: hsl(240 5% 98%);
+  /* Background: Midnight Ink - Deep navy-black from the reference image */
+  --background: hsl(220 50% 3%);
+  --foreground: hsl(210 20% 98%);
   
-  /* Cards: Elevated Obsidian surfaces */
-  --card: hsl(240 10% 5%);
-  --card-foreground: hsl(240 5% 98%);
-  --popover: hsl(240 10% 3%);
-  --popover-foreground: hsl(240 5% 98%);
+  /* Cards: Tinted translucent dark slate panels */
+  --card: hsl(220 40% 6%);
+  --card-foreground: hsl(210 20% 98%);
+  --popover: hsl(220 40% 5%);
+  --popover-foreground: hsl(210 20% 98%);
   
-  /* Primary: Glowing Ultramarine */
-  --primary: hsl(250 100% 75%);
-  --primary-foreground: hsl(240 10% 5%);
+  /* Primary: Glowing Electric Cyan/Teal (from Knivik logo/image) */
+  --primary: hsl(172 100% 48%);
+  --primary-foreground: hsl(220 50% 3%);
   
-  /* Secondary: Deep Matte Charcoal */
-  --secondary: hsl(240 10% 10%);
-  --secondary-foreground: hsl(240 5% 98%);
+  /* Secondary: Deep Slate */
+  --secondary: hsl(220 30% 10%);
+  --secondary-foreground: hsl(210 20% 98%);
   
-  /* Muted: Low-glare metadata */
-  --muted: hsl(240 10% 12%);
-  --muted-foreground: hsl(240 5% 65%);
+  /* Muted: Low-glare text and metadata */
+  --muted: hsl(220 30% 10%);
+  --muted-foreground: hsl(215 20% 65%);
   
-  /* Accent: Electric Mint - high precision feedback */
-  --accent: hsl(180 100% 50%);
-  --accent-foreground: hsl(240 10% 4%);
+  /* Accent: Electric Violet/Indigo for highlights and gradients */
+  --accent: hsl(250 100% 75%);
+  --accent-foreground: hsl(220 50% 3%);
   
   /* Success: Radioactive Green */
-  --success: hsl(150 100% 45%);
-  --success-foreground: hsl(150 100% 8%);
+  --success: hsl(150 100% 42%);
+  --success-foreground: hsl(150 100% 5%);
   
   /* Warning: Electrified Gold */
   --warning: hsl(45 100% 50%);
   --warning-foreground: hsl(45 100% 10%);
   
-  /* Destructive: Crimson Flare */
-  --destructive: hsl(0 85% 60%);
-  --destructive-foreground: hsl(210 40% 98%);
+  /* Destructive: Glowing Coral Red (from the 'Not Opened' / '1,274' badges) */
+  --destructive: hsl(353 100% 65%);
+  --destructive-foreground: hsl(220 50% 3%);
   
   /* Borders & UI Chrome */
-  --border: hsl(240 10% 12%);
-  --input: hsl(240 10% 12%);
-  --ring: hsl(250 100% 75%);
+  --border: hsl(220 30% 12%);
+  --input: hsl(220 30% 12%);
+  --ring: hsl(172 100% 48%);
 
-  /* Sidebar: Consistent with deep background */
-  --sidebar: hsl(240 10% 2.5%);
-  --sidebar-foreground: hsl(240 5% 65%);
-  --sidebar-primary: hsl(250 100% 75%);
-  --sidebar-primary-foreground: hsl(240 10% 5%);
-  --sidebar-accent: hsl(240 10% 10%);
-  --sidebar-accent-foreground: hsl(240 5% 98%);
-  --sidebar-border: hsl(240 10% 12%);
-  --sidebar-ring: hsl(250 100% 75%);
+  /* Sidebar: Matching the midnight background */
+  --sidebar: hsl(220 50% 3%);
+  --sidebar-foreground: hsl(215 20% 65%);
+  --sidebar-primary: hsl(172 100% 48%);
+  --sidebar-primary-foreground: hsl(220 50% 3%);
+  --sidebar-accent: hsl(220 30% 10%);
+  --sidebar-accent-foreground: hsl(210 20% 98%);
+  --sidebar-border: hsl(220 30% 12%);
+  --sidebar-ring: hsl(172 100% 48%);
 
-  /* RGB variants for glowing effects (148, 128, 255) */
-  --primary-rgb: 148, 128, 255;
-  --destructive-rgb: 239, 68, 68;
+  /* RGB variants for transparency and glow effects */
+  --primary-rgb: 0, 245, 212;
+  --destructive-rgb: 255, 75, 96;
 }
 
 @layer base {

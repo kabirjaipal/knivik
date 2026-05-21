@@ -68,7 +68,7 @@ router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
       metadata: {
         userId: userId,
       },
-      return_url: `${getFrontendUrl(req)}/dashboard/billing`,
+      return_url: `${getFrontendUrl(req)}/api/checkout-return`,
     });
 
     res.json({

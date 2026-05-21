@@ -467,7 +467,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
                 {product.name}
               </h3>
               {product.websiteUrl && (
-                <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest truncate">
+                <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground/85 uppercase tracking-widest truncate">
                   <Globe className="w-2.5 h-2.5 shrink-0" />
                   <span className="truncate">
                     {product.websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
@@ -484,8 +484,8 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
                 <span className="text-[9px] font-black uppercase tracking-widest">Live</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/60">
-                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30"></div>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 border border-border/40 text-muted-foreground/85">
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40"></div>
                 <span className="text-[9px] font-black uppercase tracking-widest">Paused</span>
               </div>
             )}
@@ -493,7 +493,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         </div>
 
         {/* Description */}
-        <p className="text-xs text-muted-foreground/60 leading-relaxed font-medium line-clamp-2" title={product.description || ""}>
+        <p className="text-xs text-muted-foreground leading-relaxed font-medium line-clamp-2" title={product.description || ""}>
           {product.description || "No specific detection vectors defined for this product yet."}
         </p>
 
@@ -507,11 +507,11 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
               <Radar className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest mb-0.5">Total Leads</p>
+              <p className="text-[9px] font-bold text-muted-foreground/80 uppercase tracking-widest mb-0.5">Total Leads</p>
               <p className="text-base font-bold text-foreground leading-none">{leadCount}</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground/20 group-hover/leads:text-primary transition-colors shrink-0" />
+          <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover/leads:text-primary transition-colors shrink-0" />
         </Link>
       </div>
 
@@ -520,7 +520,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         <div className="flex items-center gap-3.5 shrink-0">
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-            className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/50 hover:text-foreground transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/85 hover:text-foreground transition-colors cursor-pointer"
           >
             <Edit className="w-3.5 h-3.5" />
             Edit
@@ -528,7 +528,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
           <div className="w-px h-3 bg-border/40"></div>
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-            className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/50 hover:text-destructive transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/85 hover:text-destructive transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete

@@ -3,27 +3,28 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Loader2, CheckCircle2, Radar, Mail } from "lucide-react"
+import { Loader2, CheckCircle2, Mail } from "lucide-react"
 import { toast } from "sonner"
-
+ 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { PROJECT_NAME } from "@/lib/constants"
-
+import { Logo } from "@/components/logo"
+ 
 export default function ForgotPasswordClient() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-
+ 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
-
+ 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL
       const response = await fetch(`${apiUrl}/auth/forgot-password`, {
@@ -31,13 +32,13 @@ export default function ForgotPasswordClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
       })
-
+ 
       const data = await response.json()
-
+ 
       if (!response.ok) {
         throw new Error(data.error || "Failed to process request")
       }
-
+ 
       setSuccess(true)
       toast.success("Password reset instructions sent to your email!")
     } catch (err: any) {
@@ -47,7 +48,7 @@ export default function ForgotPasswordClient() {
       setLoading(false)
     }
   }
-
+ 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
       <div className="relative z-10 w-full max-w-md">
@@ -55,9 +56,7 @@ export default function ForgotPasswordClient() {
           <CardHeader className="space-y-4 pb-4 pt-6 text-center">
             <div className="flex flex-col items-center">
               <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-md">
-                  <Radar className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <Logo size={40} className="shrink-0" />
                 <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
               </Link>
             </div>

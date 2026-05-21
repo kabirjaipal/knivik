@@ -10,41 +10,52 @@ export const metadata: Metadata = MetadataService.constructPageMetadata({
 
 export default function RefundPolicy() {
   return (
-    <div className="container mx-auto px-4 py-20 max-w-3xl">
-      <h1 className="text-4xl font-black tracking-tight mb-8">Refund Policy</h1>
-      
-      <div className="prose prose-invert space-y-6 text-muted-foreground">
-        <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">1. 14-Day Money-Back Guarantee</h2>
-          <p>
-            We offer a 14-day money-back guarantee for new subscriptions. If you're not satisfied with {PROJECT_NAME}, you can request a full refund within the first <strong>14 days</strong> of your initial purchase.
-          </p>
-          <p className="mt-4 bg-primary/5 border border-primary/20 p-4 rounded-sm text-sm italic">
-            <strong>Usage Limit:</strong> To prevent abuse of our AI resources, refunds are only eligible if you have used <strong>less than 10%</strong> of your monthly lead quota (e.g., fewer than 100 leads for Pro plans).
-          </p>
-          <p className="mt-4">
-            After the 14-day period or if the usage limit is exceeded, all sales are final. Please carefully review our features and the Free plan before upgrading. To request a refund, please email <strong>{SUPPORT_EMAIL}</strong>.
-          </p>
-        </section>
+    <div className="container mx-auto px-4 py-24 max-w-4xl">
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-4 text-center">
+          <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl">Refund Policy</h1>
+          <p className="text-muted-foreground text-lg">Last Updated: May 21, 2026</p>
+        </div>
 
-        <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">2. Cancellations</h2>
-          <p>
-            You can cancel your subscription at any time directly from your dashboard. Your access will remain active until the end of your current billing period, but you will not be charged for the following billing cycle.
-          </p>
-        </section>
+        <div className="prose prose-slate dark:prose-invert max-w-none space-y-10 leading-relaxed text-muted-foreground">
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">1. 7-Day Free Trial (Monthly Plan)</h2>
+            <p>
+              We want you to experience {PROJECT_NAME} completely risk-free. That's why we offer a 7-day free trial on our Monthly subscription. You can cancel at any time during the first <strong>7 days</strong> and you won't be charged a single cent. Once the trial converts and your first monthly payment is processed, subsequent charges are non-refundable, but you can cancel at any time to prevent future billing.
+            </p>
+          </section>
 
-        <section>
-          <h2 className="text-xl font-bold text-foreground mb-3">3. Exceptions</h2>
-          <p>
-            We use Dodo Payments for payments, and as a Merchant of Record, they are the data controller of your checkout information. You can read how they handle your data in the <a href="https://www.dodopayments.com/privacy" target="_blank" className="text-primary hover:underline">Dodo Payments Privacy Policy</a>.
-          </p>
-        </section>
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">2. 14-Day Money-Back Guarantee (Yearly Plan)</h2>
+            <p>
+              For our Yearly subscription, we offer a <strong>14-day money-back guarantee</strong>. If {PROJECT_NAME} doesn't meet your expectations or help you discover valuable leads, simply reach out to us within the first 14 days of your purchase, and we will issue a full refund—no questions asked.
+            </p>
+          </section>
 
-        <section className="pt-8 border-t border-border/40 text-xs">
-          <p>Our order process is conducted by our online reseller & Merchant of Record, DodoPayments.com, who also handles all customer service inquiries and returns.</p>
-          <p className="mt-2">Last updated: April 26, 2026</p>
-        </section>
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">3. Cancellations & Billing Cycles</h2>
+            <p>
+              You can cancel your subscription at any time by clicking the <strong>"Manage Billing"</strong> button directly in the billing section of your dashboard. This securely opens the Dodo Payments customer billing hub, where you can self-manage your subscription and cancel with a single click. Upon cancellation, your access to {PROJECT_NAME} Pro features will remain active until the end of your current billing period, after which your account will automatically downgrade to the Free tier and you will not be charged again.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">4. Payment Reseller & Merchant of Record</h2>
+            <p>
+              We partner with <strong>Dodo Payments</strong> (DodoPayments.com) as our online reseller and Merchant of Record. They process checkout details, handle payment security, manage recurring subscription billing, and process transactional payouts.
+            </p>
+            <p>
+              As a Merchant of Record, Dodo Payments is the data controller of your checkout information. You can read how they handle your billing details in the <a href="https://www.dodopayments.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Dodo Payments Privacy Policy</a>.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">5. Requesting a Refund</h2>
+            <p>
+              To request a refund for a Yearly plan (within the 14-day window), please send an email to <strong>{SUPPORT_EMAIL}</strong> using the email address associated with your workspace. Our support team will coordinate with Dodo Payments to process your refund within 3 to 5 business days.
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   )

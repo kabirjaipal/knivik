@@ -5,6 +5,9 @@ import type { AuthenticatedRequest } from '../types/index.js';
 import { getPaymentHistory, getActiveSubscription, getPrices } from '../lib/billing.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
+import { dodo } from '../lib/dodo.js';
+import { config } from '../lib/config.js';
+import { getFrontendUrl } from '../lib/url.js';
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
   // Check if user registration is enabled globally
@@ -287,9 +290,30 @@ export const getCustomerPortalUrl = asyncHandler(async (req: AuthenticatedReques
     return;
   }
 
-  // Dodo Payments customer portal
-  const portalUrl = "https://www.dodopayments.com/customer-portal"; 
-  
+  let portalUrl = "";
+  try {
+    const user = await db.client.user.findUnique({
+      where: { id: req.user.id },
+      select: { dodoCustomerId: true }
+    });
+
+    if (user?.dodoCustomerId) {
+      const session = await dodo.customers.customerPortal.create(user.dodoCustomerId, {
+        return_url: `${getFrontendUrl(req)}/dashboard/billing`
+      });
+      portalUrl = session.link;
+    }
+  } catch (error) {
+    logger.error({ error, userId: req.user.id }, "Failed to generate Dodo portal session");
+  }
+
+  // Fallback to static URLs if we cannot generate a secure portal session
+  if (!portalUrl) {
+    portalUrl = config.NODE_ENV === "production"
+      ? "https://customer.dodopayments.com"
+      : "https://test.customer.dodopayments.com";
+  }
+
   res.status(200).json({
     success: true,
     data: { url: portalUrl },

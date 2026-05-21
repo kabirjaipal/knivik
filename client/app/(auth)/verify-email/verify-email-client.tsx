@@ -3,29 +3,30 @@
 import { useEffect, useState, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
-import { Loader2, Radar, CheckCircle2, XCircle } from "lucide-react"
-
+import { Loader2, CheckCircle2, XCircle } from "lucide-react"
+ 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PROJECT_NAME } from "@/lib/constants"
-
+import { Logo } from "@/components/logo"
+ 
 function VerifyEmailLogic() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
   const token = searchParams.get("token")
-
+ 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-
+ 
   useEffect(() => {
     if (!token) {
       setError("Invalid or missing verification link.")
       setLoading(false)
       return
     }
-
+ 
     const verify = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL
@@ -34,13 +35,13 @@ function VerifyEmailLogic() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token })
         })
-
+ 
         const data = await response.json()
-
+ 
         if (!response.ok) {
           throw new Error(data.error || "Verification failed")
         }
-
+ 
         setSuccess(true)
         setTimeout(() => {
           router.push("/login")
@@ -51,10 +52,10 @@ function VerifyEmailLogic() {
         setLoading(false)
       }
     }
-
+ 
     verify()
   }, [token, router])
-
+ 
   return (
     <div className="text-center">
       {loading ? (
@@ -108,7 +109,7 @@ function VerifyEmailLogic() {
     </div>
   )
 }
-
+ 
 export default function VerifyEmailClient() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-background">
@@ -117,9 +118,7 @@ export default function VerifyEmailClient() {
           <CardHeader className="space-y-4 pb-3 pt-6 text-center">
             <div className="flex flex-col items-center">
               <Link href="/" className="group flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-primary shadow-md">
-                  <Radar className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <Logo size={40} className="shrink-0" />
                 <span className="font-black text-2xl tracking-tighter text-foreground">{PROJECT_NAME}</span>
               </Link>
             </div>
