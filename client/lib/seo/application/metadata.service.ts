@@ -1,26 +1,10 @@
 import { Metadata } from "next";
 import { MetadataOptions } from "../domain/seo.types";
 import { EnvConfig } from "../infrastructure/env.config";
+import { siteConfig } from "../../seo";
 
 export class MetadataService {
-  private static readonly defaultKeywords = [
-    "AI Lead Finder",
-    "Social Intelligence",
-    "Intent Analysis",
-    "Reddit Lead Generation",
-    "HackerNews Monitoring",
-    "How to find leads on Reddit",
-    "Best AI tool for social selling",
-    "Automate B2B lead generation",
-    "Find customers on Twitter automatically",
-    "Social listening tool for startups",
-    "Sales Intelligence",
-    "B2B Leads",
-    "Warm Leads",
-    "Automated Outreach",
-    "Customer Discovery",
-    "Market Leads",
-  ];
+  private static readonly defaultKeywords = siteConfig.keywords;
 
   private static readonly defaultOgImage = "/og-image.png";
 

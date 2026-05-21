@@ -3,7 +3,7 @@ import { Metadata } from "next";
 export const siteConfig = {
   name: "Knivik",
   description: "Advanced AI Social Intelligence tool to find high-intent buyers across Reddit, HackerNews, and the public web. Turn online conversations into warm leads automatically.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://knivik.xyz",
+  url: process.env.NEXT_PUBLIC_SITE_URL as string,
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
     twitter: "https://x.com/knivikai",
@@ -11,6 +11,11 @@ export const siteConfig = {
   },
   keywords: [
     "AI Lead Finder",
+    "AI lead generation tools",
+    "best AI lead generation software",
+    "B2B sales prospecting tools",
+    "B2B lead generation software",
+    "sales intelligence platform",
     "Social Intelligence",
     "Intent Analysis",
     "Reddit Lead Generation",
@@ -26,6 +31,30 @@ export const siteConfig = {
     "Automated Outreach",
     "Customer Discovery",
     "Market Leads",
+    "buying intent tools",
+    "buyer intent software",
+    "AI sales agent",
+    "AI SDR tool",
+    "find clients on Reddit",
+    "track keywords on Reddit",
+    "social selling software",
+    "automated prospecting tools",
+    "lead finder software",
+    "warm lead finder",
+    "real-time buyer intent signals",
+    "sales tools for SaaS",
+    "social media prospecting",
+    "lead scraping tools",
+    "F5Bot alternative",
+    "Syften alternative",
+    "GummySearch alternative",
+    "Apollo alternative",
+    "Hootsuite alternative",
+    "BuzzSumo alternative",
+    "Mentions alternative",
+    "Brand24 alternative",
+    "best Syften alternatives",
+    "best GummySearch alternatives",
   ],
   authors: [
     {
@@ -44,16 +73,19 @@ export function constructMetadata({
   image = siteConfig.ogImage,
   icons = "/favicon.ico",
   noIndex = false,
+  keywords = siteConfig.keywords,
 }: {
   title?: string;
   description?: string;
   image?: string;
   icons?: string;
   noIndex?: boolean;
+  keywords?: string[];
 } = {}): Metadata {
   return {
     title,
     description,
+    keywords,
     openGraph: {
       title,
       description,
