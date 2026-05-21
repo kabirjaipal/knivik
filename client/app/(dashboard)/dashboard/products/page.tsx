@@ -37,13 +37,23 @@ export default function ProductsPage() {
 
 
   // Form State
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    websiteUrl: string;
+    isActive: boolean;
+    aiConfig: {
+      customPersona: string;
+      negativeKeywords: string[];
+    };
+  }>({
     name: "",
     description: "",
     websiteUrl: "",
     isActive: true,
     aiConfig: {
-      customPersona: ""
+      customPersona: "",
+      negativeKeywords: []
     }
   })
 
@@ -119,7 +129,7 @@ export default function ProductsPage() {
       const actionLabel = editingProductId ? "Product updated" : "Product created";
       setFormData({
         name: "", description: "", websiteUrl: "", isActive: true,
-        aiConfig: { customPersona: "" }
+        aiConfig: { customPersona: "", negativeKeywords: [] }
       })
       setIsCreating(false)
       const wasEditing = !!editingProductId;
@@ -190,7 +200,7 @@ export default function ProductsPage() {
           setIsCreating(false);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "" }
+            aiConfig: { customPersona: "", negativeKeywords: [] }
           });
         }
       }}>
@@ -231,7 +241,7 @@ export default function ProductsPage() {
                 setIsCreating(false);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "" }
+                  aiConfig: { customPersona: "", negativeKeywords: [] }
                 });
               }}
             >
@@ -257,7 +267,7 @@ export default function ProductsPage() {
           setEditingProductId(null);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "" }
+            aiConfig: { customPersona: "", negativeKeywords: [] }
           });
         }
       }}>
@@ -297,7 +307,7 @@ export default function ProductsPage() {
                 setEditingProductId(null);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "" }
+                  aiConfig: { customPersona: "", negativeKeywords: [] }
                 });
                 
               }}
@@ -340,7 +350,8 @@ export default function ProductsPage() {
                     websiteUrl: product.websiteUrl || "",
                     isActive: product.isActive ?? true,
                     aiConfig: {
-                      customPersona: product.aiConfig?.customPersona || ""
+                      customPersona: product.aiConfig?.customPersona || "",
+                      negativeKeywords: product.aiConfig?.negativeKeywords || []
                     }
                   })
                 }}
@@ -384,6 +395,7 @@ interface ProductFormProps {
     isActive: boolean;
     aiConfig?: {
       customPersona?: string;
+      negativeKeywords?: string[];
       [key: string]: any;
     };
   };
@@ -435,6 +447,35 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           onChange={e => setFormData({...formData, description: e.target.value})} 
           className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-28 resize-none" 
           placeholder="We help freelancers track sales and manage invoices effortlessly..." 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-foreground">
+          Exclude Keywords <span className="text-muted-foreground font-normal text-xs ml-1">(Negative Keywords)</span>
+        </label>
+        <p className="text-xs text-muted-foreground font-medium mb-1">
+          Exclude conversations containing any of these terms (comma-separated). Leave empty to automatically generate them using AI.
+        </p>
+        <textarea 
+          value={Array.isArray(formData.aiConfig?.negativeKeywords) 
+            ? formData.aiConfig.negativeKeywords.join(", ") 
+            : typeof formData.aiConfig?.negativeKeywords === 'string'
+              ? formData.aiConfig.negativeKeywords
+              : ""
+          }
+          onChange={e => {
+            const keywordsArray = e.target.value.split(",").map(k => k.trim());
+            setFormData({
+              ...formData,
+              aiConfig: {
+                ...formData.aiConfig,
+                negativeKeywords: keywordsArray
+              }
+            });
+          }}
+          className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-16 resize-none" 
+          placeholder="e.g. free, course, job, hiring, tutorial, funny" 
         />
       </div>
 

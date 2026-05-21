@@ -42,13 +42,25 @@ export class SearchQueryService {
       const existingAiConfig = (product.aiConfig as Record<string, any>) || {};
       const updatedAiConfig = {
         ...existingAiConfig,
-        keywords: strategy.keywords,
-        negativeKeywords: strategy.negativeKeywords,
-        competitors: strategy.competitors,
-        subreddits: strategy.subreddits,
-        twitterHandles: strategy.twitterHandles,
-        linkedinSearchFlags: strategy.linkedinSearchFlags,
-        productHuntCommunities: strategy.productHuntCommunities,
+        keywords: strategy.keywords, // Keywords should always be regenerated based on current product info
+        negativeKeywords: (Array.isArray(existingAiConfig.negativeKeywords) && existingAiConfig.negativeKeywords.length > 0)
+          ? existingAiConfig.negativeKeywords
+          : strategy.negativeKeywords,
+        competitors: (Array.isArray(existingAiConfig.competitors) && existingAiConfig.competitors.length > 0)
+          ? existingAiConfig.competitors
+          : strategy.competitors,
+        subreddits: (Array.isArray(existingAiConfig.subreddits) && existingAiConfig.subreddits.length > 0)
+          ? existingAiConfig.subreddits
+          : strategy.subreddits,
+        twitterHandles: (Array.isArray(existingAiConfig.twitterHandles) && existingAiConfig.twitterHandles.length > 0)
+          ? existingAiConfig.twitterHandles
+          : strategy.twitterHandles,
+        linkedinSearchFlags: (Array.isArray(existingAiConfig.linkedinSearchFlags) && existingAiConfig.linkedinSearchFlags.length > 0)
+          ? existingAiConfig.linkedinSearchFlags
+          : strategy.linkedinSearchFlags,
+        productHuntCommunities: (Array.isArray(existingAiConfig.productHuntCommunities) && existingAiConfig.productHuntCommunities.length > 0)
+          ? existingAiConfig.productHuntCommunities
+          : strategy.productHuntCommunities,
       };
 
       // Save to database

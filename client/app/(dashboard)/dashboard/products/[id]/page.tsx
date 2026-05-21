@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp } from "lucide-react"
+import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp, Ban } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
@@ -231,6 +231,21 @@ export default function ProductDetailPage() {
               </Badge>
             ))}
           </div>
+          {product.aiConfig?.negativeKeywords && Array.isArray(product.aiConfig.negativeKeywords) && product.aiConfig.negativeKeywords.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-primary/10">
+              <p className="text-[10px] font-black uppercase tracking-widest text-destructive mb-1.5 flex items-center gap-1">
+                <Ban className="w-3.5 h-3.5" /> Exclude Keywords (Negative Keywords)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {product.aiConfig.negativeKeywords.map((kw, i) => (
+                  <Badge key={i} variant="outline"
+                    className="text-xs py-0.5 px-2 bg-destructive/5 border-destructive/20 text-destructive/80 font-bold rounded-md">
+                    {kw}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           {product.aiConfig?.customPersona && (
             <div className="mt-3 pt-3 border-t border-primary/10">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Custom Persona</p>
