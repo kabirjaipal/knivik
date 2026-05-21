@@ -42,6 +42,9 @@ export default function ProductsPage() {
     description: "",
     websiteUrl: "",
     isActive: true,
+    aiConfig: {
+      customPersona: ""
+    }
   })
 
   const router = useRouter()
@@ -93,6 +96,7 @@ export default function ProductsPage() {
           description: formData.description,
           websiteUrl: formData.websiteUrl,
           isActive: formData.isActive,
+          aiConfig: formData.aiConfig,
         })
       });
 
@@ -114,7 +118,8 @@ export default function ProductsPage() {
       // Reset form
       const actionLabel = editingProductId ? "Product updated" : "Product created";
       setFormData({
-        name: "", description: "", websiteUrl: "", isActive: true
+        name: "", description: "", websiteUrl: "", isActive: true,
+        aiConfig: { customPersona: "" }
       })
       setIsCreating(false)
       const wasEditing = !!editingProductId;
@@ -184,7 +189,8 @@ export default function ProductsPage() {
         if (!open) {
           setIsCreating(false);
           setFormData({ 
-            name: "", description: "", websiteUrl: "", isActive: true 
+            name: "", description: "", websiteUrl: "", isActive: true,
+            aiConfig: { customPersona: "" }
           });
         }
       }}>
@@ -224,7 +230,8 @@ export default function ProductsPage() {
               onClick={() => {
                 setIsCreating(false);
                 setFormData({ 
-                  name: "", description: "", websiteUrl: "", isActive: true 
+                  name: "", description: "", websiteUrl: "", isActive: true,
+                  aiConfig: { customPersona: "" }
                 });
               }}
             >
@@ -249,7 +256,8 @@ export default function ProductsPage() {
         if (!open) {
           setEditingProductId(null);
           setFormData({ 
-            name: "", description: "", websiteUrl: "", isActive: true 
+            name: "", description: "", websiteUrl: "", isActive: true,
+            aiConfig: { customPersona: "" }
           });
         }
       }}>
@@ -288,7 +296,8 @@ export default function ProductsPage() {
               onClick={() => {
                 setEditingProductId(null);
                 setFormData({ 
-                  name: "", description: "", websiteUrl: "", isActive: true 
+                  name: "", description: "", websiteUrl: "", isActive: true,
+                  aiConfig: { customPersona: "" }
                 });
                 
               }}
@@ -330,6 +339,9 @@ export default function ProductsPage() {
                     description: product.description || "",
                     websiteUrl: product.websiteUrl || "",
                     isActive: product.isActive ?? true,
+                    aiConfig: {
+                      customPersona: product.aiConfig?.customPersona || ""
+                    }
                   })
                 }}
                 onDelete={() => {
@@ -370,6 +382,10 @@ interface ProductFormProps {
     description: string;
     websiteUrl: string;
     isActive: boolean;
+    aiConfig?: {
+      customPersona?: string;
+      [key: string]: any;
+    };
   };
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   isSubmitting: boolean;
@@ -380,8 +396,11 @@ interface ProductFormProps {
 }
 
 function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAiLoading, formId, onSubmit }: ProductFormProps) {
+  const { user } = useAuth()
+  const isFreePlan = user?.plan?.toUpperCase() !== "PRO"
+
   return (
-    <form id={formId} onSubmit={onSubmit} className="space-y-4">
+    <form id={formId} onSubmit={onSubmit} className="space-y-6">
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-foreground">Product Name</label>
@@ -417,6 +436,56 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-28 resize-none" 
           placeholder="We help freelancers track sales and manage invoices effortlessly..." 
         />
+      </div>
+
+      <div className="space-y-2 pt-2 border-t border-border/50">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-foreground flex items-center gap-1.5">
+            Reply Persona / Custom Brand Voice
+          </label>
+          <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+            isFreePlan 
+              ? "bg-primary/10 text-primary border border-primary/20" 
+              : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+          }`}>
+            {isFreePlan ? "Pro Upgrade" : "Active"}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground font-medium mb-2">
+          Specify the tone, name, and style the AI should use when drafting outreach replies (e.g. "Draft as Josh, founder of Knivik. Keep it helpful, casual, and suggest a meeting link").
+        </p>
+
+        {isFreePlan ? (
+          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+            <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] pointer-events-none" />
+            <textarea
+              disabled
+              value="Tone: Friendly founder. Goal: Share a helpful tip and invite them to try Knivik."
+              className="w-full border border-input bg-muted/50 rounded-sm px-3 py-2 text-sm text-muted-foreground/60 h-20 resize-none opacity-50"
+            />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
+              <p className="text-xs font-semibold text-foreground/80 max-w-sm leading-normal">
+                Unlock custom brand voices, persona matching, and automated draft customization with the Pro Plan.
+              </p>
+              <Button size="sm" className="w-full sm:w-auto font-black text-xs h-8 bg-primary text-primary-foreground shrink-0" asChild>
+                <Link href="/dashboard/billing">Upgrade to Pro</Link>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <textarea
+            value={formData.aiConfig?.customPersona || ""}
+            onChange={e => setFormData({
+              ...formData,
+              aiConfig: {
+                ...formData.aiConfig,
+                customPersona: e.target.value
+              }
+            })}
+            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-24 resize-none"
+            placeholder="e.g. Write from the perspective of John, the CEO of Acme. Tone should be expert, direct, and helpful. Mention that Acme provides 24/7 client support."
+          />
+        )}
       </div>
 
       <div className="space-y-3 pt-2 border-t border-border/50">
