@@ -58,10 +58,10 @@ export default function PricingClient() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col items-center text-center mb-16 lg:mb-24">
             <h1 className="text-5xl lg:text-7xl font-black tracking-tighter text-foreground mb-6">
-              Simple, predictable pricing.
+              Affordable Lead Generation Pricing
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mb-12">
-              Choose the plan that fits your growth stage. No long-term contracts, cancel anytime.
+              Scale your social selling with transparent pricing plans. Find high-intent buyers on Reddit, HackerNews, and Twitter.
             </p>
 
             {/* Billing Toggle */}
@@ -215,7 +215,7 @@ export default function PricingClient() {
           <PricingComparison />
 
           <div className="mt-32 max-w-4xl mx-auto">
-            <h2 className="text-4xl font-black tracking-tighter mb-12 text-center">Common Questions</h2>
+            <h2 className="text-4xl font-black tracking-tighter mb-12 text-center">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               {[
                 {

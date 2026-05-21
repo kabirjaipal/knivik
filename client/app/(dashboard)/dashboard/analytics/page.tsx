@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -145,28 +146,19 @@ export default function AnalyticsPage() {
   // GLOBAL EMPTY STATE: No Products
   if (data.activeProductsCount === 0) {
     return (
-      <div className="flex flex-col items-center justify-center space-y-8 animate-in fade-in duration-700">
-        <div className="relative">
-          <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-          <div className="relative w-24 h-24 bg-card border border-border/50 rounded-3xl flex items-center justify-center shadow-2xl">
-            <BarChart3 className="w-10 h-10 text-primary" />
-          </div>
-        </div>
-        <div className="text-center space-y-3 max-w-md">
-          <h1 className="text-3xl font-black tracking-tighter">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="max-w-md space-y-3">
+          <h1 className="text-2xl font-black tracking-tight">
             Ready to track?
           </h1>
-          <p className="text-muted-foreground font-medium">
-            Create your first product to start monitoring social mentions and
-            generating AI-powered leads.
+          <p className="text-sm text-muted-foreground">
+            Create your first product in the{" "}
+            <Link href="/dashboard/products" className="text-primary underline hover:text-primary/80 font-bold">
+              products tab
+            </Link>{" "}
+            to start monitoring social mentions and generating AI-powered leads.
           </p>
         </div>
-        <a
-          href="/dashboard/products"
-          className="h-11 px-8 rounded-xl bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-2"
-        >
-          <Box className="w-4 h-4" /> Create First Product
-        </a>
       </div>
     );
   }

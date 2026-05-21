@@ -104,7 +104,7 @@ export function Navbar({ user }: { user: any }) {
           <ThemeToggle />
           
           {user ? (
-            <Link href="/dashboard">
+            <Link href={user.role === 'admin' ? '/admin' : '/dashboard'}>
               <Button variant="ghost" className="h-10 w-10 rounded-xl p-0 overflow-hidden border border-border/50 hover:border-primary/50 transition-colors bg-background/50">
                 <Avatar className="h-full w-full">
                   <AvatarFallback className="bg-primary/5 text-primary font-black text-xs">

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { getSession } from "@/lib/auth-client"
 
 function AuthCallbackContent() {
   const router = useRouter()
@@ -21,20 +22,32 @@ function AuthCallbackContent() {
       const cookieStr = `token=${token}; path=/; max-age=604800; ${isSecure} samesite=lax`
       
       document.cookie = cookieStr
-      
-      // Refresh the auth context and redirect
-      refresh()
-        .then(() => {
-          router.push("/dashboard")
-        })
-        .catch((err) => {
+    }
+    
+    // Refresh the auth context and redirect
+    refresh()
+      .then(async () => {
+        const session = await getSession()
+        const user = session?.data?.user as { role?: string } | undefined
+        if (user) {
+          if (user.role === 'admin') {
+            router.push("/admin")
+          } else {
+            router.push("/dashboard")
+          }
+        } else if (token) {
+          // If a token was provided but session is still null
           toast.error("We couldn't complete your sign in. Please try again.")
           router.push("/login?error=Refresh+Failed")
-        })
-    } else {
-      toast.error("Authentication failed. Please log in again.")
-      router.push("/login?error=Authentication+Failed")
-    }
+        } else {
+          // No token and no active session (direct hit to page)
+          router.push("/login")
+        }
+      })
+      .catch((err) => {
+        toast.error("We couldn't complete your sign in. Please try again.")
+        router.push("/login?error=Refresh+Failed")
+      })
   }, [searchParams, router, refresh])
 
   return (

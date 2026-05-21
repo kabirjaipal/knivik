@@ -51,7 +51,7 @@ export function Hero({ user }: HeroProps) {
             className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary mb-8 border border-primary/20"
           >
             <Zap className="h-3.5 w-3.5 mr-2 fill-primary animate-pulse" />
-            Real-time Social Lead Generation
+            Best Reddit Lead Generation Tool & Social Finder
           </motion.div>
           
           <motion.h1 
@@ -73,9 +73,9 @@ export function Hero({ user }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl font-medium"
+            className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl font-medium"
           >
-            Knivik monitors Reddit, X, and Hacker News 24/7. Our AI filters the noise and sends qualified leads directly to your dashboard.
+            Learn how to find clients on HackerNews, Reddit, and Twitter automatically. Knivik monitors social media for active buying intent, filters the noise, and delivers qualified warm leads directly to your dashboard.
           </motion.p>
           
           <motion.div 

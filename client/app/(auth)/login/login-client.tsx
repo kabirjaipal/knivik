@@ -32,7 +32,11 @@ export default function LoginClient() {
  
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/dashboard')
+      if (user.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
     }
   }, [user, authLoading, router])
  
@@ -67,7 +71,7 @@ export default function LoginClient() {
         email,
         password,
         rememberMe,
-        callbackURL: window.location.origin + "/dashboard",
+        callbackURL: window.location.origin + "/auth/callback",
       })
  
       if (result.error) {
@@ -77,7 +81,12 @@ export default function LoginClient() {
         throw new Error(result.error.message || "Failed to login")
       }
  
-      router.push("/dashboard")
+      const user = result.data?.user as { role?: string } | undefined
+      if (user?.role === 'admin') {
+        router.push("/admin")
+      } else {
+        router.push("/dashboard")
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -92,7 +101,7 @@ export default function LoginClient() {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: window.location.origin + "/dashboard",
+        callbackURL: window.location.origin + "/auth/callback",
       })
     } catch (err: any) {
       setError(err.message)

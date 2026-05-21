@@ -43,7 +43,7 @@ export function Workflow() {
             transition={{ duration: 0.5 }}
             className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter text-foreground mb-6 md:mb-8"
           >
-            How it works
+            How Knivik Works
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -52,7 +52,7 @@ export function Workflow() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl font-medium"
           >
-            Stop manually searching for customers. Automate your social lead generation in three simple steps.
+            Stop manually searching for customers. Our automated social lead finder scans communities for high-intent buying signals in three simple steps.
           </motion.p>
         </div>
 

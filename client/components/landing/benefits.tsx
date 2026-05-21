@@ -58,8 +58,8 @@ export function Benefits() {
             transition={{ duration: 0.5 }}
             className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tighter text-foreground mb-6 md:mb-8 leading-tight"
           >
-            Built for growth teams <br />
-            <span className="text-muted-foreground/30">who move fast.</span>
+            B2B Social Lead Generation <br />
+            <span className="text-muted-foreground/30">Built for Growth.</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -68,7 +68,7 @@ export function Benefits() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl font-medium"
           >
-            Practical lead generation that saves you time and increases your revenue without the marketing fluff.
+            Practical tools to find active buyers on Reddit and social networks. Save time and increase your pipeline without the manual effort.
           </motion.p>
         </div>
 
