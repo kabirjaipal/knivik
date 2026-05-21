@@ -34,7 +34,7 @@ export interface LeadCardData {
   content: string
   url: string
   authorUsername: string | null
-  intentLevel: 'BUY_NOW' | 'RESEARCHING' | 'COMPARING'
+  intentLevel: 'BUY_NOW' | 'COMPARING'
   intentScore: number
   status: LeadStatus
   detectedBy: DetectedBy
@@ -63,10 +63,9 @@ export const STATUS_OPTIONS: { value: LeadStatus; label: string; color: string }
 
 const getIntentColor = (level: string) => {
   switch (level) {
-    case 'BUY_NOW':     return 'bg-destructive/10 text-destructive border-destructive/20'
-    case 'COMPARING':   return 'bg-primary/10 text-primary border-primary/20'
-    case 'RESEARCHING': return 'bg-primary/10 text-primary border-primary/20'
-    default:            return 'bg-muted text-muted-foreground border-border'
+    case 'BUY_NOW':   return 'bg-destructive/10 text-destructive border-destructive/20'
+    case 'COMPARING': return 'bg-primary/10 text-primary border-primary/20'
+    default:          return 'bg-muted text-muted-foreground border-border'
   }
 }
 

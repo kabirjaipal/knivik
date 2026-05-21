@@ -317,7 +317,7 @@ PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 15-20 positive keywords/intent phra
 PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25 terms to filter out).
 PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8 direct and indirect competitor names).
 PILLAR 4: TARGET COMMUNITIES (Reddit & ProductHunt) (6-8 relevant subreddits, 3-4 PH discussion topics).
-PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn) (5-6 target handles, 5-6 LinkedIn problem-phrases).
+PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn) (5-6 official Twitter handles of the direct competitors identified in PILLAR 3 prefixed with @, 5-6 LinkedIn problem-phrases).
 PILLAR 6: FORUM SEARCH QUERIES (Generate 15-20 short 2-4 word queries optimized for social search bars).
 
 EXPECTED OUTPUT FORMAT:
@@ -336,6 +336,7 @@ You must strictly return ONLY a valid, minified JSON object matching this struct
 CONSTRAINTS:
 - Return strictly ONLY JSON. Do not include markdown code block fences (e.g. \`\`\`json), trailing commas, or explaining notes.
 - Focus on high-buying-intent, specific terms.
+- The "twitterHandles" MUST correspond to the active, official Twitter/X accounts of the competitors specified in PILLAR 3 (prefixed with @), enabling the system to run precise competitor-poaching queries (e.g. "@supabase" or "@firebase").
 `;
 
   const userPrompt = JSON.stringify({
@@ -345,7 +346,7 @@ CONSTRAINTS:
 
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.LITE,
+      model: MODELS.VERSATILE, // 70b model produces dramatically better, more specific strategy queries
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -363,7 +364,7 @@ CONSTRAINTS:
     setImmediate(() => {
       logLlmUsage({
         action: 'generate_strategy',
-        model: MODELS.LITE,
+        model: MODELS.VERSATILE,
         userId,
         inputTokens: usage?.prompt_tokens || 0,
         outputTokens: usage?.completion_tokens || 0,
@@ -393,7 +394,7 @@ CONSTRAINTS:
     // Clean generated search queries
     const searchQueries: string[] = Array.isArray(parsed.searchQueries) ? parsed.searchQueries : [];
     const validSearchQueries = searchQueries
-      .filter(q => typeof q === 'string' && q.length > 3 && q.length < 100)
+      .filter(q => typeof q === 'string' && q.length > 10 && q.length < 150) // enforce meaningful length
       .slice(0, 20);
 
     return {
@@ -412,7 +413,7 @@ CONSTRAINTS:
     setImmediate(() => {
       logLlmUsage({
         action: 'generate_strategy',
-        model: MODELS.LITE,
+        model: MODELS.VERSATILE,
         userId,
         inputTokens: 0,
         outputTokens: 0,

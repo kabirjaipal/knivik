@@ -28,7 +28,6 @@ export const ProductStats = memo(function ProductStats({ leads }: ProductStatsPr
   const byIntent = {
     BUY_NOW: buyNow,
     COMPARING: leads.filter(l => l.intentLevel === 'COMPARING').length,
-    RESEARCHING: leads.filter(l => l.intentLevel === 'RESEARCHING').length,
   }
 
   return (
@@ -94,7 +93,6 @@ export const ProductStats = memo(function ProductStats({ leads }: ProductStatsPr
             {([
               { key: 'BUY_NOW', label: 'Buy Now 🔥', bar: 'bg-destructive/80' },
               { key: 'COMPARING', label: 'Comparing', bar: 'bg-primary/80' },
-              { key: 'RESEARCHING', label: 'Researching', bar: 'bg-primary/40' },
             ] as const).map(({ key, label, bar }) => {
               const count = byIntent[key]
               const pct = Math.round((count / total) * 100)

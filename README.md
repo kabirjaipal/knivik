@@ -79,7 +79,6 @@ Intent levels:
 
 ```
 BUY_NOW
-RESEARCHING
 COMPARING
 ```
 
@@ -351,7 +350,7 @@ Classify this post.
 
 Categories:
 BUY_NOW
-RESEARCHING
+COMPARING
 
 Text:
 "Looking for an email marketing tool"
@@ -380,7 +379,7 @@ Example:
 
 ```
 BUY_NOW → 90
-RESEARCHING → 70
+COMPARING → 75
 ```
 
 Only store leads above:

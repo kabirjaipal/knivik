@@ -16,7 +16,7 @@ Awesome! You are ready to list Knivik.
     ```text
     Knivik is a modern social listening and lead generation tool built for B2B startups, indie hackers, and digital agencies. 
 
-    Unlike traditional keyword monitors that send overwhelming amounts of spam, Knivik uses a double-pass AI pipeline (powered by Llama 3) to analyze conversations, filter out the noise, score the buying intent (e.g., BUY_NOW, RESEARCHING), and automatically draft highly personalized, human-like replies. 
+    Unlike traditional keyword monitors that send overwhelming amounts of spam, Knivik uses a double-pass AI pipeline (powered by Llama 3) to analyze conversations, filter out the noise, score the buying intent (e.g., BUY_NOW, COMPARING), and automatically draft highly personalized, human-like replies. 
 
     It also features a zero-cost Twitter/X bypass parser, a real-time dashboard with usage telemetry, and instant email or Slack alerts.
     ```

@@ -60,8 +60,9 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (user?.id && productId && lastFetchedId.current !== productId) {
       fetchProduct()
+      refresh() // Force refresh the user session from database to capture latest isScanning status
     }
-  }, [user?.id, productId, fetchProduct])
+  }, [user?.id, productId, fetchProduct, refresh])
 
   // ─── Real-time scan updates via WebSocket ──────────────────────────────────
   useEffect(() => {

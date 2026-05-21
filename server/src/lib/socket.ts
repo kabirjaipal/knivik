@@ -77,6 +77,22 @@ export const initSocket = (httpServer: HttpServer) => {
       if (product) {
         socket.join(`product:${productId}`);
         logger.info({ socketId: socket.id, productId, userId }, 'Socket joined product room');
+        
+        // Immediately sync scanning status on joining so client shows scanner spinner if active
+        try {
+          const userDb = await db.client.user.findUnique({
+            where: { id: userId },
+            select: { isScanning: true }
+          });
+          if (userDb?.isScanning) {
+            socket.emit('scan-status', {
+              isScanning: true,
+              status: 'RUNNING'
+            });
+          }
+        } catch (err: any) {
+          logger.error({ err: err.message, productId }, 'Failed to check scanning status during join-product');
+        }
       } else {
         logger.warn({ socketId: socket.id, productId, userId }, 'Unauthorized product room join attempt');
       }

@@ -392,9 +392,7 @@ enum Platform {
 
 enum IntentLevel {
   BUY_NOW
-  RESEARCHING
   COMPARING
-  LOW_INTENT
 }
 
 enum LeadStatus {

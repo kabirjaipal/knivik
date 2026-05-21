@@ -432,9 +432,7 @@ export default function AnalyticsPage() {
                 const percentage = total > 0 ? (item.count / total) * 100 : 0;
                 const colorMap: Record<string, string> = {
                   "BUY NOW": "bg-emerald-500",
-                  RESEARCHING: "bg-primary",
                   COMPARING: "bg-amber-400",
-                  "LOW INTENT": "bg-muted-foreground/40",
                   NEUTRAL: "bg-slate-400",
                 };
                 return (

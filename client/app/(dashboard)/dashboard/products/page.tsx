@@ -108,6 +108,8 @@ export default function ProductsPage() {
         setIsSubmitting(false);
         return; // Exit early without throwing
       }
+
+      const data = await res.json();
       
       // Reset form
       const actionLabel = editingProductId ? "Product updated" : "Product created";
@@ -115,9 +117,15 @@ export default function ProductsPage() {
         name: "", description: "", websiteUrl: "", isActive: true
       })
       setIsCreating(false)
+      const wasEditing = !!editingProductId;
       setEditingProductId(null)
       toast.success(actionLabel)
-      await fetchProducts()
+
+      if (!wasEditing && data?.product?.id) {
+        router.push(`/dashboard/products/${data.product.id}`);
+      } else {
+        await fetchProducts()
+      }
     } catch (e: any) {
       toast.error("A network error occurred. Please try again.");
     } finally {

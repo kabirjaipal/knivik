@@ -30,7 +30,7 @@ Are you tired of cold emails that bounce and cold DMs that get ignored? Your nex
 
 Knivik helps you intercept them at the exact moment they are ready to buy:
 
-🔥 AI Intent Analysis: Uses a double-pass LLM scoring model to filter out the noise and categorize leads by intent (e.g., BUY_NOW, RESEARCHING).
+🔥 AI Intent Analysis: Uses a double-pass LLM scoring model to filter out the noise and categorize leads by intent (e.g., BUY_NOW, COMPARING).
 🐦 $0 Twitter Bypass: Bypasses expensive Enterprise Twitter API walls using a resilient, free Yahoo-search crawling technique.
 💬 Auto-Drafted Outbound Replies: Llama-3.3-70B automatically drafts context-aware, highly personalized replies introducing your product naturally.
 ⚡ Real-time Stream: Streams new leads to your dashboard instantly using WebSockets.

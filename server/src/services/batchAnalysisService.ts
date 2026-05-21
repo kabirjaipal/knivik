@@ -92,7 +92,7 @@ export const analyzeUserPostsBatch = async (
       platform: post.platform,
       source: post.source,
       title: post.title,
-      content: post.content.substring(0, 350), // Limit content length (was 1000, then 500, now 350 for token limit)
+      content: post.content.substring(0, 600), // 600 chars captures budget/urgency signals missed at 350
       author: post.authorUsername,
       postedAt: post.postedAt?.toISOString(),
       detectionMode: post.detectionMode,
@@ -130,13 +130,18 @@ ANALYSIS CRITERIA:
 1. BUYING INTENT STRENGTH: Look for explicit "looking for", "need", "recommendations", "alternative to".
 2. PROBLEM-FIT: The post must express a problem that the specific product solves.
 3. URGENCY: Recent posts, time-sensitive language, budget mentions.
-4. QUALITY FILTERS: Strictly reject self-promotion, job posts, tutorials, general discussion, and spam.
+4. QUALITY FILTERS: Strictly reject everything that is not a warm sales opportunity:
+   - General discussions, informational questions, tutorials, and guides.
+   - Self-promotion or product launch announcements.
+   - Freelancers or agencies offering services, job postings, or resumes.
+   - Standard tech news or feature announcements.
 5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (highest priority).
 
 SELECTION RULES:
-- Choose ANY post that meets the criteria. You may select multiple leads per product if they are all qualified.
-- Score 85+ for explicit buying intent, 75+ for competitor comparisons, and 60+ for pain-point discussions.
-- Provide detailed, blunt explanation reasoning for each qualified lead.
+- Only qualify posts into exactly two intent levels: BUY_NOW or COMPARING.
+- Score 85+ for explicit buying intent (BUY_NOW), and 75+ for competitor comparisons (COMPARING).
+- If a post does not clearly fit BUY_NOW or COMPARING, REJECT it. Do not create other categories.
+- Provide detailed, blunt reasoning for each qualified lead.
 
 EXPECTED OUTPUT FORMAT:
 You must strictly return ONLY a valid, minified JSON object matching this structure:
@@ -147,8 +152,8 @@ You must strictly return ONLY a valid, minified JSON object matching this struct
       "qualifiedLeads": [
         {
           "postId": "The exact Post ID string from the input (without platform prefix, match the input id exactly)",
-          "intentLevel": "BUY_NOW" | "RESEARCHING" | "COMPARING",
-          "intentScore": number (50-100),
+          "intentLevel": "BUY_NOW" | "COMPARING",
+          "intentScore": number (75-100),
           "reasoning": "Detailed explanation of why this is a good lead or competitor poaching opportunity."
         }
       ],
@@ -160,7 +165,7 @@ You must strictly return ONLY a valid, minified JSON object matching this struct
 
 CONSTRAINTS:
 - Return strictly ONLY JSON. Do not include markdown code block fences (e.g. \`\`\`json), trailing commas, or explaining notes.
-- Be highly selective. Reject noise.
+- Be highly selective. Reject noise, freelancers, and meta-questions.
 `;
 
   const userPrompt = JSON.stringify(productsContext);
@@ -176,8 +181,8 @@ CONSTRAINTS:
       ],
       response_format: { type: 'json_object' },
       temperature: 0.1,
-      max_tokens: 4000,
-    });
+      max_tokens: 6000, // 4000 caused mid-JSON truncation on large batches, losing all leads
+    } as any);
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -187,7 +192,21 @@ CONSTRAINTS:
     // DEBUG: Print exactly what JSON structure the AI returned
     logger.info(`[AI-DEBUG] RAW JSON: ${content}`);
 
-    const parsed = JSON.parse(content);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseErr: any) {
+      // Attempt JSON repair: extract the first complete JSON object via regex before giving up
+      logger.warn({ parseErr: parseErr.message }, '[ANALYSIS] JSON parse failed, attempting repair...');
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error(`AI returned non-JSON content: ${content.substring(0, 200)}`);
+      try {
+        parsed = JSON.parse(jsonMatch[0]!);
+        logger.info('[ANALYSIS] JSON repair succeeded');
+      } catch {
+        throw new Error(`JSON repair failed. Raw content: ${content.substring(0, 200)}`);
+      }
+    }
     const elapsed = Date.now() - startTime;
     const usage = response.usage;
 
@@ -222,6 +241,22 @@ CONSTRAINTS:
         const validLeads = [];
         
         for (const aiLead of aiResult.qualifiedLeads) {
+          // Only allow the two approved intent levels — anything else is silently dropped
+          if (aiLead.intentLevel !== 'BUY_NOW' && aiLead.intentLevel !== 'COMPARING') {
+            continue;
+          }
+
+          // Hard-enforce score thresholds in code — don't rely solely on the prompt
+          const score = aiLead.intentScore || 0;
+          if (aiLead.intentLevel === 'BUY_NOW' && score < 85) {
+            logger.debug({ postId: aiLead.postId, score }, '[ANALYSIS] BUY_NOW lead below 85 threshold — dropped');
+            continue;
+          }
+          if (aiLead.intentLevel === 'COMPARING' && score < 75) {
+            logger.debug({ postId: aiLead.postId, score }, '[ANALYSIS] COMPARING lead below 75 threshold — dropped');
+            continue;
+          }
+
           const rawId = String(aiLead.postId).trim();
           // Exact match first — prevents mismatches between e.g. "reddit-abc" and "reddit-recent-abc"
           const originalPost = originalProductData?.posts.find(p => p.id === rawId)
