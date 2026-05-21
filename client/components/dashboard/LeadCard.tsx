@@ -4,16 +4,17 @@ import { memo, useState, useCallback } from "react"
 import {
   ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, ChevronDown,
   RotateCw, Brain, Flame, Tags,
-  ThumbsUp, ThumbsDown, Info, Clock, Users, Lock
+  ThumbsUp, ThumbsDown, Info, Clock, Users, Lock,
+  Copy, Check
 } from "lucide-react"
 import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -129,6 +130,14 @@ export const LeadCard = memo(({
   const [showNotes, setShowNotes] = useState(false)
   const [localNotes, setLocalNotes] = useState(lead.notes || '')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(() => {
+    if (!draftedReply) return
+    navigator.clipboard.writeText(draftedReply)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }, [draftedReply])
   const currentStatus = STATUS_OPTIONS.find(s => s.value === lead.status) ?? STATUS_OPTIONS[0]!
 
   const isTruncated = lead.content.length > 260
@@ -240,20 +249,17 @@ export const LeadCard = memo(({
           {/* Actions pushed right */}
           <div className="ml-auto flex items-center gap-1.5">
             {/* Status dropdown */}
-            <div className="relative group/status">
-              <button className={`flex items-center gap-1 text-[10px] font-bold py-1 px-2 rounded-lg border transition-all ${currentStatus.color}`}>
-                {currentStatus.label} <ChevronDown className="w-2.5 h-2.5" />
-              </button>
-              <div className="absolute z-20 bottom-full mb-1 right-0 min-w-32 bg-card border border-border rounded-xl shadow-xl overflow-hidden hidden group-hover/status:block">
-                {STATUS_OPTIONS.map(opt => (
-                  <button key={opt.value}
-                    onClick={() => onStatusChange(lead.id, opt.value)}
-                    className={`w-full text-left px-4 py-2 text-[10px] font-bold hover:bg-muted transition-colors ${opt.value === lead.status ? 'opacity-40 cursor-default' : ''}`}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <select
+              value={lead.status}
+              onChange={(e) => onStatusChange(lead.id, e.target.value as LeadStatus)}
+              className={`text-[10px] font-bold py-1 px-2.5 rounded-lg border transition-all cursor-pointer outline-none bg-transparent ${currentStatus.color}`}
+            >
+              {STATUS_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value} className="bg-popover text-foreground font-semibold">
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
             {/* Draft reply */}
             <button
@@ -307,9 +313,24 @@ export const LeadCard = memo(({
       {draftedReply && isExpanded && (
         <div className="border-t border-border/40 px-5 py-4 bg-primary/5 relative animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="absolute left-0 top-0 w-1 h-full bg-primary" />
-          <h4 className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-black text-primary mb-3">
-            <Zap className="w-3.5 h-3.5" /> AI Draft
-          </h4>
+          
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-black text-primary">
+              <Zap className="w-3.5 h-3.5" /> AI Draft
+            </h4>
+            {!isFreePlan && (
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest py-1 px-2.5 bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-all active:scale-95 shadow-sm"
+              >
+                {copied ? (
+                  <><Check className="w-3 h-3 text-emerald-500 mr-1" /> Copied</>
+                ) : (
+                  <><Copy className="w-3 h-3 mr-1" /> Copy Draft</>
+                )}
+              </button>
+            )}
+          </div>
           
           {isFreePlan ? (
             <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm p-4 bg-card flex flex-col items-center justify-center text-center py-8">

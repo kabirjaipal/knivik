@@ -96,7 +96,7 @@ const groq = new OpenAI({
 export const generateReply = async (
   postText: string,
   productInfo: { id?: string; userId?: string; name: string; description?: string; aiConfig?: any },
-  tone: string = 'helpful and highly concise'
+  tone: string = 'helpful, detailed, and naturally engaging'
 ): Promise<string> => {
   const startTime = Date.now();
   const customPersona = productInfo.aiConfig?.customPersona;
@@ -109,14 +109,22 @@ EXPECTED INPUT FORMAT:
 You will receive the prospect's social post content in the User Prompt.
 
 YOUR TASK:
-Write a helpful response to this post.
-Goal: Suggest our product naturally as a solution. Provide genuine value, don't sound like a spam bot.
+Write an authentic, highly detailed, and helpful response to this post.
+Goal: Provide genuine, specific value to the prospect's problem first, and then suggest our product naturally as a fitting solution.
+
 Tone Constraint: ${tone}
-${customPersona ? `STRICTLY FOLLOW THIS CUSTOM PERSONA: ${customPersona}` : `Role: You are an authentic, helpful founder replying to online threads.`}
+${customPersona ? `STRICTLY FOLLOW THIS CUSTOM PERSONA: ${customPersona}` : `Role: You are an authentic, helpful founder or domain expert replying to online threads.`}
+
+GUIDELINES FOR QUALITY AND LENGTH:
+1. **Empathy & Value-First**: Start by directly acknowledging the specific pain points, technical challenges, or questions raised in the post. Do not jump straight into a pitch.
+2. **Detailed Insight**: Give concrete, actionable advice or tips related to their situation. Show that you understand the domain deeply.
+3. **Natural Transition**: Introduce "${productInfo.name}" as a direct answer to their challenge, explaining *why* it fits their specific case (e.g., highlighting specific features matching their problem).
+4. **Length and Structure**: Write a well-structured response (approx. 100-200 words) using 3-4 readable paragraphs. Avoid extremely short one-liners. Use formatting like clean lists or bullet points only if it genuinely aids readability.
+5. **Human Sounding**: Avoid promotional clichés, buzzwords (e.g., "revolutionizing", "synergy"), or robotic greetings/sign-offs. Sound like an experienced practitioner giving a peer-to-peer recommendation on Reddit or Hacker News.
 
 CONSTRAINTS:
-- Keep the response clean and natural.
-- Avoid obvious sales pitch phrasing. Be a helpful human first.
+- Do not sound like a sales bot or copy-paste template.
+- Keep the tone helpful, human-first, and highly engaging.
 `;
 
   const userPrompt = `Prospect Post:\n"""\n${postText}\n"""`;

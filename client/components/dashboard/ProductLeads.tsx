@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2 } from "lucide-react"
+import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2, Sparkles, UserCheck, Bookmark, Send, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
@@ -190,10 +190,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
             {([
               { label: 'Total Leads',   value: total,      icon: Activity,      color: 'text-foreground' },
               { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
-              { label: 'Hot Leads',     value: buyNow,     icon: Flame,         color: 'text-destructive' },
-              { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-amber-500' },
               { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-indigo-500' },
-              { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-emerald-500' },
             ]).map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
                 <div className="flex items-center gap-3">
@@ -206,7 +203,32 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
           </div>
         </div>
 
-        {/* Section 2: Platform Origins */}
+        {/* Section 2: Status Pipeline */}
+        <div className="space-y-5">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+            <Radar className="w-4 h-4 text-primary" /> Status Pipeline
+          </h3>
+          <div className="space-y-1">
+            {([
+              { label: 'New',         value: leads.filter(l => l.status === 'NEW').length,       icon: Sparkles,    color: 'text-muted-foreground' },
+              { label: 'Qualified',   value: leads.filter(l => l.status === 'QUALIFIED').length, icon: UserCheck,   color: 'text-primary' },
+              { label: 'Saved',       value: leads.filter(l => l.status === 'SAVED').length,     icon: Bookmark,    color: 'text-sky-500' },
+              { label: 'Contacted',   value: leads.filter(l => l.status === 'CONTACTED').length, icon: Send,        color: 'text-indigo-500' },
+              { label: 'Converted',   value: leads.filter(l => l.status === 'CONVERTED').length, icon: CheckCircle2,color: 'text-emerald-500' },
+              { label: 'Dismissed',   value: leads.filter(l => l.status === 'DISMISSED').length, icon: XCircle,     color: 'text-destructive' },
+            ]).map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${color} opacity-80`} />
+                  <span className="text-sm font-semibold text-muted-foreground/90">{label}</span>
+                </div>
+                <span className={`text-sm font-black tracking-tight tabular-nums ${color}`}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 3: Platform Origins */}
         {total > 0 && (
           <div className="space-y-5">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">

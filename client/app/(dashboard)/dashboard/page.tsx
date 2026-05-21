@@ -3,7 +3,8 @@
 import { useAuth } from "@/context/auth-context"
 import {
   Radar, Activity, Clock, Brain, Flame, TrendingUp, CheckCircle2,
-  BarChart2, Zap, Target, Package, ChevronRight, AlertCircle
+  BarChart2, Zap, Target, Package, ChevronRight, AlertCircle,
+  Sparkles, UserCheck, Bookmark, Send, XCircle
 } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -175,7 +176,7 @@ export default function DashboardPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col space-y-4 overflow-hidden">
+    <div className="xl:h-full flex flex-col space-y-4 xl:overflow-hidden">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6 shrink-0">
@@ -209,10 +210,32 @@ export default function DashboardPage() {
               {([
                 { label: 'Total Leads',   value: total,      icon: Activity,      color: 'text-foreground' },
                 { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
-                { label: 'Hot Leads',     value: buyNow,     icon: Flame,         color: 'text-destructive' },
-                { label: 'Competitor',    value: competitor, icon: Target,        color: 'text-amber-500' },
                 { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-indigo-500' },
-                { label: 'Conversions',   value: converted,  icon: CheckCircle2,  color: 'text-emerald-500' },
+              ]).map(({ label, value, icon: Icon, color }) => (
+                <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${color} opacity-80`} />
+                    <span className="text-sm font-semibold text-muted-foreground/90">{label}</span>
+                  </div>
+                  <span className={`text-sm font-black tracking-tight tabular-nums ${color}`}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 1.5: Status Pipeline */}
+          <div className="space-y-5">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+              <Radar className="w-4 h-4 text-primary" /> Status Pipeline
+            </h3>
+            <div className="space-y-1">
+              {([
+                { label: 'New',         value: leads.filter(l => l.status === 'NEW').length,       icon: Sparkles,    color: 'text-muted-foreground' },
+                { label: 'Qualified',   value: leads.filter(l => l.status === 'QUALIFIED').length, icon: UserCheck,   color: 'text-primary' },
+                { label: 'Saved',       value: leads.filter(l => l.status === 'SAVED').length,     icon: Bookmark,    color: 'text-sky-500' },
+                { label: 'Contacted',   value: leads.filter(l => l.status === 'CONTACTED').length, icon: Send,        color: 'text-indigo-500' },
+                { label: 'Converted',   value: leads.filter(l => l.status === 'CONVERTED').length, icon: CheckCircle2,color: 'text-emerald-500' },
+                { label: 'Dismissed',   value: leads.filter(l => l.status === 'DISMISSED').length, icon: XCircle,     color: 'text-destructive' },
               ]).map(({ label, value, icon: Icon, color }) => (
                 <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
                   <div className="flex items-center gap-3">

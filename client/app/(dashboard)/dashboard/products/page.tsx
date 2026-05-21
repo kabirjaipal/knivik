@@ -45,6 +45,7 @@ export default function ProductsPage() {
     aiConfig: {
       customPersona: string;
       negativeKeywords: string[];
+      excludedAuthors: string[];
     };
   }>({
     name: "",
@@ -53,7 +54,8 @@ export default function ProductsPage() {
     isActive: true,
     aiConfig: {
       customPersona: "",
-      negativeKeywords: []
+      negativeKeywords: [],
+      excludedAuthors: []
     }
   })
 
@@ -129,7 +131,7 @@ export default function ProductsPage() {
       const actionLabel = editingProductId ? "Product updated" : "Product created";
       setFormData({
         name: "", description: "", websiteUrl: "", isActive: true,
-        aiConfig: { customPersona: "", negativeKeywords: [] }
+        aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
       })
       setIsCreating(false)
       const wasEditing = !!editingProductId;
@@ -182,11 +184,8 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Products</h1>
-          <p className="text-muted-foreground mt-1">Configure what the AI should look for</p>
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold text-foreground">Products</h1>
         
         <Button size={"default"} onClick={() => setIsCreating(true)}>
           <Plus className="w-4 h-4" /> New Product
@@ -200,7 +199,7 @@ export default function ProductsPage() {
           setIsCreating(false);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "", negativeKeywords: [] }
+            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
           });
         }
       }}>
@@ -218,7 +217,7 @@ export default function ProductsPage() {
               </div>
             </div>
           </SheetHeader>
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
             <div className="p-6">
               <ProductForm 
                 formData={formData}
@@ -230,7 +229,7 @@ export default function ProductsPage() {
                 onSubmit={handleCreateProduct}
               />
             </div>
-          </ScrollArea>
+          </div>
           <SheetFooter className="border-t p-4 gap-2 flex-row justify-end">
             <Button 
               type="button"
@@ -241,7 +240,7 @@ export default function ProductsPage() {
                 setIsCreating(false);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "", negativeKeywords: [] }
+                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
                 });
               }}
             >
@@ -267,7 +266,7 @@ export default function ProductsPage() {
           setEditingProductId(null);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "", negativeKeywords: [] }
+            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
           });
         }
       }}>
@@ -285,7 +284,7 @@ export default function ProductsPage() {
               </div>
             </div>
           </SheetHeader>
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
             <div className="p-6">
               <ProductForm 
                 formData={formData}
@@ -297,7 +296,7 @@ export default function ProductsPage() {
                 onSubmit={handleCreateProduct}
               />
             </div>
-          </ScrollArea>
+          </div>
           <SheetFooter className="border-t p-4 gap-2 flex-row justify-end">
             <Button 
               type="button"
@@ -307,7 +306,7 @@ export default function ProductsPage() {
                 setEditingProductId(null);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "", negativeKeywords: [] }
+                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
                 });
                 
               }}
@@ -337,7 +336,7 @@ export default function ProductsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
             {products.map((product) => (
               <CompactProductCard 
                 key={product.id} 
@@ -351,7 +350,8 @@ export default function ProductsPage() {
                     isActive: product.isActive ?? true,
                     aiConfig: {
                       customPersona: product.aiConfig?.customPersona || "",
-                      negativeKeywords: product.aiConfig?.negativeKeywords || []
+                      negativeKeywords: product.aiConfig?.negativeKeywords || [],
+                      excludedAuthors: product.aiConfig?.excludedAuthors || []
                     }
                   })
                 }}
@@ -476,6 +476,35 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           }}
           className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-16 resize-none" 
           placeholder="e.g. free, course, job, hiring, tutorial, funny" 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-foreground">
+          Exclude Authors <span className="text-muted-foreground font-normal text-xs ml-1">(Ignore Users/Bots)</span>
+        </label>
+        <p className="text-xs text-muted-foreground font-medium mb-1">
+          Ignore posts/comments from specific authors or bot accounts (comma-separated).
+        </p>
+        <textarea 
+          value={Array.isArray(formData.aiConfig?.excludedAuthors) 
+            ? formData.aiConfig.excludedAuthors.join(", ") 
+            : typeof formData.aiConfig?.excludedAuthors === 'string'
+              ? formData.aiConfig.excludedAuthors
+              : ""
+          }
+          onChange={e => {
+            const authorsArray = e.target.value.split(",").map(a => a.trim());
+            setFormData({
+              ...formData,
+              aiConfig: {
+                ...formData.aiConfig,
+                excludedAuthors: authorsArray
+              }
+            });
+          }}
+          className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-16 resize-none" 
+          placeholder="e.g. AutoModerator, Subreddit-Bot, CompetitorName" 
         />
       </div>
 

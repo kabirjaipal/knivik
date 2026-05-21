@@ -381,7 +381,7 @@ export class BatchCollectionService {
           const content = postData.body || postData.selftext || '';
           const combinedText = `${title} ${content}`;
 
-          const filterResult = this.passesBasicFiltersWithReason(combinedText, product);
+          const filterResult = this.passesBasicFiltersWithReason(combinedText, postData.author || null, product);
           if (!filterResult.passed) {
             continue;
           }
@@ -462,7 +462,7 @@ export class BatchCollectionService {
         const content = contentHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
         const combinedText = `${title} ${content}`;
         
-        if (!this.passesBasicFilters(combinedText, product)) return;
+        if (!this.passesBasicFilters(combinedText, author, product)) return;
 
         // Parse external post ID from link (e.g. comments/xyz/...)
         const match = link.match(/\/comments\/([a-z0-9]+)\//i);
@@ -547,7 +547,7 @@ export class BatchCollectionService {
               .trim();
 
             const combinedText = `${title} ${content}`;
-            if (!this.passesBasicFilters(combinedText, product)) continue;
+            if (!this.passesBasicFilters(combinedText, hit.author || null, product)) continue;
 
             processedIds.add(storyId);
             posts.push({
@@ -633,15 +633,32 @@ export class BatchCollectionService {
   /**
    * Basic filtering to remove obvious noise before AI analysis
    */
-  private static passesBasicFilters(text: string, product: ProductWithDetails): boolean {
-    return this.passesBasicFiltersWithReason(text, product).passed;
+  private static passesBasicFilters(text: string, author: string | null, product: ProductWithDetails): boolean {
+    return this.passesBasicFiltersWithReason(text, author, product).passed;
   }
 
   /**
    * Detailed filtering with reason for deep logging
    */
-  private static passesBasicFiltersWithReason(text: string, product: ProductWithDetails): { passed: boolean; reason?: string } {
+  private static passesBasicFiltersWithReason(text: string, author: string | null, product: ProductWithDetails): { passed: boolean; reason?: string } {
     const lower = text.toLowerCase();
+
+    // 1. Excluded authors check (Author Blacklist)
+    const aiConfig = product.aiConfig as any;
+    const excludedAuthors: string[] = Array.isArray(aiConfig?.excludedAuthors) ? aiConfig.excludedAuthors : [];
+    if (author && excludedAuthors.length > 0) {
+      const lowerAuthor = author.toLowerCase().trim();
+      const isExcluded = excludedAuthors.some(ex => {
+        if (typeof ex !== 'string') return false;
+        let cleaned = ex.toLowerCase().trim();
+        if (cleaned.startsWith('u/')) cleaned = cleaned.substring(2);
+        if (cleaned.startsWith('@')) cleaned = cleaned.substring(1);
+        return lowerAuthor === cleaned;
+      });
+      if (isExcluded) {
+        return { passed: false, reason: `Excluded author: "${author}"` };
+      }
+    }
 
     // Minimum content length
     if (text.trim().length < 50) {
@@ -673,7 +690,6 @@ export class BatchCollectionService {
     }
 
     // AI-generated negative keywords from product strategy (free 40% noise reduction)
-    const aiConfig = product.aiConfig as any;
     const negativeKeywords: string[] = Array.isArray(aiConfig?.negativeKeywords) ? aiConfig.negativeKeywords : [];
     for (const kw of negativeKeywords) {
       if (typeof kw === 'string' && kw.length > 2 && lower.includes(kw.toLowerCase())) {
@@ -1007,7 +1023,7 @@ export class BatchCollectionService {
       }
 
       // Filter query posts
-      const filtered = queryPosts.filter(p => this.passesBasicFilters(p.content, product));
+      const filtered = queryPosts.filter(p => this.passesBasicFilters(p.content, p.authorUsername, product));
       posts.push(...filtered);
 
       // Short delay between query sweeps

@@ -150,7 +150,7 @@ export default function ProductDetailPage() {
   const queries = Array.isArray(product.searchQueries) ? product.searchQueries : []
 
   return (
-    <div className="h-full flex flex-col overflow-hidden pr-1">
+    <div className="xl:h-full flex flex-col xl:overflow-hidden pr-1">
       {/* ── Compact Header Section ────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 border-b border-border/40 pb-4 shrink-0">
         
