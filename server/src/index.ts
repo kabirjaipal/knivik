@@ -43,7 +43,9 @@ const app = express();
 
 // Security best-practice
 app.disable('x-powered-by');
-app.set('trust proxy', config.TRUST_PROXY);
+// If TRUST_PROXY is enabled, trust 1 hop (e.g. Render/Cloudflare/AWS ALB). 
+// Using a boolean 'true' is insecure and causes express-rate-limit validation errors.
+app.set('trust proxy', config.TRUST_PROXY ? 1 : false);
 
 // Health check for Render/Cloud
 app.get('/', (_req, res) => {
@@ -86,7 +88,8 @@ const rateLimiter = rateLimit({
   max: config.RATE_LIMIT_MAX_REQUESTS,
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { trustProxy: config.TRUST_PROXY },
+  // We set trust proxy to 1 above, so we can disable the trustProxy warning check
+  validate: { trustProxy: false },
   message: {
     success: false,
     error: {
