@@ -128,9 +128,8 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-96 gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-primary/60" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Loading...</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }

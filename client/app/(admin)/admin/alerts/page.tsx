@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, CheckCircle2, Mail, Info, Clock, User } from "lucide-react"
+import { AlertCircle, CheckCircle2, Mail, Info, Clock, User, Loader2 } from "lucide-react"
 import { FaSlack } from "react-icons/fa"
 import { 
   Tooltip,
@@ -56,8 +56,8 @@ export default function AdminAlertsPage() {
   }, [page])
 
   if (loading && logs.length === 0) return (
-    <div className="flex items-center justify-center min-h-96">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   )
 

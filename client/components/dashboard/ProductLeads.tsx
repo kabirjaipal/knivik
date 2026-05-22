@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2, Sparkles, UserCheck, Bookmark, Send, XCircle } from "lucide-react"
+import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2, Sparkles, UserCheck, Bookmark, Send, XCircle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
@@ -153,9 +153,8 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
 
   if (loading) {
     return (
-      <div className="py-12 flex flex-col items-center justify-center gap-3">
-        <div className="w-7 h-7 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">Syncing Lead Stream...</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }

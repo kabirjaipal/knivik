@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CreditCard } from "lucide-react"
+import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CreditCard, Loader2 } from "lucide-react"
 
 interface RevenueStats {
   totalRevenue: number;
@@ -39,11 +39,13 @@ export default function AdminRevenuePage() {
       .catch(() => setLoading(false))
   }, [])
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-96">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>
-  )
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

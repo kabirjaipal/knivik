@@ -16,7 +16,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog"
-import { Search, ShieldAlert } from "lucide-react"
+import { Search, ShieldAlert, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { AdminPagination } from "@/components/admin/admin-pagination"
 
@@ -140,8 +140,8 @@ export default function AdminUsersPage() {
   }
 
   if (loading && users.length === 0) return (
-    <div className="flex items-center justify-center min-h-96">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
     </div>
   )
 

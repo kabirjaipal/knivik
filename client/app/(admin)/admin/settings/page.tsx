@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Shield, Hammer, UserPlus, Cpu, RefreshCcw } from "lucide-react";
+import { Shield, Hammer, UserPlus, Cpu, RefreshCcw, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -82,15 +82,13 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <div className="relative flex h-8 w-8 items-center justify-center">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-4 w-4 bg-primary"></span>
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
 
   return (
     <div className="">

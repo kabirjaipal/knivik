@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, LayoutDashboard, Radar, Zap, Activity, Star, MessageSquare } from "lucide-react"
+import { Users, LayoutDashboard, Radar, Zap, Activity, Star, MessageSquare, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -45,7 +45,13 @@ export default function AdminPage() {
     fetchData()
   }, [])
 
-  if (loading) return <div>Loading diagnostics...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

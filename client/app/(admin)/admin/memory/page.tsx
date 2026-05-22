@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Cpu, RefreshCw, Server, Users, Wrench, ShieldCheck, ShieldAlert, Clock, ArrowUpRight, Zap } from "lucide-react";
+import { Cpu, RefreshCw, Server, Users, Wrench, ShieldCheck, ShieldAlert, Clock, ArrowUpRight, Zap, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface QueueJob {
@@ -95,10 +95,7 @@ export default function AdminMemoryPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="relative flex h-8 w-8 items-center justify-center">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-4 w-4 bg-primary"></span>
-        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }

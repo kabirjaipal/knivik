@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Brain, DollarSign, Cpu } from "lucide-react"
+import { Brain, DollarSign, Cpu, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface UsageStats {
@@ -38,7 +38,13 @@ export default function AdminUsagePage() {
       .catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div>Loading usage analytics...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

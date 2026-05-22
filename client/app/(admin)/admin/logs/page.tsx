@@ -15,7 +15,8 @@ import {
   X,
   User,
   Activity,
-  Layers
+  Layers,
+  Loader2
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -287,8 +288,10 @@ export default function AdminLogsPage() {
               <tbody className="divide-y divide-border/20 text-xs font-medium text-foreground/80">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-muted-foreground animate-pulse">
-                      Streaming database request metrics logs...
+                    <td colSpan={8} className="py-12">
+                      <div className="flex items-center justify-center w-full min-h-[200px]">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      </div>
                     </td>
                   </tr>
                 ) : logs.length === 0 ? (

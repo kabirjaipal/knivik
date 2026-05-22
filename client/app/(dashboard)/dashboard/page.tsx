@@ -1,191 +1,247 @@
-"use client"
+"use client";
 
-import { useAuth } from "@/context/auth-context"
+import { useAuth } from "@/context/auth-context";
 import {
-  Radar, Activity, Clock, Brain, Flame, TrendingUp, CheckCircle2,
-  BarChart2, Zap, Target, Package, ChevronRight, AlertCircle,
-  Sparkles, UserCheck, Bookmark, Send, XCircle
-} from "lucide-react"
-import { useEffect, useState, useCallback, useRef } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { LeadCard, type LeadCardData, type LeadStatus } from "@/components/dashboard/LeadCard"
+  Radar,
+  Activity,
+  Clock,
+  TrendingUp,
+  CheckCircle2,
+  Package,
+  ChevronRight,
+  AlertCircle,
+  Sparkles,
+  UserCheck,
+  Bookmark,
+  Send,
+  XCircle,
+  Loader2,
+} from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  LeadCard,
+  type LeadCardData,
+  type LeadStatus,
+} from "@/components/dashboard/LeadCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
+type FilterTab = "ALL" | "BUY_NOW" | "COMPETITOR" | "SEMANTIC" | "SAVED";
 
 interface ProductSummary {
-  id: string
-  name: string
-  isActive: boolean
-  _count?: { leads: number }
+  id: string;
+  name: string;
+  isActive: boolean;
+  _count?: { leads: number };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
-  const [leads, setLeads] = useState<LeadCardData[]>([])
-  const [products, setProducts] = useState<ProductSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<FilterTab>('ALL')
-  const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null)
-  const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>({})
-  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({})
-  const [llmUsage, setLlmUsage] = useState<{ totals: { requestCount: number } } | null>(null)
+  const [leads, setLeads] = useState<LeadCardData[]>([]);
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<FilterTab>("ALL");
+  const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null);
+  const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>(
+    {},
+  );
+  const [expandedReplies, setExpandedReplies] = useState<
+    Record<string, boolean>
+  >({});
+  const [llmUsage, setLlmUsage] = useState<{
+    totals: { requestCount: number };
+  } | null>(null);
 
-  const hasFetched = useRef(false)
-  const lastUserId = useRef<string | null>(null)
+  const hasFetched = useRef(false);
+  const lastUserId = useRef<string | null>(null);
 
   // ─── Data fetching ────────────────────────────────────────────────────────
 
   const fetchAll = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const api = process.env.NEXT_PUBLIC_API_URL
+      const api = process.env.NEXT_PUBLIC_API_URL;
       const [leadsRes, productsRes, llmRes] = await Promise.all([
-        fetch(`${api}/leads`, { credentials: 'include' }),
-        fetch(`${api}/products`, { credentials: 'include' }),
-        fetch(`${api}/analytics/llm`, { credentials: 'include' }),
-      ])
+        fetch(`${api}/leads`, { credentials: "include" }),
+        fetch(`${api}/products`, { credentials: "include" }),
+        fetch(`${api}/analytics/llm`, { credentials: "include" }),
+      ]);
 
       if (leadsRes.ok) {
-        const data = await leadsRes.json()
-        const fetched = (data.leads ?? []) as LeadCardData[]
-        setLeads(fetched)
-        const drafts: Record<string, string> = {}
-        fetched.forEach(l => { if (l.replies?.length) drafts[l.id] = l.replies[0]!.generatedText })
-        setDraftedReplies(drafts)
+        const data = await leadsRes.json();
+        const fetched = (data.leads ?? []) as LeadCardData[];
+        setLeads(fetched);
+        const drafts: Record<string, string> = {};
+        fetched.forEach((l) => {
+          if (l.replies?.length) drafts[l.id] = l.replies[0]!.generatedText;
+        });
+        setDraftedReplies(drafts);
       }
 
       if (productsRes.ok) {
-        const data = await productsRes.json()
-        setProducts(data.products ?? [])
+        const data = await productsRes.json();
+        setProducts(data.products ?? []);
       }
 
       if (llmRes.ok) {
-        const data = await llmRes.json()
-        if (data.success) setLlmUsage(data.data)
+        const data = await llmRes.json();
+        if (data.success) setLlmUsage(data.data);
       }
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    if (authLoading || !user) return
-    if (hasFetched.current && lastUserId.current === user.id) return
-    hasFetched.current = true
-    lastUserId.current = user.id
-    fetchAll()
-  }, [user, authLoading, fetchAll])
+    if (authLoading || !user) return;
+    if (hasFetched.current && lastUserId.current === user.id) return;
+    hasFetched.current = true;
+    lastUserId.current = user.id;
+    fetchAll();
+  }, [user, authLoading, fetchAll]);
 
   // ─── Lead actions ─────────────────────────────────────────────────────────
 
   const handleDraftReply = async (leadId: string) => {
-    setDraftingLeadId(leadId)
+    setDraftingLeadId(leadId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/reply`, { method: 'POST', credentials: 'include' })
-      if (!res.ok) throw new Error('Failed')
-      const data = await res.json()
-      setDraftedReplies(prev => ({ ...prev, [leadId]: data.generatedText }))
-      setExpandedReplies(prev => ({ ...prev, [leadId]: true }))
-      toast.success('Your AI reply draft is ready!')
-    } catch (e) { toast.error('We could not generate a draft reply right now. Please try again.') }
-    finally { setDraftingLeadId(null) }
-  }
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/reply`,
+        { method: "POST", credentials: "include" },
+      );
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setDraftedReplies((prev) => ({ ...prev, [leadId]: data.generatedText }));
+      setExpandedReplies((prev) => ({ ...prev, [leadId]: true }));
+      toast.success("Your AI reply draft is ready!");
+    } catch (e) {
+      toast.error(
+        "We could not generate a draft reply right now. Please try again.",
+      );
+    } finally {
+      setDraftingLeadId(null);
+    }
+  };
 
   const handleStatusChange = async (leadId: string, status: LeadStatus) => {
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
+    setLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, status } : l)),
+    );
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/status`, {
-      method: 'PATCH', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    }).catch(() => {})
-  }
+    }).catch(() => {});
+  };
 
   const handleNotesChange = async (leadId: string, notes: string) => {
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, notes } : l))
+    setLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, notes } : l)),
+    );
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/notes`, {
-      method: 'PATCH', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes }),
-    }).catch(() => {})
-  }
+    }).catch(() => {});
+  };
 
   const handleFeedbackChange = async (leadId: string, feedback: number) => {
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, feedback } : l))
+    setLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, feedback } : l)),
+    );
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/feedback`, {
-      method: 'PATCH', credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ feedback }),
-    }).catch(() => {})
-  }
+    }).catch(() => {});
+  };
 
   // ─── Derived metrics ──────────────────────────────────────────────────────
 
-  const total = leads.length
-  const highIntent = leads.filter(l => l.intentScore >= 80).length
-  const buyNow = leads.filter(l => l.intentLevel === 'BUY_NOW').length
-  const competitor = leads.filter(l => l.detectedBy === 'COMPETITOR').length
-  const last24h = leads.filter(l => Date.now() - new Date(l.createdAt).getTime() < 86_400_000).length
-  const converted = leads.filter(l => l.status === 'CONVERTED').length
-  const avgScore = total > 0 ? Math.round(leads.reduce((s, l) => s + l.intentScore, 0) / total) : 0
-  const saved = leads.filter(l => l.status === 'SAVED').length
+  const total = leads.length;
+  const highIntent = leads.filter((l) => l.intentScore >= 80).length;
+  const buyNow = leads.filter((l) => l.intentLevel === "BUY_NOW").length;
+  const competitor = leads.filter((l) => l.detectedBy === "COMPETITOR").length;
+  const last24h = leads.filter(
+    (l) => Date.now() - new Date(l.createdAt).getTime() < 86_400_000,
+  ).length;
+  const converted = leads.filter((l) => l.status === "CONVERTED").length;
+  const avgScore =
+    total > 0
+      ? Math.round(leads.reduce((s, l) => s + l.intentScore, 0) / total)
+      : 0;
+  const saved = leads.filter((l) => l.status === "SAVED").length;
 
   // Per-product lead counts computed from local leads
   const leadsByProduct = leads.reduce<Record<string, number>>((acc, l) => {
-    const name = l.product?.name ?? 'Unknown'
-    acc[name] = (acc[name] ?? 0) + 1
-    return acc
-  }, {})
+    const name = l.product?.name ?? "Unknown";
+    acc[name] = (acc[name] ?? 0) + 1;
+    return acc;
+  }, {});
 
   // ─── Tabs & filtering ─────────────────────────────────────────────────────
 
   const TABS: { key: FilterTab; label: string; count: number }[] = [
-    { key: 'ALL',        label: 'All Leads',      count: total },
-    { key: 'BUY_NOW',    label: '🔥 Buy Now',     count: buyNow },
-    { key: 'COMPETITOR', label: '⚔️ Competitor',  count: competitor },
-    { key: 'SEMANTIC',   label: '🧠 Semantic',    count: leads.filter(l => l.detectedBy === 'SEMANTIC').length },
-    { key: 'SAVED',      label: '📌 Saved',       count: saved },
-  ]
+    { key: "ALL", label: "All Leads", count: total },
+    { key: "BUY_NOW", label: "🔥 Buy Now", count: buyNow },
+    { key: "COMPETITOR", label: "⚔️ Competitor", count: competitor },
+    {
+      key: "SEMANTIC",
+      label: "🧠 Semantic",
+      count: leads.filter((l) => l.detectedBy === "SEMANTIC").length,
+    },
+    { key: "SAVED", label: "📌 Saved", count: saved },
+  ];
 
-  const filteredLeads = leads.filter(l => {
-    if (activeTab === 'BUY_NOW')    return l.intentLevel === 'BUY_NOW'
-    if (activeTab === 'COMPETITOR') return l.detectedBy === 'COMPETITOR'
-    if (activeTab === 'SEMANTIC')   return l.detectedBy === 'SEMANTIC'
-    if (activeTab === 'SAVED')      return l.status === 'SAVED'
-    return true
-  })
+  const filteredLeads = leads.filter((l) => {
+    if (activeTab === "BUY_NOW") return l.intentLevel === "BUY_NOW";
+    if (activeTab === "COMPETITOR") return l.detectedBy === "COMPETITOR";
+    if (activeTab === "SEMANTIC") return l.detectedBy === "SEMANTIC";
+    if (activeTab === "SAVED") return l.status === "SAVED";
+    return true;
+  });
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="xl:h-full flex flex-col space-y-4 xl:overflow-hidden">
-
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6 shrink-0">
         <div className="space-y-1.5">
           <h1 className="text-4xl font-black tracking-tighter">
-            {getGreeting()}, <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/60">{user?.username}</span> 👋
+            {getGreeting()},{" "}
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/60">
+              {user?.username}
+            </span>{" "}
+            👋
           </h1>
           <p className="text-sm font-medium text-muted-foreground">
-            <span className="text-foreground">{products.filter(p => p.isActive).length}</span> product{products.filter(p => p.isActive).length !== 1 ? 's' : ''} live · Radar monitoring Reddit, HackerNews & Twitter.
+            <span className="text-foreground">
+              {products.filter((p) => p.isActive).length}
+            </span>{" "}
+            product{products.filter((p) => p.isActive).length !== 1 ? "s" : ""}{" "}
+            live · Radar monitoring Reddit, HackerNews & Twitter.
           </p>
         </div>
         {user?.isScanning && (
@@ -196,10 +252,8 @@ export default function DashboardPage() {
       </div>
       {/* ── Two column: sidebar + lead stream ─────────────────────────────── */}
       <div className="flex-1 min-h-0 flex flex-col xl:grid xl:grid-cols-[350px_1fr] gap-6 xl:overflow-hidden">
-
         {/* ── Left sidebar: Flat Layout (No Cards) ─────────────────────────────── */}
         <aside className="w-full shrink-0 xl:overflow-y-auto xl:max-h-[calc(100vh-200px)] pr-2 custom-scrollbar space-y-10">
-          
           {/* Section 1: Live Intelligence Stats */}
           <div className="space-y-5">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
@@ -207,17 +261,41 @@ export default function DashboardPage() {
               Live Intelligence
             </h3>
             <div className="space-y-1">
-              {([
-                { label: 'Total Leads',   value: total,      icon: Activity,      color: 'text-foreground' },
-                { label: 'High Intent',   value: highIntent, icon: TrendingUp,    color: 'text-primary' },
-                { label: 'Recent 24h',    value: last24h,    icon: Clock,         color: 'text-indigo-500' },
-              ]).map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
+              {[
+                {
+                  label: "Total Leads",
+                  value: total,
+                  icon: Activity,
+                  color: "text-foreground",
+                },
+                {
+                  label: "High Intent",
+                  value: highIntent,
+                  icon: TrendingUp,
+                  color: "text-primary",
+                },
+                {
+                  label: "Recent 24h",
+                  value: last24h,
+                  icon: Clock,
+                  color: "text-indigo-500",
+                },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0"
+                >
                   <div className="flex items-center gap-3">
                     <Icon className={`w-4 h-4 ${color} opacity-80`} />
-                    <span className="text-sm font-semibold text-muted-foreground/90">{label}</span>
+                    <span className="text-sm font-semibold text-muted-foreground/90">
+                      {label}
+                    </span>
                   </div>
-                  <span className={`text-sm font-black tracking-tight tabular-nums ${color}`}>{value}</span>
+                  <span
+                    className={`text-sm font-black tracking-tight tabular-nums ${color}`}
+                  >
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -229,20 +307,59 @@ export default function DashboardPage() {
               <Radar className="w-4 h-4 text-primary" /> Status Pipeline
             </h3>
             <div className="space-y-1">
-              {([
-                { label: 'New',         value: leads.filter(l => l.status === 'NEW').length,       icon: Sparkles,    color: 'text-muted-foreground' },
-                { label: 'Qualified',   value: leads.filter(l => l.status === 'QUALIFIED').length, icon: UserCheck,   color: 'text-primary' },
-                { label: 'Saved',       value: leads.filter(l => l.status === 'SAVED').length,     icon: Bookmark,    color: 'text-sky-500' },
-                { label: 'Contacted',   value: leads.filter(l => l.status === 'CONTACTED').length, icon: Send,        color: 'text-indigo-500' },
-                { label: 'Converted',   value: leads.filter(l => l.status === 'CONVERTED').length, icon: CheckCircle2,color: 'text-emerald-500' },
-                { label: 'Dismissed',   value: leads.filter(l => l.status === 'DISMISSED').length, icon: XCircle,     color: 'text-destructive' },
-              ]).map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0">
+              {[
+                {
+                  label: "New",
+                  value: leads.filter((l) => l.status === "NEW").length,
+                  icon: Sparkles,
+                  color: "text-muted-foreground",
+                },
+                {
+                  label: "Qualified",
+                  value: leads.filter((l) => l.status === "QUALIFIED").length,
+                  icon: UserCheck,
+                  color: "text-primary",
+                },
+                {
+                  label: "Saved",
+                  value: leads.filter((l) => l.status === "SAVED").length,
+                  icon: Bookmark,
+                  color: "text-sky-500",
+                },
+                {
+                  label: "Contacted",
+                  value: leads.filter((l) => l.status === "CONTACTED").length,
+                  icon: Send,
+                  color: "text-indigo-500",
+                },
+                {
+                  label: "Converted",
+                  value: leads.filter((l) => l.status === "CONVERTED").length,
+                  icon: CheckCircle2,
+                  color: "text-emerald-500",
+                },
+                {
+                  label: "Dismissed",
+                  value: leads.filter((l) => l.status === "DISMISSED").length,
+                  icon: XCircle,
+                  color: "text-destructive",
+                },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between py-2.5 border-b border-border/10 last:border-0 last:pb-0"
+                >
                   <div className="flex items-center gap-3">
                     <Icon className={`w-4 h-4 ${color} opacity-80`} />
-                    <span className="text-sm font-semibold text-muted-foreground/90">{label}</span>
+                    <span className="text-sm font-semibold text-muted-foreground/90">
+                      {label}
+                    </span>
                   </div>
-                  <span className={`text-sm font-black tracking-tight tabular-nums ${color}`}>{value}</span>
+                  <span
+                    className={`text-sm font-black tracking-tight tabular-nums ${color}`}
+                  >
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -254,21 +371,32 @@ export default function DashboardPage() {
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
                 <Package className="w-4 h-4 text-primary" /> Active Radar
               </h3>
-              <button onClick={() => router.push('/dashboard/products')}
-                className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all flex items-center gap-0.5">
+              <button
+                onClick={() => router.push("/dashboard/products")}
+                className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-primary transition-all flex items-center gap-0.5"
+              >
                 Manage <ChevronRight className="w-3 h-3" />
               </button>
             </div>
             <div className="space-y-1 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
               {products.length === 0 ? (
-                <p className="text-xs text-muted-foreground/50 font-bold uppercase tracking-widest py-2">No Active Radar</p>
+                <p className="text-xs text-muted-foreground/50 font-bold uppercase tracking-widest py-2">
+                  No Active Radar
+                </p>
               ) : (
-                products.slice(0, 8).map(p => (
-                  <button key={p.id} onClick={() => router.push(`/dashboard/products/${p.id}`)}
-                    className="w-full text-left py-2 px-2 hover:bg-muted/40 rounded-xl transition-all group flex items-center justify-between gap-3 text-sm">
+                products.slice(0, 8).map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => router.push(`/dashboard/products/${p.id}`)}
+                    className="w-full text-left py-2 px-2 hover:bg-muted/40 rounded-xl transition-all group flex items-center justify-between gap-3 text-sm"
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${p.isActive ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]' : 'bg-muted-foreground/30'}`} />
-                      <span className="font-bold text-muted-foreground/90 group-hover:text-primary transition-colors truncate">{p.name}</span>
+                      <div
+                        className={`w-2 h-2 rounded-full shrink-0 ${p.isActive ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" : "bg-muted-foreground/30"}`}
+                      />
+                      <span className="font-bold text-muted-foreground/90 group-hover:text-primary transition-colors truncate">
+                        {p.name}
+                      </span>
                     </div>
                     <span className="text-xs font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10 group-hover:border-primary/20 transition-all">
                       {leadsByProduct[p.name] ?? 0}
@@ -286,23 +414,33 @@ export default function DashboardPage() {
                 <Activity className="w-4 h-4 text-primary" /> Platform Origins
               </h3>
               <div className="space-y-3">
-                {(['REDDIT', 'HACKERNEWS', 'TWITTER'] as const).map(p => {
-                  const count = leads.filter(l => l.platform === p).length
-                  const pct = Math.round((count / total) * 100)
+                {(["REDDIT", "HACKERNEWS", "TWITTER"] as const).map((p) => {
+                  const count = leads.filter((l) => l.platform === p).length;
+                  const pct = Math.round((count / total) * 100);
                   return (
                     <div key={p} className="flex items-center gap-4">
-                      <span className="text-xs font-bold text-muted-foreground/60 w-24 truncate">{p === 'HACKERNEWS' ? 'HackerNews' : p.charAt(0) + p.slice(1).toLowerCase()}</span>
+                      <span className="text-xs font-bold text-muted-foreground/60 w-24 truncate">
+                        {p === "HACKERNEWS"
+                          ? "HackerNews"
+                          : p.charAt(0) + p.slice(1).toLowerCase()}
+                      </span>
                       <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-1000 ${
-                          p === 'REDDIT' ? 'bg-orange-500' : 
-                          p === 'HACKERNEWS' ? 'bg-amber-500' : 
-                          'bg-sky-500'
-                        }`}
-                          style={{ width: `${pct}%` }} />
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${
+                            p === "REDDIT"
+                              ? "bg-orange-500"
+                              : p === "HACKERNEWS"
+                                ? "bg-amber-500"
+                                : "bg-sky-500"
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
-                      <span className="text-xs font-bold tabular-nums text-foreground/80 w-12 text-right">{count}</span>
+                      <span className="text-xs font-bold tabular-nums text-foreground/80 w-12 text-right">
+                        {count}
+                      </span>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -319,8 +457,12 @@ export default function DashboardPage() {
                   <Radar className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">Live Detection Stream</h2>
-                  <p className="text-xs text-muted-foreground font-medium">Real-time keyword and competitor leads</p>
+                  <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">
+                    Live Detection Stream
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Real-time keyword and competitor leads
+                  </p>
                 </div>
               </div>
               {last24h > 0 && (
@@ -333,17 +475,21 @@ export default function DashboardPage() {
 
             {/* Filter tabs */}
             <div className="flex gap-2 px-5 py-3 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
-              {TABS.map(tab => (
-                <button key={tab.key}
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border ${
                     activeTab === tab.key
-                      ? 'bg-primary border-primary text-primary-foreground'
-                      : 'bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}>
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === tab.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted-foreground/20'}`}>
+                    <span
+                      className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === tab.key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/20"}`}
+                    >
                       {tab.count}
                     </span>
                   )}
@@ -354,18 +500,17 @@ export default function DashboardPage() {
             {/* Lead list */}
             <div className="flex-1 overflow-y-auto p-0 sm:p-4 bg-muted/5 min-h-0 custom-scrollbar">
               {loading ? (
-                <div className="h-full flex flex-col items-center justify-center gap-4 min-h-96">
-                  <div className="relative">
-                    <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                  </div>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Scanning the matrix...</p>
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 </div>
               ) : error ? (
                 <div className="p-12 text-center min-h-96 flex flex-col items-center justify-center">
                   <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="w-8 h-8" />
                   </div>
-                  <p className="text-sm text-destructive font-black tracking-widest uppercase">System Error</p>
+                  <p className="text-sm text-destructive font-black tracking-widest uppercase">
+                    System Error
+                  </p>
                   <p className="text-muted-foreground mt-2">{error}</p>
                 </div>
               ) : filteredLeads.length === 0 ? (
@@ -373,19 +518,30 @@ export default function DashboardPage() {
                   <div className="w-20 h-20 bg-card border border-border/50 rounded-full flex items-center justify-center mb-2 shadow-sm">
                     <Radar className="h-10 w-10 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xl font-black text-foreground">No leads detected</p>
-                  <p className="text-sm font-medium text-muted-foreground max-w-sm text-center">Adjust your filters or wait for the next AI scan cycle.</p>
+                  <p className="text-xl font-black text-foreground">
+                    No leads detected
+                  </p>
+                  <p className="text-sm font-medium text-muted-foreground max-w-sm text-center">
+                    Adjust your filters or wait for the next AI scan cycle.
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {filteredLeads.map(lead => (
-                    <LeadCard key={lead.id} lead={lead}
+                  {filteredLeads.map((lead) => (
+                    <LeadCard
+                      key={lead.id}
+                      lead={lead}
                       draftingLeadId={draftingLeadId}
                       draftedReply={draftedReplies[lead.id]}
                       isExpanded={expandedReplies[lead.id]}
-                      isFreePlan={user?.plan?.toUpperCase() !== 'PRO'}
+                      isFreePlan={user?.plan?.toUpperCase() !== "PRO"}
                       onDraftReply={handleDraftReply}
-                      onToggleExpand={id => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }))}
+                      onToggleExpand={(id) =>
+                        setExpandedReplies((prev) => ({
+                          ...prev,
+                          [id]: !prev[id],
+                        }))
+                      }
                       onStatusChange={handleStatusChange}
                       onNotesChange={handleNotesChange}
                       onFeedbackChange={handleFeedbackChange}
@@ -398,5 +554,5 @@ export default function DashboardPage() {
         </main>
       </div>
     </div>
-  )
+  );
 }
