@@ -80,24 +80,26 @@ const getAccentBorder = (detectedBy: DetectedBy) => {
 
 const EnrichmentIcons = ({ enrichment }: { enrichment?: LeadEnrichment | null }) => {
   if (!enrichment) return null
+  const hasAny = enrichment.linkedinUrl || enrichment.twitterUrl || enrichment.githubUrl
+  if (!hasAny) return null
   return (
-    <span className="flex items-center gap-1">
+    <span className="inline-flex items-center gap-1.5 ml-2">
       {enrichment.linkedinUrl && (
-        <a href={enrichment.linkedinUrl} target="_blank" rel="noreferrer" title="LinkedIn"
-          className="text-blue-400 hover:text-blue-300 transition-colors">
-          <FaLinkedin className="w-3 h-3" />
+        <a href={enrichment.linkedinUrl} target="_blank" rel="noreferrer" title="Inferred LinkedIn Profile (Verify manually)"
+          className="text-blue-400 hover:text-blue-300 transition-all hover:scale-110 duration-150 p-0.5">
+          <FaLinkedin className="w-3.5 h-3.5" />
         </a>
       )}
       {enrichment.twitterUrl && (
-        <a href={enrichment.twitterUrl} target="_blank" rel="noreferrer" title="Twitter"
-          className="text-sky-400 hover:text-sky-300 transition-colors">
-          <FaTwitter className="w-3 h-3" />
+        <a href={enrichment.twitterUrl} target="_blank" rel="noreferrer" title="Inferred Twitter/X Profile (Verify manually)"
+          className="text-sky-400 hover:text-sky-300 transition-all hover:scale-110 duration-150 p-0.5">
+          <FaTwitter className="w-3.5 h-3.5" />
         </a>
       )}
       {enrichment.githubUrl && (
-        <a href={enrichment.githubUrl} target="_blank" rel="noreferrer" title="GitHub"
-          className="text-foreground/60 hover:text-foreground transition-colors">
-          <FaGithub className="w-3 h-3" />
+        <a href={enrichment.githubUrl} target="_blank" rel="noreferrer" title="Inferred GitHub Profile (Verify manually)"
+          className="text-foreground/60 hover:text-foreground transition-all hover:scale-110 duration-150 p-0.5">
+          <FaGithub className="w-3.5 h-3.5" />
         </a>
       )}
     </span>
