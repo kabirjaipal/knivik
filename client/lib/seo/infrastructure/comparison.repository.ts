@@ -53,6 +53,47 @@ export class ComparisonRepository implements IComparisonRepository {
 
   private readonly comparisons: Record<string, ComparisonData> = {
 
+    brand24: {
+      competitor: {
+        slug: "brand24",
+        name: "Brand24",
+        tagline: "Premium Media & Reputation Monitoring",
+        description: "Brand24 is a well-established media monitoring platform that tracks keyword mentions across social media, blogs, forums, and news sites. It is great for PR teams and marketing managers looking for broad brand sentiment and public relations analysis, but lacks native lead pipelines, dynamic AI outreach reply drafting, and targeted intent filtering for direct sales outreach.",
+        rating: 4.6,
+        pricing: "Starts at $79/mo (can scale up quickly)",
+        platforms: ["Reddit", "HackerNews", "X (Twitter)", "Facebook", "Instagram", "Blogs", "News"],
+        pros: [
+          "Extremely comprehensive media monitoring across web and social channels",
+          "Advanced sentiment analysis and broad web reach metrics",
+          "Excellent visual reporting dashboards, PDF exports, and Slack integrations"
+        ],
+        limitations: [
+          "Does not evaluate high-intent B2B purchasing signals natively, causing heavy alert noise",
+          "Lacks automatic, context-aware AI response generators to engage prospects instantly",
+          "No dedicated CRM sales pipeline layout to move leads through status stages",
+          "Expensive pricing tiers built primarily for PR agency budgets rather than startups"
+        ]
+      },
+      keyDifferences: [
+        "Brand24 is built for PR and brand managers; Knivik is built for sales teams and founders looking to acquire leads.",
+        "Brand24 tracks broad brand sentiment; Knivik scores specific buying intent levels (e.g., BUY_NOW, COMPARING) to identify active sales opportunities.",
+        "Knivik automatically drafts context-rich, helpful reply recommendations; Brand24 leaves outreach entirely up to you.",
+        "Brand24 starts at $79/mo; Knivik offers a fully functional free tier and an affordable startup plan."
+      ],
+      features: ComparisonRepository.defaultFeatures("Brand24", true, true, true),
+      verdict: "Brand24 is a top-tier platform for PR professionals and agencies looking to monitor brand sentiment, track brand mentions, and manage reputation across the entire web. However, for B2B founders and sales teams trying to turn discussions on Reddit, HN, and X into qualified customers, Brand24 is too broad and noisy. Knivik acts as a focused AI SDR that discovers, scores, and initiates the outreach loop for you.",
+      faq: [
+        {
+          question: "Is Brand24 built for direct sales outreach?",
+          answer: "No. Brand24 is designed for public relations, brand reputation management, and monitoring general sentiment. It doesn't classify intent levels (like whether someone is looking to buy) or help you craft pitches. Knivik is built specifically to find and convert warm sales leads."
+        },
+        {
+          question: "Can Knivik track as many sources as Brand24?",
+          answer: "Brand24 covers a wider variety of web pages, blogs, and traditional news sources for PR tracking. Knivik focuses heavily on high-conversion community channels—Reddit, HackerNews, and X (Twitter)—where buyers actively ask for recommendations."
+        }
+      ]
+    },
+
     f5bot: {
       competitor: {
         slug: "f5bot",
