@@ -51,7 +51,7 @@ export function Hero({ user }: HeroProps) {
             className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary mb-8 border border-primary/20"
           >
             <Zap className="h-3.5 w-3.5 mr-2 fill-primary animate-pulse" />
-            Best Reddit Lead Generation Tool & Social Finder
+            Autonomous AI Lead Finder SaaS & Social Media Tool
           </motion.div>
           
           <motion.h1 
@@ -62,7 +62,7 @@ export function Hero({ user }: HeroProps) {
           >
             Find your next customer <br />
             <span className="relative">
-              <span className="text-primary italic">before</span>
+               <span className="text-primary italic">before</span>
               <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <path d="M0 5 Q 25 0 50 5 T 100 5" fill="none" stroke="currentColor" strokeWidth="4" />
               </svg>
@@ -75,7 +75,7 @@ export function Hero({ user }: HeroProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl font-medium"
           >
-            Learn how to find clients on HackerNews, Reddit, and Twitter automatically. Knivik monitors social media for active buying intent, filters the noise, and delivers qualified warm leads directly to your dashboard.
+            Knivik is the ultimate B2B AI Lead Finder tool. Simply add your product details, and our SaaS platform automatically scrapes Reddit, HackerNews, and X (Twitter) to find, filter, and score the best warm leads using advanced AI.
           </motion.p>
           
           <motion.div 

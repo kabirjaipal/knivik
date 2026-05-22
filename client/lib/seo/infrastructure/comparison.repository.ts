@@ -286,6 +286,124 @@ export class ComparisonRepository implements IComparisonRepository {
           answer: "No, BuzzSumo lacks native CRM sales routing and automated workflow webhooks. Knivik allows routing leads instantly to Slack, Discord, or custom pipelines."
         }
       ]
+    },
+    clay: {
+      competitor: {
+        slug: "clay",
+        name: "Clay",
+        tagline: "AI Lead Enrichment & Data Orchestration",
+        description: "Clay is a powerful data enrichment and scraping platform that aggregates 50+ data providers. It is excellent for building custom enrichment lists and using AI agents to scrape individual LinkedIn pages or company websites. However, Clay does not offer real-time conversational social listening (monitoring Reddit, HackerNews, or X for active buyer intent), meaning you cannot capture warm leads at the exact moment they express intent.",
+        rating: 4.8,
+        pricing: "Starts at $149/mo (credit-based)",
+        platforms: ["Static Data Sources", "LinkedIn", "Web Scraping"],
+        pros: [
+          "Combines 50+ data vendors into a single spreadsheet interface",
+          "Advanced AI agents for reading websites and personalizing pitches",
+          "Extremely customizable data workflows and integrations"
+        ],
+        limitations: [
+          "Does not monitor live conversational intent on Reddit, HackerNews, or X",
+          "Requires significant manual workflow configuration and logic setup",
+          "Credit consumption model can become extremely expensive at scale",
+          "Optimized for cold outreach enrichment rather than active warm social selling"
+        ]
+      },
+      keyDifferences: [
+        "Clay is a static list enrichment tool; Knivik is a real-time conversational intent monitoring engine.",
+        "Clay requires writing complex API chains and scraper recipes; Knivik works out-of-the-box as an autonomous digital SDR.",
+        "Knivik tracks and alerts you to live buyer discussions within seconds; Clay relies on crawling static web databases and profiles.",
+        "Knivik offers a generous free starting tier; Clay's entry price is high and consumption-based."
+      ],
+      features: ComparisonRepository.defaultFeatures("Clay", false, false, true),
+      verdict: "Clay is the gold standard for data enrichment if you already have a list of companies or LinkedIn profiles and want to find emails or personalized angles. However, if you want to discover warm sales leads in real-time when people are actively asking for tool recommendations or complaining about competitors on Reddit, HackerNews, or X, Knivik is the specialized AI lead finder you need.",
+      faq: [
+        {
+          question: "Can Clay monitor Reddit and HackerNews for real-time buyer intent?",
+          answer: "No. Clay is designed to enrich existing lists of companies or people using static data providers and web scraping. It is not built to monitor live, active conversation streams for buying signals. Knivik monitors these channels 24/7 in real-time."
+        },
+        {
+          question: "How does Knivik's pricing compare to Clay?",
+          answer: "Clay is credit-heavy and starts at $149/mo, which can scale up rapidly. Knivik is free to start, and its Pro tier is fixed-price and highly affordable for startups."
+        }
+      ]
+    },
+    instantly: {
+      competitor: {
+        slug: "instantly",
+        name: "Instantly",
+        tagline: "B2B Contact Database & Cold Email Sequencer",
+        description: "Instantly (specifically Instantly B2B Lead Finder) is an outreach-first platform providing a database of 450M+ cold business contacts coupled with email warmup and sending automation. While it features an AI lookalike client builder, it relies on static directory lookups. It cannot scan live social discussions or forum comments, meaning you miss out on high-intent prospects searching for immediate recommendations.",
+        rating: 4.7,
+        pricing: "Starts at $47/mo",
+        platforms: ["Static Contact Directory", "Cold Email Sequences"],
+        pros: [
+          "Massive database of 450 million business contacts",
+          "Native unlimited email account warm-up and inbox rotation",
+          "Clean interface specialized for high-volume outreach sequences"
+        ],
+        limitations: [
+          "Does not track real-time social conversations or forum discussions",
+          "Outreach is limited to cold email channels, which have low response rates",
+          "AI features are restricted to writing help and company lookalike matching",
+          "Data can occasionally be stale compared to live social profiles"
+        ]
+      },
+      keyDifferences: [
+        "Instantly provides a static contact directory for cold email lists; Knivik is a real-time conversational social lead scanner.",
+        "Instantly focuses on mass email distribution; Knivik drafts high-context, helpful responses for public threads.",
+        "Knivik targets warm buyers who are actively searching for solutions right now; Instantly targets cold leads based on static job titles."
+      ],
+      features: ComparisonRepository.defaultFeatures("Instantly", false, false, true),
+      verdict: "Instantly is the perfect utility for running high-volume cold email campaigns using broad contact criteria. However, if you want to bypass the low response rates of cold emails by connecting with buyers who are actively asking for recommendations on Reddit, HN, or X, Knivik is the superior real-time intent lead finder.",
+      faq: [
+        {
+          question: "Can I use Instantly to find prospects on Reddit?",
+          answer: "No, Instantly does not crawl or monitor social platforms like Reddit or HackerNews for buying signals. Knivik scans these platforms continuously and extracts high-intent leads."
+        },
+        {
+          question: "How does response rate compare between Knivik and Instantly?",
+          answer: "Instantly relies on cold outreach which typically gets 1-3% response rates. Knivik identifies hot public threads where the poster has already expressed intent, leading to response rates of up to 30% when engaging with relevant value."
+        }
+      ]
+    },
+    cognism: {
+      competitor: {
+        slug: "cognism",
+        name: "Cognism",
+        tagline: "GDPR-Compliant Contact Directory & Intent Data",
+        description: "Cognism is an enterprise B2B sales intelligence platform providing phone-verified mobile numbers and global contact directories. While it integrates third-party intent data from Bombora to track which organizations are researching specific B2B topics, it operates at a corporate account level. It cannot track or surface actual individual discussions, questions, or recommendations on community platforms in real-time.",
+        rating: 4.6,
+        pricing: "Custom Enterprise Pricing",
+        platforms: ["Enterprise Contact Database", "Account-Level Intent"],
+        pros: [
+          "Highly accurate, phone-verified mobile numbers for direct calling",
+          "Strict European compliance with fully GDPR-aligned database records",
+          "Bombora buyer intent integration at the organization level"
+        ],
+        limitations: [
+          "Extremely expensive enterprise licensing models with no free/startup trial",
+          "Does not track live public social posts, comments, or recommendations",
+          "Intent data is limited to account-level topic lookup (no individual context)",
+          "Does not suggest custom, AI-crafted replies for outreach"
+        ]
+      },
+      keyDifferences: [
+        "Cognism is a corporate contact directory and phone list; Knivik is a real-time conversational social lead finder.",
+        "Cognism intent data (Bombora) only flags that an organization is browsing topics; Knivik reveals the exact post, query, and context of the buyer.",
+        "Cognism is built for enterprise sales development representatives making cold calls; Knivik is designed for startups, founders, and modern SDRs doing warm social selling."
+      ],
+      features: ComparisonRepository.defaultFeatures("Cognism", true, false, false),
+      verdict: "Cognism is a top-tier B2B database for enterprise sales teams targeting Europe via cold calling and compliant direct dials. For startup founders, builders, and indie hackers looking to identify and convert high-intent buyers on active online threads (Reddit, HackerNews, X), Knivik is the much more precise and accessible AI lead finder.",
+      faq: [
+        {
+          question: "Does Cognism track Reddit and X (Twitter) mentions?",
+          answer: "No, Cognism does not scan live social media channels or developer forums for discussions. Its database is populated with corporate job profiles and phone numbers."
+        },
+        {
+          question: "Who is Cognism best suited for compared to Knivik?",
+          answer: "Cognism is suited for enterprise outbound sales teams focused on cold calling. Knivik is optimized for startups and growth teams looking to engage with warm prospects on active social threads."
+        }
+      ]
     }
   };
 

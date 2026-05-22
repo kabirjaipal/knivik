@@ -45,6 +45,23 @@ export class SchemaService {
   }
 
   /**
+   * Generates Schema.org WebSite JSON-LD object.
+   * Promotes brand entity visibility and sitelink structure.
+   */
+  public static generateWebSiteSchema(): Record<string, any> {
+    const baseUrl = EnvConfig.getBaseUrl();
+    
+    return {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Knivik",
+      "alternateName": ["Knivik AI", "Knivik Lead Finder"],
+      "url": baseUrl,
+      "description": "Advanced SaaS AI Lead Finder and B2B social sales intelligence platform."
+    };
+  }
+
+  /**
    * Generates Schema.org FAQPage JSON-LD object.
    * Promotes accordion rich snippets directly in Google SERPs.
    */

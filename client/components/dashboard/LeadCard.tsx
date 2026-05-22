@@ -362,15 +362,22 @@ export const LeadCard = memo(({
 
       {/* ── Expandable: Notes ────────────────────────────────────────────────── */}
       {showNotes && (
-        <div className="border-t border-border/40 px-5 py-4 bg-muted/10 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="border-t border-border/40 px-5 py-4 bg-muted/10 relative overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="absolute left-0 top-0 w-1 h-full bg-muted-foreground/30" />
+          <h4 className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black text-muted-foreground/90 mb-2">
+            <FileText className="w-3.5 h-3.5" /> Private CRM Notes
+          </h4>
+          <p className="text-[11px] text-muted-foreground/75 mb-3 leading-normal font-medium">
+            Keep track of outreach status, meeting follow-ups, or notes about this prospect. These comments are visible only to your team.
+          </p>
           <textarea
-            className="w-full h-20 text-sm text-foreground bg-card border border-border/60 rounded-lg p-3 outline-none resize-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground/40 shadow-sm"
-            placeholder="Internal notes about this lead..."
+            className="w-full h-20 text-sm text-foreground bg-card border border-border/60 rounded-lg p-3 outline-none resize-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground/40 shadow-sm font-medium"
+            placeholder="Type notes here (e.g. Scheduled demo for next Tuesday, sent connection request...)"
             value={localNotes}
             onChange={e => setLocalNotes(e.target.value)}
             onBlur={handleNotesBlur}
           />
-          <p className="text-xs text-muted-foreground mt-1.5 font-medium">Auto-saved on blur</p>
+          <p className="text-[10px] text-muted-foreground mt-1.5 font-bold uppercase tracking-wider">Auto-saved on blur</p>
         </div>
       )}
 

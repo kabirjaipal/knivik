@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 export const siteConfig = {
   name: "Knivik",
-  description: "Advanced AI Social Intelligence tool to find high-intent buyers across Reddit, HackerNews, and the public web. Turn online conversations into warm leads automatically.",
+  description: "Knivik is an advanced SaaS AI Lead Finder and B2B social sales intelligence platform. It scans Reddit, HackerNews, and X (Twitter) in real-time to discover warm leads with genuine buying intent.",
   url: process.env.NEXT_PUBLIC_SITE_URL as string,
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
@@ -11,6 +11,8 @@ export const siteConfig = {
   },
   keywords: [
     "AI Lead Finder",
+    "Lead Finder",
+    "B2B Lead Finder",
     "AI lead generation tools",
     "best AI lead generation software",
     "B2B sales prospecting tools",

@@ -6,18 +6,18 @@ import { motion } from "framer-motion"
 const steps = [
   {
     icon: <Search className="h-8 w-8" />,
-    title: "1. Monitor Conversations",
-    description: "Knivik scans Reddit, X, Hacker News for keywords and pain points relevant to your business."
+    title: "1. Add Your Product",
+    description: "Set up your product profile, define target keywords, and register competitors in the Knivik SaaS dashboard."
   },
   {
     icon: <BrainCircuit className="h-8 w-8" />,
-    title: "2. Filter with AI",
-    description: "Our AI scores every post to separate casual mentions from real buying intent, so you only see the best leads."
+    title: "2. Scrape Social Media",
+    description: "Knivik automatically scrapes active discussion threads on Reddit, HackerNews, and X (Twitter) in real-time."
   },
   {
     icon: <Bell className="h-8 w-8" />,
-    title: "3. Get Instant Alerts",
-    description: "Qualified leads are pushed instantly to your dashboard, Slack, or email for immediate engagement."
+    title: "3. Filter & Score with AI",
+    description: "Our advanced AI filters out noise, scores buying intent, and delivers the best leads straight to Slack or your dashboard."
   }
 ]
 
