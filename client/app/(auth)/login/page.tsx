@@ -8,6 +8,7 @@ export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Login",
   description: "Sign in to your Knivik account to access your AI lead dashboard and manage your social intelligence monitors.",
   path: "/login",
+  noIndex: true,
 });
 
 export default function LoginPage() {

@@ -16,7 +16,7 @@ export class SchemaService {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "Knivik",
-      "description": "Advanced AI Social Intelligence tool to find high-intent buyers across Reddit, HackerNews, and X (Twitter) in real-time.",
+      "description": "Knivik is an AI Lead Finder & B2B Social Lead Generation Tool. It scans online conversations on Reddit, HackerNews, and X (Twitter) in real-time to detect buying intent and suggest warm-lead outreach replies.",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
       "url": baseUrl,

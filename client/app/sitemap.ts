@@ -10,8 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/privacy",
     "/refund-policy",
-    "/login",
-    "/register",
   ].map((route) => ({
     url: EnvConfig.resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
