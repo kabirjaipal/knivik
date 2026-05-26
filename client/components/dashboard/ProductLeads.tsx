@@ -131,13 +131,13 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   }, [])
 
   const handleExportCSV = useCallback(() => {
-    const success = exportLeadsToCSV(leads, `leads_product_${productId}.csv`)
+    const success = exportLeadsToCSV(leads, `leads_product_${productId}.csv`, !isFreePlan)
     if (success) {
       toast.success("Successfully exported leads to CSV")
     } else {
       toast.error("No leads to export.")
     }
-  }, [leads, productId])
+  }, [leads, productId, isFreePlan])
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 

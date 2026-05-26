@@ -181,13 +181,14 @@ export default function DashboardPage() {
   };
 
   const handleExportCSV = useCallback(() => {
-    const success = exportLeadsToCSV(leads, "all_leads.csv");
+    const isPro = user?.plan?.toUpperCase() === "PRO";
+    const success = exportLeadsToCSV(leads, "all_leads.csv", isPro);
     if (success) {
       toast.success("Successfully exported all leads to CSV");
     } else {
       toast.error("No leads to export.");
     }
-  }, [leads]);
+  }, [leads, user?.plan]);
 
   // ─── Derived metrics ──────────────────────────────────────────────────────
 

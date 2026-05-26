@@ -24,6 +24,7 @@ export const PLANS = {
       "Basic intent detection",
       "Standard dashboard analytics",
       "No automated alerts (Dashboard only)",
+      "Standard CSV Lead Export",
     ],
     cta: "Get Started Free",
     href: "/register",
@@ -56,6 +57,7 @@ export const PLANS = {
       "Custom AI Personas for replies",
       "Email, Slack & Discord alerts",
       "Full lead enrichment",
+      "Unlimited CSV Lead Export (with AI replies)",
     ],
     limits: {
       products: 5,

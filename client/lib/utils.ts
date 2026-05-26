@@ -6,8 +6,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function exportLeadsToCSV(leads: LeadCardData[], filename = "leads.csv"): boolean {
+export function exportLeadsToCSV(leads: LeadCardData[], filename = "leads.csv", isPro = false): boolean {
   if (!leads.length) return false
+
+  const leadsToExport = leads
 
   const headers = [
     "Product Name",
@@ -21,13 +23,16 @@ export function exportLeadsToCSV(leads: LeadCardData[], filename = "leads.csv"):
     "Status",
     "Detected By",
     "Notes",
-    "Qualification Reasoning",
-    "AI Reply Draft"
+    "Qualification Reasoning"
   ]
+
+  if (isPro) {
+    headers.push("AI Reply Draft")
+  }
 
   const csvRows = [
     headers.join(","),
-    ...leads.map((lead) => {
+    ...leadsToExport.map((lead) => {
       const replyText = lead.replies?.length ? lead.replies[0].generatedText : ""
       const row = [
         lead.product?.name || "Unknown",
@@ -41,9 +46,11 @@ export function exportLeadsToCSV(leads: LeadCardData[], filename = "leads.csv"):
         lead.status,
         lead.detectedBy,
         lead.notes || "",
-        lead.metadata?.qualificationReasoning || "",
-        replyText
+        lead.metadata?.qualificationReasoning || ""
       ]
+      if (isPro) {
+        row.push(replyText)
+      }
       return row.map((val) => {
         const stringVal = String(val ?? "").replace(/"/g, '""')
         return `"${stringVal}"`
@@ -52,7 +59,7 @@ export function exportLeadsToCSV(leads: LeadCardData[], filename = "leads.csv"):
   ]
 
   const csvContent = csvRows.join("\n")
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.setAttribute("href", url)
