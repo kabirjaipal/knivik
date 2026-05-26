@@ -5,12 +5,12 @@ import { motion } from "framer-motion"
 import { FaSlack, FaDiscord } from "react-icons/fa"
 import { SiZapier } from "react-icons/si"
 
-const integrations = [
+const integrations: { name: string; icon: React.ReactNode; comingSoon?: boolean }[] = [
   { name: "Slack", icon: <FaSlack className="h-12 w-12 md:h-16 md:w-16 text-[#4A154B]" /> },
   { name: "Discord", icon: <FaDiscord className="h-12 w-12 md:h-16 md:w-16 text-[#5865F2]" /> },
   { name: "Email", icon: <Mail className="h-12 w-12 md:h-16 md:w-16 text-primary" /> },
   { name: "Zapier", icon: <SiZapier className="h-12 w-12 md:h-16 md:w-16 text-[#FF6F00]" /> },
-  { name: "CRM Export", icon: <Database className="h-12 w-12 md:h-16 md:w-16 text-success" />, comingSoon: true },
+  { name: "CSV Export", icon: <Database className="h-12 w-12 md:h-16 md:w-16 text-success" /> },
   { name: "Webhooks", icon: <Sparkles className="h-12 w-12 md:h-16 md:w-16 text-warning" /> }
 ]
 
@@ -36,11 +36,11 @@ export function Integrations() {
               <span className="text-primary italic">existing workflow.</span>
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground mb-6 md:mb-10 leading-relaxed font-medium">
-              Knivik doesn't force you into a new platform. Get your leads where you already work—whether that's Slack, Discord, Email, Zapier, or your custom CRM.
+              Knivik doesn't force you into a new platform. Get your leads where you already work—whether that's Slack, Discord, Email, Zapier, or a direct CSV download.
             </p>
             
             <div className="flex flex-wrap gap-4">
-              {["Slack Alerts", "Email Notifications", "Webhook Support", "Discord Alerts"].map((item) => (
+              {["Slack Alerts", "Email Notifications", "CSV Lead Export", "Discord Alerts"].map((item) => (
                 <div key={item} className="px-5 py-2.5 bg-background rounded-2xl border border-border text-sm font-black shadow-sm flex items-center gap-2 hover:border-primary/40 transition-colors cursor-default">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   {item}

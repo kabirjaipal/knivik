@@ -17,7 +17,7 @@ export const getLeads = async (req: Request, res: Response) => {
 
     const productId = req.query['productId'] as string | undefined;
 
-    // Fetch leads for the user's products from the last 24 hours, sorted by score
+    // Fetch leads for the user's products. If no specific product is requested, limit to last 24 hours.
     const leads = await db.client.lead.findMany({
       relationLoadStrategy: 'join',
       where: {
@@ -25,9 +25,11 @@ export const getLeads = async (req: Request, res: Response) => {
           userId: userId,
           ...(productId && { id: productId }),
         },
-        createdAt: {
-          gte: twentyFourHoursAgo,
-        },
+        ...(!productId && {
+          createdAt: {
+            gte: twentyFourHoursAgo,
+          },
+        }),
       },
       include: {
         product: {

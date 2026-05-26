@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
+import { exportLeadsToCSV } from "@/lib/utils";
 import {
   Radar,
   Activity,
@@ -16,7 +17,9 @@ import {
   Send,
   XCircle,
   Loader2,
+  Download,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -176,6 +179,15 @@ export default function DashboardPage() {
       body: JSON.stringify({ feedback }),
     }).catch(() => {});
   };
+
+  const handleExportCSV = useCallback(() => {
+    const success = exportLeadsToCSV(leads, "all_leads.csv");
+    if (success) {
+      toast.success("Successfully exported all leads to CSV");
+    } else {
+      toast.error("No leads to export.");
+    }
+  }, [leads]);
 
   // ─── Derived metrics ──────────────────────────────────────────────────────
 
@@ -465,12 +477,23 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              {last24h > 0 && (
-                <span className="text-[10px] font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  +{last24h} Today
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {last24h > 0 && (
+                  <span className="text-[10px] font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    +{last24h} Today
+                  </span>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  className="h-auto py-1.5 px-3 font-black text-[10px] uppercase tracking-widest rounded-lg shadow-sm border-border hover:bg-muted"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1.5 text-primary" />
+                  Export CSV
+                </Button>
+              </div>
             </div>
 
             {/* Filter tabs */}

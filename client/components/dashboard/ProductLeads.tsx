@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2, Sparkles, UserCheck, Bookmark, Send, XCircle, Loader2 } from "lucide-react"
+import { AlertCircle, MessageSquare, TrendingUp, Radar, Activity, Clock, Flame, Target, CheckCircle2, Sparkles, UserCheck, Bookmark, Send, XCircle, Loader2, Download } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/context/auth-context"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
+import { Button } from "@/components/ui/button"
+import { exportLeadsToCSV } from "@/lib/utils"
 
 type FilterTab = 'ALL' | 'BUY_NOW' | 'COMPETITOR' | 'SEMANTIC' | 'SAVED'
 
@@ -127,6 +129,15 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
       toast.error('We could not update the feedback right now.')
     }
   }, [])
+
+  const handleExportCSV = useCallback(() => {
+    const success = exportLeadsToCSV(leads, `leads_product_${productId}.csv`)
+    if (success) {
+      toast.success("Successfully exported leads to CSV")
+    } else {
+      toast.error("No leads to export.")
+    }
+  }, [leads, productId])
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -280,6 +291,15 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                   <p className="text-xs text-muted-foreground font-medium">Real-time leads filtered by intent</p>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                className="h-auto py-1.5 px-3 font-black text-[10px] uppercase tracking-widest rounded-lg shadow-sm border-border hover:bg-muted"
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5 text-primary" />
+                Export CSV
+              </Button>
             </div>
 
             <div className="flex gap-2 px-5 py-3 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
