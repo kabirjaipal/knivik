@@ -46,7 +46,19 @@ const pinoHttpLogger = pinoHttpFactory({
 
 export const httpLogger = pinoHttpLogger;
 
+const IGNORED_PATHS = [
+  '/api/health',
+];
+
 export const dbLogger = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const url = req.originalUrl || req.url;
+  const pathName = url.split('?')[0];
+  
+  // Skip logging for ignored endpoints
+  if (IGNORED_PATHS.includes(pathName)) {
+    return next();
+  }
+
   const startTime = Date.now();
   
   const originalSend = res.send;
