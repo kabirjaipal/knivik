@@ -385,7 +385,7 @@ export const getRevenue = async (_req: Request, res: Response) => {
     const [revenueAggregate, activeSubscriptions, recentPayments, totals, models] = await Promise.all([
       // Use aggregate instead of findMany to avoid loading all rows into memory
       db.client.payment.aggregate({
-        where: { status: 'paid' },
+        where: { status: { in: ['paid', 'succeeded'] } },
         _sum: { amount: true },
       }),
       db.client.subscription.findMany({ where: { status: 'active' } }),
