@@ -128,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       if (!user) {
         posthog.reset()
+        posthog.stopSessionRecording()
         return
       }
 
@@ -138,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: user.role,
         plan: user.plan,
       })
+      posthog.startSessionRecording()
     } catch (e) {
       // avoid throwing in the app if PostHog isn't available or fails
       // eslint-disable-next-line no-console

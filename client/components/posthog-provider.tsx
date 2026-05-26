@@ -5,6 +5,8 @@ import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { useAuth } from "@/context/auth-context";
+
 const isDev = process.env.NODE_ENV === "development";
 
 // Initialize PostHog client-side securely in production only
@@ -19,16 +21,19 @@ if (typeof window !== "undefined" && !isDev) {
       ui_host: host.replace("i.posthog", "posthog"),
       person_profiles: "identified_only",
       capture_pageview: false, // Set to false to track manually via our hook below
+      disable_session_recording: true, // Disable session recording by default for anonymous users
     });
   }
 }
 
-// Track pageviews dynamically on route changes (only active in production)
+// Track pageviews dynamically on route changes (only active in production for logged in users)
 function PostHogPageView(): null {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) return; // Only track pageviews for logged-in users
     if (pathname && typeof window !== "undefined" && !isDev) {
       let url = window.origin + pathname;
       if (searchParams && searchParams.toString()) {
@@ -38,7 +43,7 @@ function PostHogPageView(): null {
         $current_url: url,
       });
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, user]);
 
   return null;
 }

@@ -101,29 +101,29 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body className={`${inter.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} antialiased`} suppressHydrationWarning>
         <NextTopLoader showSpinner={false} color="var(--primary)" />
-        <PostHogProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-          >
-            <AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+        >
+          <AuthProvider>
+            <PostHogProvider>
               <BillingProvider>
                 <TooltipProvider>
                   {children}
                   <FeedbackWidget />
                 </TooltipProvider>
               </BillingProvider>
-            </AuthProvider>
-          </ThemeProvider>
-          <Toaster position="top-right" richColors closeButton />
-          {process.env.NODE_ENV === "production" && (
-            <>
-              <Analytics />
-              <SpeedInsights />
-            </>
-          )}
-        </PostHogProvider>
+              <Toaster position="top-right" richColors closeButton />
+              {process.env.NODE_ENV === "production" && (
+                <>
+                  <Analytics />
+                  <SpeedInsights />
+                </>
+              )}
+            </PostHogProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
