@@ -212,7 +212,6 @@ async function validateSubreddits(subreddits: string[]): Promise<string[]> {
     const cleanSub = sub.toLowerCase().replace(/^r\//, '').replace(/[^a-z0-9_]/g, '');
     if (!cleanSub || cleanSub.length < 2) continue;
 
-    
     try {
       const url = `https://www.reddit.com/r/${cleanSub}/about.json`;
       const response = await fetch(url, {
@@ -231,12 +230,19 @@ async function validateSubreddits(subreddits: string[]): Promise<string[]> {
           logger.debug(`[VALIDATE] Subreddit r/${cleanSub} exists (${data.data.subscribers} subscribers)`);
         } else if (data?.data) {
           valid.push(cleanSub); // Exists even if small
+        } else {
+          valid.push(cleanSub);
         }
       } else if (response.status === 404) {
         logger.debug(`[VALIDATE] Subreddit r/${cleanSub} does not exist (404)`);
+      } else {
+        // Fallback: If we got rate limited (429), forbidden (403), or server error, retain the subreddit
+        valid.push(cleanSub);
+        logger.debug(`[VALIDATE] Subreddit r/${cleanSub} returned status ${response.status}. Retaining as fallback.`);
       }
     } catch (err: any) {
-      logger.debug(`[VALIDATE] Failed to check r/${cleanSub}: ${err.message}`);
+      logger.debug(`[VALIDATE] Failed to check r/${cleanSub}: ${err.message}. Retaining as fallback.`);
+      valid.push(cleanSub);
     }
     
     // Minimal delay to avoid rate limits - 50ms instead of 300ms
@@ -263,8 +269,8 @@ async function validateTwitterHandles(handles: string[]): Promise<string[]> {
     const cleanHandle = handle.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!cleanHandle || cleanHandle.length < 2) continue;
 
-    
     let isValid = false;
+    let found404 = false;
     
     for (const instance of nitterInstances) {
       try {
@@ -284,6 +290,7 @@ async function validateTwitterHandles(handles: string[]): Promise<string[]> {
           logger.debug(`[VALIDATE] Twitter handle @${cleanHandle} exists`);
           break;
         } else if (response.status === 404) {
+          found404 = true;
           logger.debug(`[VALIDATE] Twitter handle @${cleanHandle} not found on ${instance}`);
         }
       } catch (err: any) {
@@ -291,7 +298,8 @@ async function validateTwitterHandles(handles: string[]): Promise<string[]> {
       }
     }
     
-    if (isValid) {
+    // If it's valid, OR if we didn't get a definitive 404 (e.g. rate limits, network failures on all instances), keep it as fallback
+    if (isValid || !found404) {
       valid.push(cleanHandle);
     }
     
@@ -402,7 +410,7 @@ CONSTRAINTS:
     // Clean generated search queries
     const searchQueries: string[] = Array.isArray(parsed.searchQueries) ? parsed.searchQueries : [];
     const validSearchQueries = searchQueries
-      .filter(q => typeof q === 'string' && q.length > 10 && q.length < 150) // enforce meaningful length
+      .filter(q => typeof q === 'string' && q.length >= 3 && q.length < 150) // enforce meaningful length
       .slice(0, 20);
 
     return {
