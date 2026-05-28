@@ -584,7 +584,6 @@ export const getLogs = async (req: Request, res: Response) => {
           OR: [
             { url: searchFilter },
             { ip: searchFilter },
-            { userAgent: searchFilter },
             { error: searchFilter },
             { userId: searchFilter },
             ...(matchingUserIds.length > 0 ? [{ userId: { in: matchingUserIds } }] : [])

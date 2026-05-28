@@ -25,7 +25,6 @@ interface RequestLog {
   requestId: string;
   method: string;
   url: string;
-  userAgent: string | null;
   ip: string | null;
   userId: string | null;
   user?: {
@@ -33,7 +32,6 @@ interface RequestLog {
     email: string;
   } | null;
   statusCode: number | null;
-  responseTime: number | null;
   requestBody: any | null;
   responseBody: any | null;
   headers: any | null;
@@ -279,7 +277,6 @@ export default function AdminLogsPage() {
                   <th className="py-4 px-6">User (Account)</th>
                   <th className="py-4 px-6">API Endpoint</th>
                   <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6">Response Latency</th>
                   <th className="py-4 px-6">IP Origin</th>
                   <th className="py-4 px-6">Recorded At</th>
                   <th className="py-4 px-6 text-right">Action</th>
@@ -288,7 +285,7 @@ export default function AdminLogsPage() {
               <tbody className="divide-y divide-border/20 text-xs font-medium text-foreground/80">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12">
+                    <td colSpan={7} className="py-12">
                       <div className="flex items-center justify-center w-full min-h-[200px]">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
                       </div>
@@ -296,7 +293,7 @@ export default function AdminLogsPage() {
                   </tr>
                 ) : logs.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-12 text-center text-muted-foreground">
                       No matching log files located in request history.
                     </td>
                   </tr>
@@ -330,9 +327,6 @@ export default function AdminLogsPage() {
                         <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${getStatusStyles(log.statusCode)}`}>
                           {log.statusCode || 'PENDING'}
                         </span>
-                      </td>
-                      <td className="py-4 px-6 font-mono text-muted-foreground">
-                        {log.responseTime ? `${log.responseTime}ms` : '—'}
                       </td>
                       <td className="py-4 px-6 font-mono text-muted-foreground">
                         {log.ip || '—'}
@@ -440,13 +434,9 @@ export default function AdminLogsPage() {
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground block mb-1">Target Path URL</span>
                   <span className="font-mono text-[11px] text-foreground font-semibold break-all">{selectedLog.url}</span>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground block mb-1">Client IP</span>
                   <span className="font-mono text-[11px]">{selectedLog.ip || '—'}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground block mb-1">Response Delay</span>
-                  <span className="font-mono text-[11px] text-foreground font-semibold">{selectedLog.responseTime ? `${selectedLog.responseTime} ms` : '—'}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground block mb-1 flex items-center gap-1">
@@ -463,15 +453,6 @@ export default function AdminLogsPage() {
                     <span className="text-xs text-muted-foreground italic font-semibold">Anonymous / Guest</span>
                   )}
                 </div>
-                {selectedLog.userAgent && (
-                  <div className="col-span-2">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground block mb-1 flex items-center gap-1">
-                      <Activity className="w-3.5 h-3.5" />
-                      Client User-Agent
-                    </span>
-                    <span className="text-xs text-muted-foreground font-medium">{selectedLog.userAgent}</span>
-                  </div>
-                )}
               </div>
 
               {/* Server Exception block */}

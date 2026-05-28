@@ -7,23 +7,27 @@ Awesome! You are ready to list Knivik.
 ---
 
 *   **Application Name**: `Knivik`
-*   **Official Website**: `https://www.knivik.xyz`
+*   **Official Website**: `https://knivik.xyz`
 *   **Short Description**:
     ```text
-    Advanced AI social intelligence to find high-intent buyers across Reddit, HackerNews, and Twitter. Turn online conversations into warm sales leads automatically.
+    Knivik is an AI Lead Finder & B2B Social Lead Generation Tool. Scan Reddit, HackerNews, and X (Twitter) in real-time to find high-intent buyers and draft personalized outreach.
     ```
 *   **Full Description / About**:
     ```text
-    Knivik is a modern social listening and lead generation tool built for B2B startups, indie hackers, and digital agencies. 
+    Knivik is an AI-powered Lead Finder and B2B social sales intelligence platform built for startups, indie hackers, and sales teams. 
 
-    Unlike traditional keyword monitors that send overwhelming amounts of spam, Knivik uses a double-pass AI pipeline (powered by Llama 3) to analyze conversations, filter out the noise, score the buying intent (e.g., BUY_NOW, COMPARING), and automatically draft highly personalized, human-like replies. 
+    Unlike standard keyword monitors that flood your inbox with spam, Knivik uses advanced AI to scan conversations in real-time, filter out the noise, score the buying intent of prospective leads, and automatically draft highly personalized outreach replies. 
 
-    It also features a zero-cost Twitter/X bypass parser, a real-time dashboard with usage telemetry, and instant email or Slack alerts.
+    Key Features:
+    - Real-time Social Listening: Monitor mentions and high-intent questions across Reddit, HackerNews, and X (Twitter).
+    - AI Intent Scoring: Instantly distinguish between casual conversations and prospective buyers actively seeking a solution.
+    - Automated Outreach Drafts: Get context-aware, human-like suggested replies to reach out with warm leads.
+    - Instant Alerts: Stay updated with real-time Slack notifications, email alerts, or custom webhooks.
     ```
 *   **Alternatives to**: Type and add: **`Syften`**, **`ReplyGuy`**, **`Surfkey`**, and **`Buska`**.
-*   **License**: **`Freemium`** *(since we have a free tier and a $49/mo Pro plan)*
+*   **License**: **`Freemium`** *(since we have a free tier and a Pro plan)*
 *   **Platforms**: **`Web / SaaS`** (Cloud-based)
-*   **Tags**: `Social Listening`, `Lead Generation`, `Sales Intelligence`, `B2B Marketing`, `AI Tools`
+*   **Tags**: `Lead Generation`, `Sales Intelligence`, `Social Listening`, `B2B Marketing`, `AI Tools`
 
 ---
 

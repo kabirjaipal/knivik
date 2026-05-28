@@ -250,11 +250,9 @@ model RequestLog {
   requestId    String   @unique
   method       String
   url          String
-  userAgent    String?
   ip           String?
   userId       String?
   statusCode   Int?
-  responseTime Int?
   requestBody  Json?
   responseBody Json?
   headers      Json?
