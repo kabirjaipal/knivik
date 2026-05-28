@@ -51,11 +51,9 @@ export interface RequestLogData {
   requestId: string;
   method: string;
   url: string;
-  userAgent?: string | undefined;
   ip?: string | undefined;
   userId?: string | undefined;
   statusCode?: number | undefined;
-  responseTime?: number | undefined;
   requestBody?: unknown;
   responseBody?: unknown;
   headers?: Record<string, string> | undefined;
