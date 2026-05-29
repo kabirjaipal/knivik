@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { getSession } from "@/lib/auth-client"
+import { redirect } from "next/navigation"
 import { Hero } from "@/components/landing/hero"
 import { PlatformSupport } from "@/components/landing/social-proof"
 import { Workflow } from "@/components/landing/workflow"
@@ -8,30 +9,16 @@ import { Benefits } from "@/components/landing/benefits"
 import { Integrations } from "@/components/landing/integrations"
 import { FAQ } from "@/components/landing/faq"
 import { FinalCTA } from "@/components/landing/cta"
-
 import { MetadataService } from "@/lib/seo/application/metadata.service"
 import { SchemaService } from "@/lib/seo/application/schema.service"
 import { SchemaScript } from "@/components/seo/schema-script"
+import { siteConfig } from "@/lib/seo"
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Knivik | AI Lead Finder & B2B Social Lead Generation Tool",
   description: "Knivik is an advanced real-time AI Lead Finder that scans Reddit, HackerNews, and X (Twitter) for warm sales leads with high buying intent automatically.",
   path: "/",
-  keywords: [
-    "AI Lead Finder",
-    "Lead Finder",
-    "B2B Lead Finder",
-    "lead generation",
-    "social listening",
-    "AI sales agent",
-    "Reddit monitoring",
-    "Twitter leads",
-    "SaaS growth",
-    "HackerNews monitoring",
-    "social selling tool",
-    "B2B intent data",
-    "best AI lead finder"
-  ]
+  keywords: siteConfig.keywords
 })
 
 
@@ -41,7 +28,15 @@ export default async function LandingPage() {
       headers: await headers()
     }
   })
-  const user = session?.user
+  const user = session?.user as { role?: string } | undefined
+
+  if (user) {
+    if (user.role === "admin") {
+      redirect("/admin")
+    } else {
+      redirect("/dashboard")
+    }
+  }
 
   // SoftwareApplication JSON-LD schema
   const softwareSchema = SchemaService.generateSoftwareApplicationSchema({
