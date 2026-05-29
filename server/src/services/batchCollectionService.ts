@@ -1,5 +1,7 @@
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
+import Snoowrap from 'snoowrap';
+import config from '../lib/config.js';
 import { Platform } from '@prisma/client';
 import { CollectedPost } from './batchAnalysisService.js';
 import { hasCapability } from '../lib/plans.js';
@@ -259,54 +261,89 @@ export class BatchCollectionService {
       return posts;
     }
 
-    const aiConfig = product.aiConfig as any;
-    const subreddits = Array.isArray(aiConfig?.subreddits) ? aiConfig.subreddits : [];
-    
-    let subredditFilter = '';
-    if (subreddits.length > 0) {
-      const cleanSubs = subreddits
-        .map((s: string) => s.toLowerCase().replace(/^r\//, '').replace(/[^a-z0-9_]/g, '').trim())
-        .filter((s: string) => s.length > 0);
-      if (cleanSubs.length > 0) {
-        subredditFilter = ` (${cleanSubs.map((s: string) => `subreddit:${s}`).join(' OR ')})`;
+    // Check if Reddit API credentials are provided and not placeholders
+    const hasCredentials = config.REDDIT_CLIENT_ID && !config.REDDIT_CLIENT_ID.includes('your_') &&
+                           config.REDDIT_CLIENT_SECRET && !config.REDDIT_CLIENT_SECRET.includes('your_') &&
+                           config.REDDIT_USERNAME && !config.REDDIT_USERNAME.includes('your_') &&
+                           config.REDDIT_PASSWORD && !config.REDDIT_PASSWORD.includes('your_');
+
+    if (!hasCredentials) {
+      logger.warn('[COLLECTION] [REDDIT] Central credentials missing or placeholders in .env. Falling back to RSS search.');
+      // Run the RSS fallback search
+      for (const query of searchQueries.slice(0, 5)) {
+        try {
+          const rssPosts = await this.fetchRedditRss(query, oneMonthAgo, product);
+          posts.push(...rssPosts);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error: any) {
+          logger.warn({ errorMsg: error.message, query }, '[COLLECTION] [REDDIT] RSS fallback search failed');
+        }
       }
+      return posts;
     }
 
-    // Build the final queries to execute in this cycle (max 5 to respect rate limits)
-    const finalQueries: string[] = [];
-    
-    // Pick 3 random base queries for global search
-    const globalQueries = [...searchQueries]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, Math.min(3, searchQueries.length));
-    finalQueries.push(...globalQueries);
+    try {
+      // Initialize snoowrap client
+      const r = new Snoowrap({
+        userAgent: config.REDDIT_USER_AGENT,
+        clientId: config.REDDIT_CLIENT_ID,
+        clientSecret: config.REDDIT_CLIENT_SECRET,
+        username: config.REDDIT_USERNAME,
+        password: config.REDDIT_PASSWORD,
+      });
 
-    // If subreddits exist, pick 2 random queries to perform targeted subreddit search
-    if (subredditFilter && searchQueries.length > 0) {
-      const targetBaseQueries = [...searchQueries]
+      // Build the final queries to execute (max 5)
+      const finalQueries = [...searchQueries]
         .sort(() => 0.5 - Math.random())
-        .slice(0, Math.min(2, searchQueries.length));
-      for (const q of targetBaseQueries) {
-        finalQueries.push(`${q}${subredditFilter}`);
+        .slice(0, Math.min(5, searchQueries.length));
+
+      for (const searchQuery of finalQueries) {
+        try {
+          // Use official Search API via SDK
+          const results = await r.search({
+            query: searchQuery,
+            sort: 'new',
+            time: 'month',
+            limit: 25,
+          });
+
+          for (const submission of results) {
+            // Must contain /comments/ in permalink to ensure it's a post/comment, not a subreddit/user
+            const permalink = submission.permalink || '';
+            if (!permalink.includes('/comments/')) continue;
+
+            const postedAt = new Date(submission.created_utc * 1000);
+            if (postedAt < oneMonthAgo) continue;
+
+            const author = submission.author?.name || 'unknown';
+            const title = submission.title || '';
+            const content = submission.selftext || '';
+            const combinedText = `${title} ${content}`;
+
+            if (!this.passesBasicFilters(combinedText, author, product)) continue;
+
+            posts.push({
+              id: `reddit-${submission.id}`,
+              platform: 'REDDIT',
+              externalPostId: submission.id,
+              title,
+              content,
+              url: `https://reddit.com${permalink}`,
+              authorUsername: author,
+              postedAt,
+              source: submission.subreddit?.display_name || 'global',
+              detectionMode: 'SEMANTIC'
+            });
+          }
+
+          // Polite spacing between searches
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (searchErr: any) {
+          logger.warn({ errorMsg: searchErr.message, query: searchQuery }, '[COLLECTION] [REDDIT] SDK search failed');
+        }
       }
-    } else if (searchQueries.length > 3) {
-      const remainingCount = 5 - finalQueries.length;
-      const unusedQueries = searchQueries.filter(q => !globalQueries.includes(q));
-      finalQueries.push(...unusedQueries.sort(() => 0.5 - Math.random()).slice(0, remainingCount));
-    } else {
-      finalQueries.push(...globalQueries); // Fallback to whatever is available
-    }
-    
-    for (const searchQuery of finalQueries) { 
-      try {
-        const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-        posts.push(...rssPosts);
-        
-        // Rate limit spacing / polite delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (error: any) {
-        logger.warn({ errorMsg: error.message, query: searchQuery }, '[COLLECTION] [REDDIT] RSS search query failed');
-      }
+    } catch (err: any) {
+      logger.error({ error: err.message }, '[COLLECTION] [REDDIT] SDK initialization or execution failed');
     }
 
     return posts;

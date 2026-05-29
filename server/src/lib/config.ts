@@ -59,6 +59,12 @@ const configSchema = z.object({
   DODO_PAYMENTS_WEBHOOK_KEY: z.string().optional(),
   DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID: z.string().optional(),
   DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID: z.string().optional(),
+  // Reddit API credentials
+  REDDIT_CLIENT_ID: z.string().optional(),
+  REDDIT_CLIENT_SECRET: z.string().optional(),
+  REDDIT_USERNAME: z.string().optional(),
+  REDDIT_PASSWORD: z.string().optional(),
+  REDDIT_USER_AGENT: z.string().default('node:knivik:v1.0.0 (by /u/username)'),
 });
 
 const configResult = configSchema.safeParse(process.env);
