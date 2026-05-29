@@ -30,7 +30,7 @@ export const initSocket = async (httpServer: HttpServer) => {
 
   // Authentication Middleware
   io.use(async (socket, next) => {
-    console.log(`[SOCKET] Handshake attempt: ${socket.id} from ${socket.handshake.address}`);
+    logger.info({ socketId: socket.id, address: socket.handshake.address }, 'Socket handshake attempt');
     try {
       // Add a 10s timeout to session check to prevent hanging handshakes during heavy DB load
       const sessionPromise = auth.api.getSession({
@@ -90,8 +90,7 @@ export const initSocket = async (httpServer: HttpServer) => {
   }
 
   io.on('connection', (socket: Socket) => {
-    console.log(`[SOCKET] New connection established: ${socket.id}`);
-    logger.info({ socketId: socket.id }, 'New socket connection');
+    logger.info(`[SOCKET] New connection established: ${socket.id}`);
 
     for (const { eventName, handlerFactory } of handlers) {
       try {

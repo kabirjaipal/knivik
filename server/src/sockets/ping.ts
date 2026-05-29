@@ -1,6 +1,7 @@
 import { Socket, Server } from 'socket.io';
+import logger from '../lib/logger.js';
 
 export default (socket: Socket, io: Server) => () => {
-  console.log(`[SOCKET] Received PING from ${socket.id}, sending PONG`);
+  logger.info({ socketId: socket.id }, 'Received PING, sending PONG');
   socket.emit('pong');
 };

@@ -95,4 +95,4 @@ export const pipelineQueue = new InMemoryQueue() as any;
  *    export const pipelineQueue = new BullQueue(PIPELINE_QUEUE_NAME, { connection: { url: process.env.REDIS_URL } });
  */
 
-console.warn('⚠️  [QUEUE] Running in IN-MEMORY mode.');
+logger.warn('⚠️  [QUEUE] Running in IN-MEMORY mode.');
