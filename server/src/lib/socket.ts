@@ -3,7 +3,6 @@ import { Server as HttpServer } from 'http';
 import logger from './logger.js';
 import config from './config.js';
 import { auth } from './auth.js';
-import { db } from './db.js';
 import { fromNodeHeaders } from 'better-auth/node';
 
 let io: Server | null = null;
