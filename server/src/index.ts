@@ -16,6 +16,7 @@ import { createServer } from 'http';
 import { initSocket } from './lib/socket.js';
 import { pipelineQueue } from './lib/queue.js';
 import { startWorkers, stopWorkers } from './workers/index.js';
+import { startSchedulers, stopSchedulers } from './schedulers/index.js';
 
 declare global {
   namespace Express {
@@ -136,6 +137,7 @@ const setupGracefulShutdown = (server: import('http').Server) => {
     try {
       logger.info({ signal }, 'Shutting down');
       await new Promise<void>((resolve) => server.close(() => resolve()));
+      await stopSchedulers();
       if (config.ENABLE_QUEUE) {
         await stopWorkers();
       }
@@ -157,19 +159,7 @@ async function startServer() {
   try {
     await db.connect();
 
-    // Start Neon database keep-alive ping in production (runs every 4 minutes to prevent scale-to-zero)
-    if (config.NODE_ENV === 'production') {
-      const KEEP_ALIVE_INTERVAL_MS = 4 * 60 * 1000; 
-      setInterval(async () => {
-        try {
-          await db.client.$queryRaw`SELECT 1`;
-          logger.debug('Database keep-alive ping successful');
-        } catch (error) {
-          logger.error({ error }, 'Database keep-alive ping failed');
-        }
-      }, KEEP_ALIVE_INTERVAL_MS);
-      logger.info('🛰️ Database keep-alive ping scheduled every 4 minutes');
-    }
+    // Schedulers are booted below
 
     // Reset stale scanning states from any previous crashed/interrupted run.
     // Without this, users remain stuck in 'SCANNING' state after a server crash/restart.
@@ -226,138 +216,8 @@ async function startServer() {
       logger.info('⚙️ Distributed workers started and listening for jobs...');
     }
 
-    // Start Scraper Dispatcher Loop (only if enabled)
-    // Process products sequentially per user - each user's products run one-by-one
-    const runScraperDispatcher = async () => {
-      try {
-        logger.info(`🛰 Dispatching scraper jobs to the queue...`);
-        const activeProducts = await db.client.product.findMany({
-          where: { isActive: true },
-          select: { 
-            id: true, 
-            userId: true, 
-            aiConfig: true,
-            user: {
-              select: { plan: true }
-            }
-          },
-        });
-
-        // Filter: PRO products are scanned every cycle. FREE products are scanned once every 24 hours.
-        const productsToScan = activeProducts.filter((product) => {
-          if (product.user?.plan === 'PRO') {
-            return true;
-          }
-          // Free tier scanning logic: 1 scan every 24 hours
-          const aiConfig = (product.aiConfig as Record<string, any>) || {};
-          const lastBgScan = aiConfig['lastBackgroundScanAt'];
-          if (!lastBgScan) {
-            return true; // Scan if it has never been scanned
-          }
-          const lastScanTime = new Date(lastBgScan).getTime();
-          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-          return lastScanTime < oneDayAgo;
-        });
-
-        // Group products by user
-        const productsByUser = new Map<string, string[]>();
-        for (const product of productsToScan) {
-          if (!productsByUser.has(product.userId)) {
-            productsByUser.set(product.userId, []);
-          }
-          productsByUser.get(product.userId)!.push(product.id);
-        }
-
-        logger.info(
-          `📊 Found ${productsToScan.length} products to scan across ${productsByUser.size} active users`
-        );
-
-        // Process each user's products sequentially, but users in parallel
-        const userPromises = Array.from(productsByUser.entries()).map(
-          async ([userId, productIds]) => {
-            logger.info(`👤 [User: ${userId}] Starting scan for ${productIds.length} products`);
-
-            for (let i = 0; i < productIds.length; i++) {
-              const productId = productIds[i];
-              const jobId = `scrape-product-${productId}`;
-
-              logger.info(
-                `👤 [User: ${userId}] Queuing product ${i + 1}/${productIds.length}: ${productId}`
-              );
-
-              const added = await pipelineQueue.add(
-                'scrape-product',
-                { userId, productId },
-                {
-                  jobId,
-                  removeOnComplete: true,
-                }
-              );
-
-              if (added.alreadyExists) {
-                logger.info(
-                  `👤 [User: ${userId}] Product ${productId} already running, waiting for completion...`
-                );
-              }
-
-              // Wait for this product to complete before starting next one
-              await waitForJobToComplete(jobId);
-              logger.info(
-                `👤 [User: ${userId}] ✅ Product ${i + 1}/${productIds.length} finished processing`
-              );
-            }
-
-            logger.info(
-              `👤 [User: ${userId}] ✅ All ${productIds.length} products completed for this interval`
-            );
-          }
-        );
-
-        // Wait for all users to complete their sequential product runs
-        await Promise.all(userPromises);
-        logger.info(`✅ All users completed their product scans for this interval`);
-      } catch (err) {
-        logger.error({ err }, 'Error in scraper dispatcher');
-      }
-    };
-
-    const waitForJobToComplete = async (jobId: string): Promise<void> => {
-      const maxWaitTime = 10 * 60 * 1000; // 10 minutes max wait per product
-      const checkInterval = 2000; // Check every 2 seconds
-      const startTime = Date.now();
-
-      while (Date.now() - startTime < maxWaitTime) {
-        const job = await pipelineQueue.getJob(jobId);
-
-        if (!job || job.finishedOn) {
-          return;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, checkInterval));
-      }
-
-      logger.warn(`Timeout waiting for job ${jobId} to complete`);
-    };
-
-    const scheduleNextScraperRun = async () => {
-      if (config.SCRAPER_INTERVAL_MS > 0) {
-        logger.info(`⏳ Waiting ${config.SCRAPER_INTERVAL_MS / 60000} minutes before next scan...`);
-        await new Promise((resolve) => setTimeout(resolve, config.SCRAPER_INTERVAL_MS));
-        await runScraperDispatcher();
-        await scheduleNextScraperRun(); // Schedule the next one after this completes
-      }
-    };
-
-    // Start the loop
-    if (config.SCRAPER_INTERVAL_MS > 0) {
-      logger.info(`⏳ Initial scan starting in ${config.SCRAPER_INTERVAL_MS / 60000} minutes`);
-      setTimeout(async () => {
-        await runScraperDispatcher();
-        await scheduleNextScraperRun();
-      }, config.SCRAPER_INTERVAL_MS);
-    } else {
-      logger.info('⏸️ Scraper dispatcher disabled (SCRAPER_INTERVAL_MS set to 0)');
-    }
+    // Start Centralized Schedulers (Keep-Alive, Scraper Dispatcher, Log Cleanup)
+    await startSchedulers();
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
