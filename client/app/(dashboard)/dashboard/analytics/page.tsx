@@ -180,11 +180,11 @@ export default function AnalyticsPage() {
         Analytics
       </h2>
 
-      {/* Resource Consumption Pulse */}
-      <div className="grid grid-cols-2 lg:flex lg:flex-row lg:items-center lg:gap-3 gap-3">
-        {/* Lead Quota */}
-        <div className="w-full lg:w-36 min-w-0 p-3 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
-          <div className="flex justify-between items-center gap-1.5">
+      {/* 6 Top Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Card 1: Quota */}
+        <div className="p-4 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
               Quota
             </span>
@@ -192,41 +192,38 @@ export default function AnalyticsPage() {
               {data.usageStats?.plan?.name || "Free"}
             </span>
           </div>
-          <div className="mt-1.5 flex items-baseline gap-0.5">
-            <span className="text-xl font-black tracking-tight leading-none">
+          <div className="mt-1.5 flex items-baseline gap-0.5 leading-none">
+            <span className="text-2xl font-black tracking-tighter">
               {data.usageStats?.leads?.used || 0}
             </span>
-            <span className="text-xs font-bold text-muted-foreground leading-none">
+            <span className="text-xs font-bold text-muted-foreground">
               /{data.usageStats?.leads?.limit || 100}
             </span>
           </div>
         </div>
 
-        {/* Manual Hours Saved */}
-        <div className="w-full lg:w-36 min-w-0 p-3 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
-          <div className="flex justify-between items-center gap-1.5">
+        {/* Card 2: Manual ROI */}
+        <div className="p-4 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
               Manual ROI
             </span>
-            <Clock className="w-3 h-3 text-blue-500 opacity-60" />
+            <Clock className="w-3.5 h-3.5 text-blue-500 opacity-60" />
           </div>
-          <div className="mt-1.5 flex items-baseline gap-0.5">
-            <span className="text-xl font-black tracking-tight text-blue-500 leading-none">
+          <div className="mt-1.5 flex items-baseline gap-0.5 leading-none">
+            <span className="text-2xl font-black tracking-tighter text-blue-500">
               {Math.round(
                 (data.usageStats?.leads?.used || 0) * 0.5 +
                   (data.llmUsage?.totals?.requestCount || 0) * 0.1,
               )}
             </span>
-            <span className="text-xs font-bold text-muted-foreground uppercase leading-none truncate">
+            <span className="text-xs font-bold text-muted-foreground uppercase truncate">
               Hrs Saved
             </span>
           </div>
         </div>
-      </div>
 
-      {/* KPI Summary Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Leads */}
+        {/* Card 3: Total Leads */}
         <div className="p-4 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
@@ -239,7 +236,7 @@ export default function AnalyticsPage() {
           </span>
         </div>
 
-        {/* Card 2: Scrape Coverage */}
+        {/* Card 4: Scrape Coverage */}
         <div className="p-4 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
@@ -252,7 +249,7 @@ export default function AnalyticsPage() {
           </span>
         </div>
 
-        {/* Card 3: Lead Velocity */}
+        {/* Card 5: Lead Velocity */}
         <div className="p-4 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
@@ -273,7 +270,7 @@ export default function AnalyticsPage() {
           </span>
         </div>
 
-        {/* Card 4: Average Intent Rating */}
+        {/* Card 6: Average Intent Rating */}
         <div className="p-4 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">

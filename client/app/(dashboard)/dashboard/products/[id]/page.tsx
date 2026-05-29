@@ -25,7 +25,7 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
-  const { user, refresh } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
   const params = useParams()
   const productId = params.id as string
@@ -60,9 +60,8 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (user?.id && productId && lastFetchedId.current !== productId) {
       fetchProduct()
-      refresh() // Force refresh the user session from database to capture latest isScanning status
     }
-  }, [user?.id, productId, fetchProduct, refresh])
+  }, [user?.id, productId, fetchProduct])
 
   // ─── Real-time scan updates via WebSocket ──────────────────────────────────
   useEffect(() => {
@@ -88,10 +87,8 @@ export default function ProductDetailPage() {
       
       if (data.isScanning) {
         setLocalScanning(true);
-        refresh();
       } else {
         setLocalScanning(false);
-        refresh();
         // Refresh product data and leads list
         fetchProduct();
         setRefreshTrigger(prev => prev + 1);
@@ -102,7 +99,7 @@ export default function ProductDetailPage() {
       socket.off('connect', joinRoom);
       socket.off('scan-status');
     };
-  }, [productId, fetchProduct, refresh]);
+  }, [productId, fetchProduct]);
 
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return

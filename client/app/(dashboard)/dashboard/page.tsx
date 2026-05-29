@@ -246,7 +246,7 @@ export default function DashboardPage() {
       {/* ── Two column: sidebar + lead stream ─────────────────────────────── */}
       <div className="flex-1 min-h-0 flex flex-col xl:grid xl:grid-cols-[350px_1fr] gap-6 xl:overflow-hidden">
         {/* ── Left sidebar: Flat Layout (No Cards) ─────────────────────────────── */}
-        <aside className="w-full shrink-0 xl:overflow-y-auto xl:max-h-[calc(100vh-200px)] pr-2 custom-scrollbar space-y-10">
+        <aside className="w-full shrink-0 xl:overflow-y-auto pr-2 custom-scrollbar space-y-10">
           {/* Section 1: Live Intelligence Stats */}
           <div className="space-y-5">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
@@ -441,7 +441,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* ── Lead stream ───────────────────────────────────────────────── */}
-        <main className="min-w-0 flex flex-col xl:overflow-hidden xl:max-h-[calc(100vh-200px)]">
+        <main className="min-w-0 flex flex-col xl:overflow-hidden">
           <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border/40 bg-card overflow-hidden shadow-xl shadow-black/5">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3 border-b border-border/40 bg-muted/5 gap-3">

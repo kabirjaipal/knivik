@@ -16,7 +16,6 @@ import { authClient } from "@/lib/auth-client"
 export default function SettingsPage() {
   const router = useRouter()
   const { user, loading: authLoading, refresh } = useAuth()
-  const [activeTab, setActiveTab] = useState<"profile" | "alerts">("profile")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -239,396 +238,386 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-8">
       <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">
         Settings
       </h2>
 
-      <div className="flex flex-col xl:flex-row gap-12 items-start">
-        {/* Sidebar Navigation */}
-        <div className="w-full xl:w-72 space-y-1 shrink-0 p-3 border border-border/40 rounded-3xl bg-card shadow-xl shadow-black/5">
-          <p className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Account System</p>
-          <button 
-            onClick={() => setActiveTab("profile")} 
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === 'profile' ? 'bg-primary text-primary-foreground shadow-2xl shadow-primary/20 scale-[1.02]' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-          >
-            <User className="w-4 h-4" /> Profile Info
-          </button>
-          <button 
-            onClick={() => setActiveTab("alerts")} 
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === 'alerts' ? 'bg-primary text-primary-foreground shadow-2xl shadow-primary/20 scale-[1.02]' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}
-          >
-            <Bell className="w-4 h-4" /> Neural Alerts
-          </button>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 min-w-0 w-full space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {activeTab === "profile" && (
-            <div className="space-y-8">
-              <Card className="border overflow-hidden shadow-none rounded-2xl bg-card">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <CardTitle>Profile Information</CardTitle>
-                      <CardDescription>Your account details.</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <form onSubmit={handleUpdateProfile}>
-                  <CardContent className="pt-6 pb-8 space-y-6">
-                    <div className="grid gap-2">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Email Address</Label>
-                      <div className="px-4 py-3 bg-muted/50 rounded-xl border border-border/50 font-medium text-muted-foreground flex justify-between items-center">
-                        {user?.email}
-                        {user?.emailVerified ? (
-                          <div className="flex items-center gap-1.5 px-1 text-xs text-success font-bold uppercase">
-                            <ShieldCheck className="w-3 h-3" /> Verified
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1.5 px-1 text-xs font-bold uppercase text-amber-500">
-                            <AlertCircle className="w-3 h-3" /> Unverified
-                          </div>
-                        )}
-                      </div>
-                      {!user?.emailVerified && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl">
-                          <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
-                            <MailCheck className="w-3.5 h-3.5 shrink-0" />
-                            <span className="font-medium">Check your inbox or resend the verification link.</span>
-                          </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={handleResendVerification}
-                            disabled={resendLoading || resendCooldown > 0}
-                            className="ml-3 shrink-0 text-xs h-7 px-3 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 gap-1.5"
-                          >
-                            {resendLoading ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <Send className="w-3 h-3" />
-                            )}
-                            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Email'}
-                          </Button>
-                        </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* Profile Information */}
+          <Card className="border border-border/40 overflow-hidden rounded-md bg-card shadow-none py-0 gap-0 ring-0">
+            <div className="border-b border-border/40 py-2.5 px-4 bg-muted/5">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-primary/10 rounded-md text-primary">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Profile Information</h3>
+                  <p className="text-xs text-muted-foreground">Your account details.</p>
+                </div>
+              </div>
+            </div>
+            <form onSubmit={handleUpdateProfile}>
+              <CardContent className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-muted-foreground">Email Address</Label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 text-muted-foreground/60"><Mail className="w-4 h-4" /></div>
+                    <div className="w-full pl-10 pr-3 py-1.5 bg-muted/35 rounded-md border border-border/50 font-medium text-muted-foreground text-sm flex justify-between items-center">
+                      <span>{user?.email}</span>
+                      {user?.emailVerified ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-md font-medium">
+                          <ShieldCheck className="w-3 h-3" /> Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md font-medium">
+                          <AlertCircle className="w-3 h-3" /> Unverified
+                        </span>
                       )}
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="username" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Username</Label>
-                      <Input 
-                        id="username"
-                        value={profileData.username}
-                        onChange={(e) => setProfileData({...profileData, username: e.target.value})}
-                        className="bg-background border-border/60 font-medium"
-                      />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="grid gap-2">
-                        <Label htmlFor="fullName" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Full Name</Label>
-                        <Input 
-                          id="fullName"
-                          placeholder="John Doe"
-                          value={profileData.fullName}
-                          onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
-                          className="bg-background border-border/60"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="company" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Company</Label>
-                        <Input 
-                          id="company"
-                          placeholder="Acme Corp"
-                          value={profileData.company}
-                          onChange={(e) => setProfileData({...profileData, company: e.target.value})}
-                          className="bg-background border-border/60"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t border-border/40 py-4">
-                    <Button type="submit" disabled={savingProfile} className="w-full sm:w-auto min-w-40 gap-2">
-                      {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Save Profile
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-
-              <Card className="border overflow-hidden shadow-none rounded-2xl bg-card">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                      <Lock className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <CardTitle>Security</CardTitle>
-                      <CardDescription>Update your password to keep your account secure.</CardDescription>
-                    </div>
                   </div>
-                </CardHeader>
-                <form onSubmit={handleUpdatePassword}>
-                  <CardContent className="pt-6 pb-8 space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentPassword">Current Password</Label>
-                      <div className="relative">
-                        <Input 
-                          id="currentPassword" 
-                          type={showCurrentPassword ? "text" : "password"}
-                          value={currentPassword}
-                          onChange={e => setCurrentPassword(e.target.value)}
-                          className="bg-background border-border/60 pr-10"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label={showCurrentPassword ? "Hide password" : "Show password"}
-                        >
-                          {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                  {!user?.emailVerified && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-3 py-2 bg-amber-500/5 border border-amber-500/10 rounded-md">
+                      <div className="flex items-center gap-2 text-xs text-amber-500">
+                        <MailCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span className="font-medium text-xs">Check your inbox or resend the verification link.</span>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">New Password</Label>
-                      <div className="relative">
-                        <Input 
-                          id="newPassword" 
-                          type={showNewPassword ? "text" : "password"}
-                          value={newPassword}
-                          onChange={e => setNewPassword(e.target.value)}
-                          className="bg-background border-border/60 pr-10"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label={showNewPassword ? "Hide password" : "Show password"}
-                        >
-                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <div className="relative">
-                        <Input 
-                          id="confirmPassword" 
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={confirmPassword}
-                          onChange={e => setConfirmPassword(e.target.value)}
-                          className="bg-background border-border/60 pr-10"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        >
-                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t border-border/40 py-4">
-                    <Button type="submit" disabled={loading} className="w-full sm:w-auto min-w-40 gap-2">
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Update Password
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-
-              <Card className="border border-destructive/20 overflow-hidden shadow-none rounded-2xl bg-destructive/5">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-destructive/10 rounded-lg text-destructive">
-                      <AlertCircle className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                      <CardDescription>Permanent actions for your account.</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-8">
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Once you delete your account, all your products, leads, and settings will be permanently removed. This action cannot be undone.
-                  </p>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full sm:w-auto font-bold uppercase tracking-widest text-xs h-10 px-6 gap-2"
-                    onClick={() => setShowDeleteModal(true)}
-                  >
-                    Delete Account
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "alerts" && (
-            <div>
-              <Card className="border overflow-hidden shadow-none rounded-2xl bg-card">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                      <Bell className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <CardTitle>Alert Routing</CardTitle>
-                      <CardDescription>Configure how radar detects and delivers high-value leads.</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <form onSubmit={handleSaveAlerts}>
-                  <CardContent className="pt-6 pb-8 space-y-6">
-                    <div className="space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-2">
-                          <Sliders className="w-4 h-4 text-primary" />
-                          <label className="text-sm font-bold text-foreground">Scan Sensitivity Threshold</label>
-                        </div>
-                        <span className="text-primary text-lg font-black">{alertSettings.minIntentScore}%</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        step="5"
-                        value={alertSettings.minIntentScore}
-                        onChange={e => setAlertSettings({...alertSettings, minIntentScore: parseInt(e.target.value)})}
-                        className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground font-bold uppercase tracking-widest px-1">
-                        <span>Low (Noisy)</span>
-                        <span>High (Precise)</span>
-                      </div>
-                      <div className="mt-4 p-3 bg-primary/5 border border-primary/10 rounded-lg flex gap-3 text-xs text-muted-foreground leading-relaxed">
-                         <Info className="w-4 h-4 text-primary shrink-0" />
-                         We recommend 70-85% for the best balance between speed and precision. Scores above 90% are usually direct "where do I buy" questions.
-                      </div>
-                    </div>
-
-                    <div className={`space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60 transition-all duration-300 ${!alertSettings.slackEnabled ? 'opacity-60' : ''}`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-primary" />
-                          <label className="text-sm font-bold text-foreground">Premium Webhooks <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">PRO ONLY</span></label>
-                        </div>
-                        {user?.plan === 'PRO' ? (
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={alertSettings.slackEnabled} onChange={e => setAlertSettings({...alertSettings, slackEnabled: e.target.checked})} />
-                            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                          </label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleResendVerification}
+                        disabled={resendLoading || resendCooldown > 0}
+                        className="w-full sm:w-auto shrink-0 text-xs h-8 px-3 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 gap-1.5 rounded-md"
+                      >
+                        {resendLoading ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
                         ) : (
-                          <div className="text-xs font-bold text-muted-foreground uppercase opacity-50 flex items-center gap-1"><Lock className="w-3 h-3"/> Locked</div>
+                          <Send className="w-3 h-3" />
                         )}
-                      </div>
-                      
-                      <div className={`space-y-5 transition-all duration-300 ${!alertSettings.slackEnabled || user?.plan !== 'PRO' ? 'pointer-events-none hidden opacity-0' : 'opacity-100'}`}>
-                        
-                        <div className="space-y-3">
-                          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Platform</Label>
-                          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                            {[
-                              { id: 'SLACK', name: 'Slack', icon: FaSlack },
-                              { id: 'DISCORD', name: 'Discord', icon: FaDiscord },
-                              { id: 'ZAPIER', name: 'Zapier', icon: SiZapier },
-                              { id: 'MAKE', name: 'Make', icon: SiMake },
-                              { id: 'CUSTOM', name: 'Raw JSON', icon: Code }
-                            ].map(({ id, name, icon: Icon }) => (
-                              <div 
-                                key={id}
-                                onClick={() => setAlertSettings({...alertSettings, webhookType: id})}
-                                className={`px-3 py-2.5 border rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all ${alertSettings.webhookType === id ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20' : 'bg-muted/30 hover:bg-muted/60 hover:text-foreground text-muted-foreground border-border/50'}`}>
-                                <Icon className={`w-4 h-4 shrink-0 ${alertSettings.webhookType === id ? 'opacity-100' : 'opacity-70'}`} />
-                                <span className="text-xs font-bold tracking-wider uppercase">{name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Webhook URL</Label>
-                          <Input 
-                            placeholder="https://..."
-                            value={alertSettings.slackWebhook}
-                            onChange={e => setAlertSettings({...alertSettings, slackWebhook: e.target.value})}
-                            className="font-mono text-sm bg-background border-border/60"
-                          />
-                          <p className="text-xs text-muted-foreground px-1">
-                            {alertSettings.webhookType === 'SLACK' && "We'll send Slack-formatted markdown with intent metrics directly into a channel."}
-                            {alertSettings.webhookType === 'DISCORD' && "We'll hit your Discord webhook with rich formatted Embeds."}
-                            {alertSettings.webhookType === 'ZAPIER' && "We'll shoot structured JSON data directly into your Zapier Catch Hook."}
-                            {alertSettings.webhookType === 'MAKE' && "We'll shoot structured JSON data directly into your Make.com target."}
-                            {alertSettings.webhookType === 'CUSTOM' && "We'll transmit a generic JSON POST request for your custom APIs to ingest."}
-                          </p>
-                        </div>
-                      </div>
+                        {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Email'}
+                      </Button>
                     </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-sm font-medium text-muted-foreground">Username</Label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 text-muted-foreground/60"><User className="w-4 h-4" /></div>
+                    <Input 
+                      id="username"
+                      value={profileData.username}
+                      onChange={(e) => setProfileData({...profileData, username: e.target.value})}
+                      className="pl-10 bg-background border-border/60 rounded-md h-9 text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-sm font-medium text-muted-foreground">Full Name</Label>
+                    <Input 
+                      id="fullName"
+                      placeholder="John Doe"
+                      value={profileData.fullName}
+                      onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
+                      className="bg-background border-border/60 rounded-md h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company" className="text-sm font-medium text-muted-foreground">Company</Label>
+                    <Input 
+                      id="company"
+                      placeholder="Acme Corp"
+                      value={profileData.company}
+                      onChange={(e) => setProfileData({...profileData, company: e.target.value})}
+                      className="bg-background border-border/60 rounded-md h-9 text-sm"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="border-t border-border/40 py-2.5 px-4 bg-muted/5">
+                <Button type="submit" disabled={savingProfile} className="w-full sm:w-auto h-9 px-4 rounded-md text-sm font-medium">
+                  {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save Profile
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
 
-                    <div className={`space-y-4 bg-background/50 p-5 rounded-2xl border border-border/60 transition-all duration-300 ${!alertSettings.emailEnabled ? 'opacity-60' : ''}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-primary" />
-                          <label className="text-sm font-bold text-foreground">Email Deliveries <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider">PRO ONLY</span></label>
-                        </div>
-                        {user?.plan !== 'FREE' ? (
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={alertSettings.emailEnabled} onChange={e => setAlertSettings({...alertSettings, emailEnabled: e.target.checked})} />
-                            <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                          </label>
-                        ) : (
-                          <div className="text-xs font-bold text-muted-foreground uppercase opacity-50 flex items-center gap-1"><Lock className="w-3 h-3"/> Locked</div>
-                        )}
-                      </div>
-                      
-                      <div className={`space-y-2 mt-4 transition-all duration-300 ${!alertSettings.emailEnabled || user?.plan === 'FREE' ? 'pointer-events-none hidden opacity-0' : 'opacity-100'}`}>
-                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Target Email Address</Label>
-                        <Input 
-                          placeholder={user?.email || "team@yourcompany.com"}
-                          value={alertSettings.emailTarget}
-                          onChange={e => setAlertSettings({...alertSettings, emailTarget: e.target.value})}
-                          className="font-mono text-sm bg-background border-border/60"
-                        />
-                        <p className="text-xs text-muted-foreground px-1">
-                          Leave blank to automatically deliver to your primary account email.
-                        </p>
-                      </div>
-                    </div>
-
-                  </CardContent>
-                  <CardFooter className="border-t border-border/40 py-4">
-                    <Button type="submit" disabled={savingAlerts} className="w-full sm:w-auto min-w-40 gap-2">
-                      {savingAlerts ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Save Alert Config
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
+          {/* Security */}
+          <Card className="border border-border/40 overflow-hidden rounded-md bg-card shadow-none py-0 gap-0 ring-0">
+            <div className="border-b border-border/40 py-2.5 px-4 bg-muted/5">
+              <div className="flex items-center gap-2">
+                <div className="p-1 bg-primary/10 rounded-md text-primary">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Security</h3>
+                  <p className="text-xs text-muted-foreground">Update your password to keep your account secure.</p>
+                </div>
+              </div>
             </div>
-          )}
-
+            <form onSubmit={handleUpdatePassword}>
+              <CardContent className="p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword" className="text-sm font-medium text-muted-foreground">Current Password</Label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 text-muted-foreground/60"><Lock className="w-4 h-4" /></div>
+                    <Input 
+                      id="currentPassword" 
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      className="pl-10 pr-10 bg-background border-border/60 rounded-md h-9 text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(v => !v)}
+                      className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-sm font-medium text-muted-foreground">New Password</Label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 text-muted-foreground/60"><Lock className="w-4 h-4" /></div>
+                    <Input 
+                      id="newPassword" 
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      className="pl-10 pr-10 bg-background border-border/60 rounded-md h-9 text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(v => !v)}
+                      className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium text-muted-foreground">Confirm New Password</Label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 text-muted-foreground/60"><Lock className="w-4 h-4" /></div>
+                    <Input 
+                      id="confirmPassword" 
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      className="pl-10 pr-10 bg-background border-border/60 rounded-md h-9 text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(v => !v)}
+                      className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="border-t border-border/40 py-2.5 px-4 bg-muted/5">
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto h-9 px-4 rounded-md text-sm font-medium">
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Update Password
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
         </div>
+
+        {/* Alert Routing */}
+        <Card className="border border-border/40 overflow-hidden rounded-md bg-card shadow-none py-0 gap-0 ring-0">
+          <div className="border-b border-border/40 py-2.5 px-4 bg-muted/5">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-primary/10 rounded-md text-primary">
+                <Bell className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Alert Routing</h3>
+                <p className="text-xs text-muted-foreground">Configure how radar detects and delivers high-value leads.</p>
+              </div>
+            </div>
+          </div>
+          <form onSubmit={handleSaveAlerts}>
+            <CardContent className="p-4 space-y-4">
+              <div className="space-y-3 bg-background border border-border/60 p-3 rounded-md">
+                <div className="flex justify-between items-center mb-1">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-primary" />
+                    <label className="text-sm font-medium text-muted-foreground">Scan Sensitivity Threshold</label>
+                  </div>
+                  <span className="text-primary text-sm font-semibold bg-primary/10 px-2 py-0.5 rounded-md">{alertSettings.minIntentScore}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="5"
+                  value={alertSettings.minIntentScore}
+                  onChange={e => setAlertSettings({...alertSettings, minIntentScore: parseInt(e.target.value)})}
+                  className="w-full h-1.5 bg-secondary rounded-md appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground font-semibold uppercase tracking-wider px-1">
+                  <span>Low (Noisy)</span>
+                  <span>High (Precise)</span>
+                </div>
+                <div className="mt-2 p-2.5 bg-primary/5 border border-primary/10 rounded-md flex gap-2 text-xs text-muted-foreground font-medium">
+                   <Info className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                   <span>We recommend 70-85% for the best balance between speed and precision. Scores above 90% are usually direct "where do I buy" questions.</span>
+                </div>
+              </div>
+
+              <div className={`space-y-3 bg-background border border-border/60 p-3 rounded-md ${!alertSettings.slackEnabled ? 'opacity-70' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-primary" />
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Premium Webhooks 
+                      <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
+                    </label>
+                  </div>
+                  {user?.plan === 'PRO' ? (
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={alertSettings.slackEnabled} onChange={e => setAlertSettings({...alertSettings, slackEnabled: e.target.checked})} />
+                      <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:bg-foreground after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-muted-foreground after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  ) : (
+                    <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-md border border-border/40"><Lock className="w-3 h-3 text-muted-foreground/80"/> Locked</div>
+                  )}
+                </div>
+                
+                <div className={`space-y-3 ${!alertSettings.slackEnabled || user?.plan !== 'PRO' ? 'hidden' : ''}`}>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-muted-foreground">Target Platform</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+                      {[
+                        { id: 'SLACK', name: 'Slack', icon: FaSlack },
+                        { id: 'DISCORD', name: 'Discord', icon: FaDiscord },
+                        { id: 'ZAPIER', name: 'Zapier', icon: SiZapier },
+                        { id: 'MAKE', name: 'Make', icon: SiMake },
+                        { id: 'CUSTOM', name: 'Raw JSON', icon: Code }
+                      ].map(({ id, name, icon: Icon }) => (
+                        <div 
+                          key={id}
+                          onClick={() => setAlertSettings({...alertSettings, webhookType: id})}
+                          className={`px-2.5 py-1.5 border rounded-md flex items-center justify-center gap-1.5 cursor-pointer ${alertSettings.webhookType === id ? 'bg-primary/10 text-primary border-primary' : 'bg-background hover:bg-muted text-muted-foreground border-border'}`}>
+                          <Icon className="w-3.5 h-3.5 shrink-0" />
+                          <span className="text-xs font-semibold tracking-wider uppercase">{name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium text-muted-foreground">Webhook URL</Label>
+                    <Input 
+                      placeholder="https://..."
+                      value={alertSettings.slackWebhook}
+                      onChange={e => setAlertSettings({...alertSettings, slackWebhook: e.target.value})}
+                      className="font-mono text-sm bg-background border-border/60 rounded-md h-9"
+                    />
+                    <p className="text-xs text-muted-foreground px-1 font-medium">
+                      {alertSettings.webhookType === 'SLACK' && "We'll send Slack-formatted markdown with intent metrics directly into a channel."}
+                      {alertSettings.webhookType === 'DISCORD' && "We'll hit your Discord webhook with rich formatted Embeds."}
+                      {alertSettings.webhookType === 'ZAPIER' && "We'll shoot structured JSON data directly into your Zapier Catch Hook."}
+                      {alertSettings.webhookType === 'MAKE' && "We'll shoot structured JSON data directly into your Make.com target."}
+                      {alertSettings.webhookType === 'CUSTOM' && "We'll transmit a generic JSON POST request for your custom APIs to ingest."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`space-y-3 bg-background border border-border/60 p-3 rounded-md ${!alertSettings.emailEnabled ? 'opacity-70' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-primary" />
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Email Deliveries 
+                      <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
+                    </label>
+                  </div>
+                  {user?.plan !== 'FREE' ? (
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={alertSettings.emailEnabled} onChange={e => setAlertSettings({...alertSettings, emailEnabled: e.target.checked})} />
+                      <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:bg-foreground after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-muted-foreground after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  ) : (
+                    <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-md border border-border/40"><Lock className="w-3 h-3 text-muted-foreground/80"/> Locked</div>
+                  )}
+                </div>
+                
+                <div className={`space-y-1 mt-2 ${!alertSettings.emailEnabled || user?.plan === 'FREE' ? 'hidden' : ''}`}>
+                  <Label className="text-sm font-medium text-muted-foreground">Target Email Address</Label>
+                  <Input 
+                    placeholder={user?.email || "team@yourcompany.com"}
+                    value={alertSettings.emailTarget}
+                    onChange={e => setAlertSettings({...alertSettings, emailTarget: e.target.value})}
+                    className="font-mono text-sm bg-background border-border/60 rounded-md h-9"
+                  />
+                  <p className="text-xs text-muted-foreground px-1 font-medium">
+                    Leave blank to automatically deliver to your primary account email.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t border-border/40 py-2.5 px-4 bg-muted/5">
+              <Button type="submit" disabled={savingAlerts} className="w-full sm:w-auto h-9 px-4 rounded-md text-sm font-medium">
+                {savingAlerts ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Alert Config
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="border border-destructive/20 overflow-hidden rounded-md bg-destructive/5 shadow-none py-0 gap-0 ring-0">
+          <div className="border-b border-destructive/10 py-2.5 px-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-destructive/10 rounded-md text-destructive">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-destructive">Danger Zone</h3>
+                <p className="text-xs text-destructive/80">Permanent actions for your account.</p>
+              </div>
+            </div>
+          </div>
+          <CardContent className="p-4 space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+              Once you delete your account, all your products, leads, and settings will be permanently removed from our active databases. This action cannot be undone.
+            </p>
+            <Button 
+              variant="destructive" 
+              className="w-full sm:w-auto h-9 px-4 rounded-md text-sm font-semibold uppercase tracking-wider shadow-none"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              Delete Account
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="relative w-full max-w-sm bg-card border border-destructive/20 rounded-2xl p-6 shadow-2xl space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-destructive/10 rounded-xl text-destructive">
-                <AlertCircle className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="relative w-full max-w-sm bg-card border border-border rounded-md p-4 space-y-4 shadow-none">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-destructive/10 rounded-md text-destructive">
+                <AlertCircle className="w-4 h-4" />
               </div>
-              <h3 className="text-lg font-black text-foreground tracking-tight">Delete Account?</h3>
+              <h3 className="text-base font-semibold text-foreground tracking-tight">Delete Account?</h3>
             </div>
 
             <p className="text-sm text-muted-foreground leading-relaxed font-medium">
@@ -638,7 +627,7 @@ export default function SettingsPage() {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                className="flex-1 rounded-sm h-10 text-xs font-bold border-border/60 hover:bg-muted/50"
+                className="flex-1 rounded-md h-9 text-sm font-semibold border border-border hover:bg-muted"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deletingAccount}
               >
@@ -646,11 +635,11 @@ export default function SettingsPage() {
               </Button>
               <Button
                 variant="destructive"
-                className="flex-1 rounded-sm h-10 text-xs font-black uppercase tracking-wider gap-2"
+                className="flex-1 rounded-md h-9 text-sm font-semibold uppercase tracking-wider gap-2 shadow-none"
                 onClick={handleDeleteAccount}
                 disabled={deletingAccount}
               >
-                {deletingAccount ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {deletingAccount ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                 Confirm
               </Button>
             </div>
