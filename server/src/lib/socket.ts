@@ -8,7 +8,14 @@ import { fromNodeHeaders } from 'better-auth/node';
 
 let io: Server | null = null;
 
-export const initSocket = (httpServer: HttpServer) => {
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const initSocket = async (httpServer: HttpServer) => {
   io = new Server(httpServer, {
     cors: {
       origin: [...config.CORS_ORIGIN.split(',').map((origin: string) => origin.trim()), 'http://127.0.0.1:3000'],
@@ -57,61 +64,43 @@ export const initSocket = (httpServer: HttpServer) => {
     }
   });
 
+  // Load socket handlers dynamically
+  const handlers: { eventName: string; handlerFactory: (socket: Socket, io: Server) => (...args: any[]) => void }[] = [];
+  try {
+    const socketDir = path.join(__dirname, '../sockets');
+    const files = fs.readdirSync(socketDir);
+    for (const file of files) {
+      if (
+        file.startsWith('index.') || 
+        (!file.endsWith('.js') && !file.endsWith('.ts')) || 
+        file.endsWith('.d.ts')
+      ) {
+        continue;
+      }
+      
+      const eventName = path.parse(file).name;
+      logger.info(`🔌 Loading socket event handler: ${eventName} (${file})`);
+      const module = await import(path.join(socketDir, file));
+      if (module.default) {
+        handlers.push({ eventName, handlerFactory: module.default });
+      }
+    }
+  } catch (error) {
+    logger.error({ error }, 'Failed to dynamically load socket handlers');
+  }
+
   io.on('connection', (socket: Socket) => {
     console.log(`[SOCKET] New connection established: ${socket.id}`);
     logger.info({ socketId: socket.id }, 'New socket connection');
 
-    socket.on('ping', () => {
-      console.log(`[SOCKET] Received PING from ${socket.id}, sending PONG`);
-      socket.emit('pong');
-    });
-
-    socket.on('join-product', async (productId: string) => {
-      const userId = socket.data.user.id;
-      
-      // Verify ownership
-      const product = await db.client.product.findUnique({
-        where: { id: productId, userId }
-      });
-
-      if (product) {
-        socket.join(`product:${productId}`);
-        logger.info({ socketId: socket.id, productId, userId }, 'Socket joined product room');
-        
-        // Immediately sync scanning status on joining so client shows scanner spinner if active
-        try {
-          const userDb = await db.client.user.findUnique({
-            where: { id: userId },
-            select: { isScanning: true }
-          });
-          if (userDb?.isScanning) {
-            socket.emit('scan-status', {
-              isScanning: true,
-              status: 'RUNNING'
-            });
-          }
-        } catch (err: any) {
-          logger.error({ err: err.message, productId }, 'Failed to check scanning status during join-product');
-        }
-      } else {
-        logger.warn({ socketId: socket.id, productId, userId }, 'Unauthorized product room join attempt');
+    for (const { eventName, handlerFactory } of handlers) {
+      try {
+        const handler = handlerFactory(socket, io!);
+        socket.on(eventName, handler);
+      } catch (error) {
+        logger.error({ error, socketId: socket.id, eventName }, 'Error registering socket handler');
       }
-    });
-
-    socket.on('join-user', (userId: string) => {
-      const authenticatedUserId = socket.data.user.id;
-      
-      if (userId === authenticatedUserId) {
-        socket.join(`user:${userId}`);
-        logger.info({ socketId: socket.id, userId }, 'Socket joined user room');
-      } else {
-        logger.warn({ socketId: socket.id, userId, authenticatedUserId }, 'Unauthorized user room join attempt');
-      }
-    });
-
-    socket.on('disconnect', () => {
-      logger.info({ socketId: socket.id }, 'Socket disconnected');
-    });
+    }
   });
 
   return io;

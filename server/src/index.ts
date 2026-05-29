@@ -176,7 +176,7 @@ async function startServer() {
     }
 
     const httpServer = createServer(app);
-    initSocket(httpServer);
+    await initSocket(httpServer);
 
     httpServer.listen(config.PORT, config.HOST, () => {
       logger.info(
