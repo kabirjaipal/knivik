@@ -5,6 +5,7 @@ import config from '../lib/config.js';
 import { Platform } from '@prisma/client';
 import { CollectedPost } from './batchAnalysisService.js';
 import { hasCapability } from '../lib/plans.js';
+import { twitterProtection } from '../utils/ipProtection.js';
 
 // Define ProductWithDetails interface locally
 interface ProductWithDetails {
@@ -687,15 +688,11 @@ export class BatchCollectionService {
     try {
       const cheerio = await import('cheerio');
       const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:x.com ${query}`)}`;
-      const response = await fetch(searchUrl, {
-        headers: {
-          'User-Agent': this.getRandomUserAgent(),
-          'Accept': 'text/html,application/xhtml+xml',
-        },
-        signal: AbortSignal.timeout(10000)
-      });
+      const response = await twitterProtection.safeFetch(searchUrl, {
+        'Accept': 'text/html,application/xhtml+xml',
+      }, 10000);
 
-      if (!response.ok) return posts;
+      if (!response) return posts;
 
       const html = await response.text();
       const $ = cheerio.load(html);

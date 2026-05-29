@@ -49,6 +49,7 @@ interface MemoryData {
   ipProtection: {
     reddit: RateLimitStatus;
     hackernews: RateLimitStatus;
+    twitter: RateLimitStatus;
     overall: {
       totalRequests: number;
       totalRateLimitHits: number;
@@ -317,6 +318,26 @@ export default function AdminMemoryPage() {
                       : 'bg-success/15 text-success border-success/20'
                   }`}>
                     {data?.ipProtection.hackernews.rateLimitHits && data.ipProtection.hackernews.rateLimitHits > 0 ? 'Throttled' : 'Healthy'}
+                  </Badge>
+                </td>
+              </tr>
+              {/* Twitter row */}
+              <tr className="border-b border-border/40 hover:bg-muted/10">
+                <td className="py-2.5 font-bold">Twitter</td>
+                <td className="py-2.5">{data?.ipProtection.twitter?.requestCount || 0}</td>
+                <td className="py-2.5">{data?.ipProtection.twitter?.rateLimitHits || 0}</td>
+                <td className="py-2.5 text-muted-foreground">
+                  {data?.ipProtection.twitter?.lastRequestTime && data.ipProtection.twitter.lastRequestTime > 0 
+                    ? new Date(data.ipProtection.twitter.lastRequestTime).toLocaleTimeString() 
+                    : 'N/A'}
+                </td>
+                <td className="py-2.5 text-right">
+                  <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
+                    data?.ipProtection.twitter?.rateLimitHits && data.ipProtection.twitter.rateLimitHits > 0
+                      ? 'bg-destructive/10 text-destructive border-destructive/20'
+                      : 'bg-success/15 text-success border-success/20'
+                  }`}>
+                    {data?.ipProtection.twitter?.rateLimitHits && data.ipProtection.twitter.rateLimitHits > 0 ? 'Throttled' : 'Healthy'}
                   </Badge>
                 </td>
               </tr>

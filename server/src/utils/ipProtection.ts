@@ -24,6 +24,13 @@ export const RATE_LIMIT_CONFIGS = {
     BURST_DELAY_MS: 10000,  // 10 seconds after rate limit
     MAX_RETRIES: 3,          // Maximum retry attempts
     BACKOFF_MULTIPLIER: 2    // Exponential backoff
+  },
+  TWITTER: {
+    MIN_DELAY_MS: 2000,      // 2 seconds minimum
+    MAX_DELAY_MS: 10000,     // 10 seconds maximum
+    BURST_DELAY_MS: 20000,  // 20 seconds after rate limit
+    MAX_RETRIES: 3,          // Maximum retry attempts
+    BACKOFF_MULTIPLIER: 2    // Exponential backoff
   }
 };
 
@@ -34,9 +41,11 @@ export class IPProtection {
   private lastRequestTime = 0;
   private requestCount = 0;
   private rateLimitHits = 0;
-  private config: typeof RATE_LIMIT_CONFIGS.REDDIT | typeof RATE_LIMIT_CONFIGS.HACKERNEWS;
+  private config: typeof RATE_LIMIT_CONFIGS.REDDIT | typeof RATE_LIMIT_CONFIGS.HACKERNEWS | typeof RATE_LIMIT_CONFIGS.TWITTER;
+  public platform: 'REDDIT' | 'HACKERNEWS' | 'TWITTER';
 
-  constructor(platform: 'REDDIT' | 'HACKERNEWS') {
+  constructor(platform: 'REDDIT' | 'HACKERNEWS' | 'TWITTER') {
+    this.platform = platform;
     this.config = RATE_LIMIT_CONFIGS[platform];
   }
 
@@ -58,7 +67,7 @@ export class IPProtection {
     let delay = this.config.MIN_DELAY_MS;
     
     // Increase delay if we've been making many requests
-    const threshold = this.config === RATE_LIMIT_CONFIGS.REDDIT ? 10 : 20;
+    const threshold = this.platform === 'REDDIT' ? 10 : 20;
     if (this.requestCount > threshold) {
       delay = Math.min(this.config.MAX_DELAY_MS, delay * 1.5);
     }
@@ -71,7 +80,7 @@ export class IPProtection {
     
     const remainingDelay = delay - timeSinceLastRequest;
     if (remainingDelay > 0) {
-      logger.info(`[${this.config === RATE_LIMIT_CONFIGS.REDDIT ? 'REDDIT' : 'HN'}] Rate limiting: waiting ${remainingDelay}ms`);
+      logger.info(`[${this.platform}] Rate limiting: waiting ${remainingDelay}ms`);
       await this.sleep(remainingDelay);
     }
     
@@ -86,7 +95,7 @@ export class IPProtection {
     try {
       await this.enforceRateLimit();
       
-      const defaultHeaders = this.config === RATE_LIMIT_CONFIGS.REDDIT ? {
+      const defaultHeaders = this.platform === 'REDDIT' ? {
         'User-Agent': this.getRandomUserAgent(),
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9',
@@ -97,9 +106,15 @@ export class IPProtection {
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-origin'
-      } : {
+      } : this.platform === 'HACKERNEWS' ? {
         'User-Agent': 'Mozilla/5.0 (compatible; HN-Bot/1.0; +https://news.ycombinator.com)',
         'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      } : {
+        'User-Agent': this.getRandomUserAgent(),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
@@ -115,13 +130,12 @@ export class IPProtection {
       // Handle rate limiting
       if (response.status === 429 || response.status === 503) {
         this.rateLimitHits++;
-        const platform = this.config === RATE_LIMIT_CONFIGS.REDDIT ? 'REDDIT' : 'HN';
-        logger.warn(`[${platform}] 🛑 Rate limit hit (${response.status}) on ${url}. Attempt 1/${this.config.MAX_RETRIES}`);
+        logger.warn(`[${this.platform}] 🛑 Rate limit hit (${response.status}) on ${url}. Attempt 1/${this.config.MAX_RETRIES}`);
         
         // Try exponential backoff
         for (let attempt = 1; attempt < this.config.MAX_RETRIES; attempt++) {
           const backoffDelay = this.config.BURST_DELAY_MS * Math.pow(this.config.BACKOFF_MULTIPLIER, attempt - 1);
-          logger.info(`[${platform}] Backing off for ${backoffDelay}ms (attempt ${attempt + 1})...`);
+          logger.info(`[${this.platform}] Backing off for ${backoffDelay}ms (attempt ${attempt + 1})...`);
           await this.sleep(backoffDelay);
           
           try {
@@ -136,18 +150,17 @@ export class IPProtection {
               return retryResponse;
             }
           } catch (error: any) {
-            logger.warn(`[${platform}] Retry attempt ${attempt + 1} failed: ${error.message}`);
+            logger.warn(`[${this.platform}] Retry attempt ${attempt + 1} failed: ${error.message}`);
           }
         }
         
-        logger.error(`[${platform}] Max retries exceeded for ${url}`);
+        logger.error(`[${this.platform}] Max retries exceeded for ${url}`);
         return null;
       }
 
       // Handle other HTTP errors
       if (!response.ok) {
-        const platform = this.config === RATE_LIMIT_CONFIGS.REDDIT ? 'REDDIT' : 'HN';
-        logger.warn(`[${platform}] HTTP ${response.status} for ${url}`);
+        logger.warn(`[${this.platform}] HTTP ${response.status} for ${url}`);
         return null;
       }
 
@@ -157,8 +170,7 @@ export class IPProtection {
       return response;
       
     } catch (error: any) {
-      const platform = this.config === RATE_LIMIT_CONFIGS.REDDIT ? 'REDDIT' : 'HN';
-      logger.error(`[${platform}] Request failed for ${url}: ${error.message}`);
+      logger.error(`[${this.platform}] Request failed for ${url}: ${error.message}`);
       return null;
     }
   }
@@ -178,7 +190,7 @@ export class IPProtection {
       requestCount: this.requestCount,
       rateLimitHits: this.rateLimitHits,
       lastRequestTime: this.lastRequestTime,
-      platform: this.config === RATE_LIMIT_CONFIGS.REDDIT ? 'REDDIT' : 'HACKERNEWS'
+      platform: this.platform
     };
   }
 
@@ -204,6 +216,7 @@ export class IPProtection {
  */
 export const redditProtection = new IPProtection('REDDIT');
 export const hackerNewsProtection = new IPProtection('HACKERNEWS');
+export const twitterProtection = new IPProtection('TWITTER');
 
 /**
  * Utility function to check IP health across all platforms
@@ -212,10 +225,11 @@ export function getGlobalIPHealth() {
   return {
     reddit: redditProtection.getRateLimitStatus(),
     hackernews: hackerNewsProtection.getRateLimitStatus(),
+    twitter: twitterProtection.getRateLimitStatus(),
     overall: {
-      totalRequests: redditProtection.getRateLimitStatus().requestCount + hackerNewsProtection.getRateLimitStatus().requestCount,
-      totalRateLimitHits: redditProtection.getRateLimitStatus().rateLimitHits + hackerNewsProtection.getRateLimitStatus().rateLimitHits,
-      needsBackoff: redditProtection.shouldBackOff() || hackerNewsProtection.shouldBackOff()
+      totalRequests: redditProtection.getRateLimitStatus().requestCount + hackerNewsProtection.getRateLimitStatus().requestCount + twitterProtection.getRateLimitStatus().requestCount,
+      totalRateLimitHits: redditProtection.getRateLimitStatus().rateLimitHits + hackerNewsProtection.getRateLimitStatus().rateLimitHits + twitterProtection.getRateLimitStatus().rateLimitHits,
+      needsBackoff: redditProtection.shouldBackOff() || hackerNewsProtection.shouldBackOff() || twitterProtection.shouldBackOff()
     }
   };
 }
@@ -226,5 +240,6 @@ export function getGlobalIPHealth() {
 export function resetAllIPProtection() {
   redditProtection.resetCounters();
   hackerNewsProtection.resetCounters();
+  twitterProtection.resetCounters();
   logger.info('[IP_PROTECTION] All counters reset');
 }
