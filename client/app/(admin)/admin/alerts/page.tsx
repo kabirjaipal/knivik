@@ -63,10 +63,7 @@ export default function AdminAlertsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-foreground">Alert Delivery Logs</h1>
-        <p className="text-sm text-muted-foreground mt-1">Monitor the health and reliability of user notifications.</p>
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">Alerts</h2>
 
       <Card className="border-border/40 overflow-hidden">
         <Table>

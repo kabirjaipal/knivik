@@ -48,10 +48,7 @@ export default function AdminUsagePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-black">LLM Infrastructure Usage</h1>
-        <p className="text-sm text-muted-foreground mt-1">Real-time token consumption and estimated OpenAI/Groq costs.</p>
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">LLM Usage</h2>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="bg-primary/5 border-primary/20">

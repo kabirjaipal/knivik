@@ -147,11 +147,9 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">Users</h2>
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-foreground">User Directory</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage all registered accounts and their performance.</p>
-        </div>
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground/70" />
           <Input 

@@ -117,10 +117,7 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-black tracking-tight">Billing</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your plan and payment history.</p>
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">Billing</h2>
 
       {/* Success Banner */}
       {showSuccess && (

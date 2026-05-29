@@ -184,8 +184,8 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-foreground">Products</h1>
+      <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
+        <h2 className="text-xl font-black tracking-tight text-foreground">Products</h2>
         
         <Button size={"default"} onClick={() => setIsCreating(true)}>
           <Plus className="w-4 h-4" /> New Product

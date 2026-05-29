@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Shield, Hammer, UserPlus, Cpu, RefreshCcw, Loader2 } from "lucide-react";
+import { Shield, Hammer, UserPlus, Cpu, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -92,23 +91,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border/40 pb-3">
-        <div>
-          <h1 className="text-xl font-black tracking-tight text-foreground">
-            Global Settings
-          </h1>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 text-xs font-bold rounded-lg border-border/40 bg-background hover:bg-muted"
-          onClick={fetchData}
-        >
-          <RefreshCcw className="w-3 h-3" />
-          Sync
-        </Button>
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">Global Settings</h2>
 
       {/* Compact Grid Card adapting fully to standard application theme settings */}
       <div className="bg-background/95 grid md:grid-cols-2 rounded-2xl border border-border/40 overflow-hidden shadow-lg">

@@ -2,13 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import {
   Search,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
   X,
   User,
   Loader2,
@@ -127,25 +125,7 @@ export default function AdminLogsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">API Request Logs</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Inspect incoming API requests, response codes, and server exceptions.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchLogs(pagination.page)}
-          disabled={loading}
-          className="flex items-center gap-1.5 text-xs h-8 self-start md:self-center"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">API Request Logs</h2>
 
       {/* Filters */}
       <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 flex-wrap">

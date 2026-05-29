@@ -65,7 +65,7 @@ export default function AdminPage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight">System Overview</h1>
+          <h2 className="text-xl font-black tracking-tight text-foreground">System Overview</h2>
         </div>
         
         {/* Real-time Inline Health Status */}

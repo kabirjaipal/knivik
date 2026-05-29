@@ -240,29 +240,9 @@ export default function DashboardPage() {
   return (
     <div className="xl:h-full flex flex-col space-y-4 xl:overflow-hidden">
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6 shrink-0">
-        <div className="space-y-1.5">
-          <h1 className="text-4xl font-black tracking-tighter">
-            {getGreeting()},{" "}
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary/60">
-              {user?.username}
-            </span>{" "}
-            👋
-          </h1>
-          <p className="text-sm font-medium text-muted-foreground">
-            <span className="text-foreground">
-              {products.filter((p) => p.isActive).length}
-            </span>{" "}
-            product{products.filter((p) => p.isActive).length !== 1 ? "s" : ""}{" "}
-            live · Radar monitoring Reddit, HackerNews & Twitter.
-          </p>
-        </div>
-        {user?.isScanning && (
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl animate-pulse shadow-lg shadow-primary/10">
-            <Radar className="w-4 h-4" /> System Active
-          </div>
-        )}
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4 shrink-0">
+        Dashboard
+      </h2>
       {/* ── Two column: sidebar + lead stream ─────────────────────────────── */}
       <div className="flex-1 min-h-0 flex flex-col xl:grid xl:grid-cols-[350px_1fr] gap-6 xl:overflow-hidden">
         {/* ── Left sidebar: Flat Layout (No Cards) ─────────────────────────────── */}

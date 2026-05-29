@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Cpu, RefreshCw, Server, Users, Wrench, ShieldCheck, ShieldAlert, Clock, ArrowUpRight, Zap, Loader2 } from "lucide-react";
+import { Cpu, Server, Users, Wrench, ShieldCheck, ShieldAlert, Clock, ArrowUpRight, Zap, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface QueueJob {
@@ -61,10 +60,9 @@ interface MemoryData {
 export default function AdminMemoryPage() {
   const [data, setData] = useState<MemoryData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchMemoryStats = async (silent = false) => {
-    if (!silent) setLoading(true);
+  const fetchMemoryStats = async () => {
+    setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/memory`, {
         credentials: "include",
@@ -79,18 +77,12 @@ export default function AdminMemoryPage() {
       toast.error("Network error fetching telemetry");
     } finally {
       setLoading(false);
-      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchMemoryStats();
   }, []);
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchMemoryStats();
-  };
 
   if (loading) {
     return (
@@ -104,25 +96,7 @@ export default function AdminMemoryPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">System Telemetry</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Monitor active scraper queues, live WebSockets, and engine health.
-          </p>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-1.5 text-xs h-8 self-start md:self-center"
-        >
-          <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">Memory Monitor</h2>
 
       {/* Deployment Status & Stats Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">

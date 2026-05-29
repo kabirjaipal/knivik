@@ -239,11 +239,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12 bg-mesh min-h-screen -m-8 p-8">
-      <div className="space-y-3">
-        <h1 className="text-5xl font-black tracking-tighter text-foreground text-glow">Settings</h1>
-        <p className="text-muted-foreground text-lg font-medium max-w-2xl">Manage your account preferences, security, and neural alert routing protocols.</p>
-      </div>
+    <div className="space-y-8 pb-12">
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">
+        Settings
+      </h2>
 
       <div className="flex flex-col xl:flex-row gap-12 items-start">
         {/* Sidebar Navigation */}

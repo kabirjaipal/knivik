@@ -176,58 +176,50 @@ export default function AnalyticsPage() {
       animate={{ opacity: 1 }}
       className="space-y-6 pb-20"
     >
-      {/* Premium Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-border/40">
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-xs">
-            <Activity className="w-3.5 h-3.5" /> System Intelligence
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">
+        Analytics
+      </h2>
+
+      {/* Resource Consumption Pulse */}
+      <div className="grid grid-cols-2 lg:flex lg:flex-row lg:items-center lg:gap-3 gap-3">
+        {/* Lead Quota */}
+        <div className="w-full lg:w-36 min-w-0 p-3 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-center gap-1.5">
+            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Quota
+            </span>
+            <span className="text-xs font-black text-primary uppercase px-1.5 bg-primary/10 rounded">
+              {data.usageStats?.plan?.name || "Free"}
+            </span>
           </div>
-          <h1 className="text-2xl font-black tracking-tighter text-foreground leading-none mt-1">
-            Intelligence Pulse<span className="text-primary">.</span>
-          </h1>
+          <div className="mt-1.5 flex items-baseline gap-0.5">
+            <span className="text-xl font-black tracking-tight leading-none">
+              {data.usageStats?.leads?.used || 0}
+            </span>
+            <span className="text-xs font-bold text-muted-foreground leading-none">
+              /{data.usageStats?.leads?.limit || 100}
+            </span>
+          </div>
         </div>
 
-        {/* Resource Consumption Pulse */}
-        <div className="grid grid-cols-2 gap-3 w-full lg:flex lg:flex-row lg:items-center lg:gap-3 lg:w-auto">
-          {/* Lead Quota */}
-          <div className="w-full lg:w-36 min-w-0 p-3 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
-            <div className="flex justify-between items-center gap-1.5">
-              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                Quota
-              </span>
-              <span className="text-xs font-black text-primary uppercase px-1.5 bg-primary/10 rounded">
-                {data.usageStats?.plan?.name || "Free"}
-              </span>
-            </div>
-            <div className="mt-1.5 flex items-baseline gap-0.5">
-              <span className="text-xl font-black tracking-tight leading-none">
-                {data.usageStats?.leads?.used || 0}
-              </span>
-              <span className="text-xs font-bold text-muted-foreground leading-none">
-                /{data.usageStats?.leads?.limit || 100}
-              </span>
-            </div>
+        {/* Manual Hours Saved */}
+        <div className="w-full lg:w-36 min-w-0 p-3 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-center gap-1.5">
+            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+              Manual ROI
+            </span>
+            <Clock className="w-3 h-3 text-blue-500 opacity-60" />
           </div>
-
-          {/* Manual Hours Saved */}
-          <div className="w-full lg:w-36 min-w-0 p-3 rounded-xl bg-card border border-border/40 shadow-sm flex flex-col justify-between">
-            <div className="flex justify-between items-center gap-1.5">
-              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                Manual ROI
-              </span>
-              <Clock className="w-3 h-3 text-blue-500 opacity-60" />
-            </div>
-            <div className="mt-1.5 flex items-baseline gap-0.5">
-              <span className="text-xl font-black tracking-tight text-blue-500 leading-none">
-                {Math.round(
-                  (data.usageStats?.leads?.used || 0) * 0.5 +
-                    (data.llmUsage?.totals?.requestCount || 0) * 0.1,
-                )}
-              </span>
-              <span className="text-xs font-bold text-muted-foreground uppercase leading-none truncate">
-                Hrs Saved
-              </span>
-            </div>
+          <div className="mt-1.5 flex items-baseline gap-0.5">
+            <span className="text-xl font-black tracking-tight text-blue-500 leading-none">
+              {Math.round(
+                (data.usageStats?.leads?.used || 0) * 0.5 +
+                  (data.llmUsage?.totals?.requestCount || 0) * 0.1,
+              )}
+            </span>
+            <span className="text-xs font-bold text-muted-foreground uppercase leading-none truncate">
+              Hrs Saved
+            </span>
           </div>
         </div>
       </div>
