@@ -103,16 +103,13 @@ export default function AdminMemoryPage() {
   const isSafeToDeploy = (data?.queue.length === 0) && (data?.queue.activeCount === 0) && (!data?.queue.isProcessing);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border/40 pb-3">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
         <div>
-          <h1 className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-primary" />
-            Memory Telemetry Monitor
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            Real-time diagnostics of in-memory queues, active WebSockets, and scraping workers.
+          <h1 className="text-3xl font-black tracking-tight text-foreground">System Telemetry</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Monitor active scraper queues, live WebSockets, and engine health.
           </p>
         </div>
         <Button 
@@ -120,167 +117,97 @@ export default function AdminMemoryPage() {
           size="sm" 
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="flex items-center gap-1 text-xs"
+          className="flex items-center gap-1.5 text-xs h-8 self-start md:self-center"
         >
           <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh Stats
+          Refresh
         </Button>
       </div>
 
-      {/* Deployment Deployment Checker Card */}
-      <div className={`p-4 border rounded-xl flex items-start gap-4 transition-all duration-300 ${
-        isSafeToDeploy 
-          ? 'bg-success/5 border-success/30 text-success' 
-          : 'bg-warning/5 border-warning/30 text-warning-foreground'
-      }`}>
-        <div className={`p-2.5 rounded-lg shrink-0 ${
-          isSafeToDeploy ? 'bg-success/10' : 'bg-warning/10'
+      {/* Deployment Status & Stats Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Status Banner */}
+        <div className={`p-4 border rounded-xl flex items-center gap-3 lg:col-span-2 transition-all ${
+          isSafeToDeploy 
+            ? 'bg-success/5 border-success/20 text-success' 
+            : 'bg-warning/5 border-warning/20 text-warning-foreground'
         }`}>
           {isSafeToDeploy ? (
-            <ShieldCheck className="h-6 w-6 text-success animate-pulse" />
+            <ShieldCheck className="h-5 w-5 text-success shrink-0" />
           ) : (
-            <ShieldAlert className="h-6 w-6 text-warning" />
+            <ShieldAlert className="h-5 w-5 text-warning shrink-0" />
           )}
-        </div>
-        <div className="space-y-1">
-          <h2 className="text-sm font-bold leading-none">
-            {isSafeToDeploy 
-              ? 'Safe for Deployment' 
-              : 'Hold Deployment: Active Jobs Detected'
-            }
-          </h2>
-          <p className="text-xs opacity-90 leading-relaxed max-w-2xl">
-            {isSafeToDeploy 
-              ? 'No in-memory scraper queue items are being processed. It is completely safe to put the site into Maintenance Mode and trigger your production updates/migrations.' 
-              : 'There are active scraper jobs currently pending or processing in the queue. Deploying now will drop in-memory state and cause scrapers to lose current progress. Wait until the queue length drops to 0!'
-            }
-          </p>
-        </div>
-      </div>
-
-      {/* Primary Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Scraper Queue Card */}
-        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-3 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Scraper Job Queue</span>
-            <Server className="h-4 w-4 text-primary" />
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-3xl font-black tracking-tight">{data?.queue.activeCount || 0}</h3>
-              <span className="text-xs text-muted-foreground font-medium">active</span>
-            </div>
-            <div className="flex items-center justify-between gap-1.5 text-[10px] text-muted-foreground border-t border-border/20 pt-1.5">
-              <div className="flex items-center gap-1">
-                <span className="font-bold text-foreground">{data?.queue.length || 0}</span> pending in queue
-              </div>
-              <Badge variant="outline" className={`text-[9px] font-bold px-1 py-0 ${
-                data?.queue.isProcessing 
-                  ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
-                  : 'bg-muted text-muted-foreground border-border/50'
-              }`}>
-                {data?.queue.isProcessing ? 'Processing' : 'Idle'}
-              </Badge>
-            </div>
+          <div className="min-w-0">
+            <h2 className="text-xs font-bold uppercase tracking-wider">Deployment Status</h2>
+            <p className="text-xs font-medium mt-0.5 truncate">
+              {isSafeToDeploy ? 'Safe to deploy - Queue idle' : 'Scrapers running - Hold deployment'}
+            </p>
           </div>
         </div>
 
-        {/* Live Socket.IO Card */}
-        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-3 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Live WebSocket Channels</span>
-            <Users className="h-4 w-4 text-primary" />
-          </div>
+        {/* Scraper Queue Counter */}
+        <div className="border border-border/60 bg-card rounded-xl p-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h3 className="text-3xl font-black tracking-tight">{data?.sockets.activeConnections || 0}</h3>
-            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
-              real-time dashboard connections
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">Scraper Queue</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black">{data?.queue.activeCount || 0}</span>
+              <span className="text-[10px] text-muted-foreground">/ {data?.queue.length || 0} pending</span>
             </div>
           </div>
+          <Server className="h-4 w-4 text-muted-foreground" />
         </div>
 
-        {/* Crawler API Health Card */}
-        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-3 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Scraping Health (IP Protection)</span>
-            <Zap className="h-4 w-4 text-primary" />
-          </div>
+        {/* WebSocket Connections */}
+        <div className="border border-border/60 bg-card rounded-xl p-4 flex items-center justify-between">
           <div className="space-y-1">
-            <h3 className="text-3xl font-black tracking-tight">{data?.ipProtection.overall.totalRequests || 0}</h3>
-            <div className="flex items-center gap-1.5">
-              <Badge variant="outline" className={`text-[10px] font-bold px-1.5 py-0.5 ${
-                data?.ipProtection.overall.needsBackoff 
-                  ? 'bg-destructive/15 text-destructive border-destructive/20 animate-pulse' 
-                  : 'bg-success/15 text-success border-success/20'
-              }`}>
-                {data?.ipProtection.overall.needsBackoff ? 'Back-off Active' : 'Normal Operations'}
-              </Badge>
-              <span className="text-[10px] text-muted-foreground">
-                {data?.ipProtection.overall.totalRateLimitHits || 0} rate-limit flags
-              </span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">WebSockets</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-black">{data?.sockets.activeConnections || 0}</span>
+              <span className="text-[10px] text-muted-foreground">active client{data?.sockets.activeConnections === 1 ? '' : 's'}</span>
             </div>
           </div>
+          <Users className="h-4 w-4 text-muted-foreground" />
         </div>
       </div>
 
       {/* Details Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Scraper Job Queue Details */}
-        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-4">
-          <div>
-            <h3 className="text-sm font-bold leading-none">Scraper Queue Queue details</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Active and recently processed scraping tasks currently in JS memory.
-            </p>
+        {/* Active Jobs */}
+        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-border/30 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Scraper Queue</h3>
+            {data?.queue.isProcessing && (
+              <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-500 border-amber-500/20 py-0 px-1">
+                Processing
+              </Badge>
+            )}
           </div>
-
-          <div className="overflow-x-auto min-h-[200px]">
+          <div className="overflow-x-auto min-h-[160px]">
             {data?.queue.jobs && data.queue.jobs.length > 0 ? (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border/40 text-muted-foreground font-semibold">
-                    <th className="pb-2">Job Details</th>
-                    <th className="pb-2">Target Product</th>
-                    <th className="pb-2">Triggered By</th>
-                    <th className="pb-2 text-right">Status</th>
+                    <th className="pb-1.5">Job</th>
+                    <th className="pb-1.5">Product</th>
+                    <th className="pb-1.5">User</th>
+                    <th className="pb-1.5 text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.queue.jobs.map((job) => (
-                    <tr key={job.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
-                      <td className="py-2.5 font-mono text-[10px] space-y-0.5">
-                        <div className="font-bold text-foreground truncate max-w-[110px]" title={job.id}>
-                          {job.id}
-                        </div>
-                        <div className="text-[9px] text-muted-foreground flex items-center gap-1 capitalize">
-                          <span>{job.name}</span>
-                          <span className="text-muted-foreground/30">•</span>
-                          <span className="flex items-center gap-0.5 text-[8px] font-sans">
-                            <Clock className="h-2.5 w-2.5" />
-                            {new Date(job.addedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                          </span>
-                        </div>
+                    <tr key={job.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                      <td className="py-2 font-mono text-[10px]">
+                        <span className="font-bold text-foreground truncate block max-w-[80px]" title={job.id}>{job.id}</span>
+                        <span className="text-[8px] text-muted-foreground block">{new Date(job.addedAt).toLocaleTimeString()}</span>
                       </td>
-                      <td className="py-2.5">
-                        <div className="font-semibold text-foreground truncate max-w-[120px]" title={job.data.productName}>
-                          {job.data.productName}
-                        </div>
-                        <div className="text-[9px] text-muted-foreground truncate max-w-[120px]" title={job.data.productId || ''}>
-                          ID: {job.data.productId || 'N/A'}
-                        </div>
+                      <td className="py-2">
+                        <span className="font-semibold text-foreground truncate block max-w-[100px]" title={job.data.productName}>{job.data.productName}</span>
                       </td>
-                      <td className="py-2.5">
-                        <div className="font-semibold text-foreground truncate max-w-[110px]" title={job.data.userName}>
-                          {job.data.userName}
-                        </div>
-                        <div className="text-[9px] text-muted-foreground truncate max-w-[110px]" title={job.data.userEmail || ''}>
-                          {job.data.userEmail || 'System Job'}
-                        </div>
+                      <td className="py-2">
+                        <span className="text-[10px] text-muted-foreground block truncate max-w-[80px]" title={job.data.userName}>{job.data.userName}</span>
                       </td>
-                      <td className="py-2.5 text-right">
-                        <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
+                      <td className="py-2 text-right">
+                        <Badge variant="outline" className={`text-[8px] font-bold px-1.5 py-0 ${
                           job.status === 'processing' 
                             ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
                             : 'bg-success/15 text-success border-success/20'
@@ -293,57 +220,47 @@ export default function AdminMemoryPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[200px] text-center space-y-2">
-                <Server className="h-8 w-8 text-muted-foreground/40" />
-                <div>
-                  <h4 className="text-xs font-bold">Scraper Queue is Empty</h4>
-                  <p className="text-[10px] text-muted-foreground max-w-xs mx-auto mt-0.5">
-                    No leads or products are currently queued or being crawled.
-                  </p>
-                </div>
+              <div className="flex flex-col items-center justify-center min-h-[160px] text-center">
+                <Server className="h-6 w-6 text-muted-foreground/30 mb-1" />
+                <p className="text-xs font-bold text-muted-foreground">Queue is empty</p>
+                <p className="text-[10px] text-muted-foreground/80 mt-0.5">No scraping jobs active.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Real-time Socket Connection Details */}
-        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-4">
-          <div>
-            <h3 className="text-sm font-bold leading-none">WebSocket Active Channels</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Active clients currently listening to push events and leads updates.
-            </p>
+        {/* Live Socket.IO Clients */}
+        <div className="border border-border/60 bg-card rounded-xl p-5 space-y-3">
+          <div className="flex items-center justify-between border-b border-border/30 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">WebSocket Clients</h3>
           </div>
-
-          <div className="overflow-x-auto min-h-[200px]">
+          <div className="overflow-x-auto min-h-[160px]">
             {data?.sockets.clients && data.sockets.clients.length > 0 ? (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border/40 text-muted-foreground font-semibold">
-                    <th className="pb-2">User details</th>
-                    <th className="pb-2">Socket ID</th>
-                    <th className="pb-2 text-right">Subscriptions</th>
+                    <th className="pb-1.5">User</th>
+                    <th className="pb-1.5">Socket ID</th>
+                    <th className="pb-1.5 text-right">Rooms</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.sockets.clients.map((client) => (
-                    <tr key={client.id} className="border-b border-border/40 hover:bg-muted/30 transition-colors">
-                      <td className="py-2.5 space-y-0.5">
-                        <div className="font-bold text-foreground">{client.username}</div>
-                        <div className="text-[9px] text-muted-foreground">{client.email}</div>
+                    <tr key={client.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                      <td className="py-2">
+                        <span className="font-bold text-foreground block">{client.username}</span>
+                        <span className="text-[9px] text-muted-foreground block truncate max-w-[120px]">{client.email}</span>
                       </td>
-                      <td className="py-2.5 font-mono text-[10px] text-muted-foreground">
-                        {client.id}
-                      </td>
-                      <td className="py-2.5 text-right space-y-1">
+                      <td className="py-2 font-mono text-[10px] text-muted-foreground">{client.id}</td>
+                      <td className="py-2 text-right space-y-0.5">
                         {client.rooms.length > 0 ? (
                           client.rooms.map((room) => (
                             <Badge 
                               key={room} 
                               variant="outline" 
-                              className="text-[9px] font-semibold bg-primary/5 text-primary border-primary/20 ml-1 inline-flex"
+                              className="text-[8px] font-semibold bg-primary/5 text-primary border-primary/20 ml-1 inline-flex"
                             >
-                              {room.replace('product:', 'Product ').replace('user:', 'User ')}
+                              {room.replace('product:', 'P: ').replace('user:', 'U: ')}
                             </Badge>
                           ))
                         ) : (
@@ -355,95 +272,82 @@ export default function AdminMemoryPage() {
                 </tbody>
               </table>
             ) : (
-              <div className="flex flex-col items-center justify-center min-h-[200px] text-center space-y-2">
-                <Users className="h-8 w-8 text-muted-foreground/40" />
-                <div>
-                  <h4 className="text-xs font-bold">No Active Socket Connections</h4>
-                  <p className="text-[10px] text-muted-foreground max-w-xs mx-auto mt-0.5">
-                    No admins or users are currently browsing dashboard channels.
-                  </p>
-                </div>
+              <div className="flex flex-col items-center justify-center min-h-[160px] text-center">
+                <Users className="h-6 w-6 text-muted-foreground/30 mb-1" />
+                <p className="text-xs font-bold text-muted-foreground">No active sockets</p>
+                <p className="text-[10px] text-muted-foreground/80 mt-0.5">No connected dashboard clients.</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Third Party Crawler Telemetry details */}
-      <div className="border border-border/60 bg-card rounded-xl p-5 space-y-4">
-        <div>
-          <h3 className="text-sm font-bold leading-none">Crawler Engine IP Health Status</h3>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            Telemetry metrics of request count windows and 429 Rate Limit Hits.
-          </p>
+      {/* Engine Ingestion Health */}
+      <div className="border border-border/60 bg-card rounded-xl p-5 space-y-3">
+        <div className="flex items-center justify-between border-b border-border/30 pb-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Scraper IP Health</h3>
+          <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
+            data?.ipProtection.overall.needsBackoff 
+              ? 'bg-destructive/15 text-destructive border-destructive/20 animate-pulse' 
+              : 'bg-success/15 text-success border-success/20'
+          }`}>
+            {data?.ipProtection.overall.needsBackoff ? 'Back-off active' : 'Normal Operations'}
+          </Badge>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Reddit protection statistics */}
-          <div className="border border-border/40 rounded-xl p-4 bg-muted/10 space-y-3">
-            <div className="flex items-center justify-between border-b border-border/40 pb-2">
-              <span className="text-xs font-bold">Reddit Scraper</span>
-              <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
-                data?.ipProtection.reddit.rateLimitHits && data.ipProtection.reddit.rateLimitHits > 0
-                  ? 'bg-destructive/15 text-destructive border-destructive/20 animate-pulse'
-                  : 'bg-success/15 text-success border-success/20'
-              }`}>
-                {data?.ipProtection.reddit.rateLimitHits && data.ipProtection.reddit.rateLimitHits > 0 ? 'Throttled' : 'Healthy'}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="space-y-1 border-r border-border/30">
-                <div className="text-xs text-muted-foreground">Requests</div>
-                <div className="text-base font-bold text-foreground">{data?.ipProtection.reddit.requestCount || 0}</div>
-              </div>
-              <div className="space-y-1 border-r border-border/30">
-                <div className="text-xs text-muted-foreground">Limit Hits</div>
-                <div className="text-base font-bold text-foreground">{data?.ipProtection.reddit.rateLimitHits || 0}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Last Request</div>
-                <div className="text-[10px] font-bold text-foreground leading-none pt-1">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-border/40 text-muted-foreground font-semibold">
+                <th className="pb-1.5">Platform</th>
+                <th className="pb-1.5">Total Requests</th>
+                <th className="pb-1.5">Rate Limit Hits</th>
+                <th className="pb-1.5">Last Request Time</th>
+                <th className="pb-1.5 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Reddit row */}
+              <tr className="border-b border-border/40 hover:bg-muted/10">
+                <td className="py-2.5 font-bold">Reddit</td>
+                <td className="py-2.5">{data?.ipProtection.reddit.requestCount || 0}</td>
+                <td className="py-2.5">{data?.ipProtection.reddit.rateLimitHits || 0}</td>
+                <td className="py-2.5 text-muted-foreground">
                   {data?.ipProtection.reddit.lastRequestTime && data.ipProtection.reddit.lastRequestTime > 0 
-                    ? new Date(data.ipProtection.reddit.lastRequestTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                    : 'N/A'
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* HackerNews protection statistics */}
-          <div className="border border-border/40 rounded-xl p-4 bg-muted/10 space-y-3">
-            <div className="flex items-center justify-between border-b border-border/40 pb-2">
-              <span className="text-xs font-bold">HackerNews Scraper</span>
-              <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
-                data?.ipProtection.hackernews.rateLimitHits && data.ipProtection.hackernews.rateLimitHits > 0
-                  ? 'bg-destructive/15 text-destructive border-destructive/20 animate-pulse'
-                  : 'bg-success/15 text-success border-success/20'
-              }`}>
-                {data?.ipProtection.hackernews.rateLimitHits && data.ipProtection.hackernews.rateLimitHits > 0 ? 'Throttled' : 'Healthy'}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="space-y-1 border-r border-border/30">
-                <div className="text-xs text-muted-foreground">Requests</div>
-                <div className="text-base font-bold text-foreground">{data?.ipProtection.hackernews.requestCount || 0}</div>
-              </div>
-              <div className="space-y-1 border-r border-border/30">
-                <div className="text-xs text-muted-foreground">Limit Hits</div>
-                <div className="text-base font-bold text-foreground">{data?.ipProtection.hackernews.rateLimitHits || 0}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Last Request</div>
-                <div className="text-[10px] font-bold text-foreground leading-none pt-1">
+                    ? new Date(data.ipProtection.reddit.lastRequestTime).toLocaleTimeString() 
+                    : 'N/A'}
+                </td>
+                <td className="py-2.5 text-right">
+                  <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
+                    data?.ipProtection.reddit.rateLimitHits && data.ipProtection.reddit.rateLimitHits > 0
+                      ? 'bg-destructive/10 text-destructive border-destructive/20'
+                      : 'bg-success/15 text-success border-success/20'
+                  }`}>
+                    {data?.ipProtection.reddit.rateLimitHits && data.ipProtection.reddit.rateLimitHits > 0 ? 'Throttled' : 'Healthy'}
+                  </Badge>
+                </td>
+              </tr>
+              {/* HN row */}
+              <tr className="border-b border-border/40 hover:bg-muted/10">
+                <td className="py-2.5 font-bold">HackerNews</td>
+                <td className="py-2.5">{data?.ipProtection.hackernews.requestCount || 0}</td>
+                <td className="py-2.5">{data?.ipProtection.hackernews.rateLimitHits || 0}</td>
+                <td className="py-2.5 text-muted-foreground">
                   {data?.ipProtection.hackernews.lastRequestTime && data.ipProtection.hackernews.lastRequestTime > 0 
-                    ? new Date(data.ipProtection.hackernews.lastRequestTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                    : 'N/A'
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
+                    ? new Date(data.ipProtection.hackernews.lastRequestTime).toLocaleTimeString() 
+                    : 'N/A'}
+                </td>
+                <td className="py-2.5 text-right">
+                  <Badge variant="outline" className={`text-[9px] font-bold px-1.5 py-0 ${
+                    data?.ipProtection.hackernews.rateLimitHits && data.ipProtection.hackernews.rateLimitHits > 0
+                      ? 'bg-destructive/10 text-destructive border-destructive/20'
+                      : 'bg-success/15 text-success border-success/20'
+                  }`}>
+                    {data?.ipProtection.hackernews.rateLimitHits && data.ipProtection.hackernews.rateLimitHits > 0 ? 'Throttled' : 'Healthy'}
+                  </Badge>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
