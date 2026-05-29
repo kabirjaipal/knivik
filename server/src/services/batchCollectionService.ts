@@ -254,9 +254,6 @@ export class BatchCollectionService {
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
     
-    // ALWAYS use global Reddit search for broader coverage
-    // Subreddit-specific search is too limiting - we want to find leads anywhere on Reddit
-
     if (searchQueries.length === 0) {
       logger.warn(`[COLLECTION] No search queries available for Reddit scan of "${product.name}"`);
       return posts;
@@ -300,120 +297,15 @@ export class BatchCollectionService {
       finalQueries.push(...globalQueries); // Fallback to whatever is available
     }
     
-    // Strategy 1: Advanced query-based collection
-    // Run each query with both 'new' (freshness) and 'relevance' (high-engagement older threads)
-    const finalRequests: Array<{ query: string; sort: 'new' | 'relevance' }> = [
-      ...finalQueries.map(q => ({ query: q, sort: 'new' as const })),
-      ...finalQueries.slice(0, 2).map(q => ({ query: q, sort: 'relevance' as const })),
-    ];
-
-    for (const { query: searchQuery, sort } of finalRequests) { 
+    for (const searchQuery of finalQueries) { 
       try {
-        // Search globally across Reddit with both sort strategies for maximum lead discovery
-        const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(searchQuery)}&sort=${sort}&limit=25&type=link,comment`;
-
-        let response;
-        try {
-          response = await fetch(url, {
-            headers: {
-              'User-Agent': this.getRandomUserAgent(),
-              'Accept': 'application/json',
-            },
-            signal: AbortSignal.timeout(10000)
-          });
-        } catch (fetchErr: any) {
-          logger.warn(`[COLLECTION] [REDDIT] JSON search fetch failed: ${fetchErr.message}. Falling back to RSS.`);
-          const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-          posts.push(...rssPosts);
-          continue;
-        }
-
-        if (response.status === 429) {
-          logger.warn(`[COLLECTION] [REDDIT] JSON search hit 429. Falling back to RSS.`);
-          const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-          if (rssPosts.length > 0) {
-            posts.push(...rssPosts);
-          } else {
-            await new Promise(resolve => setTimeout(resolve, 15000));
-          }
-          continue;
-        }
-
-        if (response.status === 404) {
-          // Fallback to global search with same query or RSS
-          const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-          if (rssPosts.length > 0) {
-            posts.push(...rssPosts);
-          }
-          continue;
-        }
-
-        if (!response.ok) {
-          const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-          posts.push(...rssPosts);
-          continue;
-        }
-
-        const data = (await response.json()) as any;
-        const children = data?.data?.children;
-        if (!Array.isArray(children)) {
-          const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-          posts.push(...rssPosts);
-          continue;
-        }
-
-        let queryMatches = 0;
-        for (const child of children) {
-          const postData = child.data;
-          if (!postData?.id) continue;
-
-          // Skip ghost posts with zero engagement — they never convert
-          const score = postData.score ?? postData.ups ?? 0;
-          const numComments = postData.num_comments ?? 0;
-          if (score < 1 && numComments < 1) continue;
-
-          const postedAt = new Date(postData.created_utc * 1000);
-          if (postedAt < oneMonthAgo) {
-            continue;
-          }
-
-          const title = postData.title || (postData.link_title ? `Comment on: ${postData.link_title}` : '');
-          const content = postData.body || postData.selftext || '';
-          const combinedText = `${title} ${content}`;
-
-          const filterResult = this.passesBasicFiltersWithReason(combinedText, postData.author || null, product);
-          if (!filterResult.passed) {
-            continue;
-          }
-
-          // Pure semantic detection based on AI search query
-          const detectionMode: 'SEMANTIC' = 'SEMANTIC';
-
-          posts.push({
-            id: `reddit-${postData.id}`,
-            platform: 'REDDIT',
-            externalPostId: postData.id,
-            title,
-            content,
-            url: `https://reddit.com${postData.permalink}`,
-            authorUsername: postData.author,
-            postedAt,
-            source: 'global',
-            detectionMode
-
-          });
-          queryMatches++;
-        }
-
-        // Rate limiting: 2.5s base + jitter to avoid rhythmic detection patterns
-        await new Promise(resolve => setTimeout(resolve, 2500 + Math.floor(Math.random() * 1000)));
-
+        const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
+        posts.push(...rssPosts);
+        
+        // Rate limit spacing / polite delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (error: any) {
-        // Fallback to RSS on any unhandled error
-        try {
-          const rssPosts = await this.fetchRedditRss(searchQuery, oneMonthAgo, product);
-          posts.push(...rssPosts);
-        } catch { /* ignore silently */ }
+        logger.warn({ errorMsg: error.message, query: searchQuery }, '[COLLECTION] [REDDIT] RSS search query failed');
       }
     }
 
@@ -451,6 +343,9 @@ export class BatchCollectionService {
         const contentHtml = $(el).find('content').text() || '';
         const published = $(el).find('published').text();
         const authorRaw = $(el).find('author name').text() || '';
+
+        // Must be a post/comment entry, not subreddit/community/user profile
+        if (!link.includes('/comments/')) return;
 
         const postedAt = published ? new Date(published) : new Date();
         if (postedAt < oneMonthAgo) return;
@@ -601,9 +496,6 @@ export class BatchCollectionService {
             .replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&#x2F;/g, '/')
             .replace(/\s+/g, ' ').trim();
 
-          // Ask HN threads are high-intent by nature — only apply basic spam filter
-          if (content.length < 20 && title.length < 20) continue;
-
           processedIds.add(storyId);
           posts.push({
             id: `hn-${storyId}`,
@@ -623,8 +515,6 @@ export class BatchCollectionService {
     } catch (askErr: any) {
       logger.warn({ errorMsg: askErr.message }, '[COLLECTION] [HACKERNEWS] Ask HN query failed');
     }
-
-
 
     logger.info(`[COLLECTION] [HACKERNEWS] Total posts collected: ${posts.length}`);
     return posts;
@@ -658,11 +548,6 @@ export class BatchCollectionService {
       if (isExcluded) {
         return { passed: false, reason: `Excluded author: "${author}"` };
       }
-    }
-
-    // Minimum content length
-    if (text.trim().length < 50) {
-      return { passed: false, reason: 'Content too short (< 50 chars)' };
     }
 
     // Bot detection
@@ -754,147 +639,12 @@ export class BatchCollectionService {
     });
   }
 
-  private static cachedNitterInstances: string[] | null = null;
-  private static lastNitterFetchTime = 0;
-
-  private static async getDynamicNitterInstances(): Promise<string[]> {
-    const now = Date.now();
-    const cacheDuration = 15 * 60 * 1000; // Cache for 15 minutes
-    
-    if (this.cachedNitterInstances && (now - this.lastNitterFetchTime < cacheDuration)) {
-      return this.cachedNitterInstances;
-    }
-
-    const fallbackInstances = [
-      'https://nitter.poast.org',
-      'https://nitter.privacyredirect.com',
-      'https://xcancel.com',
-      'https://nitter.space',
-      'https://nitter.tiekoetter.com',
-      'https://nuku.trabun.org',
-      'https://nitter.catsarch.com'
-    ];
-
-    try {
-      const response = await fetch('https://raw.githubusercontent.com/libredirect/instances/main/data.json', {
-        signal: AbortSignal.timeout(4000)
-      });
-      if (response.ok) {
-        const data = await response.json() as any;
-        const clearnet = data?.nitter?.clearnet;
-        if (Array.isArray(clearnet) && clearnet.length > 0) {
-          const cleanUrls = clearnet
-            .map((url: string) => url.replace(/\/$/, '').trim())
-            .filter((url: string) => url.startsWith('http'));
-          if (cleanUrls.length > 0) {
-            this.cachedNitterInstances = cleanUrls;
-            this.lastNitterFetchTime = now;
-            return cleanUrls;
-          }
-        }
-      }
-    } catch (err: any) {
-      logger.debug(`[COLLECTION] [TWITTER] Failed to fetch dynamic Nitter instances: ${err.message}. Using fallback.`);
-    }
-
-    this.cachedNitterInstances = fallbackInstances;
-    this.lastNitterFetchTime = now;
-    return fallbackInstances;
-  }
-
-  /**
-   * Scrapes Twitter/X using a rotated list of public, free Nitter RSS instances.
-   * RSS is fully structured, XML-parsed, has exact dates/authors, and is free.
-   */
-  private static async fetchFromNitter(
-    query: string,
-    oneMonthAgo: Date
-  ): Promise<CollectedPost[]> {
-    const posts: CollectedPost[] = [];
-    const cheerio = await import('cheerio');
-    
-    // Dynamically retrieve active Nitter instances from online LibRedirect registry
-    const activeInstances = await this.getDynamicNitterInstances();
-    const instances = [...activeInstances].sort(() => Math.random() - 0.5);
-    
-    for (const instance of instances) {
-      try {
-        const url = `${instance}/search/rss?q=${encodeURIComponent(query)}`;
-        const response = await fetch(url, {
-          headers: {
-            'User-Agent': this.getRandomUserAgent(),
-            'Accept': 'application/xml, application/rss+xml'
-          },
-          signal: AbortSignal.timeout(6000)
-        });
-        
-        if (!response.ok) continue;
-        
-        const xml = await response.text();
-        const $ = cheerio.load(xml, { xmlMode: true });
-        
-        $('item').each((_, el) => {
-          const rawUrl = $(el).find('link').text() || '';
-          const description = $(el).find('description').text() || '';
-          const pubDateStr = $(el).find('pubDate').text();
-          
-          let url = rawUrl;
-          if (url.includes('/status/')) {
-            const urlPath = url.substring(url.indexOf('://') + 3);
-            const pathWithoutDomain = urlPath.substring(urlPath.indexOf('/'));
-            url = `https://x.com${pathWithoutDomain}`;
-          }
-          
-          const idMatch = url.match(/\/status\/(\d+)/);
-          if (!idMatch) return;
-          const tweetId = idMatch[1] ?? '';
-          if (!tweetId) return;
-          
-          const authorMatch = url.match(/(?:x\.com|twitter\.com)\/([^/]+)/);
-          const author = authorMatch?.[1] ?? 'unknown';
-          if (author === 'unknown' || author === 'i') return;
-          
-          // Strip HTML tags from description (Nitter RSS encloses body in HTML)
-          const content = description.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-          if (!content || content.length < 30) return;
-          
-          // Skip retweets — amplified content, not original buying intent
-          if (content.startsWith('RT @') || /^retweeted by/i.test(content)) return;
-          
-          const postedAt = pubDateStr ? new Date(pubDateStr) : new Date();
-          if (postedAt < oneMonthAgo) return;
-          
-          posts.push({
-            id: `twitter-${tweetId}`,
-            platform: 'TWITTER',
-            externalPostId: tweetId,
-            title: null,
-            content,
-            url,
-            authorUsername: author,
-            postedAt,
-            source: 'global',
-            detectionMode: 'SEMANTIC'
-          });
-        });
-        
-        if (posts.length > 0) {
-          logger.info(`[COLLECTION] [TWITTER] Successfully scraped ${posts.length} posts from Nitter instance: ${instance}`);
-          return posts;
-        }
-      } catch (err: any) {
-        logger.debug(`[COLLECTION] [TWITTER] Nitter instance ${instance} failed: ${err.message}`);
-      }
-    }
-    
-    return [];
-  }
-
   /**
    * Fallback method using Yahoo Search crawling for Twitter statuses
    */
   private static async fetchFromYahoo(
-    query: string
+    query: string,
+    oneMonthAgo: Date
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
     try {
@@ -940,6 +690,9 @@ export class BatchCollectionService {
         const parsedDate = dateMatch ? new Date(dateMatch[1]!) : null;
         // Use parsed date, or default to 7 days ago as safe pessimistic estimate — NEVER new Date()
         const postedAt = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        // Enforce lookback window
+        if (postedAt < oneMonthAgo) return;
 
         const content = rawText.replace(/^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d+,\s\d{4}\s[·\-]\s*/i, '').trim();
         if (!content || content.length < 30) return;
@@ -1014,13 +767,8 @@ export class BatchCollectionService {
     }
 
     for (const query of finalQueries) {
-      // 1. Try Nitter first (reliable RSS XML with exact timestamps & profiles)
-      let queryPosts = await this.fetchFromNitter(query, oneMonthAgo);
-      
-      // 2. Fallback to Yahoo search if Nitter fails
-      if (queryPosts.length === 0) {
-        queryPosts = await this.fetchFromYahoo(query);
-      }
+      // Fallback to Yahoo search only
+      const queryPosts = await this.fetchFromYahoo(query, oneMonthAgo);
 
       // Filter query posts
       const filtered = queryPosts.filter(p => this.passesBasicFilters(p.content, p.authorUsername, product));
