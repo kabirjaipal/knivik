@@ -72,6 +72,9 @@ export const getUsers = async (req: Request, res: Response) => {
           createdAt: true,
           isScanning: true,
           metadata: true,
+          referralPartner: {
+            select: { id: true }
+          },
           _count: {
             select: { products: true }
           }
@@ -83,9 +86,43 @@ export const getUsers = async (req: Request, res: Response) => {
       db.client.user.count({ where })
     ]);
 
+    // Fetch lead counts for each user's products to sum them up
+    const userIds = users.map(u => u.id);
+    const productsWithLeadCounts = await db.client.product.findMany({
+      where: { userId: { in: userIds } },
+      select: {
+        userId: true,
+        _count: {
+          select: { leads: true }
+        }
+      }
+    });
+
+    const userLeadCountsMap = new Map<string, number>();
+    for (const item of productsWithLeadCounts) {
+      const current = userLeadCountsMap.get(item.userId) || 0;
+      userLeadCountsMap.set(item.userId, current + (item._count?.leads || 0));
+    }
+
+    const mappedUsers = users.map(u => ({
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      role: u.role,
+      plan: u.plan,
+      createdAt: u.createdAt,
+      isScanning: u.isScanning,
+      metadata: u.metadata,
+      allowReferrals: !!u.referralPartner,
+      _count: {
+        products: u._count?.products || 0,
+        leads: userLeadCountsMap.get(u.id) || 0
+      }
+    }));
+
     res.json({ 
       success: true, 
-      data: users,
+      data: mappedUsers,
       pagination: {
         page,
         limit,

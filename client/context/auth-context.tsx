@@ -22,6 +22,7 @@ interface User {
   dodoCustomerId?: string | null
   isScanning?: boolean
   lastScanStatus?: string
+  allowReferrals?: boolean
 }
 
 // Extended user type with custom fields from Better Auth callback
@@ -31,13 +32,7 @@ interface ExtendedUser {
   name?: string
   image?: string | null
   username?: string
-  role?: string
-  plan?: string
   emailVerified?: boolean
-  subscriptionStatus?: string | null
-  dodoCustomerId?: string | null
-  isScanning?: boolean
-  lastScanStatus?: string
 }
 
 interface AuthContextType {
@@ -63,7 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     registrationEnabled: true,
   });
 
+  const [dbUser, setDbUser] = React.useState<any>(null);
+
   const { data: session, isPending, error, refetch } = useSession()
+
+  // It's loading if we haven't loaded the client, it's pending, we haven't passed the initial fetch window, or we are loading the DB user profile
+  const loading = !isClientLoaded || isPending || (!hasInitialFetch && !session && !error) || (!!session?.user && !dbUser);
 
   React.useEffect(() => {
     setIsClientLoaded(true);
@@ -71,6 +71,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const timer = setTimeout(() => setHasInitialFetch(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Fetch detailed user profile (including allowReferrals) from backend
+  React.useEffect(() => {
+    if (!session?.user) {
+      setDbUser(null);
+      return;
+    }
+
+    const fetchMe = async () => {
+      try {
+        const response = await fetch('/api/users/me');
+        const result = await response.json();
+        if (result.success && result.data?.user) {
+          setDbUser(result.data.user);
+        } else {
+          setDbUser({});
+        }
+      } catch (err) {
+        setDbUser({});
+      }
+    };
+    fetchMe();
+  }, [session?.user]);
 
   // Fetch public configuration on mount
   React.useEffect(() => {
@@ -88,8 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchConfig();
   }, []);
 
-  // It's loading if we haven't loaded the client, it's pending, or we haven't passed the initial fetch window
-  const loading = !isClientLoaded || isPending || (!hasInitialFetch && !session && !error);
+
 
   const logout = React.useCallback(async () => {
     disconnectSocket()
@@ -111,15 +133,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: extendedUser.name,
       username: extendedUser.username,
       image: extendedUser.image ?? undefined,
-      role: extendedUser.role || 'user',
-      plan: extendedUser.plan || 'FREE',
+      role: dbUser?.role || 'user',
+      plan: dbUser?.plan || 'FREE',
       emailVerified: extendedUser.emailVerified ?? false,
-      subscriptionStatus: extendedUser.subscriptionStatus || null,
-      dodoCustomerId: extendedUser.dodoCustomerId || null,
-      isScanning: extendedUser.isScanning,
-      lastScanStatus: extendedUser.lastScanStatus,
+      subscriptionStatus: dbUser?.subscriptionStatus || null,
+      dodoCustomerId: dbUser?.dodoCustomerId || null,
+      isScanning: dbUser?.isScanning ?? false,
+      lastScanStatus: dbUser?.lastScanStatus,
+      allowReferrals: dbUser?.allowReferrals ?? false,
     }
-  }, [session])
+  }, [session, dbUser])
 
   // Link PostHog sessions to our authenticated users (identify on login, reset on logout)
   React.useEffect(() => {
@@ -146,6 +169,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn('PostHog identify/reset failed', e)
     }
   }, [user])
+
+  // Process referral code claim if the cookie exists and user has authenticated
+  React.useEffect(() => {
+    if (loading || !user) return;
+
+    const claimReferral = async () => {
+      const match = document.cookie.match(/(^|;)\s*knivik_ref_code\s*=\s*([^;]+)/);
+      if (!match) return;
+
+      const referralCode = match[2];
+      try {
+        const response = await fetch('/api/referrals/claim', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ referralCode }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          // Clear cookie upon success
+          document.cookie = 'knivik_ref_code=; max-age=0; path=/; SameSite=Lax';
+        }
+      } catch (err) {
+        // Fail silently
+      }
+    };
+
+    claimReferral();
+  }, [user, loading]);
 
   const value = useMemo(() => ({
     user,

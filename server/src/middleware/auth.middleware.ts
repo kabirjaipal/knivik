@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import logger from '../lib/logger.js';
 import { auth } from '../lib/auth.js';
 import { fromNodeHeaders } from "better-auth/node";
+import { db } from '../lib/db.js';
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -22,8 +23,39 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    // Attach user payload to request
-    req.user = sessionData.user as any;
+    // Attach user payload to request with dynamic profile resolution
+    if (sessionData.user) {
+      const dbUser = await db.client.user.findUnique({
+        where: { id: sessionData.user.id },
+        select: {
+          role: true,
+          plan: true,
+          subscriptionStatus: true,
+          dodoCustomerId: true,
+          isScanning: true,
+          lastScanStatus: true,
+          referralPartner: {
+            select: { id: true }
+          }
+        }
+      });
+      if (dbUser) {
+        req.user = {
+          ...sessionData.user,
+          role: dbUser.role,
+          plan: dbUser.plan,
+          subscriptionStatus: dbUser.subscriptionStatus,
+          dodoCustomerId: dbUser.dodoCustomerId,
+          isScanning: dbUser.isScanning ?? false,
+          lastScanStatus: dbUser.lastScanStatus,
+          allowReferrals: !!dbUser.referralPartner
+        } as any;
+      } else {
+        req.user = sessionData.user as any;
+      }
+    } else {
+      req.user = sessionData.user as any;
+    }
     next();
   } catch (error) {
     logger.error({ error }, 'Auth middleware token verification failed');
@@ -47,7 +79,38 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
     });
 
     if (sessionData?.session && sessionData.session.expiresAt > new Date()) {
-      req.user = sessionData.user as any;
+      if (sessionData.user) {
+        const dbUser = await db.client.user.findUnique({
+          where: { id: sessionData.user.id },
+          select: {
+            role: true,
+            plan: true,
+            subscriptionStatus: true,
+            dodoCustomerId: true,
+            isScanning: true,
+            lastScanStatus: true,
+            referralPartner: {
+              select: { id: true }
+            }
+          }
+        });
+        if (dbUser) {
+          req.user = {
+            ...sessionData.user,
+            role: dbUser.role,
+            plan: dbUser.plan,
+            subscriptionStatus: dbUser.subscriptionStatus,
+            dodoCustomerId: dbUser.dodoCustomerId,
+            isScanning: dbUser.isScanning ?? false,
+            lastScanStatus: dbUser.lastScanStatus,
+            allowReferrals: !!dbUser.referralPartner
+          } as any;
+        } else {
+          req.user = sessionData.user as any;
+        }
+      } else {
+        req.user = sessionData.user as any;
+      }
     }
     next();
   } catch (error) {

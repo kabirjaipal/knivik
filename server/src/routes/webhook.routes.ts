@@ -173,6 +173,25 @@ async function handleCheckoutCompleted(data: any) {
     status
   );
 
+  // Track referral conversion
+  if (status === 'succeeded' || status === 'captured' || status === 'paid' || status === 'success') {
+    try {
+      const referral = await db.client.referral.findUnique({
+        where: { referredUserId: userId }
+      });
+
+      if (referral && referral.status !== 'CONVERTED') {
+        await db.client.referral.update({
+          where: { id: referral.id },
+          data: { status: 'CONVERTED' }
+        });
+        logger.info({ referralId: referral.id, userId }, 'Referral status updated to CONVERTED');
+      }
+    } catch (referralErr: any) {
+      logger.error({ error: referralErr.message, userId, paymentId }, 'Failed to process referral conversion status update');
+    }
+  }
+
   // If it's a subscription, the subscription.active event will also fire
   // but we can proactively upgrade here if we have enough info
   const planInfo = getPlanFromProductId(productId);

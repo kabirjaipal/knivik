@@ -29,6 +29,7 @@ interface User {
   isScanning: boolean;
   createdAt: string;
   metadata: any;
+  allowReferrals: boolean;
   _count: {
     products: number;
     leads: number;
@@ -117,6 +118,25 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleToggleReferrals = async (user: User) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/referrals/admin/users/${user.id}/toggle-referrals`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message)
+        fetchUsers()
+      } else {
+        toast.error(data.error || "Failed to update referral status")
+      }
+    } catch (err) {
+      toast.error("Network error")
+    }
+  }
+
   const handleDeleteUser = async () => {
     if (!selectedUser) return
     
@@ -171,7 +191,7 @@ export default function AdminUsersPage() {
               <TableHead className="font-bold text-center">Leads</TableHead>
               <TableHead className="font-bold">Status</TableHead>
               <TableHead className="font-bold">Joined</TableHead>
-              <TableHead className="text-right font-bold w-48">Actions</TableHead>
+              <TableHead className="text-right font-bold w-72">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -242,6 +262,19 @@ export default function AdminUsersPage() {
                   
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={`h-8 text-xs font-semibold cursor-pointer ${
+                          user.allowReferrals 
+                            ? "text-primary hover:text-primary-foreground hover:bg-primary/10 border-primary/20" 
+                            : "text-muted-foreground hover:text-foreground border-border/50"
+                        }`}
+                        onClick={() => handleToggleReferrals(user)}
+                      >
+                        {user.allowReferrals ? "Revoke Creator" : "Approve Creator"}
+                      </Button>
                       <Button
                         type="button"
                         variant="outline"

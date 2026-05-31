@@ -15,16 +15,6 @@ const baseURL = getBaseURL();
 export const authClient = createAuthClient({
   baseURL,
   plugins: [usernameClient()],
-  user: {
-    additionalFields: {
-      role: { type: "string" },
-      plan: { type: "string" },
-      subscriptionStatus: { type: "string" },
-      dodoCustomerId: { type: "string" },
-      isScanning: { type: "boolean" },
-      lastScanStatus: { type: "string" },
-    }
-  }
 });
 
 // Export typed helpers for convenience

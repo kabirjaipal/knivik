@@ -57,18 +57,27 @@ export function Sidebar({ className }: SidebarProps) {
 
   const isAtAdmin = pathname.startsWith('/admin')
 
-  const userLinks: NavLink[] = useMemo(() => [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/products", label: "Products", icon: Radar },
-    { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
-    { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  ], [])
+  const userLinks: NavLink[] = useMemo(() => {
+    const links = [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/products", label: "Products", icon: Radar },
+      { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
+      { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+    ];
+
+    if (user?.allowReferrals) {
+      links.push({ href: "/dashboard/referrals", label: "Referrals", icon: Coins });
+    }
+
+    links.push({ href: "/dashboard/settings", label: "Settings", icon: Settings });
+    return links;
+  }, [user?.allowReferrals])
 
   const adminLinks: NavLink[] = useMemo(() => [
     { href: "/admin", label: "System Overview", icon: LayoutDashboard },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/revenue", label: "Revenue", icon: Coins },
+    { href: "/admin/referrals", label: "Referrals Manager", icon: ShieldAlert },
     { href: "/admin/usage", label: "LLM Usage", icon: Brain },
     { href: "/admin/alerts", label: "Alert Logs", icon: BellRing },
     { href: "/admin/logs", label: "API Logs", icon: Terminal },

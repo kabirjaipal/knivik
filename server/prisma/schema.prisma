@@ -38,6 +38,10 @@ model User {
   subscriptions      Subscription[]
   usages             UsageRecord[]
   feedbacks          SiteFeedback[]
+  referralCodes      ReferralCode[] @relation("CreatorReferralCodes")
+  referredBy         Referral?      @relation("ReferredUser")
+  referralPartner    ReferralPartner?
+  referralPayouts    ReferralPayout[] @relation("CreatorPayouts")
 
   @@index([plan])
   @@map("ir_users")
@@ -344,8 +348,8 @@ model Payment {
   amount                Int
   currency              String
   status                String
-  createdAt             DateTime @default(now())
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt             DateTime        @default(now())
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("ir_payments")
@@ -433,3 +437,64 @@ model SiteFeedback {
   @@index([userId])
   @@map("ir_site_feedbacks")
 }
+
+model ReferralCode {
+  id          String     @id @default(cuid())
+  creatorId   String
+  code        String     @unique
+  createdAt   DateTime   @default(now())
+  creator     User       @relation("CreatorReferralCodes", fields: [creatorId], references: [id], onDelete: Cascade)
+  referrals   Referral[]
+
+  @@index([creatorId])
+  @@map("ir_referral_codes")
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referralCodeId String
+  referredUserId String         @unique
+  status         ReferralStatus @default(SIGNED_UP)
+  createdAt      DateTime       @default(now())
+  referralCode   ReferralCode   @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+  referredUser   User           @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referralCodeId])
+  @@map("ir_referrals")
+}
+
+enum ReferralStatus {
+  SIGNED_UP
+  CONVERTED
+}
+
+model ReferralPayout {
+  id          String       @id @default(cuid())
+  creatorId   String
+  amount      Int
+  currency    String       @default("USD")
+  status      PayoutStatus @default(PAID)
+  notes       String?
+  createdAt   DateTime     @default(now())
+  creator     User         @relation("CreatorPayouts", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+  @@map("ir_referral_payouts")
+}
+
+
+enum PayoutStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model ReferralPartner {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ir_referral_partners")
+}
+

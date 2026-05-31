@@ -41,14 +41,6 @@ export const auth: any = betterAuth({
     fields: {
       name: 'displayUsername',
     },
-    additionalFields: {
-      role: { type: 'string' },
-      plan: { type: 'string' },
-      subscriptionStatus: { type: 'string' },
-      dodoCustomerId: { type: 'string' },
-      isScanning: { type: 'boolean' },
-      lastScanStatus: { type: 'string' },
-    },
   },
 
   emailVerification: {
@@ -121,43 +113,5 @@ export const auth: any = betterAuth({
   rateLimit: {
     window: 60, // 1 minute window
     max: 100, // 100 requests per window
-  },
-
-  callbacks: {
-    async session({ session, user }: any) {
-      // Better Auth already queries the database and populates user additionalFields.
-      // We check if the fields are already present on the user object to avoid a redundant DB query.
-      if (user && user.role !== undefined && user.plan !== undefined) {
-        return { session, user };
-      }
-
-      const userData = await db.client.user.findUnique({
-        where: { id: user.id },
-        select: {
-          role: true,
-          plan: true,
-          subscriptionStatus: true,
-          dodoCustomerId: true,
-          isScanning: true,
-          lastScanStatus: true,
-        },
-      });
-
-      if (userData) {
-        return {
-          session,
-          user: {
-            ...user,
-            role: userData.role,
-            plan: userData.plan,
-            subscriptionStatus: userData.subscriptionStatus,
-            dodoCustomerId: userData.dodoCustomerId,
-            isScanning: userData.isScanning,
-            lastScanStatus: userData.lastScanStatus,
-          },
-        };
-      }
-      return { session, user };
-    },
   },
 });
