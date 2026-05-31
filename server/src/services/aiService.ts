@@ -1,92 +1,11 @@
-import { OpenAI } from 'openai';
+import { z } from 'zod';
 import config from '../lib/config.js';
 import logger from '../lib/logger.js';
-import { db } from '../lib/db.js';
 import * as outreachReplyPrompt from '../prompts/outreachReply.js';
 import * as productStrategyPrompt from '../prompts/productStrategy.js';
+import { aiLlmRunner, MODELS } from '../lib/aiRunner.js';
 
-// Centralized model registry (Optimized for 2026 Profitability)
-const MODELS = {
-  LITE: 'llama-3.1-8b-instant',      // Ultra-cheap scoring ($0.05)
-  VERSATILE: 'llama-3.3-70b-versatile', // High-reasoning replies ($0.59)
-};
-
-// Pricing per 1M tokens (USD) - Groq 2026 Rates
-const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  [MODELS.LITE]: { input: 0.05, output: 0.08 },
-  [MODELS.VERSATILE]: { input: 0.59, output: 0.79 },
-};
-
-export async function logLlmUsage(params: {
-  action: string;
-  model: string;
-  userId?: string | null | undefined;
-  productId?: string | null | undefined;
-  inputTokens: number;
-  outputTokens: number;
-  latencyMs: number;
-  status?: string | undefined;
-  errorMessage?: string | undefined;
-}) {
-  const { action, model: modelId, userId, productId, inputTokens, outputTokens, latencyMs, status = 'success', errorMessage } = params;
-  const totalTokens = inputTokens + outputTokens;
-
-  try {
-    // 1. Ensure the pricing model exists in the database (safeguard)
-    const rates = MODEL_PRICING[modelId as keyof typeof MODEL_PRICING] || { input: 0, output: 0 };
-    try {
-      // Check if the model already exists first to avoid triggering Prisma's global error logger
-      const existingModel = await db.client.llmModel.findUnique({
-        where: { id: modelId },
-        select: { id: true }
-      });
-
-      if (!existingModel) {
-        await db.client.llmModel.create({
-          data: { 
-            id: modelId, 
-            inputPrice: rates.input, 
-            outputPrice: rates.output,
-            modelOptions: { 
-              source: 'groq', 
-              reasoning_tokens_supported: modelId.includes('llama-3.3') 
-            } 
-          }
-        });
-      }
-    } catch (createError: any) {
-      // In case of a race condition between the check and the create, 
-      // we still catch P2002 but it's much less likely to happen.
-      if (createError.code !== 'P2002') {
-        throw createError;
-      }
-    }
-
-    // 2. Log exactly how many tokens were used
-    await db.client.llmUsageLog.create({
-      data: {
-        action,
-        modelId,
-        userId: userId || null,
-        productId: productId || null,
-        inputTokens,
-        outputTokens,
-        totalTokens,
-        latencyMs,
-        status,
-        errorMessage: errorMessage || null,
-      }
-    });
-  } catch (error: any) {
-    logger.error({ message: error.message, action }, 'Failed to write LLM telemetry');
-  }
-}
-
-// Initialize Groq client (Groq is OpenAI-compatible)
-const groq = new OpenAI({
-  apiKey: config.GROQ_API_KEY,
-  baseURL: config.GROQ_BASE_URL,
-});
+export { logLlmUsage } from '../lib/aiRunner.js';
 
 /**
  * Generates a helpful, non-spammy reply to a prospect.
@@ -98,7 +17,6 @@ export const generateReply = async (
   productInfo: { id?: string; userId?: string; name: string; description?: string; aiConfig?: any },
   tone: string = 'helpful, detailed, and naturally engaging'
 ): Promise<string> => {
-  const startTime = Date.now();
   const customPersona = productInfo.aiConfig?.customPersona;
   
   const systemPrompt = outreachReplyPrompt.systemPrompt;
@@ -111,53 +29,22 @@ export const generateReply = async (
   });
 
   try {
-    const response = await groq.chat.completions.create({
+    const text = await aiLlmRunner({
+      action: 'generate_reply',
       model: MODELS.VERSATILE,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
+      system: systemPrompt,
+      prompt: userPrompt,
       temperature: 0.7,
+      userId: productInfo.userId,
+      productId: productInfo.id,
+      responseFormat: 'text'
     });
-
-    const elapsed = Date.now() - startTime;
-    const usage = response.usage;
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'generate_reply',
-        model: MODELS.VERSATILE,
-        userId: productInfo.userId,
-        productId: productInfo.id,
-        inputTokens: usage?.prompt_tokens || 0,
-        outputTokens: usage?.completion_tokens || 0,
-        latencyMs: elapsed
-      });
-    });
-
-    return response.choices[0]?.message?.content || '';
+    return text;
   } catch (error: any) {
-    logger.error({ message: error.message, status: error.status }, 'Failed to generate reply:');
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'generate_reply',
-        model: MODELS.VERSATILE,
-        userId: productInfo.userId,
-        productId: productInfo.id,
-        inputTokens: 0,
-        outputTokens: 0,
-        latencyMs: Date.now() - startTime,
-        status: 'error',
-        errorMessage: error?.message || 'Unknown error'
-      });
-    });
-
+    logger.error({ error: error.message }, 'Failed to generate outreach reply');
     return 'Hi! Based on your post, our tool might be exactly what you need. Would love to chat more if you are interested.';
   }
 };
-
-
 
 // ─────────────────────────────────────────────
 // PRODUCT STRATEGY GENERATOR
@@ -177,12 +64,23 @@ export interface ProductStrategyResult {
   searchQueries: string[];
 }
 
+const strategyResponseSchema = z.object({
+  keywords: z.array(z.string()),
+  negativeKeywords: z.array(z.string()),
+  competitors: z.array(z.string()),
+  subreddits: z.array(z.string()),
+  twitterHandles: z.array(z.string()),
+  linkedinSearchFlags: z.array(z.string()),
+  productHuntCommunities: z.array(z.string()),
+  searchQueries: z.array(z.string()),
+});
+
 export const generateProductStrategy = async (
   name: string,
   description: string,
-  userId?: string
+  userId?: string,
+  productId?: string
 ): Promise<ProductStrategyResult> => {
-  const startTime = Date.now();
   const systemPrompt = productStrategyPrompt.systemPrompt;
   const userPrompt = productStrategyPrompt.getUserPrompt({
     projectName: config.PROJECT_NAME,
@@ -191,35 +89,18 @@ export const generateProductStrategy = async (
   });
 
   try {
-    const response = await groq.chat.completions.create({
-      model: MODELS.VERSATILE, // 70b model produces dramatically better, more specific strategy queries
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      response_format: { type: 'json_object' },
+    const parsed = await aiLlmRunner<ProductStrategyResult>({
+      action: 'generate_strategy',
+      model: MODELS.VERSATILE,
+      system: systemPrompt,
+      prompt: userPrompt,
       temperature: 0.2,
+      userId,
+      productId,
+      responseFormat: 'json',
+      schema: strategyResponseSchema,
     });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error('No content');
-
-    const elapsed = Date.now() - startTime;
-    const usage = response.usage;
-    
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'generate_strategy',
-        model: MODELS.VERSATILE,
-        userId,
-        inputTokens: usage?.prompt_tokens || 0,
-        outputTokens: usage?.completion_tokens || 0,
-        latencyMs: elapsed
-      });
-    });
-
-    const parsed = JSON.parse(content);
-    
     // Filter suggestions to ensure they are valid strings, preserving casing and length from the AI
     const rawSubreddits = Array.isArray(parsed.subreddits) ? parsed.subreddits : [];
     const rawTwitterHandles = Array.isArray(parsed.twitterHandles) ? parsed.twitterHandles : [];
@@ -251,21 +132,8 @@ export const generateProductStrategy = async (
       searchQueries: validSearchQueries
     };
   } catch (error: any) {
-    logger.error({ message: error.message, status: error.status }, 'Failed to generate product strategy:');
+    logger.error({ message: error.message }, 'Failed to generate product strategy:');
     
-    setImmediate(() => {
-      logLlmUsage({
-        action: 'generate_strategy',
-        model: MODELS.VERSATILE,
-        userId,
-        inputTokens: 0,
-        outputTokens: 0,
-        latencyMs: Date.now() - startTime,
-        status: 'error',
-        errorMessage: error?.message || 'Unknown error'
-      });
-    });
-
     return { 
       keywords: [], 
       negativeKeywords: [], 

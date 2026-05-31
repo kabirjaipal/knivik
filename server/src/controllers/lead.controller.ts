@@ -91,6 +91,8 @@ export const generateLeadReply = async (req: Request, res: Response): Promise<vo
 
     // Call OpenAI LLM Generator
     const replyText = await generateReply(lead.content, {
+       id: lead.product.id,
+       userId: lead.product.userId,
        name: lead.product.name,
        ...(lead.product.description && { description: lead.product.description }),
        ...(lead.product.aiConfig && { aiConfig: lead.product.aiConfig })

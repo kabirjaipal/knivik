@@ -1,15 +1,8 @@
-import { OpenAI } from 'openai';
-import config from '../lib/config.js';
+import { z } from 'zod';
 import { IntentLevel } from '@prisma/client';
 import logger from '../lib/logger.js';
-import { logLlmUsage } from './aiService.js';
+import { aiLlmRunner, MODELS } from '../lib/aiRunner.js';
 import * as batchAnalysisPrompt from '../prompts/batchAnalysis.js';
-
-// Initialize Groq client
-const groq = new OpenAI({
-  apiKey: config.GROQ_API_KEY,
-  baseURL: config.GROQ_BASE_URL,
-});
 
 export interface CollectedPost {
   id: string;
@@ -42,6 +35,38 @@ export interface BatchAnalysisResult {
   totalPostsAnalyzed: number;
   processingTime: number;
 }
+
+interface BatchAnalysisOutput {
+  results: Array<{
+    productId: string;
+    qualifiedLeads: Array<{
+      postId: string;
+      intentLevel: 'BUY_NOW' | 'COMPARING';
+      intentScore: number;
+      reasoning: string;
+    }>;
+    analysisSummary: string;
+  }>;
+  overallSummary: string;
+}
+
+const batchAnalysisSchema = z.object({
+  results: z.array(
+    z.object({
+      productId: z.string(),
+      qualifiedLeads: z.array(
+        z.object({
+          postId: z.string(),
+          intentLevel: z.enum(['BUY_NOW', 'COMPARING']),
+          intentScore: z.number().int().min(75).max(100),
+          reasoning: z.string(),
+        })
+      ),
+      analysisSummary: z.string(),
+    })
+  ),
+  overallSummary: z.string(),
+});
 
 /**
  * Batch AI Analysis - Processes all collected posts for a user in a single AI call
@@ -106,60 +131,22 @@ export const analyzeUserPostsBatch = async (
 
   logger.info(`[ANALYSIS] System prompt size: ${systemPrompt.length} chars, User prompt size: ${userPrompt.length} chars, sending to AI...`);
 
+  // If we only analyzed one product, link this log to it
+  const singleProductId = collectedPostsByProduct.length === 1 
+    ? collectedPostsByProduct[0].product.id 
+    : null;
+
   try {
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      response_format: { type: 'json_object' },
+    const parsed = await aiLlmRunner<BatchAnalysisOutput>({
+      action: 'batch_analysis',
+      model: MODELS.VERSATILE,
+      system: systemPrompt,
+      prompt: userPrompt,
       temperature: 0.1,
-      max_tokens: 6000, // 4000 caused mid-JSON truncation on large batches, losing all leads
-    } as any);
-
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error('No content returned from batch analysis');
-    }
-    
-    // DEBUG: Print exactly what JSON structure the AI returned
-    logger.info(`[AI-DEBUG] RAW JSON: ${content}`);
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(content);
-    } catch (parseErr: any) {
-      // Attempt JSON repair: extract the first complete JSON object via regex before giving up
-      logger.warn({ parseErr: parseErr.message }, '[ANALYSIS] JSON parse failed, attempting repair...');
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error(`AI returned non-JSON content: ${content.substring(0, 200)}`);
-      try {
-        parsed = JSON.parse(jsonMatch[0]!);
-        logger.info('[ANALYSIS] JSON repair succeeded');
-      } catch {
-        throw new Error(`JSON repair failed. Raw content: ${content.substring(0, 200)}`);
-      }
-    }
-    const elapsed = Date.now() - startTime;
-    const usage = response.usage;
-
-    // Log LLM usage
-    setImmediate(() => {
-      // If we only analyzed one product, link this log to it
-      const singleProductId = collectedPostsByProduct.length === 1 
-        ? collectedPostsByProduct[0].product.id 
-        : null;
-
-      logLlmUsage({
-        action: 'batch_analysis',
-        model: 'llama-3.3-70b-versatile',
-        userId,
-        productId: singleProductId,
-        inputTokens: usage?.prompt_tokens || 0,
-        outputTokens: usage?.completion_tokens || 0,
-        latencyMs: elapsed
-      });
+      userId,
+      productId: singleProductId,
+      responseFormat: 'json',
+      schema: batchAnalysisSchema,
     });
 
     // Convert AI response to our format
@@ -230,13 +217,12 @@ export const analyzeUserPostsBatch = async (
       userId,
       results,
       totalPostsAnalyzed: totalPosts,
-      processingTime: elapsed,
+      processingTime: Date.now() - startTime,
     };
 
   } catch (error: any) {
     logger.error({ 
       message: error.message, 
-      status: error.status,
       userId,
       totalPosts
     }, 'Batch analysis failed:');

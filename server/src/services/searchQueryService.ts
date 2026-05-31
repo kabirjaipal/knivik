@@ -36,7 +36,8 @@ export class SearchQueryService {
       const strategy = await generateProductStrategy(
         product.name,
         product.description || '',
-        product.userId
+        product.userId,
+        product.id
       );
 
       const existingAiConfig = (product.aiConfig as Record<string, any>) || {};
