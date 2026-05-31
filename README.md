@@ -513,11 +513,9 @@ $5k MRR
 
 # Future Features
 
-After MVP:
-
-```
-Twitter scanning
-AI outreach automation
-CRM integration
-lead enrichment
-```
+1. let our site go on the post link and comment automaticly no user interaction needed
+2. rn our project optomize to find leads for product but we have optimzie it for services too like video editing 
+3. use instagram and linkedin and facebook too for lead platform
+4. referal portal
+5. micro saas tools related to this project
+6. add buy now button near start trial 
