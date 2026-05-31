@@ -2,6 +2,8 @@ import { OpenAI } from 'openai';
 import config from '../lib/config.js';
 import logger from '../lib/logger.js';
 import { db } from '../lib/db.js';
+import * as outreachReplyPrompt from '../prompts/outreachReply.js';
+import * as productStrategyPrompt from '../prompts/productStrategy.js';
 
 // Centralized model registry (Optimized for 2026 Profitability)
 const MODELS = {
@@ -86,8 +88,6 @@ const groq = new OpenAI({
   baseURL: config.GROQ_BASE_URL,
 });
 
-
-
 /**
  * Generates a helpful, non-spammy reply to a prospect.
  * Reasoning task: Contextual writing and personalization.
@@ -101,33 +101,14 @@ export const generateReply = async (
   const startTime = Date.now();
   const customPersona = productInfo.aiConfig?.customPersona;
   
-  const systemPrompt = `
-You are representing a product called "${productInfo.name}".
-Product description: ${productInfo.description || 'A software tool.'}
-
-EXPECTED INPUT FORMAT:
-You will receive the prospect's social post content in the User Prompt.
-
-YOUR TASK:
-Write an authentic, highly detailed, and helpful response to this post.
-Goal: Provide genuine, specific value to the prospect's problem first, and then suggest our product naturally as a fitting solution.
-
-Tone Constraint: ${tone}
-${customPersona ? `STRICTLY FOLLOW THIS CUSTOM PERSONA: ${customPersona}` : `Role: You are an authentic, helpful founder or domain expert replying to online threads.`}
-
-GUIDELINES FOR QUALITY AND LENGTH:
-1. **Empathy & Value-First**: Start by directly acknowledging the specific pain points, technical challenges, or questions raised in the post. Do not jump straight into a pitch.
-2. **Detailed Insight**: Give concrete, actionable advice or tips related to their situation. Show that you understand the domain deeply.
-3. **Natural Transition**: Introduce "${productInfo.name}" as a direct answer to their challenge, explaining *why* it fits their specific case (e.g., highlighting specific features matching their problem).
-4. **Length and Structure**: Write a well-structured response (approx. 100-200 words) using 3-4 readable paragraphs. Avoid extremely short one-liners. Use formatting like clean lists or bullet points only if it genuinely aids readability.
-5. **Human Sounding**: Avoid promotional clichés, buzzwords (e.g., "revolutionizing", "synergy"), or robotic greetings/sign-offs. Sound like an experienced practitioner giving a peer-to-peer recommendation on Reddit or Hacker News.
-
-CONSTRAINTS:
-- Do not sound like a sales bot or copy-paste template.
-- Keep the tone helpful, human-first, and highly engaging.
-`;
-
-  const userPrompt = `Prospect Post:\n"""\n${postText}\n"""`;
+  const systemPrompt = outreachReplyPrompt.systemPrompt;
+  const userPrompt = outreachReplyPrompt.getUserPrompt({
+    productName: productInfo.name,
+    productDescription: productInfo.description || 'A software tool.',
+    tone,
+    customPersona,
+    postText,
+  });
 
   try {
     const response = await groq.chat.completions.create({
@@ -196,168 +177,17 @@ export interface ProductStrategyResult {
   searchQueries: string[];
 }
 
-/**
- * Validate subreddit names by checking if they exist on Reddit
- * Uses Reddit's JSON API to verify subreddit exists
- */
-async function validateSubreddits(subreddits: string[]): Promise<string[]> {
-  const valid: string[] = [];
-  const maxToCheck = 25; // Check more subreddits to ensure we get at least 10 valid ones
-  
-  for (const sub of subreddits.slice(0, maxToCheck)) {
-    // Stop early if we already have 10 valid subreddits
-    if (valid.length >= 10) break;
-    
-    // Strict alphanumeric sanitization to prevent path traversal or SSRF via malicious handles
-    const cleanSub = sub.toLowerCase().replace(/^r\//, '').replace(/[^a-z0-9_]/g, '');
-    if (!cleanSub || cleanSub.length < 2) continue;
-
-    try {
-      const url = `https://www.reddit.com/r/${cleanSub}/about.json`;
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Knivik-Validator/1.0 (Product Strategy Validation)',
-          'Accept': 'application/json',
-        },
-        signal: AbortSignal.timeout(3000) // Reduced timeout from 5s to 3s
-      });
-      
-      if (response.ok) {
-        const data = await response.json() as any;
-        // Check if it's a real subreddit with subscribers
-        if (data?.data?.subscribers && data.data.subscribers > 100) {
-          valid.push(cleanSub);
-          logger.debug(`[VALIDATE] Subreddit r/${cleanSub} exists (${data.data.subscribers} subscribers)`);
-        } else if (data?.data) {
-          valid.push(cleanSub); // Exists even if small
-        } else {
-          valid.push(cleanSub);
-        }
-      } else if (response.status === 404) {
-        logger.debug(`[VALIDATE] Subreddit r/${cleanSub} does not exist (404)`);
-      } else {
-        // Fallback: If we got rate limited (429), forbidden (403), or server error, retain the subreddit
-        valid.push(cleanSub);
-        logger.debug(`[VALIDATE] Subreddit r/${cleanSub} returned status ${response.status}. Retaining as fallback.`);
-      }
-    } catch (err: any) {
-      logger.debug(`[VALIDATE] Failed to check r/${cleanSub}: ${err.message}. Retaining as fallback.`);
-      valid.push(cleanSub);
-    }
-    
-    // Minimal delay to avoid rate limits - 50ms instead of 300ms
-    await new Promise(r => setTimeout(r, 50));
-  }
-  
-  return valid;
-}
-
-/**
- * Validate Twitter handles by checking if they exist
- * Uses Nitter as a lightweight check (no auth needed)
- */
-async function validateTwitterHandles(handles: string[]): Promise<string[]> {
-  const valid: string[] = [];
-  const nitterInstances = ['nitter.privacydev.net', 'nitter.net', 'nitter.cz'];
-  const maxToCheck = 15; // Check more handles to get at least 6 valid ones
-  
-  for (const handle of handles.slice(0, maxToCheck)) {
-    // Stop early if we already have 6 valid handles
-    if (valid.length >= 6) break;
-    
-    // Strict alphanumeric sanitization for Twitter handles
-    const cleanHandle = handle.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '');
-    if (!cleanHandle || cleanHandle.length < 2) continue;
-
-    let isValid = false;
-    let found404 = false;
-    
-    for (const instance of nitterInstances) {
-      try {
-        const url = `https://${instance}/${cleanHandle}`;
-        const response = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0.36',
-            'Accept': 'text/html',
-          },
-          signal: AbortSignal.timeout(3000), // Reduced from 5s to 3s
-          redirect: 'manual'
-        });
-        
-        // If we get a 200 or redirect (not 404), the user likely exists
-        if (response.status === 200 || response.status === 302 || response.status === 301) {
-          isValid = true;
-          logger.debug(`[VALIDATE] Twitter handle @${cleanHandle} exists`);
-          break;
-        } else if (response.status === 404) {
-          found404 = true;
-          logger.debug(`[VALIDATE] Twitter handle @${cleanHandle} not found on ${instance}`);
-        }
-      } catch (err: any) {
-        continue; // Try next instance
-      }
-    }
-    
-    // If it's valid, OR if we didn't get a definitive 404 (e.g. rate limits, network failures on all instances), keep it as fallback
-    if (isValid || !found404) {
-      valid.push(cleanHandle);
-    }
-    
-    // Minimal delay - 100ms instead of 500ms
-    await new Promise(r => setTimeout(r, 100));
-  }
-  
-  return valid;
-}
-
 export const generateProductStrategy = async (
   name: string,
   description: string,
   userId?: string
 ): Promise<ProductStrategyResult> => {
   const startTime = Date.now();
-  const systemPrompt = `
-You are a Senior Growth Marketer and Social Listening Expert with a background in B2B and consumer SaaS. 
-Your goal is to build a high-conversion social listening strategy for a product on "${config.PROJECT_NAME}".
-
-EXPECTED INPUT FORMAT:
-You will receive a JSON object containing:
-- productName: The name of the product.
-- productDescription: Core description and value proposition of the product.
-
-YOUR TASK:
-Generate a comprehensive strategy to capture high-intent leads across Reddit, HackerNews, Twitter, LinkedIn, and ProductHunt, including exact search queries.
-
-Pillars to map:
-PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 15-20 positive keywords/intent phrases).
-PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25 terms to filter out).
-PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8 direct and indirect competitor names).
-PILLAR 4: TARGET COMMUNITIES (Reddit & ProductHunt) (6-8 relevant subreddits, 3-4 PH discussion topics).
-PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn) (5-6 official Twitter handles of the direct competitors identified in PILLAR 3 prefixed with @, 5-6 LinkedIn problem-phrases).
-PILLAR 6: FORUM SEARCH QUERIES (Generate 15-20 short 2-4 word queries optimized for social search bars).
-
-EXPECTED OUTPUT FORMAT:
-You must strictly return ONLY a valid, minified JSON object matching this structure:
-{
-  "keywords": ["intent phrase 1", "intent phrase 2", ...],
-  "negativeKeywords": ["negative term 1", "negative term 2", ...],
-  "competitors": ["competitor 1", "competitor 2", ...],
-  "subreddits": ["subreddit1", "subreddit2", ...],
-  "twitterHandles": ["@handle1", "@handle2", ...],
-  "linkedinSearchFlags": ["flag 1", "flag 2", ...],
-  "productHuntCommunities": ["topic 1", "topic 2", ...],
-  "searchQueries": ["query 1", "query 2", ...]
-}
-
-CONSTRAINTS:
-- Return strictly ONLY JSON. Do not include markdown code block fences (e.g. \`\`\`json), trailing commas, or explaining notes.
-- Focus on high-buying-intent, specific terms.
-- The "twitterHandles" MUST correspond to the active, official Twitter/X accounts of the competitors specified in PILLAR 3 (prefixed with @), enabling the system to run precise competitor-poaching queries (e.g. "@supabase" or "@firebase").
-`;
-
-  const userPrompt = JSON.stringify({
+  const systemPrompt = productStrategyPrompt.systemPrompt;
+  const userPrompt = productStrategyPrompt.getUserPrompt({
+    projectName: config.PROJECT_NAME,
     productName: name,
-    productDescription: description
+    productDescription: description,
   });
 
   try {
@@ -390,28 +220,25 @@ CONSTRAINTS:
 
     const parsed = JSON.parse(content);
     
-    // Validate AI-generated suggestions to ensure they exist
+    // Filter suggestions to ensure they are valid strings, preserving casing and length from the AI
     const rawSubreddits = Array.isArray(parsed.subreddits) ? parsed.subreddits : [];
     const rawTwitterHandles = Array.isArray(parsed.twitterHandles) ? parsed.twitterHandles : [];
     
-    // Validate subreddits and Twitter handles in parallel
-    const [validSubreddits, validTwitterHandles] = await Promise.all([
-      validateSubreddits(rawSubreddits),
-      validateTwitterHandles(rawTwitterHandles)
-    ]);
-    
+    const validSubreddits = rawSubreddits
+      .filter((sub: any) => typeof sub === 'string' && sub.trim().length > 0);
+
+    const validTwitterHandles = rawTwitterHandles
+      .filter((h: any) => typeof h === 'string' && h.trim().length > 0);
+
     logger.info({ 
       rawSubreddits: rawSubreddits.length, 
-      validSubreddits: validSubreddits.length,
-      rawTwitter: rawTwitterHandles.length,
-      validTwitter: validTwitterHandles.length 
-    }, 'Validated AI-generated communities');
+      rawTwitter: rawTwitterHandles.length 
+    }, 'Processed AI-generated communities');
 
     // Clean generated search queries
     const searchQueries: string[] = Array.isArray(parsed.searchQueries) ? parsed.searchQueries : [];
     const validSearchQueries = searchQueries
-      .filter(q => typeof q === 'string' && q.length >= 3 && q.length < 150) // enforce meaningful length
-      .slice(0, 20);
+      .filter((q: any) => typeof q === 'string' && q.trim().length > 0);
 
     return {
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
