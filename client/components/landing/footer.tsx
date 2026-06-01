@@ -22,7 +22,7 @@ export function Footer() {
       <div className="container mx-auto px-6">
         
         {/* Multi-Column Upper Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex items-center gap-2 group w-fit">
               <Logo size={20} />
@@ -33,6 +33,17 @@ export function Footer() {
             <p className="text-muted-foreground text-xs font-medium leading-relaxed max-w-xs">
               AI-powered social lead generation. Catch high-intent conversations in real-time.
             </p>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Free Tools</h4>
+            <ul className="flex flex-col gap-2 text-xs font-bold text-foreground/70">
+              <li>
+                <Link href="/tools/search-builder" className="hover:text-primary transition-colors">
+                  Social Search Operator Builder
+                </Link>
+              </li>
+            </ul>
           </div>
 
           <div className="flex flex-col gap-2.5">
