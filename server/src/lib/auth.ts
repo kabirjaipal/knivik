@@ -100,6 +100,10 @@ export const auth: any = betterAuth({
 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days in seconds
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes — role is re-read from DB at most every 5 min
+    },
   },
 
   advanced: {

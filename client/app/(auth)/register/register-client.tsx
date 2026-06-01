@@ -81,7 +81,7 @@ export default function RegisterClient() {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: window.location.origin + "/auth/callback",
+        callbackURL: window.location.origin + "/dashboard",
       })
     } catch (err: any) {
       setError(err.message)
