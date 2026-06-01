@@ -31,8 +31,8 @@ export class SearchQueryService {
         return [];
       }
 
-      const existingAiConfig = (product.aiConfig as Record<string, any>) || {};
-      const productType = existingAiConfig.productType || 'product';
+      const existingConfig = (product.config as Record<string, any>) || {};
+      const productType = existingConfig.productType || 'product';
 
       // Generate queries & strategy using our merged AI function
       logger.info({ productId, productName: product.name, productType }, '[STRATEGY] Generating unified strategy & search queries...');
@@ -44,26 +44,26 @@ export class SearchQueryService {
         productType
       );
 
-      const updatedAiConfig = {
-        ...existingAiConfig,
+      const updatedConfig = {
+        ...existingConfig,
         keywords: strategy.keywords, // Keywords should always be regenerated based on current product info
-        negativeKeywords: (Array.isArray(existingAiConfig.negativeKeywords) && existingAiConfig.negativeKeywords.length > 0)
-          ? existingAiConfig.negativeKeywords
+        negativeKeywords: (Array.isArray(existingConfig.negativeKeywords) && existingConfig.negativeKeywords.length > 0)
+          ? existingConfig.negativeKeywords
           : strategy.negativeKeywords,
-        competitors: (Array.isArray(existingAiConfig.competitors) && existingAiConfig.competitors.length > 0)
-          ? existingAiConfig.competitors
+        competitors: (Array.isArray(existingConfig.competitors) && existingConfig.competitors.length > 0)
+          ? existingConfig.competitors
           : strategy.competitors,
-        subreddits: (Array.isArray(existingAiConfig.subreddits) && existingAiConfig.subreddits.length > 0)
-          ? existingAiConfig.subreddits
+        subreddits: (Array.isArray(existingConfig.subreddits) && existingConfig.subreddits.length > 0)
+          ? existingConfig.subreddits
           : strategy.subreddits,
-        twitterHandles: (Array.isArray(existingAiConfig.twitterHandles) && existingAiConfig.twitterHandles.length > 0)
-          ? existingAiConfig.twitterHandles
+        twitterHandles: (Array.isArray(existingConfig.twitterHandles) && existingConfig.twitterHandles.length > 0)
+          ? existingConfig.twitterHandles
           : strategy.twitterHandles,
-        linkedinSearchFlags: (Array.isArray(existingAiConfig.linkedinSearchFlags) && existingAiConfig.linkedinSearchFlags.length > 0)
-          ? existingAiConfig.linkedinSearchFlags
+        linkedinSearchFlags: (Array.isArray(existingConfig.linkedinSearchFlags) && existingConfig.linkedinSearchFlags.length > 0)
+          ? existingConfig.linkedinSearchFlags
           : strategy.linkedinSearchFlags,
-        productHuntCommunities: (Array.isArray(existingAiConfig.productHuntCommunities) && existingAiConfig.productHuntCommunities.length > 0)
-          ? existingAiConfig.productHuntCommunities
+        productHuntCommunities: (Array.isArray(existingConfig.productHuntCommunities) && existingConfig.productHuntCommunities.length > 0)
+          ? existingConfig.productHuntCommunities
           : strategy.productHuntCommunities,
       };
 
@@ -72,7 +72,7 @@ export class SearchQueryService {
         where: { id: productId },
         data: {
           searchQueries: strategy.searchQueries,
-          aiConfig: updatedAiConfig,
+          config: updatedConfig,
         },
       });
 

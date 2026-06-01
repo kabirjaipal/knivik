@@ -10,7 +10,7 @@ interface Product {
   websiteUrl: string | null
   isActive: boolean
   searchQueries?: string[]
-  aiConfig?: any
+  config?: any
 }
 
 interface ProductDetailsProps {
@@ -57,13 +57,13 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       </div>
  
       {/* AI Persona */}
-      {product.aiConfig?.customPersona && (
+      {product.config?.customPersona && (
         <section className="bg-primary/3 p-5 rounded-2xl border border-primary/10">
           <h2 className="text-xs font-bold uppercase tracking-widest text-primary/80 mb-2 flex items-center gap-1.5">
             <Zap className="w-3 h-3 fill-current" /> AI Persona
           </h2>
           <p className="text-sm font-medium italic text-foreground/70 leading-relaxed">
-            "{product.aiConfig.customPersona}"
+            "{product.config.customPersona}"
           </p>
         </section>
       )}

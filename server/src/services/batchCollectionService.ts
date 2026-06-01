@@ -15,7 +15,7 @@ interface ProductWithDetails {
   description: string | null;
   websiteUrl: string | null;
   isActive: boolean;
-  aiConfig: any;
+  config: any;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -572,8 +572,8 @@ export class BatchCollectionService {
     const lower = text.toLowerCase();
 
     // 1. Excluded authors check (Author Blacklist)
-    const aiConfig = product.aiConfig as any;
-    const excludedAuthors: string[] = Array.isArray(aiConfig?.excludedAuthors) ? aiConfig.excludedAuthors : [];
+    const config = product.config as any;
+    const excludedAuthors: string[] = Array.isArray(config?.excludedAuthors) ? config.excludedAuthors : [];
     if (author && excludedAuthors.length > 0) {
       const lowerAuthor = author.toLowerCase().trim();
       const isExcluded = excludedAuthors.some(ex => {
@@ -608,7 +608,7 @@ export class BatchCollectionService {
 
     // For products, we also reject job/hiring posts since they are seeking people, not software tools
     // For services, we want to allow job/hiring posts, but still reject other job seekers ("looking for a job")
-    const productType = product.aiConfig?.productType || 'product';
+    const productType = product.config?.productType || 'product';
     const hardRejects = productType === 'service'
       ? [...baseHardRejects, 'looking for a job']
       : [...baseHardRejects, 'we\'re hiring', 'we are hiring', 'job post', 'looking for a job'];
@@ -620,7 +620,7 @@ export class BatchCollectionService {
     }
 
     // AI-generated negative keywords from product strategy (free 40% noise reduction)
-    const negativeKeywords: string[] = Array.isArray(aiConfig?.negativeKeywords) ? aiConfig.negativeKeywords : [];
+    const negativeKeywords: string[] = Array.isArray(config?.negativeKeywords) ? config.negativeKeywords : [];
     for (const kw of negativeKeywords) {
       if (typeof kw === 'string' && kw.length > 2 && lower.includes(kw.toLowerCase())) {
         return { passed: false, reason: `Negative keyword: "${kw}"` };
@@ -776,9 +776,9 @@ export class BatchCollectionService {
       return posts;
     }
 
-    const aiConfig = product.aiConfig as any;
-    const competitors = Array.isArray(aiConfig?.competitors) ? aiConfig.competitors : [];
-    const twitterHandles = Array.isArray(aiConfig?.twitterHandles) ? aiConfig.twitterHandles : [];
+    const config = product.config as any;
+    const competitors = Array.isArray(config?.competitors) ? config.competitors : [];
+    const twitterHandles = Array.isArray(config?.twitterHandles) ? config.twitterHandles : [];
     
     // Clean and merge targets
     const competitorTargets = Array.from(new Set([

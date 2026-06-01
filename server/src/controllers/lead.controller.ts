@@ -95,7 +95,7 @@ export const generateLeadReply = async (req: Request, res: Response): Promise<vo
        userId: lead.product.userId,
        name: lead.product.name,
        ...(lead.product.description && { description: lead.product.description }),
-       ...(lead.product.aiConfig && { aiConfig: lead.product.aiConfig })
+       ...(lead.product.config && { config: lead.product.config })
     });
 
     // Optionally save it as a drafting history

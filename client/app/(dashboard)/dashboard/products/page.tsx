@@ -24,7 +24,7 @@ interface ProductFormData {
   description: string;
   websiteUrl: string;
   isActive: boolean;
-  aiConfig: {
+  config: {
     customPersona: string;
     negativeKeywords: string[];
     excludedAuthors: string[];
@@ -52,7 +52,7 @@ export default function ProductsPage() {
     description: "",
     websiteUrl: "",
     isActive: true,
-    aiConfig: {
+    config: {
       customPersona: "",
       negativeKeywords: [],
       excludedAuthors: [],
@@ -95,7 +95,7 @@ export default function ProductsPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    const isService = formData.aiConfig.productType === 'service';
+    const isService = formData.config.productType === 'service';
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -111,7 +111,7 @@ export default function ProductsPage() {
           description: formData.description,
           websiteUrl: formData.websiteUrl,
           isActive: formData.isActive,
-          aiConfig: formData.aiConfig,
+          config: formData.config,
         })
       });
 
@@ -140,7 +140,7 @@ export default function ProductsPage() {
         description: "", 
         websiteUrl: "", 
         isActive: true,
-        aiConfig: { 
+        config: { 
           customPersona: "", 
           negativeKeywords: [], 
           excludedAuthors: [],
@@ -168,7 +168,7 @@ export default function ProductsPage() {
     if (!productToDelete) return
     setIsDeleting(true)
 
-    const isService = productToDelete.aiConfig?.productType === 'service';
+    const isService = productToDelete.config?.productType === 'service';
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -215,7 +215,7 @@ export default function ProductsPage() {
           setIsCreating(false);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
+            config: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
           });
         }
       }}>
@@ -227,10 +227,10 @@ export default function ProductsPage() {
               </div>
               <div>
                 <SheetTitle className="text-xl font-black tracking-tight">
-                  {formData.aiConfig.productType === 'service' ? 'New Service' : 'New Product'}
+                  {formData.config.productType === 'service' ? 'New Service' : 'New Product'}
                 </SheetTitle>
                 <SheetDescription className="text-muted-foreground">
-                  {formData.aiConfig.productType === 'service' 
+                  {formData.config.productType === 'service' 
                     ? 'Create a new service offering to track' 
                     : 'Create a new product to track'}
                 </SheetDescription>
@@ -260,7 +260,7 @@ export default function ProductsPage() {
                 setIsCreating(false);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
+                  config: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
                 });
               }}
             >
@@ -273,7 +273,7 @@ export default function ProductsPage() {
               disabled={isSubmitting || isAiLoading}
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {formData.aiConfig.productType === 'service' ? 'Create Service' : 'Create Product'}
+              {formData.config.productType === 'service' ? 'Create Service' : 'Create Product'}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -286,7 +286,7 @@ export default function ProductsPage() {
           setEditingProductId(null);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
+            config: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
           });
         }
       }}>
@@ -298,10 +298,10 @@ export default function ProductsPage() {
               </div>
               <div>
                 <SheetTitle className="text-xl font-black tracking-tight">
-                  {formData.aiConfig.productType === 'service' ? 'Edit Service' : 'Edit Product'}
+                  {formData.config.productType === 'service' ? 'Edit Service' : 'Edit Product'}
                 </SheetTitle>
                 <SheetDescription className="text-muted-foreground">
-                  {formData.aiConfig.productType === 'service' 
+                  {formData.config.productType === 'service' 
                     ? 'Update your service configuration' 
                     : 'Update your product configuration'}
                 </SheetDescription>
@@ -330,7 +330,7 @@ export default function ProductsPage() {
                 setEditingProductId(null);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
+                  config: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
                 });
               }}
             >
@@ -342,7 +342,7 @@ export default function ProductsPage() {
               disabled={isSubmitting || isAiLoading}
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {formData.aiConfig.productType === 'service' ? 'Update Service' : 'Update Product'}
+              {formData.config.productType === 'service' ? 'Update Service' : 'Update Product'}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -371,11 +371,11 @@ export default function ProductsPage() {
                     description: product.description || "",
                     websiteUrl: product.websiteUrl || "",
                     isActive: product.isActive ?? true,
-                    aiConfig: {
-                      customPersona: product.aiConfig?.customPersona || "",
-                      negativeKeywords: product.aiConfig?.negativeKeywords || [],
-                      excludedAuthors: product.aiConfig?.excludedAuthors || [],
-                      productType: product.aiConfig?.productType === 'service' ? 'service' : 'product',
+                    config: {
+                      customPersona: product.config?.customPersona || "",
+                      negativeKeywords: product.config?.negativeKeywords || [],
+                      excludedAuthors: product.config?.excludedAuthors || [],
+                      productType: product.config?.productType === 'service' ? 'service' : 'product',
                     }
                   })
                 }}
@@ -394,7 +394,7 @@ export default function ProductsPage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title={productToDelete?.aiConfig?.productType === 'service' ? "Delete Service?" : "Delete Product?"}
+        title={productToDelete?.config?.productType === 'service' ? "Delete Service?" : "Delete Product?"}
         description={
           <>
             Are you sure you want to delete <span className="font-black text-foreground">"{productToDelete?.name}"</span>? 
@@ -424,7 +424,7 @@ interface ProductFormProps {
 function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAiLoading, formId, onSubmit }: ProductFormProps) {
   const { user } = useAuth()
   const isFreePlan = user?.plan?.toUpperCase() !== "PRO"
-  const isService = formData.aiConfig.productType === 'service'
+  const isService = formData.config.productType === 'service'
 
   return (
     <form id={formId} onSubmit={onSubmit} className="space-y-6">
@@ -436,10 +436,10 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
             type="button"
             onClick={() => setFormData({
               ...formData,
-              aiConfig: { ...formData.aiConfig, productType: 'product' }
+              config: { ...formData.config, productType: 'product' }
             })}
             className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-              formData.aiConfig.productType === 'product'
+              formData.config.productType === 'product'
                 ? "border-primary bg-primary/5 text-primary shadow-sm"
                 : "border-border/60 hover:border-border hover:bg-muted/50 text-muted-foreground"
             }`}
@@ -455,10 +455,10 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
             type="button"
             onClick={() => setFormData({
               ...formData,
-              aiConfig: { ...formData.aiConfig, productType: 'service' }
+              config: { ...formData.config, productType: 'service' }
             })}
             className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-              formData.aiConfig.productType === 'service'
+              formData.config.productType === 'service'
                 ? "border-primary bg-primary/5 text-primary shadow-sm"
                 : "border-border/60 hover:border-border hover:bg-muted/50 text-muted-foreground"
             }`}
@@ -524,18 +524,18 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           Exclude conversations containing any of these terms (comma-separated). Leave empty to automatically generate them using AI.
         </p>
         <textarea 
-          value={Array.isArray(formData.aiConfig.negativeKeywords) 
-            ? formData.aiConfig.negativeKeywords.join(", ") 
-            : typeof formData.aiConfig.negativeKeywords === 'string'
-              ? formData.aiConfig.negativeKeywords
+          value={Array.isArray(formData.config.negativeKeywords) 
+            ? formData.config.negativeKeywords.join(", ") 
+            : typeof formData.config.negativeKeywords === 'string'
+              ? formData.config.negativeKeywords
               : ""
           }
           onChange={e => {
             const keywordsArray = e.target.value.split(",").map(k => k.trim());
             setFormData({
               ...formData,
-              aiConfig: {
-                ...formData.aiConfig,
+              config: {
+                ...formData.config,
                 negativeKeywords: keywordsArray
               }
             });
@@ -553,18 +553,18 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           Ignore posts/comments from specific authors or bot accounts (comma-separated).
         </p>
         <textarea 
-          value={Array.isArray(formData.aiConfig.excludedAuthors) 
-            ? formData.aiConfig.excludedAuthors.join(", ") 
-            : typeof formData.aiConfig.excludedAuthors === 'string'
-              ? formData.aiConfig.excludedAuthors
+          value={Array.isArray(formData.config.excludedAuthors) 
+            ? formData.config.excludedAuthors.join(", ") 
+            : typeof formData.config.excludedAuthors === 'string'
+              ? formData.config.excludedAuthors
               : ""
           }
           onChange={e => {
             const authorsArray = e.target.value.split(",").map(a => a.trim());
             setFormData({
               ...formData,
-              aiConfig: {
-                ...formData.aiConfig,
+              config: {
+                ...formData.config,
                 excludedAuthors: authorsArray
               }
             });
@@ -610,11 +610,11 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           </div>
         ) : (
           <textarea
-            value={formData.aiConfig.customPersona || ""}
+            value={formData.config.customPersona || ""}
             onChange={e => setFormData({
               ...formData,
-              aiConfig: {
-                ...formData.aiConfig,
+              config: {
+                ...formData.config,
                 customPersona: e.target.value
               }
             })}
@@ -683,7 +683,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         <div className="flex justify-between items-start gap-3 flex-wrap sm:flex-nowrap">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-11 h-11 rounded-xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors shrink-0">
-              {product.aiConfig?.productType === 'service' ? (
+              {product.config?.productType === 'service' ? (
                 <Briefcase className="w-5 h-5" />
               ) : (
                 <Package className="w-5 h-5" />
@@ -706,11 +706,11 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
 
           <div className="shrink-0 flex items-center gap-1.5">
             <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-              product.aiConfig?.productType === 'service'
+              product.config?.productType === 'service'
                 ? "bg-teal-500/10 text-teal-600 border-teal-500/20 dark:text-teal-400"
                 : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
             }`}>
-              {product.aiConfig?.productType === 'service' ? 'Service' : 'Product'}
+              {product.config?.productType === 'service' ? 'Service' : 'Product'}
             </span>
 
             {isActive ? (

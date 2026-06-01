@@ -137,7 +137,7 @@ model Product {
   description      String?
   websiteUrl       String?
   isActive         Boolean           @default(true)
-  aiConfig         Json?
+  config           Json?
   searchQueries    Json?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt

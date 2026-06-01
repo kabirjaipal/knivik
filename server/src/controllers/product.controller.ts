@@ -11,7 +11,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
   isActive: z.boolean().default(true),
-  aiConfig: z.record(z.string(), z.any()).optional(),
+  config: z.record(z.string(), z.any()).optional(),
 });
 
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
@@ -107,9 +107,9 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const cleanAiConfig: Record<string, any> = { ...(data.aiConfig || {}) };
-    delete cleanAiConfig['lastManualScanDate'];
-    delete cleanAiConfig['manualScansToday'];
+    const cleanConfig: Record<string, any> = { ...(data.config || {}) };
+    delete cleanConfig['lastManualScanDate'];
+    delete cleanConfig['manualScansToday'];
 
     const product = await db.client.product.create({
       data: {
@@ -118,7 +118,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
         description: data.description || null,
         websiteUrl: data.websiteUrl || null,
         isActive: data.isActive,
-        aiConfig: cleanAiConfig,
+        config: cleanConfig,
       },
       include: {
         _count: {
@@ -184,17 +184,17 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const user = await db.client.user.findUnique({ where: { id: userId } });
     const { hasCapability: hasCap } = await import('../lib/plans.js');
     
-    const existingAiConfig = (existing.aiConfig as Record<string, any>) || {};
-    const finalAiConfig: Record<string, any> = {
-      ...(data.aiConfig || {}),
+    const existingConfig = (existing.config as Record<string, any>) || {};
+    const finalConfig: Record<string, any> = {
+      ...(data.config || {}),
       // Preserve internal scan-tracking properties to prevent manual scan quota bypass
-      lastManualScanDate: existingAiConfig['lastManualScanDate'],
-      manualScansToday: existingAiConfig['manualScansToday'],
+      lastManualScanDate: existingConfig['lastManualScanDate'],
+      manualScansToday: existingConfig['manualScansToday'],
     };
 
-    if (finalAiConfig['customPersona'] && (!user || !hasCap(user.plan as any, 'canAccessCustomPersonas'))) {
+    if (finalConfig['customPersona'] && (!user || !hasCap(user.plan as any, 'canAccessCustomPersonas'))) {
       // Strip out the custom persona if they don't have the capability, fail silently
-      delete finalAiConfig['customPersona'];
+      delete finalConfig['customPersona'];
     }
 
     // We'll use a transaction to cleanly overwrite the relations
@@ -207,7 +207,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
           description: data.description || null,
           websiteUrl: data.websiteUrl || null,
           isActive: data.isActive,
-          aiConfig: finalAiConfig,
+          config: finalConfig,
           // Clear old queries - will regenerate
           searchQueries: [],
         },
@@ -325,9 +325,9 @@ export const scanProduct = async (req: Request, res: Response): Promise<void> =>
 
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0]; // e.g. "2026-05-14"
-    const aiConfig = (existing.aiConfig as Record<string, any>) || {};
-    const lastScanDate = aiConfig['lastManualScanDate'];
-    let scansToday = aiConfig['manualScansToday'] || 0;
+    const productConfig = (existing.config as Record<string, any>) || {};
+    const lastScanDate = productConfig['lastManualScanDate'];
+    let scansToday = productConfig['manualScansToday'] || 0;
 
     if (lastScanDate === todayStr) {
       if (scansToday >= maxScans) {
@@ -346,8 +346,8 @@ export const scanProduct = async (req: Request, res: Response): Promise<void> =>
     await db.client.product.update({
       where: { id: productId },
       data: {
-        aiConfig: {
-          ...aiConfig,
+        config: {
+          ...productConfig,
           lastManualScanDate: todayStr,
           manualScansToday: scansToday
         }

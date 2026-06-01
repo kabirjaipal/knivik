@@ -14,11 +14,11 @@ export { logLlmUsage } from '../lib/aiRunner.js';
  */
 export const generateReply = async (
   postText: string,
-  productInfo: { id?: string; userId?: string; name: string; description?: string; aiConfig?: any },
+  productInfo: { id?: string; userId?: string; name: string; description?: string; config?: any },
   tone: string = 'helpful, detailed, and naturally engaging'
 ): Promise<string> => {
-  const customPersona = productInfo.aiConfig?.customPersona;
-  const productType = productInfo.aiConfig?.productType || 'product';
+  const customPersona = productInfo.config?.customPersona;
+  const productType = productInfo.config?.productType || 'product';
   
   const systemPrompt = outreachReplyPrompt.systemPrompt;
   const userPrompt = outreachReplyPrompt.getUserPrompt({

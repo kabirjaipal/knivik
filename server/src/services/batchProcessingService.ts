@@ -49,11 +49,11 @@ export class BatchProcessingService {
         data: { isScanning: true }
       });
       try {
-        const currentConfig = (product.aiConfig as Record<string, any>) || {};
+        const currentConfig = (product.config as Record<string, any>) || {};
         await db.client.product.update({
           where: { id: productId },
           data: {
-            aiConfig: {
+            config: {
               ...currentConfig,
               lastBackgroundScanAt: new Date().toISOString()
             }
@@ -91,7 +91,7 @@ export class BatchProcessingService {
           id: product.id,
           name: product.name,
           description: product.description,
-          productType: (product.aiConfig as any)?.productType || 'product'
+          productType: (product.config as any)?.productType || 'product'
         },
         posts
       }];
@@ -191,7 +191,7 @@ export class BatchProcessingService {
           id: product.id,
           name: product.name,
           description: product.description,
-          productType: (product.aiConfig as any)?.productType || 'product'
+          productType: (product.config as any)?.productType || 'product'
         },
         posts
       }));

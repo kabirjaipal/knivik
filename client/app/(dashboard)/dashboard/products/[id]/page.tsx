@@ -17,7 +17,7 @@ interface Product {
   websiteUrl: string | null
   isActive: boolean
   searchQueries?: string[] | null
-  aiConfig?: {
+  config?: {
     lastManualScanDate?: string | null
     customPersona?: string | null
     [key: string]: any
@@ -181,7 +181,7 @@ export default function ProductDetailPage() {
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 truncate">
-              {product.aiConfig?.productType === 'service' ? (
+              {product.config?.productType === 'service' ? (
                 <Briefcase className="w-5 h-5 text-primary shrink-0 animate-in fade-in" />
               ) : (
                 <Package className="w-5 h-5 text-primary shrink-0 animate-in fade-in" />
@@ -202,11 +202,11 @@ export default function ProductDetailPage() {
             )}
 
             <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 animate-in fade-in ${
-              product.aiConfig?.productType === 'service'
+              product.config?.productType === 'service'
                 ? "bg-teal-500/10 text-teal-600 border-teal-500/20 dark:text-teal-400"
                 : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
             }`}>
-              {product.aiConfig?.productType === 'service' ? 'Service' : 'Product'}
+              {product.config?.productType === 'service' ? 'Service' : 'Product'}
             </span>
 
             {product.websiteUrl && (
@@ -242,13 +242,13 @@ export default function ProductDetailPage() {
               </Badge>
             ))}
           </div>
-          {product.aiConfig?.negativeKeywords && Array.isArray(product.aiConfig.negativeKeywords) && product.aiConfig.negativeKeywords.length > 0 && (
+          {product.config?.negativeKeywords && Array.isArray(product.config.negativeKeywords) && product.config.negativeKeywords.length > 0 && (
             <div className="mt-3 pt-3 border-t border-primary/10">
               <p className="text-[10px] font-black uppercase tracking-widest text-destructive mb-1.5 flex items-center gap-1">
                 <Ban className="w-3.5 h-3.5" /> Exclude Keywords (Negative Keywords)
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {product.aiConfig.negativeKeywords.map((kw, i) => (
+                {product.config.negativeKeywords.map((kw, i) => (
                   <Badge key={i} variant="outline"
                     className="text-xs py-0.5 px-2 bg-destructive/5 border-destructive/20 text-destructive/80 font-bold rounded-md">
                     {kw}
@@ -257,11 +257,11 @@ export default function ProductDetailPage() {
               </div>
             </div>
           )}
-          {product.aiConfig?.customPersona && (
+          {product.config?.customPersona && (
             <div className="mt-3 pt-3 border-t border-primary/10">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Custom Persona</p>
               <p className="text-xs font-medium text-foreground/80 italic border-l border-primary/40 pl-2">
-                "{product.aiConfig.customPersona}"
+                "{product.config.customPersona}"
               </p>
             </div>
           )}
@@ -271,9 +271,9 @@ export default function ProductDetailPage() {
       {/* ── Stats + Leads (full width) ───────────────────────────────────────── */}
       <ProductLeads
         productId={productId}
-        lastManualScanDate={product.aiConfig?.lastManualScanDate ?? null}
+        lastManualScanDate={product.config?.lastManualScanDate ?? null}
         refreshTrigger={refreshTrigger}
-        productType={product.aiConfig?.productType === 'service' ? 'service' : 'product'}
+        productType={product.config?.productType === 'service' ? 'service' : 'product'}
       />
     </div>
   )

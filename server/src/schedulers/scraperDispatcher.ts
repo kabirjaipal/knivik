@@ -35,7 +35,7 @@ const runScraperDispatcher = async () => {
       select: { 
         id: true, 
         userId: true, 
-        aiConfig: true,
+        config: true,
         user: {
           select: { plan: true }
         }
@@ -48,8 +48,8 @@ const runScraperDispatcher = async () => {
         return true;
       }
       // Free tier scanning logic: 1 scan every 24 hours
-      const aiConfig = (product.aiConfig as Record<string, any>) || {};
-      const lastBgScan = aiConfig['lastBackgroundScanAt'];
+      const productConfig = (product.config as Record<string, any>) || {};
+      const lastBgScan = productConfig['lastBackgroundScanAt'];
       if (!lastBgScan) {
         return true; // Scan if it has never been scanned
       }
