@@ -41,6 +41,12 @@ export const auth: any = betterAuth({
     fields: {
       name: 'displayUsername',
     },
+    additionalFields: {
+      role: {
+        type: 'string',
+        defaultValue: 'user'
+      }
+    }
   },
 
   emailVerification: {

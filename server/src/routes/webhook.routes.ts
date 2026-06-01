@@ -120,9 +120,11 @@ async function handleCheckoutCompleted(data: any) {
   const productId = data.product_id || data.product_cart?.[0]?.product_id;
   const customerId = data.customer?.customer_id;
   const paymentId = data.transaction_id || data.payment_id;
-  const amount = data.total_amount || data.amount;
-  const currency = data.currency;
+  const amount = typeof data.settlement_amount === 'number' ? data.settlement_amount : (typeof data.total_amount === 'number' ? data.total_amount : (typeof data.amount === 'number' ? data.amount : 0));
+  const tax = typeof data.settlement_tax === 'number' ? data.settlement_tax : (typeof data.tax === 'number' ? data.tax : 0);
+  const currency = data.settlement_currency || data.currency || 'USD';
   const status = data.status;
+  const invoiceUrl = data.invoice_url || null;
   const email = data.customer?.email;
 
   if (userId) {
@@ -170,7 +172,9 @@ async function handleCheckoutCompleted(data: any) {
     paymentId,
     amount,
     currency,
-    status
+    status,
+    tax,
+    invoiceUrl
   );
 
   // Track referral conversion

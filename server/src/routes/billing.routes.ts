@@ -14,7 +14,7 @@ const router = Router();
  */
 router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
   try {
-    const { productId, email, name } = req.body;
+    const { productId, email, name, skipTrial } = req.body;
     const userId = req.user?.id;
 
     if (!productId) {
@@ -55,7 +55,7 @@ router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
     }
 
     logger.info(
-      { userId, productId, email: checkoutEmail, name: checkoutName },
+      { userId, productId, email: checkoutEmail, name: checkoutName, skipTrial },
       'Creating Dodo Payments checkout'
     );
 
@@ -68,6 +68,9 @@ router.post('/create-checkout', requireAuth, async (req: any, res: any) => {
       metadata: {
         userId: userId,
       },
+      subscription_data: skipTrial ? {
+        trial_period_days: 0,
+      } : undefined,
       return_url: `${getFrontendUrl(req)}/api/checkout-return`,
     });
 

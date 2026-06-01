@@ -2,18 +2,12 @@ import { Request, Response } from 'express';
 import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { z } from 'zod';
+import { sendEmail, renderBaseEmail } from '../lib/mailer.js';
 
 const claimReferralSchema = z.object({
   referralCode: z.string().min(2, 'Referral code must be at least 2 characters').max(30, 'Referral code is too long'),
 });
 
-const createCodeSchema = z.object({
-  code: z.string()
-    .min(3, 'Referral code must be at least 3 characters')
-    .max(15, 'Referral code must be at most 15 characters')
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Referral code can only contain alphanumeric characters, hyphens, and underscores')
-    .optional(),
-});
 
 const recordPayoutSchema = z.object({
   creatorId: z.string().min(1, 'Creator ID is required'),
@@ -168,7 +162,7 @@ export const getCreatorStats = async (req: Request, res: Response): Promise<void
                 plan: true,
                 payments: {
                   where: { status: { in: ['paid', 'succeeded', 'success'] } },
-                  select: { amount: true, currency: true }
+                  select: { amount: true, tax: true, currency: true }
                 }
               }
             }
@@ -211,7 +205,7 @@ export const getCreatorStats = async (req: Request, res: Response): Promise<void
                   plan: true,
                   payments: {
                     where: { status: { in: ['paid', 'succeeded', 'success'] } },
-                    select: { amount: true, currency: true }
+                    select: { amount: true, tax: true, currency: true }
                   }
                 }
               }
@@ -243,7 +237,8 @@ export const getCreatorStats = async (req: Request, res: Response): Promise<void
           if (isConverted && payments) {
             for (const payment of payments) {
               if (payment.currency?.toUpperCase() === 'USD') {
-                estimatedEarned += Math.round(payment.amount * 0.30);
+                const baseAmount = Math.max(0, payment.amount - (payment.tax || 0));
+                estimatedEarned += Math.round(baseAmount * 0.30);
               }
             }
           }
@@ -355,7 +350,7 @@ export const getAdminPayouts = async (_req: Request, res: Response): Promise<voi
                   select: {
                     payments: {
                       where: { status: { in: ['paid', 'succeeded', 'success'] } },
-                      select: { amount: true, currency: true }
+                      select: { amount: true, tax: true, currency: true }
                     }
                   }
                 }
@@ -388,7 +383,8 @@ export const getAdminPayouts = async (_req: Request, res: Response): Promise<voi
                 if (payments) {
                   for (const payment of payments) {
                     if (payment.currency?.toUpperCase() === 'USD') {
-                      totalEarned += Math.round(payment.amount * 0.30);
+                      const baseAmount = Math.max(0, payment.amount - (payment.tax || 0));
+                      totalEarned += Math.round(baseAmount * 0.30);
                     }
                   }
                 }
@@ -466,6 +462,8 @@ export const recordAdminPayout = async (req: Request, res: Response): Promise<vo
       where: { id: creatorId },
       select: {
         id: true,
+        email: true,
+        username: true,
         referralPartner: {
           select: { id: true }
         }
@@ -494,6 +492,37 @@ export const recordAdminPayout = async (req: Request, res: Response): Promise<vo
 
     logger.info({ payoutId: payout.id, creatorId, amount }, 'Manual creator payout recorded successfully');
 
+    // Send email notification to creator asynchronously
+    if (creator.email) {
+      const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount / 100);
+      const emailHtml = renderBaseEmail({
+        title: 'Referral Payout Processed!',
+        preheader: `You received a payout of ${formattedAmount} for your referrals on Knivik!`,
+        bodyHtml: `
+          <p>Hi ${creator.username || 'Creator'},</p>
+          <p>Great news! We have processed a referral commission payout for your account.</p>
+          <p><strong>Payout Details:</strong></p>
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+            <ul style="margin: 0; padding-left: 20px; font-size: 15px; color: #475569; line-height: 1.6;">
+              <li>Amount: <strong style="color: #0b0f19;">${formattedAmount}</strong></li>
+              <li>Status: <strong style="color: #10b981;">PAID</strong></li>
+              <li>Date: <strong>${new Date().toLocaleDateString()}</strong></li>
+              ${notes ? `<li>Notes: <em>${notes}</em></li>` : ''}
+            </ul>
+          </div>
+          <p>Thank you for partnering with us and sharing Knivik with your audience. We really appreciate your support!</p>
+          <p>Keep up the great work, and happy referring!</p>
+        `,
+        ctaText: 'View Referrals Portal',
+        ctaUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/referrals`,
+        footerText: `Sent to ${creator.email}. You received this email because you are an approved creator partner on Knivik.`,
+      });
+
+      sendEmail(creator.email, 'Your Knivik Referral Payout Has Been Processed! 🚀', emailHtml).catch((err) => {
+        logger.error({ err, creatorId }, 'Failed to send referral payout email');
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Payout recorded successfully',
@@ -517,11 +546,13 @@ export const toggleCreatorReferralAccess = async (req: Request, res: Response): 
       where: { id },
       select: {
         id: true,
+        email: true,
+        username: true,
         referralPartner: {
           select: { id: true }
         }
       }
-    }) as { id: string; referralPartner: { id: string } | null } | null;
+    }) as { id: string; email: string | null; username: string | null; referralPartner: { id: string } | null } | null;
 
     if (!user) {
       res.status(404).json({ success: false, error: 'User not found' });
@@ -542,6 +573,35 @@ export const toggleCreatorReferralAccess = async (req: Request, res: Response): 
           userId: id
         }
       });
+
+      // Send email notification to creator asynchronously
+      if (user.email) {
+        const emailHtml = renderBaseEmail({
+          title: 'Referral Partner Program Approved! 🎉',
+          preheader: 'Congratulations! You have been approved as a Knivik Referral Partner.',
+          bodyHtml: `
+            <p>Hi ${user.username || 'Creator'},</p>
+            <p>We are thrilled to inform you that your application to join the <strong>Knivik Creator/Referral Partner Program</strong> has been approved! 🚀</p>
+            <p>You can now start sharing Knivik with your audience and earn a recurring commission for every customer you refer.</p>
+            <p><strong>Next Steps:</strong></p>
+            <ol style="font-size: 15px; color: #475569; line-height: 1.6; padding-left: 20px;">
+              <li>Log in to your Knivik account.</li>
+              <li>Go to your <strong>Referral Dashboard</strong>.</li>
+              <li>Get your unique referral link/code.</li>
+              <li>Share the link and start tracking your signups and payouts in real-time!</li>
+            </ol>
+            <p>If you have any questions or need custom promotional assets, please feel free to reply directly to this email.</p>
+            <p>Welcome aboard, and thank you for partnering with us!</p>
+          `,
+          ctaText: 'Go to Referral Dashboard',
+          ctaUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/referrals`,
+          footerText: `Sent to ${user.email}. You received this email because your Knivik referral partner account was activated.`,
+        });
+
+        sendEmail(user.email, 'Your Knivik Creator Partnership is Approved! 🚀', emailHtml).catch((err) => {
+          logger.error({ err, userId: id }, 'Failed to send referral partner approval email');
+        });
+      }
     }
 
     logger.info({ userId: id, approved: !isApproved }, 'Creator referral approval toggled');

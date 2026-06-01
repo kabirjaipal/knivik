@@ -188,7 +188,9 @@ export async function recordPayment(
   dodoPaymentId: string,
   amount: number,
   currency: string,
-  status: string
+  status: string,
+  tax: number = 0,
+  invoiceUrl?: string
 ): Promise<void> {
   try {
     await db.client.payment.upsert({
@@ -197,14 +199,17 @@ export async function recordPayment(
         userId,
         dodoPaymentId,
         amount,
+        tax,
         currency,
         status,
+        invoiceUrl,
       },
       update: {
         status,
+        ...(invoiceUrl && { invoiceUrl }),
       },
     });
-    logger.info({ userId, dodoPaymentId, amount }, "Payment recorded");
+    logger.info({ userId, dodoPaymentId, amount, tax, invoiceUrl }, "Payment recorded");
   } catch (error) {
     logger.error({ error, userId, dodoPaymentId }, "Failed to record payment");
     throw error;

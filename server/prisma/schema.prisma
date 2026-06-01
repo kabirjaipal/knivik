@@ -26,6 +26,7 @@ model User {
   subscriptionStatus String?
   billingCycle       String?
   currentPeriodEnd   DateTime?
+  allowReferrals     Boolean        @default(false)
   accounts           Account[]
   alertSetting       AlertSetting?
   llmUsageLogs       LlmUsageLog[]
@@ -346,8 +347,10 @@ model Payment {
   userId                String
   dodoPaymentId         String?  @unique
   amount                Int
+  tax                   Int      @default(0)
   currency              String
   status                String
+  invoiceUrl            String?
   createdAt             DateTime        @default(now())
   user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 

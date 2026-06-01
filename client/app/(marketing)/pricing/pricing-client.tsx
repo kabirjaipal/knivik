@@ -196,7 +196,7 @@ export default function PricingClient() {
                 className={`w-full h-14 text-base font-bold rounded-2xl transition-all ${
                   currentPlan === "PRO" 
                   ? "bg-secondary text-foreground cursor-default" 
-                  : "bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 hover:scale-[1.02]"
+                  : "bg-primary hover:bg-primary/90 hover:scale-[1.02]"
                 }`}
                 disabled={currentPlan === "PRO"}
                 onSuccess={() => {
@@ -209,6 +209,25 @@ export default function PricingClient() {
                   : (billingCycle === "monthly" ? "Start 7-Day Free Trial" : "Get Started Now")
                 }
               </CheckoutButton>
+
+              {billingCycle === "monthly" && currentPlan !== "PRO" && (
+                <CheckoutButton
+                  productId={PLANS.PRO.monthly.productId}
+                  email={user?.email || ""}
+                  name={(user as any)?.displayUsername || user?.username || ""}
+                  userId={user?.id || ""}
+                  planName="Pro"
+                  skipTrial={true}
+                  variant="outline"
+                  className="w-full h-12 text-sm font-bold rounded-2xl mt-3 border-primary/20 hover:border-primary/40 hover:bg-primary/5 hover:scale-[1.01] transition-all"
+                  onSuccess={() => {
+                    toast.success("Payment successful!");
+                  }}
+                  onError={(error) => toast.error(error.message)}
+                >
+                  Get Started Now
+                </CheckoutButton>
+              )}
             </div>
           </div>
 

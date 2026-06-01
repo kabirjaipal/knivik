@@ -109,7 +109,7 @@ export default function BillingPage() {
   if (isInitializing || isLoadingBilling) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/60" />
       </div>
     );
   }
@@ -117,29 +117,34 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">Billing</h2>
+      <h2 className="text-xl font-black tracking-tight text-foreground border-b border-border/40 pb-4">
+        Billing
+      </h2>
 
       {/* Success Banner */}
       {showSuccess && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-            {currentPlan === "FREE"
-              ? <Loader2 className="h-4 w-4 text-emerald-500 animate-spin" />
-              : <PartyPopper className="h-4 w-4 text-emerald-500" />
-            }
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-              {currentPlan === "FREE" ? "Verifying payment…" : "Payment successful!"}
-            </p>
-            <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">
-              {currentPlan === "FREE"
-                ? "Hang tight, your account is being upgraded."
-                : "Your Pro features are now active. Thanks for choosing Knivik!"}
-            </p>
+        <div className="bg-success/5 border border-success/20 rounded-xl p-4 flex items-center justify-between gap-3 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center shrink-0">
+              {currentPlan === "FREE" ? (
+                <Loader2 className="h-4 w-4 text-success animate-spin" />
+              ) : (
+                <PartyPopper className="h-4 w-4 text-success" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-success">
+                {currentPlan === "FREE" ? "Verifying your upgrade..." : "Subscription activated successfully!"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {currentPlan === "FREE"
+                  ? "We are processing your payment. Your features will unlock momentarily."
+                  : "Thank you for upgrading! Your Pro features are now fully enabled."}
+              </p>
+            </div>
           </div>
           {currentPlan !== "FREE" && (
-            <Button variant="ghost" size="sm" className="text-emerald-600 hover:bg-emerald-500/10 text-xs"
+            <Button variant="ghost" size="sm" className="text-success hover:bg-success/10 text-xs"
               onClick={() => router.replace("/dashboard/billing")}>
               Dismiss
             </Button>
@@ -147,102 +152,98 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Main 2-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* LEFT — main column */}
-        <div className="lg:col-span-2 space-y-6">
-
-          {/* Current Plan Card */}
-          <Card className="border-border/50 bg-card overflow-hidden">
-            <div className="h-0.5 bg-primary w-full" />
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Current Plan</CardTitle>
-                <div className="flex items-center gap-2">
-                  <PlanBadge plan={currentPlan} className="text-xs" />
-                  {subscriptionStatus === "active" && !showTrialPeriod && (
-                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs">Active</Badge>
-                  )}
-                  {showTrialPeriod && (
-                    <Badge className="bg-primary/10 text-primary border-primary/20 text-xs capitalize">Trialing</Badge>
-                  )}
-                  {subscriptionStatus !== "active" && subscriptionStatus !== "trialing" && (
-                    <Badge variant="secondary" className="text-xs capitalize">{subscriptionStatus ?? "Inactive"}</Badge>
-                  )}
-                </div>
-              </div>
+      {/* Main Layout Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Subscription Info & Actions */}
+        <div className="md:col-span-2 space-y-6">
+          <Card className="border-border/50 bg-card/60 backdrop-blur-sm shadow-none">
+            <CardHeader className="pb-3 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-bold">Subscription Details</CardTitle>
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold capitalize">
+                {currentPlan === "PRO" ? "Pro Plan" : "Free Plan"}
+              </Badge>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-4xl font-black tracking-tighter">{planConfig.name}</p>
+            <CardContent className="pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-extrabold tracking-tight text-foreground">{planConfig.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isProPlan ? "You have unlimited access to all Pro features." : "Upgrade to unlock advanced intent discovery and alerts."}
+                  </p>
+                </div>
+                
                 {isProPlan ? (
-                  <Button variant="outline" className="font-bold gap-2 shrink-0"
+                  <Button variant="outline" size="sm" className="font-semibold gap-2 border-border/50 hover:bg-muted"
                     onClick={handleOpenCustomerPortal} disabled={isRedirecting}>
-                    {isRedirecting
-                      ? <><Loader2 className="h-4 w-4 animate-spin" /> Redirecting…</>
-                      : <><ExternalLink className="h-4 w-4" /> Manage Billing</>
-                    }
+                    {isRedirecting ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Redirecting...</>
+                    ) : (
+                      <><ExternalLink className="h-3.5 w-3.5" /> Portal</>
+                    )}
                   </Button>
                 ) : (
-                  <Button asChild className="font-bold shadow-lg shadow-primary/20 shrink-0">
-                    <Link href="/pricing">Upgrade to Pro</Link>
+                  <Button asChild size="sm" className="font-semibold bg-primary hover:bg-primary/95 text-primary-foreground shadow-sm">
+                    <Link href="/pricing">Upgrade Plan</Link>
                   </Button>
                 )}
               </div>
 
-              {/* Billing details row — only for active or trialing subscriptions */}
               {isActiveOrTrial && (
-                <div className="flex flex-col gap-4 mt-4 pt-4 border-t border-border/40">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                    <div>
-                      <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">{billingDateLabel}</p>
-                      <p className="text-sm font-bold mt-0.5">{formatDate(billingInfo?.currentPeriodEnd!)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Cycle</p>
-                      <p className="text-sm font-bold mt-0.5 capitalize">{billingInfo?.billingCycle ?? "—"}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-border/40">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{billingDateLabel}</span>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">{formatDate(billingInfo?.currentPeriodEnd!)}</p>
                   </div>
-
-                  {isNewTrialPeriod && (
-                    <p className="text-sm text-muted-foreground">You are still in your free trial period. Your first paid cycle starts when this trial ends.</p>
-                  )}
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Billing Cycle</span>
+                    <p className="text-sm font-semibold text-foreground mt-0.5 capitalize">{billingInfo?.billingCycle ?? "—"}</p>
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Invoices Card */}
-          <Card className="border-border/50 bg-card">
+          <Card className="border-border/50 bg-card/60 backdrop-blur-sm shadow-none">
             <CardHeader className="pb-3 border-b border-border/40">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                <CardTitle className="text-sm font-bold">Invoices</CardTitle>
-              </div>
+              <CardTitle className="text-sm font-bold">Invoices & Receipts</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {payments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                  <AlertCircle className="h-7 w-7 mb-2 opacity-20" />
-                  <p className="text-sm font-medium">No payment history yet</p>
+                  <AlertCircle className="h-6 w-6 mb-2 opacity-30" />
+                  <p className="text-xs">No payment transactions found</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border/40">
                   {payments.map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-muted/30 transition-colors">
+                    <div key={payment.id} className="flex items-center justify-between px-5 py-3 hover:bg-muted/10 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
-                          <CreditCard className="h-4 w-4 text-primary/70" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+                          <CreditCard className="h-4 w-4 text-primary/80" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold">{formatAmount(payment.amount, payment.currency)}</p>
-                          <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">{formatDate(payment.createdAt)}</p>
+                          <p className="text-xs font-bold text-foreground">{formatAmount(payment.amount, payment.currency)}</p>
+                          <p className="text-[10px] text-muted-foreground font-semibold">{formatDate(payment.createdAt)}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={`text-sm uppercase font-black ${payment.status === "completed" ? "bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : ""}`}>
-                        {payment.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {(payment as any).invoiceUrl && (
+                          <Button asChild variant="ghost" size="sm" className="h-7 text-[10px] font-semibold text-primary border border-primary/10 hover:bg-primary/5 px-2">
+                            <a href={(payment as any).invoiceUrl} target="_blank" rel="noopener noreferrer">
+                              Invoice <ExternalLink className="h-2.5 w-2.5 ml-1" />
+                            </a>
+                          </Button>
+                        )}
+                        <Badge variant="outline" className={`text-[10px] font-semibold uppercase px-2 py-0.5 ${
+                          payment.status === "completed" || payment.status === "succeeded" || payment.status === "success" 
+                            ? "bg-success/5 text-success border-success/20" 
+                            : "bg-muted/10 text-muted-foreground border-border/50"
+                        }`}>
+                          {payment.status}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -251,67 +252,41 @@ export default function BillingPage() {
           </Card>
         </div>
 
-        {/* RIGHT — sidebar */}
+        {/* Sidebar Info & Support */}
         <div className="space-y-6">
-
           {/* Plan Features */}
-          <Card className="border-border/50 bg-card">
+          <Card className="border-border/50 bg-card/60 backdrop-blur-sm shadow-none">
             <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                {isProPlan ? "Your Pro Features" : "Free Plan Includes"}
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {isProPlan ? "Pro Plan Features" : "Free Plan Features"}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
-              <ul className="space-y-3">
+              <ul className="space-y-2.5">
                 {planConfig.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2.5">
-                    <div className={`mt-0.5 rounded-full p-0.5 shrink-0 ${isProPlan ? "bg-primary/10" : "bg-muted/60"}`}>
-                      {isProPlan
-                        ? <Zap className="h-3 w-3 text-primary fill-primary" />
-                        : <Check className="h-3 w-3 text-foreground/60" />
-                      }
-                    </div>
-                    <span className="text-sm font-medium text-foreground/80 leading-tight">{feature}</span>
+                  <li key={feature} className="flex items-start gap-2 text-xs">
+                    <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground font-medium leading-relaxed">{feature}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
           </Card>
 
-          {/* Upgrade CTA — only for Free users */}
-          {!isProPlan && (
-            <div className="relative overflow-hidden p-6 rounded-2xl border border-primary/20 bg-primary/5 transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(91,61,245,0.05)] space-y-4 group">
-              {/* Glowing decorative background effect */}
-              <div className="absolute -right-10 -top-10 w-28 h-28 rounded-full bg-primary/10 blur-2xl group-hover:bg-primary/15 transition-all duration-500 pointer-events-none" />
-              
-              <div className="flex items-center gap-2.5 relative z-10">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <Sparkles className="h-5 w-5 fill-primary/20 animate-pulse" />
-                </div>
-                <p className="font-black text-base tracking-tight text-foreground">Upgrade to Pro</p>
+          {/* Support Info */}
+          <Card className="border-border/50 bg-card/60 backdrop-blur-sm shadow-none">
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <p className="text-xs font-bold text-foreground">Need Assistance?</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">For billing issues or questions, contact support.</p>
               </div>
-              
-              <p className="text-xs text-muted-foreground leading-relaxed relative z-10">
-                Unlock 5 products, 1,000 leads/month, instant alerts, and advanced AI intent scoring.
-              </p>
-              
-              <Button className="w-full font-black text-xs h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 relative z-10" asChild>
-                <Link href="/pricing">See Pricing Plans</Link>
-              </Button>
-            </div>
-          )}
-
-          {/* Support */}
-          <Card className="border-border/40 bg-muted/10">
-            <CardContent className="p-5">
-              <p className="text-sm font-bold">Need help?</p>
-              <p className="text-xs text-muted-foreground mt-0.5 mb-4">Billing issues or questions? We're here.</p>
-              <Button variant="outline" size="sm" className="w-full font-bold text-xs" asChild>
-                <a href={'mailto:'+ SUPPORT_EMAIL}>Contact Support</a>
+              <Button variant="outline" size="sm" className="w-full font-semibold text-xs border-border/50 hover:bg-muted" asChild>
+                <a href={`mailto:${SUPPORT_EMAIL}`}>Email Support</a>
               </Button>
             </CardContent>
           </Card>
         </div>
+
       </div>
     </div>
   );

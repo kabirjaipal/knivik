@@ -15,6 +15,13 @@ const baseURL = getBaseURL();
 export const authClient = createAuthClient({
   baseURL,
   plugins: [usernameClient()],
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string'
+      }
+    }
+  }
 });
 
 // Export typed helpers for convenience

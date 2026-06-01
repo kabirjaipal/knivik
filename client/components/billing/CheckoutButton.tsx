@@ -12,6 +12,7 @@ interface CheckoutButtonProps {
   name?: string;
   userId: string;
   planName: string;
+  skipTrial?: boolean;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   className?: string;
   disabled?: boolean;
@@ -26,6 +27,7 @@ export function CheckoutButton({
   name,
   userId,
   planName,
+  skipTrial = false,
   variant = "default",
   className = "",
   disabled = false,
@@ -58,6 +60,7 @@ export function CheckoutButton({
           productId,
           email,
           name,
+          skipTrial,
         }),
       });
 

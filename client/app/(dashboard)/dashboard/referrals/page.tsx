@@ -132,15 +132,9 @@ export default function ReferralsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 border-b border-border/40 pb-4">
         {/* Title */}
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-black tracking-tight text-foreground flex items-center gap-2">
+          <h2 className="text-lg font-black tracking-tight text-foreground">
             Creator Referral Portal
-            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-wider bg-success/10 text-success border-success/20">
-              Approved
-            </Badge>
           </h2>
-          <p className="text-xs text-muted-foreground">
-            Promote {process.env.NEXT_PUBLIC_PROJECT_NAME} and track your conversions.
-          </p>
         </div>
 
         {/* Referral Code + Copy — compact inline block */}
