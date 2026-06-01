@@ -50,9 +50,10 @@ Every line of code you write must conform to these modern design principles:
 *   Write small, single-responsibility functions. Keep components under 150 lines.
 *   Favor simple, descriptive, and readable code over "clever" one-liners or premature optimizations.
 *   Keep helper utilities pure and side-effect free.
+*   **Avoid JSX Repetition:** If JSX nodes (such as navigation links, menu items, or tables rows) are repeated, store the configuration data in an array or object and map over it dynamically instead of duplicating JSX structure.
 
 ### 🛡️ Robust Type Safety
-*   **Strict Typing:** Never use `any`. If a type is complex or unknown, use `unknown` and type guards.
+*   **Strict Typing:** Never use `any`. Always use package-provided types; if they do not exist, define custom types or interfaces. If a type is truly dynamic or unknown, use `unknown` combined with type guards.
 *   **Discriminated Unions:** Prefer discriminated unions (e.g., `{ success: true; data: T } | { success: false; error: string }`) for API responses and operational results.
 *   **Interfaces:** Use interfaces for component props and standard objects; use type aliases for unions, intersections, and primitives.
 
@@ -103,3 +104,4 @@ Every line of code you write must conform to these modern design principles:
 *   Never commit `.env` or sensitive security credentials to git.
 *   Never force-push or skip git pre-commit hook checks.
 *   Never bypass TypeScript checks with `// @ts-ignore` or `any` unless explicitly instructed with a detailed comment explaining why it is unavoidable.
+*   Never reset the database to apply schema changes or resolve conflicts. Always solve migration issues in the best, non-destructive way (using custom SQL scripts, Prisma migration resolutions, or data migration scripts).

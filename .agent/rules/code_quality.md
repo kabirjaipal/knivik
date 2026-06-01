@@ -8,6 +8,7 @@ Use this rule when writing, refactoring, or reviewing TypeScript, React, and Nod
 
 ### No `any` Allowed
 *   Every variable, parameter, and function return value must be explicitly typed.
+*   **Never use the `any` type.** Always use package-provided types first; if they do not exist, define custom types or interfaces.
 *   If a type is truly dynamic, use `unknown` combined with custom type guards, or use generic type parameters `<T>`.
 *   Avoid non-null assertions (`!`) unless the variable was explicitly checked in the immediate block. Prefer optional chaining (`?.`) or fallback defaults (`??`).
 
@@ -35,6 +36,7 @@ Use this rule when writing, refactoring, or reviewing TypeScript, React, and Nod
 *   Break down larger components and routes.
 *   Keep Next.js components focused purely on rendering or local view state. Move side effects, heavy computations, or data fetching logic to React Hooks or server-side actions.
 *   Backend routes should handle request parsing and response format, delegating domain logic to dedicated service layers.
+*   **Avoid JSX Repetition:** If JSX nodes (such as navigation links, menu items, or tables rows) are repeated, store the configuration data in an array or object and map over it dynamically instead of duplicating JSX structure.
 
 ---
 
@@ -65,3 +67,11 @@ Use this rule when writing, refactoring, or reviewing TypeScript, React, and Nod
 *   **Clean Imports:** Group imports logically (external libraries first, shared local modules second, relative files third).
 *   **Named Exports:** Prefer named exports (`export const MyComponent = ...`) over default exports (`export default ...`) to keep imports clean, searchable, and refactoring-safe (except where default exports are required by Next.js routing files like `page.tsx`, `layout.tsx`, etc.).
 *   **Dead Code Elimination:** Instantly delete unused variables, unused imports, or dead logs before finalizing edits.
+
+---
+
+## 💾 5. Database Schema & Migrations
+
+### No Database Resets
+*   **Never reset the database** (e.g., via `prisma db push --force` or resetting production/development tables) to apply schema changes or resolve conflicts.
+*   Always resolve migration conflicts in the best, non-destructive way (using custom SQL scripts, Prisma migration resolutions, or data migration scripts) to preserve existing development/production data.
