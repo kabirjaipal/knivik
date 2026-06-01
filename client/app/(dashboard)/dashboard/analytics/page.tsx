@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  // GLOBAL EMPTY STATE: No Products
+  // GLOBAL EMPTY STATE: No Products/Services
   if (data.activeProductsCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -159,9 +159,9 @@ export default function AnalyticsPage() {
             Ready to track?
           </h1>
           <p className="text-sm text-muted-foreground">
-            Create your first product in the{" "}
+            Create your first product or service in the{" "}
             <Link href="/dashboard/products" className="text-primary underline hover:text-primary/80 font-bold">
-              products tab
+              products & services tab
             </Link>{" "}
             to start monitoring social mentions and generating AI-powered leads.
           </p>
@@ -554,12 +554,12 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Row 5: Top Product Spotlight */}
+      {/* Row 5: Top Offering Spotlight */}
       <div className="grid grid-cols-1 gap-6">
         <Card className="border border-border/40 bg-card/60 shadow-xl shadow-black/5">
           <CardHeader className="py-3 px-6 border-b border-border/40">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-              <Award className="w-3.5 h-3.5 text-primary" /> Top Performer Product
+              <Award className="w-3.5 h-3.5 text-primary" /> Top Performer Offering
             </CardTitle>
           </CardHeader>
           <CardContent className="p-5">

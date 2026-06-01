@@ -247,7 +247,7 @@ export default function PricingClient() {
                 },
                 {
                   q: "What counts as a 'lead'?",
-                  a: "A lead is a high-intent conversation found by our AI. We filter out the noise so you only see people who are actively looking to buy or solving a problem."
+                  a: "A lead is a high-intent conversation found by our AI. We filter out the noise so you only see people who are actively looking to buy your product, hire your service, or solve a problem."
                 },
                 {
                   q: "How do alerts work?",

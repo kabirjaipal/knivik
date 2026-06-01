@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp, Ban } from "lucide-react"
+import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp, Ban, Briefcase, Package } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
@@ -46,11 +46,11 @@ export default function ProductDetailPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
         credentials: "include",
       })
-      if (!res.ok) throw new Error("Failed to fetch product")
+      if (!res.ok) throw new Error("Failed to load details")
       const data = await res.json()
       setProduct(data.product)
     } catch (e: any) {
-      toast.error("Could not load the product details right now.")
+      toast.error("Could not load details right now.")
       lastFetchedId.current = null // Reset on error to allow retry
     } finally {
       setLoading(false)
@@ -134,7 +134,7 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
-        <p className="text-sm font-bold text-muted-foreground">Product not found</p>
+        <p className="text-sm font-bold text-muted-foreground">Product or Service not found</p>
         <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/products")}
           className="rounded-xl px-4 font-bold text-xs uppercase tracking-wider">
           <ArrowLeft className="w-3 h-3 mr-2" /> Back
@@ -180,19 +180,34 @@ export default function ProductDetailPage() {
         {/* Title, Badge, Description */}
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-foreground truncate">
-              {product.name}
-            </h1>
+            <div className="flex items-center gap-2 truncate">
+              {product.aiConfig?.productType === 'service' ? (
+                <Briefcase className="w-5 h-5 text-primary shrink-0 animate-in fade-in" />
+              ) : (
+                <Package className="w-5 h-5 text-primary shrink-0 animate-in fade-in" />
+              )}
+              <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-foreground truncate">
+                {product.name}
+              </h1>
+            </div>
 
             {product.isActive ? (
-              <span className="flex items-center gap-1 text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0">
+              <span className="flex items-center gap-1 text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0 animate-in fade-in">
                 <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" /> Live
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0">
+              <span className="flex items-center gap-1 text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-full font-black uppercase tracking-widest text-[10px] shrink-0 animate-in fade-in">
                 <span className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full" /> Standby
               </span>
             )}
+
+            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0 animate-in fade-in ${
+              product.aiConfig?.productType === 'service'
+                ? "bg-teal-500/10 text-teal-600 border-teal-500/20 dark:text-teal-400"
+                : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
+            }`}>
+              {product.aiConfig?.productType === 'service' ? 'Service' : 'Product'}
+            </span>
 
             {product.websiteUrl && (
               <a href={product.websiteUrl} target="_blank" rel="noopener noreferrer"
@@ -258,6 +273,7 @@ export default function ProductDetailPage() {
         productId={productId}
         lastManualScanDate={product.aiConfig?.lastManualScanDate ?? null}
         refreshTrigger={refreshTrigger}
+        productType={product.aiConfig?.productType === 'service' ? 'service' : 'product'}
       />
     </div>
   )

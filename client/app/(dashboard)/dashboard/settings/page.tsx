@@ -131,8 +131,8 @@ export default function SettingsPage() {
     // Sync profile data from user object
     setProfileData({
       username: user.username || "",
-      fullName: user.metadata?.fullName || "",
-      company: user.metadata?.company || ""
+      fullName: (user.metadata?.fullName as string) || "",
+      company: (user.metadata?.company as string) || ""
     })
 
     // Only fetch alerts if identity actually changed or we've never fetched
@@ -596,7 +596,7 @@ export default function SettingsPage() {
           </div>
           <CardContent className="p-4 space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-              Once you delete your account, all your products, leads, and settings will be permanently removed from our active databases. This action cannot be undone.
+              Once you delete your account, all your products, services, leads, and settings will be permanently removed from our active databases. This action cannot be undone.
             </p>
             <Button 
               variant="destructive" 

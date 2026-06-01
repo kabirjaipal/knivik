@@ -75,13 +75,13 @@ export class ComparisonRepository implements IComparisonRepository {
         ]
       },
       keyDifferences: [
-        "Brand24 is built for PR and brand managers; Knivik is built for sales teams and founders looking to acquire leads.",
+        "Brand24 is built for PR and brand managers; Knivik is built for sales teams, agencies, and founders looking to acquire leads.",
         "Brand24 tracks broad brand sentiment; Knivik scores specific buying intent levels (e.g., BUY_NOW, COMPARING) to identify active sales opportunities.",
         "Knivik automatically drafts context-rich, helpful reply recommendations; Brand24 leaves outreach entirely up to you.",
-        "Brand24 starts at $79/mo; Knivik offers a fully functional free tier and an affordable startup plan."
+        "Brand24 starts at $79/mo; Knivik offers a fully functional free tier and affordable startup/agency plans."
       ],
       features: ComparisonRepository.defaultFeatures("Brand24", true, true, true),
-      verdict: "Brand24 is a top-tier platform for PR professionals and agencies looking to monitor brand sentiment, track brand mentions, and manage reputation across the entire web. However, for B2B founders and sales teams trying to turn discussions on Reddit, HN, and X into qualified customers, Brand24 is too broad and noisy. Knivik acts as a focused AI SDR that discovers, scores, and initiates the outreach loop for you.",
+      verdict: "Brand24 is a top-tier platform for PR professionals and agencies looking to monitor brand sentiment, track brand mentions, and manage reputation across the entire web. However, for B2B founders, agencies, freelancers, and sales teams trying to turn discussions on Reddit, HN, and X into qualified customers, Brand24 is too broad and noisy. Knivik acts as a focused AI SDR that discovers, scores, and initiates the outreach loop for you.",
       faq: [
         {
           question: "Is Brand24 built for direct sales outreach?",
@@ -138,7 +138,7 @@ export class ComparisonRepository implements IComparisonRepository {
         slug: "syften",
         name: "Syften",
         tagline: "Keyword Alerts for Communities",
-        description: "Syften is a community keyword monitoring tool designed for founders. It is lightweight and covers several platforms, but relies entirely on literal keyword rules. It requires you to configure dozens of manual search combinations, leading to constant manual filtering or missed leads.",
+        description: "Syften is a community keyword monitoring tool designed for founders and agencies. It is lightweight and covers several platforms, but relies entirely on literal keyword rules. It requires you to configure dozens of manual search combinations, leading to constant manual filtering or missed leads.",
         rating: 4.2,
         pricing: "Starts at $29/mo (very low limits)",
         platforms: ["Reddit", "HackerNews", "IndieHackers", "X (Twitter)"],
@@ -246,7 +246,7 @@ export class ComparisonRepository implements IComparisonRepository {
         },
         {
           question: "How does Knivik compare to cold emailing with Apollo?",
-          answer: "Cold emailing typically gets a 1% to 2% response rate. Replying to a live post where someone is actively asking for your product (which Knivik finds and drafts pitches for) gets up to a 30% conversion rate because the buyer intent is hot and immediate."
+          answer: "Cold emailing typically gets a 1% to 2% response rate. Replying to a live post where someone is actively asking for your product or service (which Knivik finds and drafts pitches for) gets up to a 30% conversion rate because the buyer intent is hot and immediate."
         }
       ]
     },
@@ -277,7 +277,7 @@ export class ComparisonRepository implements IComparisonRepository {
         "Knivik has a completely free plan ($0); Hootsuite's starting pricing is highly restrictive for startups."
       ],
       features: ComparisonRepository.defaultFeatures("Hootsuite", true, true, true),
-      verdict: "For general marketing agencies looking to schedule Instagram posts or track corporate brand hashtags across social networks, Hootsuite is a powerful suite. However, for startups, founders, and sales teams looking to convert live discussions on Reddit, HN, and X into qualified customers, Knivik is the clear, intelligent choice.",
+      verdict: "For general marketing agencies looking to schedule Instagram posts or track corporate brand hashtags across social networks, Hootsuite is a powerful suite. However, for startups, founders, agencies, freelancers, and sales teams looking to convert live discussions on Reddit, HN, and X into qualified customers, Knivik is the clear, intelligent choice.",
       faq: [
         {
           question: "Can I track HackerNews mentions with Hootsuite?",
@@ -431,10 +431,10 @@ export class ComparisonRepository implements IComparisonRepository {
       keyDifferences: [
         "Cognism is a corporate contact directory and phone list; Knivik is a real-time conversational social lead finder.",
         "Cognism intent data (Bombora) only flags that an organization is browsing topics; Knivik reveals the exact post, query, and context of the buyer.",
-        "Cognism is built for enterprise sales development representatives making cold calls; Knivik is designed for startups, founders, and modern SDRs doing warm social selling."
+        "Cognism is built for enterprise sales development representatives making cold calls; Knivik is designed for startups, founders, agencies, freelancers, and modern SDRs doing warm social selling."
       ],
       features: ComparisonRepository.defaultFeatures("Cognism", true, false, false),
-      verdict: "Cognism is a top-tier B2B database for enterprise sales teams targeting Europe via cold calling and compliant direct dials. For startup founders, builders, and indie hackers looking to identify and convert high-intent buyers on active online threads (Reddit, HackerNews, X), Knivik is the much more precise and accessible AI lead finder.",
+      verdict: "Cognism is a top-tier B2B database for enterprise sales teams targeting Europe via cold calling and compliant direct dials. For startup founders, agencies, freelancers, builders, and indie hackers looking to identify and convert high-intent buyers on active online threads (Reddit, HackerNews, X), Knivik is the much more precise and accessible AI lead finder.",
       faq: [
         {
           question: "Does Cognism track Reddit and X (Twitter) mentions?",

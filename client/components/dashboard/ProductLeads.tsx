@@ -14,9 +14,10 @@ interface ProductLeadsProps {
   productId: string
   lastManualScanDate?: string | null
   refreshTrigger?: number
+  productType?: 'product' | 'service'
 }
 
-export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0 }: ProductLeadsProps) {
+export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0, productType = 'product' }: ProductLeadsProps) {
   const { user } = useAuth()
   const isFreePlan = user?.plan?.toUpperCase() !== 'PRO'
 
@@ -131,13 +132,14 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   }, [])
 
   const handleExportCSV = useCallback(() => {
-    const success = exportLeadsToCSV(leads, `leads_product_${productId}.csv`, !isFreePlan)
+    const filename = productType === 'service' ? `leads_service_${productId}.csv` : `leads_product_${productId}.csv`
+    const success = exportLeadsToCSV(leads, filename, !isFreePlan)
     if (success) {
       toast.success("Successfully exported leads to CSV")
     } else {
       toast.error("No leads to export.")
     }
-  }, [leads, productId, isFreePlan])
+  }, [leads, productId, isFreePlan, productType])
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -287,7 +289,9 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                   <TrendingUp className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">Product Feed</h2>
+                  <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">
+                    {productType === 'service' ? 'Service Feed' : 'Product Feed'}
+                  </h2>
                   <p className="text-xs text-muted-foreground font-medium">Real-time leads filtered by intent</p>
                 </div>
               </div>

@@ -270,7 +270,7 @@ export const analyzeProduct = async (req: Request, res: Response): Promise<void>
   try {
     // @ts-ignore
     const userId = req.user?.id as string | undefined;
-    const { name, description } = req.body;
+    const { name, description, productType } = req.body;
     if (!name || typeof name !== 'string' || !description || typeof description !== 'string') {
       res.status(400).json({ error: 'Name and description are required for AI analysis' });
       return;
@@ -285,7 +285,7 @@ export const analyzeProduct = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const strategy = await generateProductStrategy(name, description, userId);
+    const strategy = await generateProductStrategy(name, description, userId, undefined, productType);
     res.status(200).json({ success: true, strategy });
   } catch (error) {
     logger.error({ error }, 'Analyze Product error');

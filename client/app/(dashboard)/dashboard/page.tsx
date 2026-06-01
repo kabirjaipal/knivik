@@ -9,6 +9,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Package,
+  Briefcase,
   ChevronRight,
   AlertCircle,
   Sparkles,
@@ -37,6 +38,10 @@ interface ProductSummary {
   id: string;
   name: string;
   isActive: boolean;
+  aiConfig?: {
+    productType?: 'product' | 'service';
+    [key: string]: any;
+  } | null;
   _count?: { leads: number };
 }
 
@@ -358,11 +363,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Section 2: Active Radar (Products) */}
+          {/* Section 2: Active Radar (Offerings) */}
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                <Package className="w-4 h-4 text-primary" /> Active Radar
+                <Radar className="w-4 h-4 text-primary" /> Active Radar
               </h3>
               <button
                 onClick={() => router.push("/dashboard/products")}
@@ -387,6 +392,11 @@ export default function DashboardPage() {
                       <div
                         className={`w-2 h-2 rounded-full shrink-0 ${p.isActive ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" : "bg-muted-foreground/30"}`}
                       />
+                      {p.aiConfig?.productType === 'service' ? (
+                        <Briefcase className="w-3.5 h-3.5 text-teal-500/80 group-hover:text-primary transition-colors shrink-0" />
+                      ) : (
+                        <Package className="w-3.5 h-3.5 text-blue-500/80 group-hover:text-primary transition-colors shrink-0" />
+                      )}
                       <span className="font-bold text-muted-foreground/90 group-hover:text-primary transition-colors truncate">
                         {p.name}
                       </span>

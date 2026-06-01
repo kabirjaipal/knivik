@@ -31,16 +31,19 @@ export class SearchQueryService {
         return [];
       }
 
+      const existingAiConfig = (product.aiConfig as Record<string, any>) || {};
+      const productType = existingAiConfig.productType || 'product';
+
       // Generate queries & strategy using our merged AI function
-      logger.info({ productId, productName: product.name }, '[STRATEGY] Generating unified strategy & search queries...');
+      logger.info({ productId, productName: product.name, productType }, '[STRATEGY] Generating unified strategy & search queries...');
       const strategy = await generateProductStrategy(
         product.name,
         product.description || '',
         product.userId,
-        product.id
+        product.id,
+        productType
       );
 
-      const existingAiConfig = (product.aiConfig as Record<string, any>) || {};
       const updatedAiConfig = {
         ...existingAiConfig,
         keywords: strategy.keywords, // Keywords should always be regenerated based on current product info

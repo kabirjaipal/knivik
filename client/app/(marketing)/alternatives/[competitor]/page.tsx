@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ComparisonService } from "@/lib/seo/application/comparison.service";
 import { SchemaScript } from "@/components/seo/schema-script";

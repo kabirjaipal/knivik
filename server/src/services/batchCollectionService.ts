@@ -599,13 +599,20 @@ export class BatchCollectionService {
     }
 
     // Hard rejects - obvious non-buying content + spam/promo
-    const hardRejects = [
-      'show hn', 'we\'re hiring', 'we are hiring', 'job post', 'looking for a job',
-      'tutorial', 'how to', 'guide', 'step by step',
+    const baseHardRejects = [
+      'show hn', 'tutorial', 'how to', 'guide', 'step by step',
       'breaking news', 'press release',
       'use code', 'sponsored', 'affiliate link', 'discount code',
       'automod', 'this is a bot', 'automatic reply',
     ];
+
+    // For products, we also reject job/hiring posts since they are seeking people, not software tools
+    // For services, we want to allow job/hiring posts, but still reject other job seekers ("looking for a job")
+    const productType = product.aiConfig?.productType || 'product';
+    const hardRejects = productType === 'service'
+      ? [...baseHardRejects, 'looking for a job']
+      : [...baseHardRejects, 'we\'re hiring', 'we are hiring', 'job post', 'looking for a job'];
+
     for (const reject of hardRejects) {
       if (lower.includes(reject)) {
         return { passed: false, reason: `Hard-reject phrase: "${reject}"` };

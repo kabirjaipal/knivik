@@ -18,14 +18,16 @@ export const generateReply = async (
   tone: string = 'helpful, detailed, and naturally engaging'
 ): Promise<string> => {
   const customPersona = productInfo.aiConfig?.customPersona;
+  const productType = productInfo.aiConfig?.productType || 'product';
   
   const systemPrompt = outreachReplyPrompt.systemPrompt;
   const userPrompt = outreachReplyPrompt.getUserPrompt({
     productName: productInfo.name,
-    productDescription: productInfo.description || 'A software tool.',
+    productDescription: productInfo.description || (productType === 'service' ? 'A professional service.' : 'A software tool.'),
     tone,
     customPersona,
     postText,
+    productType,
   });
 
   try {
@@ -79,13 +81,15 @@ export const generateProductStrategy = async (
   name: string,
   description: string,
   userId?: string,
-  productId?: string
+  productId?: string,
+  productType?: 'product' | 'service'
 ): Promise<ProductStrategyResult> => {
   const systemPrompt = productStrategyPrompt.systemPrompt;
   const userPrompt = productStrategyPrompt.getUserPrompt({
     projectName: config.PROJECT_NAME,
     productName: name,
     productDescription: description,
+    productType,
   });
 
   try {

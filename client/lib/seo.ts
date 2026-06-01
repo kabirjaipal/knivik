@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 export const siteConfig = {
   name: "Knivik",
-  description: "Knivik is an advanced SaaS AI Lead Finder and B2B social sales intelligence platform. It scans Reddit, HackerNews, and X (Twitter) in real-time to discover warm leads with genuine buying intent.",
+  description: "Knivik is an advanced AI Lead Finder and B2B social sales intelligence platform for products and services. It scans Reddit, HackerNews, and X (Twitter) in real-time to discover warm leads with genuine buying intent.",
   url: process.env.NEXT_PUBLIC_SITE_URL as string,
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
@@ -71,7 +71,17 @@ export const siteConfig = {
     "Mentions alternative",
     "Brand24 alternative",
     "best Syften alternatives",
-    "best GummySearch alternatives"
+    "best GummySearch alternatives",
+    "find clients for agency on reddit",
+    "find freelance clients on reddit",
+    "find video editing clients on reddit",
+    "social lead finder for agencies",
+    "lead generation for freelance services",
+    "find service clients on twitter",
+    "buying intent signals for agencies",
+    "lead generation tool for freelancers",
+    "B2B service sales tools",
+    "agency client acquisition software"
   ],
   authors: [
     {

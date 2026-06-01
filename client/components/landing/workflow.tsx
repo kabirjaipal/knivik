@@ -6,8 +6,8 @@ import { motion } from "framer-motion"
 const steps = [
   {
     icon: <Search className="h-8 w-8" />,
-    title: "1. Add Your Product",
-    description: "Set up your product profile, define target keywords, and register competitors in the Knivik SaaS dashboard."
+    title: "1. Add Product or Service",
+    description: "Set up your product or service profile, define target keywords, and register competitors in the Knivik dashboard."
   },
   {
     icon: <BrainCircuit className="h-8 w-8" />,

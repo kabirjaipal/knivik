@@ -12,11 +12,11 @@ import { Sparkles } from "lucide-react"
 const faqs = [
   {
     question: "Is Knivik a SaaS tool or an agency?",
-    answer: "Knivik is a 100% self-service AI Lead Finder SaaS (Software-as-a-Service) tool, not an agency. You log into the dashboard, add your products, define keywords/competitors, and manage your leads directly inside our software."
+    answer: "Knivik is a 100% self-service AI Lead Finder SaaS (Software-as-a-Service) tool, not an agency. You log into the dashboard, add your products or services, define keywords/competitors, and manage your leads directly inside our software."
   },
   {
     question: "How does the lead finding and filtering process work?",
-    answer: "Once you add your product, our background scraping engine continuously scans active discussion streams on Reddit, HackerNews, and X (Twitter). Our advanced AI then filters and scores these posts based on buying intent to deliver only the best, highest-converting leads directly to your dashboard."
+    answer: "Once you add your product or service, our background scraping engine continuously scans active discussion streams on Reddit, HackerNews, and X (Twitter). Our advanced AI then filters and scores these posts based on buying intent to deliver only the best, highest-converting leads directly to your dashboard."
   },
   {
     question: "How does the AI find high-quality leads?",
@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     question: "Is it easy to get started?",
-    answer: "Yes! You can set up your first product in minutes. We offer a free tier so you can see the quality of leads for yourself before committing to a paid plan as your business grows."
+    answer: "Yes! You can set up your first product or service in minutes. We offer a free tier so you can see the quality of leads for yourself before committing to a paid plan as your business grows."
   }
 ]
 

@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit, Globe, Package } from "lucide-react"
+import { Plus, Trash2, X, Zap, ChevronRight, Loader2, Radar, Edit, Globe, Package, Briefcase } from "lucide-react"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -19,6 +19,19 @@ import {
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+interface ProductFormData {
+  name: string;
+  description: string;
+  websiteUrl: string;
+  isActive: boolean;
+  aiConfig: {
+    customPersona: string;
+    negativeKeywords: string[];
+    excludedAuthors: string[];
+    productType: 'product' | 'service';
+  };
+}
+
 export default function ProductsPage() {
   const { user, loading: authLoading } = useAuth()
   const [products, setProducts] = useState<any[]>([])
@@ -33,21 +46,8 @@ export default function ProductsPage() {
   const hasFetchedProducts = useRef(false)
   const lastFetchedUserId = useRef<string | null>(null)
 
-  // Auto-hide success message - REMOVED since we use sonner now
-
-
   // Form State
-  const [formData, setFormData] = useState<{
-    name: string;
-    description: string;
-    websiteUrl: string;
-    isActive: boolean;
-    aiConfig: {
-      customPersona: string;
-      negativeKeywords: string[];
-      excludedAuthors: string[];
-    };
-  }>({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     description: "",
     websiteUrl: "",
@@ -55,7 +55,8 @@ export default function ProductsPage() {
     aiConfig: {
       customPersona: "",
       negativeKeywords: [],
-      excludedAuthors: []
+      excludedAuthors: [],
+      productType: "product"
     }
   })
 
@@ -94,6 +95,8 @@ export default function ProductsPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
+    const isService = formData.aiConfig.productType === 'service';
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const url = editingProductId ? `${apiUrl}/products/${editingProductId}` : `${apiUrl}/products`;
@@ -113,7 +116,7 @@ export default function ProductsPage() {
       });
 
       if (!res.ok) {
-        let errorMessage = 'Failed to save product';
+        let errorMessage = isService ? 'Failed to save service' : 'Failed to save product';
         try {
           const errData = await res.json();
           errorMessage = errData.error || errorMessage;
@@ -128,10 +131,21 @@ export default function ProductsPage() {
       const data = await res.json();
       
       // Reset form
-      const actionLabel = editingProductId ? "Product updated" : "Product created";
+      const actionLabel = editingProductId 
+        ? (isService ? "Service updated" : "Product updated") 
+        : (isService ? "Service created" : "Product created");
+
       setFormData({
-        name: "", description: "", websiteUrl: "", isActive: true,
-        aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
+        name: "", 
+        description: "", 
+        websiteUrl: "", 
+        isActive: true,
+        aiConfig: { 
+          customPersona: "", 
+          negativeKeywords: [], 
+          excludedAuthors: [],
+          productType: "product"
+        }
       })
       setIsCreating(false)
       const wasEditing = !!editingProductId;
@@ -154,6 +168,8 @@ export default function ProductsPage() {
     if (!productToDelete) return
     setIsDeleting(true)
 
+    const isService = productToDelete.aiConfig?.productType === 'service';
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/products/${productToDelete.id}`, {
@@ -161,14 +177,14 @@ export default function ProductsPage() {
         credentials: 'include'
       })
 
-      if (!res.ok) throw new Error('Failed to delete product')
+      if (!res.ok) throw new Error(isService ? 'Failed to delete service' : 'Failed to delete product')
       
-      toast.success('Product deleted')
+      toast.success(isService ? 'Service deleted' : 'Product deleted')
       setIsDeleteDialogOpen(false)
       setProductToDelete(null)
       await fetchProducts()
     } catch (e: any) {
-      toast.error('Failed to delete product')
+      toast.error(isService ? 'Failed to delete service' : 'Failed to delete product')
     } finally {
       setIsDeleting(false)
     }
@@ -185,10 +201,10 @@ export default function ProductsPage() {
   return (
     <div className="space-y-8 pb-12">
       <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <h2 className="text-xl font-black tracking-tight text-foreground">Products</h2>
+        <h2 className="text-xl font-black tracking-tight text-foreground">Products & Services</h2>
         
         <Button size={"default"} onClick={() => setIsCreating(true)}>
-          <Plus className="w-4 h-4" /> New Product
+          <Plus className="w-4 h-4" /> New Offering
         </Button>
       </div>
 
@@ -199,7 +215,7 @@ export default function ProductsPage() {
           setIsCreating(false);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
+            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
           });
         }
       }}>
@@ -210,9 +226,13 @@ export default function ProductsPage() {
                 <Plus className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <SheetTitle className="text-xl font-black tracking-tight">New Product</SheetTitle>
+                <SheetTitle className="text-xl font-black tracking-tight">
+                  {formData.aiConfig.productType === 'service' ? 'New Service' : 'New Product'}
+                </SheetTitle>
                 <SheetDescription className="text-muted-foreground">
-                  Create a new product to track
+                  {formData.aiConfig.productType === 'service' 
+                    ? 'Create a new service offering to track' 
+                    : 'Create a new product to track'}
                 </SheetDescription>
               </div>
             </div>
@@ -240,7 +260,7 @@ export default function ProductsPage() {
                 setIsCreating(false);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
+                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
                 });
               }}
             >
@@ -253,7 +273,7 @@ export default function ProductsPage() {
               disabled={isSubmitting || isAiLoading}
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Create Product
+              {formData.aiConfig.productType === 'service' ? 'Create Service' : 'Create Product'}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -266,7 +286,7 @@ export default function ProductsPage() {
           setEditingProductId(null);
           setFormData({ 
             name: "", description: "", websiteUrl: "", isActive: true,
-            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
+            aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
           });
         }
       }}>
@@ -277,9 +297,13 @@ export default function ProductsPage() {
                 <Edit className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <SheetTitle className="text-xl font-black tracking-tight">Edit Product</SheetTitle>
+                <SheetTitle className="text-xl font-black tracking-tight">
+                  {formData.aiConfig.productType === 'service' ? 'Edit Service' : 'Edit Product'}
+                </SheetTitle>
                 <SheetDescription className="text-muted-foreground">
-                  Update your product configuration
+                  {formData.aiConfig.productType === 'service' 
+                    ? 'Update your service configuration' 
+                    : 'Update your product configuration'}
                 </SheetDescription>
               </div>
             </div>
@@ -306,9 +330,8 @@ export default function ProductsPage() {
                 setEditingProductId(null);
                 setFormData({ 
                   name: "", description: "", websiteUrl: "", isActive: true,
-                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [] }
+                  aiConfig: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
                 });
-                
               }}
             >
               Cancel
@@ -319,7 +342,7 @@ export default function ProductsPage() {
               disabled={isSubmitting || isAiLoading}
             >
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Update Product
+              {formData.aiConfig.productType === 'service' ? 'Update Service' : 'Update Product'}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -330,9 +353,9 @@ export default function ProductsPage() {
         {products.length === 0 ? (
           <div className="flex justify-center flex-col items-center py-32 bg-muted/5 rounded-xl border border-dashed border-border/40">
             <Radar className="w-12 h-12 text-muted-foreground/20 mb-4" />
-            <h3 className="text-xl font-bold text-foreground">No products found</h3>
+            <h3 className="text-xl font-bold text-foreground">No offerings found</h3>
             <p className="text-muted-foreground mt-1 text-sm text-center max-w-xs">
-              Click the "New Product" button above to start scanning for high-intent customer leads.
+              Click the "New Offering" button above to start scanning for high-intent customer leads.
             </p>
           </div>
         ) : (
@@ -351,7 +374,8 @@ export default function ProductsPage() {
                     aiConfig: {
                       customPersona: product.aiConfig?.customPersona || "",
                       negativeKeywords: product.aiConfig?.negativeKeywords || [],
-                      excludedAuthors: product.aiConfig?.excludedAuthors || []
+                      excludedAuthors: product.aiConfig?.excludedAuthors || [],
+                      productType: product.aiConfig?.productType === 'service' ? 'service' : 'product',
                     }
                   })
                 }}
@@ -370,7 +394,7 @@ export default function ProductsPage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Product?"
+        title={productToDelete?.aiConfig?.productType === 'service' ? "Delete Service?" : "Delete Product?"}
         description={
           <>
             Are you sure you want to delete <span className="font-black text-foreground">"{productToDelete?.name}"</span>? 
@@ -388,18 +412,8 @@ export default function ProductsPage() {
 }
 
 interface ProductFormProps {
-  formData: {
-    name: string;
-    description: string;
-    websiteUrl: string;
-    isActive: boolean;
-    aiConfig?: {
-      customPersona?: string;
-      negativeKeywords?: string[];
-      [key: string]: any;
-    };
-  };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: ProductFormData;
+  setFormData: React.Dispatch<React.SetStateAction<ProductFormData>>;
   isSubmitting: boolean;
   isAiLoading: boolean;
   setIsAiLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -410,23 +424,72 @@ interface ProductFormProps {
 function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAiLoading, formId, onSubmit }: ProductFormProps) {
   const { user } = useAuth()
   const isFreePlan = user?.plan?.toUpperCase() !== "PRO"
+  const isService = formData.aiConfig.productType === 'service'
 
   return (
     <form id={formId} onSubmit={onSubmit} className="space-y-6">
+      {/* Offering Type Selector */}
+      <div className="space-y-2.5">
+        <label className="block text-sm font-medium text-foreground">Offering Type</label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setFormData({
+              ...formData,
+              aiConfig: { ...formData.aiConfig, productType: 'product' }
+            })}
+            className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+              formData.aiConfig.productType === 'product'
+                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                : "border-border/60 hover:border-border hover:bg-muted/50 text-muted-foreground"
+            }`}
+          >
+            <Package className="w-5 h-5 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs font-bold leading-tight">Product Offering</div>
+              <div className="text-[10px] text-muted-foreground truncate mt-0.5">SaaS, software apps</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFormData({
+              ...formData,
+              aiConfig: { ...formData.aiConfig, productType: 'service' }
+            })}
+            className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+              formData.aiConfig.productType === 'service'
+                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                : "border-border/60 hover:border-border hover:bg-muted/50 text-muted-foreground"
+            }`}
+          >
+            <Briefcase className="w-5 h-5 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs font-bold leading-tight">Service Offering</div>
+              <div className="text-[10px] text-muted-foreground truncate mt-0.5">Freelance, agency, consulting</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Product Name</label>
+          <label className="block text-sm font-medium text-foreground">
+            {isService ? 'Service Name' : 'Product Name'}
+          </label>
           <input 
             required 
             value={formData.name} 
             onChange={e => setFormData({...formData, name: e.target.value})} 
             className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-            placeholder="e.g. Acme CRM" 
+            placeholder={isService ? "e.g. Video Editing Studio" : "e.g. Acme CRM"} 
           />
         </div>
         
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">Website</label>
+          <label className="block text-sm font-medium text-foreground">
+            {isService ? 'Website / Portfolio' : 'Website'}
+          </label>
           <input 
             type="url"
             value={formData.websiteUrl} 
@@ -446,7 +509,10 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           value={formData.description} 
           onChange={e => setFormData({...formData, description: e.target.value})} 
           className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-28 resize-none" 
-          placeholder="We help freelancers track sales and manage invoices effortlessly..." 
+          placeholder={isService 
+            ? "e.g. We provide professional short-form video editing for YouTube creators and TikTok channels. Focuses on high pacing and animation..."
+            : "e.g. We help freelancers track sales and manage invoices effortlessly..."
+          } 
         />
       </div>
 
@@ -458,9 +524,9 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           Exclude conversations containing any of these terms (comma-separated). Leave empty to automatically generate them using AI.
         </p>
         <textarea 
-          value={Array.isArray(formData.aiConfig?.negativeKeywords) 
+          value={Array.isArray(formData.aiConfig.negativeKeywords) 
             ? formData.aiConfig.negativeKeywords.join(", ") 
-            : typeof formData.aiConfig?.negativeKeywords === 'string'
+            : typeof formData.aiConfig.negativeKeywords === 'string'
               ? formData.aiConfig.negativeKeywords
               : ""
           }
@@ -475,7 +541,7 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
             });
           }}
           className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-16 resize-none" 
-          placeholder="e.g. free, course, job, hiring, tutorial, funny" 
+          placeholder={isService ? "e.g. job search, looking for a job, hire me, resume" : "e.g. free, course, job, hiring, tutorial, funny"} 
         />
       </div>
 
@@ -487,9 +553,9 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           Ignore posts/comments from specific authors or bot accounts (comma-separated).
         </p>
         <textarea 
-          value={Array.isArray(formData.aiConfig?.excludedAuthors) 
+          value={Array.isArray(formData.aiConfig.excludedAuthors) 
             ? formData.aiConfig.excludedAuthors.join(", ") 
-            : typeof formData.aiConfig?.excludedAuthors === 'string'
+            : typeof formData.aiConfig.excludedAuthors === 'string'
               ? formData.aiConfig.excludedAuthors
               : ""
           }
@@ -544,7 +610,7 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           </div>
         ) : (
           <textarea
-            value={formData.aiConfig?.customPersona || ""}
+            value={formData.aiConfig.customPersona || ""}
             onChange={e => setFormData({
               ...formData,
               aiConfig: {
@@ -553,42 +619,52 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
               }
             })}
             className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-24 resize-none"
-            placeholder="e.g. Write from the perspective of John, the CEO of Acme. Tone should be expert, direct, and helpful. Mention that Acme provides 24/7 client support."
+            placeholder={isService 
+              ? "e.g. Write from the perspective of Josh, video editing lead. Tone should be friendly, helpful, and suggest a quick review of their current pacing..."
+              : "e.g. Write from the perspective of John, the CEO of Acme. Tone should be expert, direct, and helpful. Mention that Acme provides 24/7 client support."
+            }
           />
         )}
       </div>
 
-      <div className="space-y-3 pt-2 border-t border-border/50">
+      {/* Tracking Status Selector */}
+      <div className="space-y-2.5 pt-2 border-t border-border/50">
         <label className="block text-sm font-medium text-foreground">Tracking Status</label>
-        <div className="flex bg-muted/30 p-1 rounded-lg border border-border/50 w-full sm:max-w-xs">
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => setFormData({ ...formData, isActive: true })}
-            className={`flex-1 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider py-2 px-3 rounded-md transition-all ${
-              formData.isActive 
-                ? "bg-background text-success shadow-sm border border-border/50" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+              formData.isActive
+                ? "border-success bg-success/5 text-success shadow-sm"
+                : "border-border/60 hover:border-border hover:bg-muted/50 text-muted-foreground"
             }`}
           >
-            <Radar className={`w-3.5 h-3.5 ${formData.isActive ? "text-success" : ""}`} />
-            Active
+            <Radar className={`w-5 h-5 shrink-0 ${formData.isActive ? "text-success" : ""}`} />
+            <div className="min-w-0">
+              <div className="text-xs font-bold leading-tight">Active Scan</div>
+              <div className="text-[10px] text-muted-foreground truncate mt-0.5">Scan continuously for leads</div>
+            </div>
           </button>
+
           <button
             type="button"
             onClick={() => setFormData({ ...formData, isActive: false })}
-            className={`flex-1 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider py-2 px-3 rounded-md transition-all ${
-              !formData.isActive 
-                ? "bg-background text-foreground shadow-sm border border-border/50" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+              !formData.isActive
+                ? "border-muted-foreground/60 bg-muted/20 text-foreground shadow-sm"
+                : "border-border/60 hover:border-border hover:bg-muted/50 text-muted-foreground"
             }`}
           >
-            <div className={`w-2 h-2 rounded-full ${!formData.isActive ? "bg-muted-foreground" : "bg-muted-foreground/50"}`}></div>
-            Paused
+            <div className="w-5 h-5 flex items-center justify-center shrink-0">
+              <div className={`w-2.5 h-2.5 rounded-full ${!formData.isActive ? "bg-muted-foreground" : "bg-muted-foreground/50"}`} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold leading-tight">Paused Scan</div>
+              <div className="text-[10px] text-muted-foreground truncate mt-0.5">Stop finding new leads</div>
+            </div>
           </button>
         </div>
-        <p className="text-xs text-muted-foreground font-medium">
-          {formData.isActive ? "The AI will continuously scan for new leads." : "Scanning is paused. No new leads will be found."}
-        </p>
       </div>
 
     </form>
@@ -607,7 +683,11 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
         <div className="flex justify-between items-start gap-3 flex-wrap sm:flex-nowrap">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-11 h-11 rounded-xl bg-muted/30 border border-border/40 flex items-center justify-center text-primary group-hover:border-primary/20 transition-colors shrink-0">
-              <Package className="w-5.5 h-5.5" />
+              {product.aiConfig?.productType === 'service' ? (
+                <Briefcase className="w-5 h-5" />
+              ) : (
+                <Package className="w-5 h-5" />
+              )}
             </div>
             <div className="space-y-0.5 min-w-0">
               <h3 className="text-base font-bold text-foreground tracking-tight truncate" title={product.name}>
@@ -624,7 +704,15 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-1.5">
+            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+              product.aiConfig?.productType === 'service'
+                ? "bg-teal-500/10 text-teal-600 border-teal-500/20 dark:text-teal-400"
+                : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
+            }`}>
+              {product.aiConfig?.productType === 'service' ? 'Service' : 'Product'}
+            </span>
+
             {isActive ? (
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-success/10 border border-success/20 text-success">
                 <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shadow-sm shadow-success/50"></div>
@@ -641,7 +729,7 @@ function CompactProductCard({ product, onDelete, onEdit }: { product: any, onDel
 
         {/* Description */}
         <p className="text-xs text-muted-foreground leading-relaxed font-medium line-clamp-2" title={product.description || ""}>
-          {product.description || "No specific detection vectors defined for this product yet."}
+          {product.description || "No specific detection vectors defined for this offering yet."}
         </p>
 
         {/* Leads block */}

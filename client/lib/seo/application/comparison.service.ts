@@ -39,7 +39,7 @@ export class ComparisonService {
     const competitor = data.competitor;
     return MetadataService.constructPageMetadata({
       title: `Best ${competitor.name} Alternative in 2026 (Why Switch?)`,
-      description: `Compare ${competitor.name} vs Knivik. Discover why startup founders and sales teams are switching to Knivik for AI-powered semantic B2B lead generation and automated reply crafting.`,
+      description: `Compare ${competitor.name} vs Knivik. Discover why startup founders, agencies, freelancers, and sales teams are switching to Knivik for AI-powered B2B lead generation for products and services.`,
       path: `/alternatives/${competitor.slug}`,
       keywords: [
         `${competitor.name} alternative`,

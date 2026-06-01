@@ -70,27 +70,27 @@ const initialSampleLeads: LeadCardData[] = [
   {
     id: "lead-3",
     platform: "Twitter",
-    externalPostId: "twitter-buffer-alt",
-    title: "Looking for Buffer alternatives",
-    content: "Buffer's free plan is too limited now and the premium plans are way out of my budget. Does anyone know a good social media scheduling tool that lets you link up to 5 profiles without charging a fortune?",
-    url: "https://x.com/tweets/buffer_alt",
-    authorUsername: "social_guru",
+    externalPostId: "twitter-video-editor",
+    title: "Looking to hire a video editor / agency",
+    content: "We are scaling our YouTube channel and need to hire a freelance video editor or a video editing agency for 2 long-form videos a week. Looking for someone with strong storytelling, motion graphics, and color grading experience. Please drop your portfolio or recommendations below!",
+    url: "https://x.com/tweets/video_editor_needed",
+    authorUsername: "content_creator_tom",
     intentLevel: "BUY_NOW",
-    intentScore: 91,
+    intentScore: 95,
     status: "NEW",
     detectedBy: "KEYWORD",
     enrichment: {
-      twitterUrl: "https://x.com/social_guru"
+      twitterUrl: "https://x.com/content_creator_tom"
     },
     feedback: 0,
-    notes: "Sent Twitter DM offering a custom discount on our annual plan. Waiting for reply.",
+    notes: "Sent DM with our portfolio link. Booking a call.",
     metadata: {
-      qualificationReasoning: "Matches keywords: 'Buffer alternatives'. The user is looking for an affordable scheduling tool for 5 social profiles."
+      qualificationReasoning: "Matches keywords: 'hire a video editor'. The user is actively seeking freelance or agency video editing services."
     },
     postedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
     createdAt: new Date().toISOString(),
     product: {
-      name: "ShareDeck SaaS"
+      name: "VividCut Agency"
     },
     replies: [] // Empty by default to let users click "Draft"
   }
@@ -113,7 +113,7 @@ export function ProductPreview() {
           } else if (id === "lead-2") {
             customReply = "Hey! If you are tired of AWS Textract layout rules, you should try DocuParse AI. It uses LLMs under the hood to automatically identify fields like total, tax, and line items, returning clean JSON without any template configuration. It takes under 5 lines of Python code to integrate."
           } else if (id === "lead-3") {
-            customReply = "Hey social_guru! Give ShareDeck a look. Our starter tier supports up to 6 profiles for a fraction of Buffer's pricing, and it includes advanced analytics. Happy to share a extended free trial link with you if you want to test it!"
+            customReply = "Hey content_creator_tom! I run VividCut Agency. We specialize in high-retention YouTube video editing, motion graphics, and color grading. We've helped several creators scale their channels. Check out our portfolio at vividcut.com/portfolio. Let me know if you'd like to do a quick test edit!"
           }
           return {
             ...l,

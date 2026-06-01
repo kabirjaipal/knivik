@@ -16,7 +16,7 @@ export const PLANS = {
     name: "Free",
     description: "Get started with basic lead detection",
     features: [
-      "Track 1 Product",
+      "Track 1 Product or Service",
       "50 leads per month",
       "Reddit & HackerNews scanning",
       "Automated scans every 24 hours",
@@ -47,11 +47,11 @@ export const PLANS = {
     description: "Everything you need to scale your lead generation. Get 2 months free with annual billing!",
     popular: true,
     features: [
-      "Track up to 5 Products",
+      "Track up to 5 Products or Services",
       "1,000 High-Intent leads / mo",
       "Reddit, HN & Twitter (X)",
       "Automated scans every 2 hours (24/7 background)",
-      "10 Manual Force Scans / day per product",
+      "10 Manual Force Scans / day per offering",
       "Advanced ROI & Intent Analytics",
       "Advanced AI Intent Scoring",
       "Custom AI Personas for replies",

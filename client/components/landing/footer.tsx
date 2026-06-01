@@ -3,13 +3,26 @@ import { Logo } from "@/components/logo"
 import { ShieldCheck } from "lucide-react"
 import { FaTwitter, FaGithub } from "react-icons/fa"
 
+const competitors = [
+  { name: "Apollo", slug: "apollo" },
+  { name: "Brand24", slug: "brand24" },
+  { name: "Clay", slug: "clay" },
+  { name: "GummySearch", slug: "gummysearch" },
+  { name: "Hootsuite", slug: "hootsuite" },
+  { name: "Instantly", slug: "instantly" },
+  { name: "Syften", slug: "syften" },
+  { name: "F5Bot", slug: "f5bot" },
+  { name: "BuzzSumo", slug: "buzzsumo" },
+  { name: "Cognism", slug: "cognism" },
+]
+
 export function Footer() {
   return (
-    <footer className="bg-background py-6 border-t border-border/40">
+    <footer className="bg-background py-10 border-t border-border/40">
       <div className="container mx-auto px-6">
         
-        {/* Compact Upper Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-6">
+        {/* Multi-Column Upper Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex items-center gap-2 group w-fit">
               <Logo size={20} />
@@ -22,9 +35,22 @@ export function Footer() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:items-end gap-2.5">
+          <div className="flex flex-col gap-2.5">
+            <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Alternatives</h4>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-bold text-foreground/70">
+              {competitors.map((c) => (
+                <li key={c.slug}>
+                  <Link href={`/alternatives/${c.slug}`} className="hover:text-primary transition-colors">
+                    {c.name} Alternative
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-col md:items-end gap-2.5">
             <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Legal</h4>
-            <ul className="flex flex-wrap items-center gap-4 text-xs font-bold text-foreground/70">
+            <ul className="flex flex-wrap md:flex-col md:items-end gap-4 md:gap-2 text-xs font-bold text-foreground/70">
               <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link></li>
               <li><Link href="/terms" className="hover:text-primary transition-colors">Terms</Link></li>
               <li><Link href="/refund-policy" className="hover:text-primary transition-colors">Refunds</Link></li>

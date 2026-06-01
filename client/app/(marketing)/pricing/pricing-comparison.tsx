@@ -9,7 +9,7 @@ const getComparisonFeatures = () => [
     category: "Monitoring",
     features: [
       { 
-        name: "Monitored Products", 
+        name: "Monitored Products/Services", 
         free: String(PLANS.FREE.limits.products), 
         pro: String(PLANS.PRO.limits.products) 
       },
@@ -26,7 +26,7 @@ const getComparisonFeatures = () => [
       { 
         name: "Manual Force Scans", 
         free: `${PLANS.FREE.limits.manualScansPerDay} / day`, 
-        pro: `${PLANS.PRO.limits.manualScansPerDay} / day / product` 
+        pro: `${PLANS.PRO.limits.manualScansPerDay} / day / offering` 
       },
       { name: "Reddit Support", free: true, pro: true },
       { name: "Hacker News Support", free: true, pro: true },

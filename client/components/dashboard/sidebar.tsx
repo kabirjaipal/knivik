@@ -60,7 +60,7 @@ export function Sidebar({ className }: SidebarProps) {
   const userLinks: NavLink[] = useMemo(() => {
     const links = [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/products", label: "Products", icon: Radar },
+      { href: "/dashboard/products", label: "Products & Services", icon: Radar },
       { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
       { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
     ];

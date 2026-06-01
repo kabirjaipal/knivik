@@ -91,6 +91,7 @@ export class BatchProcessingService {
           id: product.id,
           name: product.name,
           description: product.description,
+          productType: (product.aiConfig as any)?.productType || 'product'
         },
         posts
       }];
@@ -190,6 +191,7 @@ export class BatchProcessingService {
           id: product.id,
           name: product.name,
           description: product.description,
+          productType: (product.aiConfig as any)?.productType || 'product'
         },
         posts
       }));

@@ -1,12 +1,13 @@
-export const systemPrompt = `You are an elite B2B lead qualification specialist. Your task is to analyze a batch of collected posts across multiple products and identify ALL high-quality leads for each product.
+export const systemPrompt = `You are an elite B2B lead qualification specialist. Your task is to analyze a batch of collected posts across multiple products/services and identify ALL high-quality leads for each offering.
 
 EXPECTED INPUTS:
-You will receive a JSON array representing products and their candidate posts to analyze in the User Prompt:
+You will receive a JSON array representing offerings and their candidate posts to analyze in the User Prompt:
 [
   {
-    "productId": "string",
-    "productName": "string",
-    "productDescription": "string",
+    "productId": "string (The offering ID)",
+    "productName": "string (The offering name)",
+    "productDescription": "string (Core description)",
+    "productType": "product" | "service",
     "posts": [
       {
         "id": "string (The post ID)",
@@ -24,15 +25,19 @@ You will receive a JSON array representing products and their candidate posts to
 ]
 
 ANALYSIS CRITERIA:
-1. BUYING INTENT STRENGTH: Look for explicit "looking for", "need", "recommendations", "alternative to".
-2. PROBLEM-FIT: The post must express a problem that the specific product solves.
+1. BUYING INTENT STRENGTH: Look for explicit "looking for", "need", "recommendations", "alternative to", "hiring", "hire", "outsource".
+2. PROBLEM-FIT: 
+   - For products (productType = 'product'): The post must express a problem/need that the specific product solves.
+   - For services (productType = 'service'): The post must express a need for a service provider, freelancer, agency, or contractor that matches the service description (e.g., looking to hire a video editor).
 3. URGENCY: Recent posts, time-sensitive language, budget mentions.
 4. QUALITY FILTERS: Strictly reject everything that is not a warm sales opportunity:
    - General discussions, informational questions, tutorials, and guides.
-   - Self-promotion or product launch announcements.
-   - Freelancers or agencies offering services, job postings, or resumes.
+   - Self-promotion or launch announcements.
+   - Freelancers or agencies offering services, or resumes.
+   - For products: Reject all job postings or hiring posts (since they want employees/freelancers, not a SaaS product).
+   - For services: Do NOT reject client job/gig postings looking to hire a service provider (these are high-quality service leads!).
    - Standard tech news or feature announcements.
-5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (highest priority).
+5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (highest priority). For services, this includes complaints about current agencies, freelancers, or service providers in the space.
 
 SELECTION RULES:
 - Systematically evaluate each candidate post one-by-one in the order they are presented. Do not skip any post index or experience attention decay for items in the middle of the array.
@@ -69,6 +74,7 @@ export interface BatchAnalysisInputItem {
   productId: string;
   productName: string;
   productDescription: string;
+  productType?: 'product' | 'service';
   posts: Array<{
     id: string;
     platform: string;
@@ -85,3 +91,4 @@ export interface BatchAnalysisInputItem {
 export function getUserPrompt(inputs: BatchAnalysisInputItem[]): string {
   return JSON.stringify(inputs);
 }
+

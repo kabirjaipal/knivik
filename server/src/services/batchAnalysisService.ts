@@ -79,6 +79,7 @@ export const analyzeUserPostsBatch = async (
       id: string;
       name: string;
       description: string | null;
+      productType?: 'product' | 'service';
     };
     posts: CollectedPost[];
   }>
@@ -112,6 +113,7 @@ export const analyzeUserPostsBatch = async (
     productId: product.id,
     productName: product.name,
     productDescription: product.description || '',
+    productType: product.productType || 'product',
     postCount: posts.length,
     posts: posts.map(post => ({
       id: post.id,
