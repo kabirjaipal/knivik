@@ -3,10 +3,10 @@
 ## Summary
 
 - **Total planned micro-tools:** 5
-- **Completed:** 2
-- **Pending:** 3
+- **Completed:** 3
+- **Pending:** 2
 
-## Completed (2/5)
+## Completed (3/5)
 
 1. ✅ **Advanced Social Search Operator Builder**
    - Route: `/tools/search-builder`
@@ -30,6 +30,17 @@
      - Produces actionable suggestions + copyable rewrite.
      - Scoring/rewrite logic upgraded to be less generic and more realistic.
 
+3. ✅ **Reddit & HackerNews Testimonial Card Generator**
+   - Route: `/tools/testimonial-generator`
+   - Files:
+     - `client/app/(marketing)/tools/testimonial-generator/page.tsx`
+     - `client/app/(marketing)/tools/testimonial-generator/TestimonialGeneratorClient.tsx`
+   - Notes:
+     - Generates shareable testimonial card previews from Reddit/HN quotes.
+     - Supports presets for minimal, social-proof, and bold layouts.
+     - Includes copyable text outputs, live preview, and SVG card download.
+     - Adds CTA to `/pricing` and footer navigation under Free Tools.
+
 ## Navigation Integration
 
 - Free tools are linked from footer:
@@ -37,6 +48,7 @@
   - Current links:
     - `/tools/search-builder`
     - `/tools/warmth-auditor`
+    - `/tools/testimonial-generator`
 
 ## Pending (3/5)
 
@@ -46,20 +58,19 @@
 
 ## Recommended Next Build (for new chat)
 
-### Next tool: **Reddit & HackerNews Testimonial Card Generator**
+### Next tool: **Ask HN Lead Finder Feed**
 
 Suggested route/files:
 
-- `client/app/(marketing)/tools/testimonial-generator/page.tsx`
-- `client/app/(marketing)/tools/testimonial-generator/TestimonialGeneratorClient.tsx`
+- `client/app/(marketing)/tools/ask-hn-feed/page.tsx`
+- `client/app/(marketing)/tools/ask-hn-feed/AskHnFeedClient.tsx`
 
 Suggested MVP scope:
 
-- Input: quote text, author handle, source platform (Reddit/HN), source link, optional product/niche tag.
-- Live preview testimonial card (theme-consistent dark/light).
-- Preset styles (minimal, social-proof, bold).
-- Copy-to-clipboard output text and optional downloadable image card.
-- Include CTA to `/pricing` similar to other tools.
+- Curated Ask HN-style lead feed focused on hiring, tool requests, and pain points.
+- Compact filtering by intent, keyword, and recency.
+- Lead cards with source context, tags, and warm outreach suggestions.
+- CTA to `/pricing` similar to other tools.
 - Add footer link under **Free Tools** after implementation.
 
 ## Handoff Notes

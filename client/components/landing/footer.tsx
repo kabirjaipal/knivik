@@ -56,6 +56,14 @@ export function Footer() {
                   Outreach Warmth & Spam Auditor
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tools/testimonial-generator"
+                  className="hover:text-primary transition-colors"
+                >
+                  Testimonial Card Generator
+                </Link>
+              </li>
             </ul>
           </div>
 
