@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useMemo } from 'react'
+import React, { createContext, useContext, useMemo, useEffect, useCallback, useState, ReactNode } from 'react'
 import posthog from 'posthog-js'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession, signOut } from '@/lib/auth-client'
@@ -16,7 +16,7 @@ interface User {
   image?: string
   role?: string
   plan?: string
-  metadata?: any
+  metadata?: Record<string, unknown> | null
   emailVerified?: boolean
   subscriptionStatus?: string | null
   dodoCustomerId?: string | null
@@ -46,74 +46,96 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
-  const [isClientLoaded, setIsClientLoaded] = React.useState(false);
-  const [hasInitialFetch, setHasInitialFetch] = React.useState(false);
+  const [isClientLoaded, setIsClientLoaded] = useState(false);
 
   // Expose public configs
-  const [publicConfig, setPublicConfig] = React.useState<{ maintenanceMode: boolean; registrationEnabled: boolean }>({
+  const [publicConfig, setPublicConfig] = useState<{ maintenanceMode: boolean; registrationEnabled: boolean }>({
     maintenanceMode: false,
     registrationEnabled: true,
   });
 
-  const [dbUser, setDbUser] = React.useState<any>(null);
+  const [dbUser, setDbUser] = useState<Partial<User> | null>(null);
+  const [isInitialAuthSettled, setIsInitialAuthSettled] = useState(false);
+  const [referralCheckedUserId, setReferralCheckedUserId] = useState<string | null>(null);
 
-  const { data: session, isPending, error, refetch } = useSession()
+  const { data: session, isPending, refetch } = useSession()
 
-  // It's loading if we haven't loaded the client, it's pending, we haven't passed the initial fetch window, or we are loading the DB user profile
-  const loading = !isClientLoaded || isPending || (!hasInitialFetch && !session && !error) || (!!session?.user && !dbUser);
+  // Deterministic loading state: only load when client isn't ready, initial auth query hasn't finished, or we have a session but haven't loaded the db profile yet
+  const loading = !isClientLoaded || !isInitialAuthSettled || (!!session?.user && !dbUser);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsClientLoaded(true);
-    // After a short delay, we assume the initial fetch state is settled
-    const timer = setTimeout(() => setHasInitialFetch(true), 100);
-    return () => clearTimeout(timer);
   }, []);
 
+  // Track when the initial session check settles
+  useEffect(() => {
+    if (!isPending) {
+      setIsInitialAuthSettled(true);
+    }
+  }, [isPending]);
+
   // Fetch detailed user profile (including allowReferrals) from backend
-  React.useEffect(() => {
-    if (!session?.user) {
+  useEffect(() => {
+    if (isPending) return;
+
+    if (!session?.user?.id) {
       setDbUser(null);
       return;
     }
 
+    // Skip refetching if we already have the database user for this active session
+    if (dbUser && dbUser.id === session.user.id) {
+      return;
+    }
+
+    const controller = new AbortController();
     const fetchMe = async () => {
       try {
-        const response = await fetch('/api/users/me');
+        const response = await fetch('/api/users/me', { signal: controller.signal });
         const result = await response.json();
         if (result.success && result.data?.user) {
           setDbUser(result.data.user);
         } else {
           setDbUser({});
         }
-      } catch (err) {
-        setDbUser({});
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setDbUser({});
+        }
       }
     };
     fetchMe();
-  }, [session?.user]);
+
+    return () => {
+      controller.abort();
+    };
+  }, [session?.user?.id, isPending, dbUser?.id, session?.user]);
 
   // Fetch public configuration on mount
-  React.useEffect(() => {
+  useEffect(() => {
+    const controller = new AbortController();
     const fetchConfig = async () => {
       try {
-        const response = await fetch('/api/config/public');
+        const response = await fetch('/api/config/public', { signal: controller.signal });
         const result = await response.json();
         if (result.success && result.data) {
           setPublicConfig(result.data);
         }
-      } catch (err) {
-        // Silently log/ignore config fetch errors in console
+      } catch (err: any) {
+        // Silently ignore aborts/errors
       }
     };
     fetchConfig();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
-
-
-  const logout = React.useCallback(async () => {
+  const logout = useCallback(async () => {
     disconnectSocket()
     await signOut()
     router.push('/login')
@@ -145,11 +167,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session, dbUser])
 
   // Link PostHog sessions to our authenticated users (identify on login, reset on logout)
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return
 
     try {
-      if (!user) {
+      if (!user?.id) {
         posthog.reset()
         posthog.stopSessionRecording()
         return
@@ -168,15 +190,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // eslint-disable-next-line no-console
       console.warn('PostHog identify/reset failed', e)
     }
-  }, [user])
+  }, [user?.id, user?.email, user?.plan, user?.role, user?.username, user?.name])
 
   // Process referral code claim if the cookie exists and user has authenticated
-  React.useEffect(() => {
-    if (loading || !user) return;
+  useEffect(() => {
+    if (loading || !user?.id || referralCheckedUserId === user.id) return;
 
     const claimReferral = async () => {
       const match = document.cookie.match(/(^|;)\s*knivik_ref_code\s*=\s*([^;]+)/);
-      if (!match) return;
+      if (!match) {
+        setReferralCheckedUserId(user.id);
+        return;
+      }
 
       const referralCode = match[2];
       try {
@@ -194,11 +219,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         // Fail silently
+      } finally {
+        setReferralCheckedUserId(user.id);
       }
     };
 
     claimReferral();
-  }, [user, loading]);
+  }, [user?.id, loading, referralCheckedUserId]);
 
   const value = useMemo(() => ({
     user,
