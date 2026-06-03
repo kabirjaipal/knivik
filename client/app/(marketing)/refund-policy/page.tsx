@@ -45,7 +45,7 @@ export default function RefundPolicy() {
               We partner with <strong>Dodo Payments</strong> (DodoPayments.com) as our online reseller and Merchant of Record. They process checkout details, handle payment security, manage recurring subscription billing, and process transactional payouts.
             </p>
             <p>
-              As a Merchant of Record, Dodo Payments is the data controller of your checkout information. You can read how they handle your billing details in the <a href="https://www.dodopayments.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Dodo Payments Privacy Policy</a>.
+              As a Merchant of Record, Dodo Payments is the data controller of your checkout information. You can read how they handle your billing details in the <a href="https://dodopayments.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Dodo Payments Privacy Policy</a>.
             </p>
           </section>
 
