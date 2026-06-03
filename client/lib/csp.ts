@@ -14,6 +14,8 @@ export function applyCsp(request: NextRequest, pathname: string): NextResponse {
     "https://va.vercel-scripts.com",
     "https://*.posthog.com",
     "https://*.i.posthog.com",
+    "https://*.google-analytics.com",
+    "https://*.analytics.google.com",
     backendUrl,
     socketUrl,
     socketWsUrl,
@@ -37,6 +39,7 @@ export function applyCsp(request: NextRequest, pathname: string): NextResponse {
       "https://va.vercel-scripts.com",
       "https://*.posthog.com",
       "https://*.i.posthog.com",
+      "https://www.googletagmanager.com",
     ];
 
     const cspHeader = [
@@ -44,7 +47,7 @@ export function applyCsp(request: NextRequest, pathname: string): NextResponse {
       `script-src ${scriptSources.join(" ")}`,
       `style-src-elem 'self' 'nonce-${nonce}' https://*.dodopayments.com`,
       "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
-      "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
+      "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://*.google-analytics.com https://avatars.githubusercontent.com",
       "font-src 'self' data:",
       "frame-src 'self' https://*.dodopayments.com",
       `connect-src ${connectSources.join(" ")}`,
@@ -66,9 +69,9 @@ export function applyCsp(request: NextRequest, pathname: string): NextResponse {
 
   const cspHeader = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.dodopayments.com https://va.vercel-scripts.com https://*.posthog.com https://*.i.posthog.com https://www.googletagmanager.com https://www.google-analytics.com",
     "style-src 'self' 'unsafe-inline' https://*.dodopayments.com",
-    "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://avatars.githubusercontent.com",
+    "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://*.google-analytics.com https://avatars.githubusercontent.com",
     "font-src 'self' data:",
     "frame-src 'self' https://*.dodopayments.com",
     `connect-src ${connectSources.join(" ")}`,

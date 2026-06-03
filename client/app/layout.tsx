@@ -8,6 +8,13 @@ import { PROJECT_NAME, PROJECT_DESCRIPTION, PROJECT_URL } from "@/lib/constants"
 import { siteConfig } from "@/lib/seo";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { FeedbackWidget } from "@/components/feedback-widget";
+import { PostHogProvider } from "@/components/posthog-provider";
+import { GoogleAnalytics } from "@/components/seo/google-analytics";
+import NextTopLoader from 'nextjs-toploader';
+
 
 const inter = Inter({
   variable: "--font-inter",
@@ -85,13 +92,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { Toaster } from "sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { FeedbackWidget } from "@/components/feedback-widget";
-import { PostHogProvider } from "@/components/posthog-provider";
-
-import NextTopLoader from 'nextjs-toploader';
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -115,6 +115,7 @@ export default function RootLayout({
                 </TooltipProvider>
               </BillingProvider>
               <Toaster position="top-right" richColors closeButton />
+              <GoogleAnalytics />
               {process.env.NODE_ENV === "production" && (
                 <>
                   <Analytics />
