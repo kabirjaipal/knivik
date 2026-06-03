@@ -11,7 +11,8 @@ PILLAR 1: INTENT-SPECIFIC KEYWORDS (Generate 15-20 positive keywords/intent phra
 - For products: Use phrases indicating pain points the product solves or tools they need.
 - For services: Use phrases indicating a client looking to hire, outsource, or contract this specific service (e.g., "looking for a video editor", "need design agency", "hire developer").
 PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25 terms to filter out).
-- For services: Exclude terms like "offering services", "portfolio", "hire me", "hiring freelancers" (from freelancer side) to avoid other service providers pitching.
+- For products: Exclude terms like "i am building", "i'm building", "my project", "side project", "building in public", "buildinpublic", "built a", "check out my", "tutorial", "guide", "how to" to filter out DIY developers, hobbyists, and competitor showcases.
+- For services: Exclude terms like "offering services", "portfolio", "hire me", "hiring freelancers" (from freelancer side), "my portfolio", "accepting clients", "looking for clients", "freelancer looking for" to avoid other service providers pitching their own services.
 PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8 direct and indirect competitor names).
 - For products: Competitor software/tool names.
 - For services: Other well-known agencies, popular platforms, or service models in this space.

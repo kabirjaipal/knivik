@@ -37,7 +37,12 @@ ANALYSIS CRITERIA:
    - For products: Reject all job postings or hiring posts (since they want employees/freelancers, not a SaaS product).
    - For services: Do NOT reject client job/gig postings looking to hire a service provider (these are high-quality service leads!).
    - Standard tech news or feature announcements.
-5. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (highest priority). For services, this includes complaints about current agencies, freelancers, or service providers in the space.
+5. BUILDERS, DEVELOPERS, AND DIY PROJECTS (CRITICAL):
+   - Strictly REJECT posts where the author is building their own product, tool, or service themselves (DIY / 'building in public' / hobby projects / dev logs / personal projects). Even if they mention competitor names or pain points, they are NOT leads because they are creating their own solution rather than seeking to buy/hire one.
+   - Strictly REJECT authors asking for technical/coding/implementation help on building their own solutions (e.g., "how to connect Stripe to my React app" or "how to setup a mail server"), unless they are explicitly asking for recommendations on third-party products (for 'product' type offerings) or looking to hire/outsource to an agency/freelancer (for 'service' type offerings).
+   - Strictly REJECT other freelancers, agencies, or builders who are showcasing their work, sharing progress, or asking for feedback on their projects.
+   - Carefully analyze the context of the entire post to determine the author's role: qualify only genuine BUYERS/SEEKERS, never BUILDERS/CREATORS.
+6. COMPETITOR FRUSTRATION: Posts complaining about competitors are GOLD (highest priority). For services, this includes complaints about current agencies, freelancers, or service providers in the space.
 
 SELECTION RULES:
 - Systematically evaluate each candidate post one-by-one in the order they are presented. Do not skip any post index or experience attention decay for items in the middle of the array.

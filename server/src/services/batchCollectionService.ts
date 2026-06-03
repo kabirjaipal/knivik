@@ -604,13 +604,30 @@ export class BatchCollectionService {
       'breaking news', 'press release',
       'use code', 'sponsored', 'affiliate link', 'discount code',
       'automod', 'this is a bot', 'automatic reply',
+      'check out my', 'just launched', 'launched my', 'my new product',
+      'our new product', 'proud to share', 'proud to announce', 'project showcase'
     ];
 
     // For products, we also reject job/hiring posts since they are seeking people, not software tools
-    // For services, we want to allow job/hiring posts, but still reject other job seekers ("looking for a job")
+    // For services, we want to allow job/hiring posts, but still reject other job seekers and pitching freelancers/agencies
     const productType = product.config?.productType || 'product';
     const hardRejects = productType === 'service'
-      ? [...baseHardRejects, 'looking for a job']
+      ? [
+          ...baseHardRejects,
+          'looking for a job',
+          'hire me',
+          'for hire',
+          'offering my services',
+          'my portfolio',
+          'portfolio website',
+          'accepting new clients',
+          'looking for clients',
+          'accepting clients',
+          'freelancer looking for',
+          'my services',
+          'hire us',
+          'our agency',
+        ]
       : [...baseHardRejects, 'we\'re hiring', 'we are hiring', 'job post', 'looking for a job'];
 
     for (const reject of hardRejects) {
