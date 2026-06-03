@@ -3,10 +3,10 @@
 ## Summary
 
 - **Total planned micro-tools:** 5
-- **Completed:** 3
-- **Pending:** 2
+- **Completed:** 4
+- **Pending:** 1
 
-## Completed (3/5)
+## Completed (4/5)
 
 1. ✅ **Advanced Social Search Operator Builder**
    - Route: `/tools/search-builder`
@@ -41,6 +41,18 @@
      - Includes copyable text outputs, live preview, and SVG card download.
      - Adds CTA to `/pricing` and footer navigation under Free Tools.
 
+4. ✅ **Ask HN Lead Finder Feed**
+   - Route: `/tools/ask-hn-feed`
+   - Files:
+     - `client/app/(marketing)/tools/ask-hn-feed/page.tsx`
+     - `client/app/(marketing)/tools/ask-hn-feed/AskHnFeedClient.tsx`
+   - Notes:
+     - Displays curated HackerNews thread lead feed filtered by intent and topics.
+     - Interactive search, sorting, intent level filtering.
+     - Live customizable pitch template generator updating in real-time.
+     - Collapsible/expandable thread details showing HN discussion comments context.
+     - Link added to footer under Free Tools.
+
 ## Navigation Integration
 
 - Free tools are linked from footer:
@@ -49,29 +61,27 @@
     - `/tools/search-builder`
     - `/tools/warmth-auditor`
     - `/tools/testimonial-generator`
+    - `/tools/ask-hn-feed`
 
-## Pending (3/5)
+## Pending (1/5)
 
-3. ⏳ **Reddit & HackerNews Testimonial Card Generator**
-4. ⏳ **Ask HN Lead Finder Feed**
 5. ⏳ **Subreddit Niche Lead Directory**
 
 ## Recommended Next Build (for new chat)
 
-### Next tool: **Ask HN Lead Finder Feed**
+### Next tool: **Subreddit Niche Lead Directory**
 
 Suggested route/files:
 
-- `client/app/(marketing)/tools/ask-hn-feed/page.tsx`
-- `client/app/(marketing)/tools/ask-hn-feed/AskHnFeedClient.tsx`
+- `client/app/(marketing)/tools/subreddit-directory/page.tsx`
+- `client/app/(marketing)/tools/subreddit-directory/SubredditDirectoryClient.tsx`
 
 Suggested MVP scope:
 
-- Curated Ask HN-style lead feed focused on hiring, tool requests, and pain points.
-- Compact filtering by intent, keyword, and recency.
-- Lead cards with source context, tags, and warm outreach suggestions.
-- CTA to `/pricing` similar to other tools.
-- Add footer link under **Free Tools** after implementation.
+- Directory of high-value subreddits categorized by business niche (SaaS, eCommerce, DevTools, Agency, Creator, etc.).
+- Search and filterable list showcasing active subscriber sizes, common pain points, and specific high-intent keyword triggers.
+- Quick link actions to launch search-builders or register active monitors inside Knivik.
+- Keep UI consistent, using clean table or grid layouts, with HSL token-based Midnight Premium design.
 
 ## Handoff Notes
 

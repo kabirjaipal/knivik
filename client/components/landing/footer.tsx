@@ -64,6 +64,14 @@ export function Footer() {
                   Testimonial Card Generator
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tools/ask-hn-feed"
+                  className="hover:text-primary transition-colors"
+                >
+                  Ask HN Lead Finder Feed
+                </Link>
+              </li>
             </ul>
           </div>
 
