@@ -7,11 +7,7 @@ import Script from "next/script";
  * It functions in both Server and Client contexts.
  */
 export function GoogleAnalytics() {
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-
-  if (process.env.NODE_ENV !== "production" || !gaId) {
-    return null;
-  }
+  const gaId = "G-SX969B2QYG";
 
   return (
     <>

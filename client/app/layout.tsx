@@ -115,11 +115,11 @@ export default function RootLayout({
                 </TooltipProvider>
               </BillingProvider>
               <Toaster position="top-right" richColors closeButton />
-              <GoogleAnalytics />
               {process.env.NODE_ENV === "production" && (
                 <>
                   <Analytics />
                   <SpeedInsights />
+                  <GoogleAnalytics />
                 </>
               )}
             </PostHogProvider>
