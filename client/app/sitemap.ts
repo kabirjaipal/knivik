@@ -10,6 +10,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/privacy",
     "/refund-policy",
+    "/tools/search-builder",
+    "/tools/warmth-auditor",
+    "/tools/testimonial-generator",
+    "/tools/ask-hn-feed",
+    "/tools/subreddit-directory",
   ].map((route) => ({
     url: EnvConfig.resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
