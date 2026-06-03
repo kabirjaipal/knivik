@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { SchemaScript } from "@/components/seo/schema-script";
@@ -51,7 +52,9 @@ export default function SearchBuilderPage() {
     <div className="flex flex-col bg-background">
       <BreadcrumbJsonLd items={breadcrumbs} />
       <SchemaScript schema={faqSchema} />
-      <SearchBuilderClient />
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <SearchBuilderClient />
+      </Suspense>
     </div>
   );
 }

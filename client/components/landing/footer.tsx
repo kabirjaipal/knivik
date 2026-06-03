@@ -72,6 +72,14 @@ export function Footer() {
                   Ask HN Lead Finder Feed
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tools/subreddit-directory"
+                  className="hover:text-primary transition-colors"
+                >
+                  Subreddit Niche Lead Directory
+                </Link>
+              </li>
             </ul>
           </div>
 

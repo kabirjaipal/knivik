@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Copy,
@@ -103,12 +104,19 @@ const INTENT_TEMPLATES: QueryTemplate[] = [
 ];
 
 export function SearchBuilderClient() {
+  const searchParams = useSearchParams();
+  const initialNiche = searchParams.get("niche") || "CRM software";
+  const initialCompetitors = searchParams.get("competitors") || "Salesforce, Hubspot";
+  const initialKeywords = searchParams.get("keywords") || "freelancers, startups";
+  const initialTemplate = searchParams.get("template") || "recommendations";
+  const initialTimeframe = searchParams.get("timeframe") || "month";
+
   // Input states with conversion-optimized defaults
-  const [niche, setNiche] = useState("CRM software");
-  const [competitors, setCompetitors] = useState("Salesforce, Hubspot");
-  const [customKeywords, setCustomKeywords] = useState("freelancers, startups");
-  const [selectedTemplate, setSelectedTemplate] = useState("recommendations");
-  const [timeframe, setTimeframe] = useState("month"); // 'day', 'week', 'month', 'all'
+  const [niche, setNiche] = useState(initialNiche);
+  const [competitors, setCompetitors] = useState(initialCompetitors);
+  const [customKeywords, setCustomKeywords] = useState(initialKeywords);
+  const [selectedTemplate, setSelectedTemplate] = useState(initialTemplate);
+  const [timeframe, setTimeframe] = useState(initialTimeframe); // 'day', 'week', 'month', 'all'
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const queries = useMemo<
@@ -304,7 +312,7 @@ export function SearchBuilderClient() {
         {/* Header - Compact Inline layout to save top space */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-border/40">
           <div className="flex flex-col gap-1">
-            <h1 className="text-xl md:text-2xl font-black tracking-tight leading-none text-foreground flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-black tracking-tight text-foreground">
               Social Lead{" "}
               <span className="bg-gradient-to-r from-primary via-indigo-500 to-accent bg-clip-text text-transparent">
                 Search Operator

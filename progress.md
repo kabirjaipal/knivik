@@ -3,10 +3,10 @@
 ## Summary
 
 - **Total planned micro-tools:** 5
-- **Completed:** 4
-- **Pending:** 1
+- **Completed:** 5
+- **Pending:** 0
 
-## Completed (4/5)
+## Completed (5/5)
 
 1. ✅ **Advanced Social Search Operator Builder**
    - Route: `/tools/search-builder`
@@ -53,6 +53,18 @@
      - Collapsible/expandable thread details showing HN discussion comments context.
      - Link added to footer under Free Tools.
 
+5. ✅ **Subreddit Niche Lead Directory**
+   - Route: `/tools/subreddit-directory`
+   - Files:
+     - `client/app/(marketing)/tools/subreddit-directory/page.tsx`
+     - `client/app/(marketing)/tools/subreddit-directory/SubredditDirectoryClient.tsx`
+   - Notes:
+     - Directory of 12 high-value subreddits categorized by niche (SaaS, eCommerce, DevTools, Freelance/Agency, Marketing).
+     - Search and filterable listings displaying active subscribers and post frequencies.
+     - Expanded details card showing common pain points, intent triggers, and sample questions.
+     - Direct integrations linking to the Search Builder tool pre-populated with niche-relevant query parameters.
+     - Link added to footer under Free Tools.
+
 ## Navigation Integration
 
 - Free tools are linked from footer:
@@ -62,26 +74,11 @@
     - `/tools/warmth-auditor`
     - `/tools/testimonial-generator`
     - `/tools/ask-hn-feed`
+    - `/tools/subreddit-directory`
 
-## Pending (1/5)
+## Pending (0/5)
 
-5. ⏳ **Subreddit Niche Lead Directory**
-
-## Recommended Next Build (for new chat)
-
-### Next tool: **Subreddit Niche Lead Directory**
-
-Suggested route/files:
-
-- `client/app/(marketing)/tools/subreddit-directory/page.tsx`
-- `client/app/(marketing)/tools/subreddit-directory/SubredditDirectoryClient.tsx`
-
-Suggested MVP scope:
-
-- Directory of high-value subreddits categorized by business niche (SaaS, eCommerce, DevTools, Agency, Creator, etc.).
-- Search and filterable list showcasing active subscriber sizes, common pain points, and specific high-intent keyword triggers.
-- Quick link actions to launch search-builders or register active monitors inside Knivik.
-- Keep UI consistent, using clean table or grid layouts, with HSL token-based Midnight Premium design.
+*All free tools successfully completed.*
 
 ## Handoff Notes
 
