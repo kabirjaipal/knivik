@@ -16,9 +16,10 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog"
-import { Search, ShieldAlert, Loader2 } from "lucide-react"
+import { Search, ShieldAlert, Loader2, LogIn } from "lucide-react"
 import { toast } from "sonner"
 import { AdminPagination } from "@/components/admin/admin-pagination"
+import { useAuth } from "@/context/auth-context"
 
 interface User {
   id: string;
@@ -37,6 +38,7 @@ interface User {
 }
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -48,6 +50,7 @@ export default function AdminUsersPage() {
   // Action states
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
 
   const fetchUsers = () => {
     setLoading(true)
@@ -159,6 +162,30 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleImpersonate = async (user: User) => {
+    if (impersonatingId) return
+    setImpersonatingId(user.id)
+    
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${user.id}/impersonate`, {
+        method: 'POST',
+        credentials: 'include'
+      })
+      
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Logging in as ${user.username}...`)
+        window.location.href = '/dashboard'
+      } else {
+        toast.error(data.error || "Failed to impersonate")
+        setImpersonatingId(null)
+      }
+    } catch (err) {
+      toast.error("Network error")
+      setImpersonatingId(null)
+    }
+  }
+
   if (loading && users.length === 0) return (
     <div className="flex items-center justify-center min-h-[400px]">
       <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -191,7 +218,7 @@ export default function AdminUsersPage() {
               <TableHead className="font-bold text-center">Leads</TableHead>
               <TableHead className="font-bold">Status</TableHead>
               <TableHead className="font-bold">Joined</TableHead>
-              <TableHead className="text-right font-bold w-72">Actions</TableHead>
+              <TableHead className="text-right font-bold w-[450px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -262,6 +289,23 @@ export default function AdminUsersPage() {
                   
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {user.id !== currentUser?.id && user.role !== 'admin' && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={impersonatingId !== null}
+                          className="h-8 text-xs font-semibold text-primary hover:text-primary-foreground hover:bg-primary/10 border-primary/20 cursor-pointer"
+                          onClick={() => handleImpersonate(user)}
+                        >
+                          {impersonatingId === user.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                          ) : (
+                            <LogIn className="w-3.5 h-3.5 mr-1.5" />
+                          )}
+                          Impersonate
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="outline"

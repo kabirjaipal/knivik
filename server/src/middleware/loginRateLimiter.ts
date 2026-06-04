@@ -66,3 +66,16 @@ export const feedbackLimiter = rateLimit({
   },
 });
 
+/** Strict limiter for admin impersonation (10 actions per 15 minutes per IP). */
+export const impersonateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many impersonation requests. Please try again in 15 minutes.',
+  },
+});
+
+

@@ -4,6 +4,8 @@ import logger from '../lib/logger.js';
 import { pipelineQueue } from '../lib/queue.js';
 import { getSocketStats } from '../lib/socket.js';
 import { getGlobalIPHealth } from '../utils/ipProtection.js';
+import { makeSignature } from 'better-auth/crypto';
+import { config } from '../lib/config.js';
 
 /**
  * GET /api/admin/stats
@@ -741,6 +743,84 @@ export const getMemoryStats = async (_req: Request, res: Response): Promise<void
     });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Admin Memory Stats Error');
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+};
+
+/**
+ * POST /api/admin/users/:id/impersonate
+ * Temporary login as a target user (impersonation).
+ */
+export const impersonateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+
+    // Safety: Don't allow impersonating yourself
+    if (id === (req as any).user?.id) {
+      res.status(400).json({ success: false, error: 'You cannot impersonate yourself' });
+      return;
+    }
+
+    const targetUser = await db.client.user.findUnique({ where: { id } });
+    if (!targetUser) {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+
+    // Security: Prevents lateral escalation or hacking other admin accounts
+    if (targetUser.role === 'admin') {
+      res.status(403).json({ success: false, error: 'Cannot impersonate another administrator' });
+      return;
+    }
+
+    // Generate a random 32-character token (alphanumeric like Better Auth)
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    for (let i = 0; i < 32; i++) {
+      token += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    // Create signature using better-auth secret
+    const signature = await makeSignature(token, config.BETTER_AUTH_SECRET);
+    const cookieValue = `${token}.${signature}`;
+
+    const IMPERSONATION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours (temporary session)
+
+    // Create the session in the database
+    await db.client.session.create({
+      data: {
+        userId: targetUser.id,
+        token: token,
+        expiresAt: new Date(Date.now() + IMPERSONATION_DURATION_MS),
+        userAgent: req.headers['user-agent'],
+        ipAddress: req.ip || req.headers['x-forwarded-for']?.toString(),
+      }
+    });
+
+    const isProd = config.NODE_ENV === 'production';
+    const tokenCookieName = isProd ? '__secure-better-auth.session_token' : 'better-auth.session_token';
+    const dataCookieName = isProd ? '__secure-better-auth.session_data' : 'better-auth.session_data';
+
+    // Clear session cache cookie to force a refresh on the frontend
+    res.clearCookie(dataCookieName, {
+      path: '/',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax'
+    });
+
+    // Set the new session token cookie
+    res.cookie(tokenCookieName, cookieValue, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      path: '/',
+      maxAge: IMPERSONATION_DURATION_MS,
+    });
+
+    logger.info({ adminId: (req as any).user?.id, targetUserId: targetUser.id, targetUserEmail: targetUser.email }, 'Admin impersonated user');
+    res.json({ success: true });
+  } catch (error: any) {
+    logger.error({ error: error.message, userId: req.params.id }, 'Admin Impersonation Error');
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 };

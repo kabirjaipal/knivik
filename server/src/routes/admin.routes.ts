@@ -13,9 +13,11 @@ import {
   toggleUserStatus, 
   deleteUser,
   getLogs,
-  getMemoryStats
+  getMemoryStats,
+  impersonateUser
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.middleware.js';
+import { impersonateLimiter } from '../middleware/loginRateLimiter.js';
 
 const router = Router();
 
@@ -37,6 +39,7 @@ router.get('/memory', getMemoryStats);
 // User Management Actions
 router.post('/users/:id/update-plan', updatePlan);
 router.post('/users/:id/toggle-status', toggleUserStatus);
+router.post('/users/:id/impersonate', impersonateLimiter, impersonateUser);
 router.delete('/users/:id', deleteUser);
 
 export default router;
