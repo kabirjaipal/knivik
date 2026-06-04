@@ -798,8 +798,8 @@ export const impersonateUser = async (req: Request, res: Response): Promise<void
     });
 
     const isProd = config.NODE_ENV === 'production';
-    const tokenCookieName = isProd ? '__secure-better-auth.session_token' : 'better-auth.session_token';
-    const dataCookieName = isProd ? '__secure-better-auth.session_data' : 'better-auth.session_data';
+    const tokenCookieName = isProd ? '__Secure-better-auth.session_token' : 'better-auth.session_token';
+    const dataCookieName = isProd ? '__Secure-better-auth.session_data' : 'better-auth.session_data';
 
     // Clear session cache cookie to force a refresh on the frontend
     res.clearCookie(dataCookieName, {

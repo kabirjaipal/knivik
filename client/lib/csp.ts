@@ -45,7 +45,7 @@ export function applyCsp(request: NextRequest, pathname: string): NextResponse {
     const cspHeader = [
       "default-src 'self'",
       `script-src ${scriptSources.join(" ")}`,
-      `style-src-elem 'self' 'nonce-${nonce}' https://*.dodopayments.com`,
+      `style-src-elem 'self' 'unsafe-inline' 'nonce-${nonce}' https://*.dodopayments.com`,
       "style-src-attr 'self' 'unsafe-inline' https://*.dodopayments.com",
       "img-src 'self' data: blob: https://*.posthog.com https://*.dodopayments.com https://www.redditstatic.com https://abs.twimg.com https://news.ycombinator.com https://*.google.com https://*.gstatic.com https://*.google-analytics.com https://avatars.githubusercontent.com",
       "font-src 'self' data:",
