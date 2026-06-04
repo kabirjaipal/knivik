@@ -12,6 +12,10 @@ const createPrismaClient = () => {
   const pool = new Pool({
     connectionString,
     ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: false },
+    max: config.DB_POOL_MAX,
+    min: config.DB_POOL_MIN,
+    idleTimeoutMillis: config.DB_POOL_IDLE_TIMEOUT_MS,
+    connectionTimeoutMillis: config.DB_POOL_CONNECTION_TIMEOUT_MS,
   });
 
   const adapter = new PrismaPg(pool as any);

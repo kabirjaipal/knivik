@@ -35,6 +35,11 @@ const configSchema = z.object({
   LOG_DB_MAX_BODY_LENGTH: z.coerce.number().default(2000),
   // Prisma logging controls
   PRISMA_LOG_QUERIES: envBool(false),
+  // Database Pool Tuning & Logging
+  DB_POOL_MAX: z.coerce.number().default(process.env.NODE_ENV === 'production' ? 12 : 10),
+  DB_POOL_MIN: z.coerce.number().default(process.env.NODE_ENV === 'production' ? 2 : 1),
+  DB_POOL_IDLE_TIMEOUT_MS: z.coerce.number().default(30000),
+  DB_POOL_CONNECTION_TIMEOUT_MS: z.coerce.number().default(5000),
   // SMTP credentials (for Nodemailer)
   SMTP_HOST: z.string().default('smtp.ethereal.email'),
   SMTP_PORT: z.coerce.number().default(587),
