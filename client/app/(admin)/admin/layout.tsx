@@ -24,13 +24,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen bg-background overflow-hidden text-foreground">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <div className="w-full px-4 py-8 lg:px-8">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="w-full h-full px-4 py-4 lg:py-8 lg:px-8 overflow-y-auto custom-scrollbar">
            {children}
         </div>
       </main>

@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className="w-full h-full px-4 py-8 lg:px-8 overflow-y-auto custom-scrollbar">
+        <div className="w-full h-full px-4 py-4 lg:py-8 lg:px-8 overflow-y-auto custom-scrollbar">
            {children}
         </div>
       </main>
