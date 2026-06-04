@@ -99,7 +99,7 @@ export default function SettingsPage() {
     slackWebhook: "",
     webhookType: "SLACK",
     emailTarget: "",
-    minIntentScore: 70
+    minIntentScore: 85
   })
 
   const fetchAlertSettings = useCallback(async () => {
@@ -475,7 +475,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="mt-2 p-2.5 bg-primary/5 border border-primary/10 rounded-md flex gap-2 text-xs text-muted-foreground font-medium">
                    <Info className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                   <span>We recommend 70-85% for the best balance between speed and precision. Scores above 90% are usually direct "where do I buy" questions.</span>
+                   <span>We recommend 80-90% for the best balance between speed and precision. Scores above 90% are usually direct "where do I buy" questions.</span>
                 </div>
               </div>
 
@@ -485,7 +485,7 @@ export default function SettingsPage() {
                     <Zap className="w-4 h-4 text-primary" />
                     <label className="text-sm font-medium text-muted-foreground">
                       Premium Webhooks 
-                      <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
+                      <span className="ml-2 text-xs font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
                     </label>
                   </div>
                   {user?.plan === 'PRO' ? (
@@ -545,7 +545,7 @@ export default function SettingsPage() {
                     <Mail className="w-4 h-4 text-primary" />
                     <label className="text-sm font-medium text-muted-foreground">
                       Email Deliveries 
-                      <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
+                      <span className="ml-2 text-xs font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
                     </label>
                   </div>
                   {user?.plan !== 'FREE' ? (

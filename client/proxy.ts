@@ -45,9 +45,6 @@ export async function proxy(request: NextRequest) {
       role = await getRoleFromBackend(request);
     }
 
-    if (role === "admin" && pathname.startsWith("/dashboard")) {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
     if (role !== "admin" && pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }

@@ -19,6 +19,7 @@ import {
   XCircle,
   Loader2,
   Download,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -32,7 +33,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type FilterTab = "ALL" | "BUY_NOW" | "COMPETITOR" | "SEMANTIC" | "SAVED";
+type FilterTab = "ALL" | "NEW" | "QUALIFIED" | "SAVED" | "CONTACTED" | "CONVERTED" | "DISMISSED";
 
 interface ProductSummary {
   id: string;
@@ -199,8 +200,6 @@ export default function DashboardPage() {
 
   const total = leads.length;
   const highIntent = leads.filter((l) => l.intentScore >= 80).length;
-  const buyNow = leads.filter((l) => l.intentLevel === "BUY_NOW").length;
-  const competitor = leads.filter((l) => l.detectedBy === "COMPETITOR").length;
   const last24h = leads.filter(
     (l) => Date.now() - new Date(l.createdAt).getTime() < 86_400_000,
   ).length;
@@ -220,23 +219,24 @@ export default function DashboardPage() {
 
   // ─── Tabs & filtering ─────────────────────────────────────────────────────
 
-  const TABS: { key: FilterTab; label: string; count: number }[] = [
-    { key: "ALL", label: "All Leads", count: total },
-    { key: "BUY_NOW", label: "🔥 Buy Now", count: buyNow },
-    { key: "COMPETITOR", label: "⚔️ Competitor", count: competitor },
-    {
-      key: "SEMANTIC",
-      label: "🧠 Semantic",
-      count: leads.filter((l) => l.detectedBy === "SEMANTIC").length,
-    },
-    { key: "SAVED", label: "📌 Saved", count: saved },
+  const TABS: { key: FilterTab; label: string; count: number; icon: React.ComponentType<any> }[] = [
+    { key: "ALL", label: "All Active", count: leads.filter(l => l.status !== 'DISMISSED').length, icon: Activity },
+    { key: "NEW", label: "New", count: leads.filter(l => l.status === 'NEW').length, icon: Sparkles },
+    { key: "QUALIFIED", label: "Qualified", count: leads.filter(l => l.status === 'QUALIFIED').length, icon: Target },
+    { key: "SAVED", label: "Saved", count: leads.filter(l => l.status === 'SAVED').length, icon: Bookmark },
+    { key: "CONTACTED", label: "Contacted", count: leads.filter(l => l.status === 'CONTACTED').length, icon: Send },
+    { key: "CONVERTED", label: "Converted", count: leads.filter(l => l.status === 'CONVERTED').length, icon: CheckCircle2 },
+    { key: "DISMISSED", label: "Dismissed", count: leads.filter(l => l.status === 'DISMISSED').length, icon: XCircle },
   ];
 
   const filteredLeads = leads.filter((l) => {
-    if (activeTab === "BUY_NOW") return l.intentLevel === "BUY_NOW";
-    if (activeTab === "COMPETITOR") return l.detectedBy === "COMPETITOR";
-    if (activeTab === "SEMANTIC") return l.detectedBy === "SEMANTIC";
+    if (activeTab === "ALL") return l.status !== "DISMISSED";
+    if (activeTab === "NEW") return l.status === "NEW";
+    if (activeTab === "QUALIFIED") return l.status === "QUALIFIED";
     if (activeTab === "SAVED") return l.status === "SAVED";
+    if (activeTab === "CONTACTED") return l.status === "CONTACTED";
+    if (activeTab === "CONVERTED") return l.status === "CONVERTED";
+    if (activeTab === "DISMISSED") return l.status === "DISMISSED";
     return true;
   });
 
@@ -271,6 +271,24 @@ export default function DashboardPage() {
                   value: highIntent,
                   icon: TrendingUp,
                   color: "text-primary",
+                },
+                {
+                  label: "Qualified Leads",
+                  value: leads.filter((l) => l.status === "QUALIFIED").length,
+                  icon: UserCheck,
+                  color: "text-emerald-500",
+                },
+                {
+                  label: "Saved Leads",
+                  value: leads.filter((l) => l.status === "SAVED").length,
+                  icon: Bookmark,
+                  color: "text-sky-500",
+                },
+                {
+                  label: "Converted Leads",
+                  value: leads.filter((l) => l.status === "CONVERTED").length,
+                  icon: CheckCircle2,
+                  color: "text-emerald-600",
                 },
                 {
                   label: "Recent 24h",
@@ -470,7 +488,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 {last24h > 0 && (
-                  <span className="text-[10px] font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                  <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     +{last24h} Today
                   </span>
@@ -479,7 +497,7 @@ export default function DashboardPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleExportCSV}
-                  className="h-auto py-1.5 px-3 font-black text-[10px] uppercase tracking-widest rounded-lg shadow-sm border-border hover:bg-muted"
+                  className="h-auto py-1.5 px-3 font-black text-xs uppercase tracking-widest rounded-lg shadow-sm border-border hover:bg-muted"
                 >
                   <Download className="w-3.5 h-3.5 mr-1.5 text-primary" />
                   Export CSV
@@ -489,26 +507,30 @@ export default function DashboardPage() {
 
             {/* Filter tabs */}
             <div className="flex gap-2 px-5 py-3 border-b border-border/40 bg-card overflow-x-auto no-scrollbar">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border ${
-                    activeTab === tab.key
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                  {tab.count > 0 && (
-                    <span
-                      className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${activeTab === tab.key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/20"}`}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border ${
+                      activeTab === tab.key
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                    {tab.count > 0 && (
+                      <span
+                        className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === tab.key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/20"}`}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Lead list */}

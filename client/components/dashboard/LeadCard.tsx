@@ -1,6 +1,8 @@
 "use client"
 
 import { memo, useState, useCallback } from "react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, ChevronDown,
   RotateCw, Brain, Flame, Tags,
@@ -14,6 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -158,42 +167,21 @@ export const LeadCard = memo(({
         {/* ── Row 1: badges + score + engage ──────────────────────────── */}
         <div className="flex items-center gap-1.5 flex-wrap mb-2">
           {/* Platform */}
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
             {lead.platform}
           </span>
 
-          {/* Intent level */}
-          <span className={`text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${getIntentColor(lead.intentLevel)}`}>
-            {lead.intentLevel.replace('_', ' ')}
-          </span>
-
           {/* Score */}
-          <span className="text-[10px] font-black px-1.5 py-0.5 bg-primary/10 text-primary rounded">
-            ★ {lead.intentScore}
+          <span className="text-xs font-black px-1.5 py-0.5 bg-primary/10 text-primary rounded">
+            ★ {lead.intentScore}%
           </span>
-
-          {/* Detection badge */}
-          {lead.detectedBy === 'COMPETITOR' && (
-            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-destructive/15 text-destructive border border-destructive/30">
-              <Flame className="w-3 h-3 fill-current" /> Competitor
-            </span>
-          )}
-          {lead.detectedBy === 'SEMANTIC' && (
-            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">
-              <Brain className="w-3 h-3" /> Semantic
-            </span>
-          )}
-          {lead.detectedBy === 'KEYWORD' && (
-            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
-              <Tags className="w-3 h-3" /> Keyword
-            </span>
-          )}
 
           {/* Spacer + Engage button pushed right */}
-          <a href={lead.url} target="_blank" rel="noreferrer"
-            className="ml-auto flex items-center gap-1 text-[10px] font-black uppercase tracking-widest py-1 px-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all active:scale-95 shrink-0 shadow-sm shadow-primary/20">
-            Engage <ExternalLink className="w-2.5 h-2.5" />
-          </a>
+          <Button size="xs" variant="default" asChild className="ml-auto uppercase tracking-widest text-xs font-black shadow-sm shadow-primary/20">
+            <a href={lead.url} target="_blank" rel="noreferrer">
+              Engage <ExternalLink className="w-2.5 h-2.5" />
+            </a>
+          </Button>
         </div>
 
         {/* ── Row 2: title ────────────────────────────────────────────── */}
@@ -202,15 +190,16 @@ export const LeadCard = memo(({
         </h3>
 
         {/* ── Row 3: content preview ──────────────────────────────────── */}
-        <p className="text-xs text-muted-foreground leading-relaxed mb-2 whitespace-pre-wrap">
+        <p className="text-xs text-foreground/85 leading-relaxed mb-2 whitespace-pre-wrap">
           {displayContent}
           {isTruncated && (
-            <button
+            <Button
+              variant="link"
               onClick={() => setIsDialogOpen(true)}
-              className="ml-1.5 text-primary hover:text-primary/80 font-black cursor-pointer hover:underline focus:outline-none"
+              className="h-auto p-0 ml-1.5 text-primary hover:text-primary/80 font-black text-xs cursor-pointer hover:underline"
             >
               Read more
-            </button>
+            </Button>
           )}
         </p>
 
@@ -218,7 +207,7 @@ export const LeadCard = memo(({
         {lead.metadata?.qualificationReasoning && (
           <div className="flex gap-1.5 items-start mb-2 p-1.5 bg-primary/5 rounded-lg border border-primary/10">
             <div className="p-0.5"><Info className="w-3 h-3 text-primary shrink-0" /></div>
-            <p className="text-[11px] text-primary/80 leading-relaxed italic">
+            <p className="text-xs text-primary/80 leading-relaxed italic">
               {lead.metadata.qualificationReasoning}
             </p>
           </div>
@@ -227,7 +216,7 @@ export const LeadCard = memo(({
         {/* ── Row 5: meta + all action controls ──────────────────────── */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-2 border-t border-border/40">
           {/* Meta info */}
-          <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
             <Clock className="w-2.5 h-2.5" />
             {new Date(lead.postedAt || lead.createdAt).toLocaleDateString(undefined, {
               month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -235,14 +224,14 @@ export const LeadCard = memo(({
           </span>
 
           {lead.authorUsername && (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+            <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
               u/{lead.authorUsername}
               <EnrichmentIcons enrichment={lead.enrichment} />
             </span>
           )}
 
           {showProductName && lead.product?.name && (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-foreground/70 bg-secondary px-1.5 py-0.5 rounded">
+            <span className="flex items-center gap-1 text-xs font-bold text-foreground/70 bg-secondary px-1.5 py-0.5 rounded">
               <Users className="w-2.5 h-2.5" />
               {lead.product.name}
             </span>
@@ -251,61 +240,93 @@ export const LeadCard = memo(({
           {/* Actions pushed right */}
           <div className="ml-auto flex items-center gap-1.5">
             {/* Status dropdown */}
-            <select
+            <Select
               value={lead.status}
-              onChange={(e) => onStatusChange(lead.id, e.target.value as LeadStatus)}
-              className={`text-[10px] font-bold py-1 px-2.5 rounded-lg border transition-all cursor-pointer outline-none bg-transparent ${currentStatus.color}`}
+              onValueChange={(val) => onStatusChange(lead.id, val as LeadStatus)}
             >
-              {STATUS_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value} className="bg-popover text-foreground font-semibold">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger
+                size="sm"
+                className={`text-xs font-bold h-7 rounded-lg border px-2.5 transition-all outline-none bg-transparent ${currentStatus.color}`}
+              >
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent position="popper" align="end" className="font-semibold">
+                {STATUS_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-xs font-semibold">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Draft reply */}
-            <button
+            <Button
+              variant="outline-primary"
+              size="xs"
               onClick={() => onDraftReply(lead.id)}
               disabled={isDrafting}
               title="Generate AI draft reply"
-              className="flex items-center gap-1 text-[10px] font-bold py-1 px-2 bg-secondary text-secondary-foreground rounded-lg border border-border hover:bg-secondary/80 transition-all active:scale-95 disabled:opacity-50">
+              className="uppercase tracking-widest text-xs font-black"
+            >
               {isDrafting ? (
-                <div className="w-2.5 h-2.5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
               ) : draftedReply ? (
-                <><RotateCw className="w-2.5 h-2.5" /> Regen</>
+                <><RotateCw className="w-3 h-3" /> Regen</>
               ) : (
-                <><ChevronRight className="w-2.5 h-2.5" /> Draft</>
+                <><ChevronRight className="w-3 h-3" /> Draft</>
               )}
-            </button>
-
+            </Button>
+ 
             {/* View draft toggle */}
             {draftedReply && (
-              <button onClick={() => onToggleExpand(lead.id)} title="View AI Draft"
-                className={`p-1.5 rounded-lg border transition-all active:scale-95 ${isExpanded ? 'bg-primary/10 text-primary border-primary/30' : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'}`}>
+              <Button
+                variant={isExpanded ? "outline-primary" : "secondary"}
+                size="icon-xs"
+                onClick={() => onToggleExpand(lead.id)}
+                title="View AI Draft"
+                className={cn("border border-border/40", isExpanded && "border-primary/40")}
+              >
                 <MessageSquareText className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             )}
-
+ 
             {/* Notes */}
-            <button onClick={() => setShowNotes(v => !v)} title="Internal notes"
-              className={`p-1.5 rounded-lg border transition-all active:scale-95 ${showNotes ? 'bg-primary/10 text-primary border-primary/30' : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'}`}>
+            <Button
+              variant={showNotes ? "outline-primary" : "secondary"}
+              size="icon-xs"
+              onClick={() => setShowNotes(v => !v)}
+              title="Internal notes"
+              className={cn("border border-border/40", showNotes && "border-primary/40")}
+            >
               <FileText className="w-3.5 h-3.5" />
-            </button>
-
+            </Button>
+ 
             {/* Feedback */}
-            <div className="flex bg-secondary rounded-lg border border-border overflow-hidden">
-              <button
+            <div className="flex bg-secondary rounded-lg border border-border overflow-hidden h-7 items-center">
+              <Button
+                variant={lead.feedback === 1 ? "outline-success" : "ghost"}
+                size="icon-xs"
                 onClick={() => onFeedbackChange(lead.id, lead.feedback === 1 ? 0 : 1)}
                 title="Good Lead"
-                className={`p-1.5 transition-all active:scale-90 ${lead.feedback === 1 ? 'bg-success/20 text-success border-r border-success/40' : 'text-muted-foreground/50 hover:bg-muted border-r border-border'}`}>
+                className={cn(
+                  "rounded-none h-full border-r border-border hover:bg-muted active:scale-95",
+                  lead.feedback === 1 ? "border-r border-success/40" : "text-muted-foreground/50"
+                )}
+              >
                 <ThumbsUp className="w-3.5 h-3.5" />
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={lead.feedback === -1 ? "outline-destructive" : "ghost"}
+                size="icon-xs"
                 onClick={() => onFeedbackChange(lead.id, lead.feedback === -1 ? 0 : -1)}
                 title="Bad Lead"
-                className={`p-1.5 transition-all active:scale-90 ${lead.feedback === -1 ? 'bg-destructive/20 text-destructive' : 'text-muted-foreground/50 hover:bg-muted'}`}>
+                className={cn(
+                  "rounded-none h-full hover:bg-muted active:scale-95",
+                  lead.feedback === -1 ? "" : "text-muted-foreground/50"
+                )}
+              >
                 <ThumbsDown className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -321,23 +342,25 @@ export const LeadCard = memo(({
               <Zap className="w-3.5 h-3.5" /> AI Draft
             </h4>
             {!isFreePlan && (
-              <button
+              <Button
+                variant="outline-primary"
+                size="xs"
                 onClick={handleCopy}
-                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest py-1 px-2.5 bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-all active:scale-95 shadow-sm"
+                className="uppercase tracking-widest text-xs font-black"
               >
                 {copied ? (
                   <><Check className="w-3 h-3 text-emerald-500 mr-1" /> Copied</>
                 ) : (
                   <><Copy className="w-3 h-3 mr-1" /> Copy Draft</>
                 )}
-              </button>
+              </Button>
             )}
           </div>
           
           {isFreePlan ? (
             <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm p-4 bg-card flex flex-col items-center justify-center text-center py-8">
               {/* Blurred dummy text backdrop */}
-              <div className="absolute inset-0 filter blur-[5px] opacity-[0.15] select-none pointer-events-none p-4 text-xs font-bold leading-relaxed text-left">
+              <div className="absolute inset-0 filter blur-sm opacity-15 select-none pointer-events-none p-4 text-xs font-bold leading-relaxed text-left">
                 Hey growth_hacker_dan! I totally feel your pain—most traditional social listening tools are built for huge PR agencies and scan only once a day. We actually built Knivik precisely for this. It runs continuous, rapid-scanning loops on Reddit and pushes new high-intent threads directly to Slack within minutes. You can set up a keyword like 'CRM tools' in under 60 seconds and try it completely free. Happy to set you up with extra scan credits if you want to stress-test it! Let me know if you want to check it out!
               </div>
               <div className="relative z-10 flex flex-col items-center max-w-sm">
@@ -345,10 +368,10 @@ export const LeadCard = memo(({
                   <Lock className="w-5 h-5" />
                 </div>
                 <h5 className="text-xs font-black uppercase tracking-wider text-foreground mb-1">AI Outreach Draft Locked</h5>
-                <p className="text-[11px] text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-4">
                   Upgrade to Pro to unlock unlimited, instant personalized AI outreach replies matched to your brand persona.
                 </p>
-                <a href="/dashboard/billing" className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest py-1.5 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20">
+                <a href="/dashboard/billing" className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-widest py-1.5 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20">
                   Go Pro <ChevronRight className="w-3 h-3" />
                 </a>
               </div>
@@ -366,10 +389,10 @@ export const LeadCard = memo(({
       {showNotes && (
         <div className="border-t border-border/40 px-5 py-4 bg-muted/10 relative overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="absolute left-0 top-0 w-1 h-full bg-muted-foreground/30" />
-          <h4 className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black text-muted-foreground/90 mb-2">
+          <h4 className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-black text-muted-foreground/90 mb-2">
             <FileText className="w-3.5 h-3.5" /> Private CRM Notes
           </h4>
-          <p className="text-[11px] text-muted-foreground/75 mb-3 leading-normal font-medium">
+          <p className="text-xs text-muted-foreground/75 mb-3 leading-normal font-medium">
             Keep track of outreach status, meeting follow-ups, or notes about this prospect. These comments are visible only to your team.
           </p>
           <textarea
@@ -379,7 +402,7 @@ export const LeadCard = memo(({
             onChange={e => setLocalNotes(e.target.value)}
             onBlur={handleNotesBlur}
           />
-          <p className="text-[10px] text-muted-foreground mt-1.5 font-bold uppercase tracking-wider">Auto-saved on blur</p>
+          <p className="text-xs text-muted-foreground mt-1.5 font-bold uppercase tracking-wider">Auto-saved on blur</p>
         </div>
       )}
 
@@ -399,20 +422,19 @@ export const LeadCard = memo(({
 
           {/* Footer actions */}
           <div className="pt-3 border-t border-border/40 flex justify-end gap-3 shrink-0">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setIsDialogOpen(false)}
-              className="text-xs font-bold py-2 px-4 border border-border hover:bg-muted rounded-xl transition-all cursor-pointer"
+              className="rounded-xl px-4 font-bold text-xs"
             >
               Close
-            </button>
-            <a
-              href={lead.url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 text-xs font-bold py-2 px-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all cursor-pointer"
-            >
-              Open Post <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            </Button>
+            <Button size="sm" asChild className="rounded-xl px-4 font-bold text-xs">
+              <a href={lead.url} target="_blank" rel="noreferrer">
+                Open Post <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

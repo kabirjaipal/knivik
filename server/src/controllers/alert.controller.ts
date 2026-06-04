@@ -9,7 +9,7 @@ const alertSettingSchema = z.object({
   slackEnabled: z.boolean().default(false),
   slackWebhook: z.string().url().optional().or(z.literal('')),
   webhookType: z.string().default('SLACK'),
-  minIntentScore: z.number().min(0).max(100).default(70),
+  minIntentScore: z.number().min(0).max(100).default(85),
 });
 
 export const getAlertSettings = async (req: Request, res: Response): Promise<void> => {
@@ -25,7 +25,7 @@ export const getAlertSettings = async (req: Request, res: Response): Promise<voi
     if (!settings) {
       // Default create if doesn't exist
       settings = await db.client.alertSetting.create({
-        data: { userId },
+        data: { userId, minIntentScore: 85 },
       });
     }
 

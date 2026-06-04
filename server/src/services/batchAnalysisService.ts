@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { IntentLevel } from '@prisma/client';
+import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import { aiLlmRunner, MODELS } from '../lib/aiRunner.js';
 import * as batchAnalysisPrompt from '../prompts/batchAnalysis.js';
@@ -41,7 +42,7 @@ interface BatchAnalysisOutput {
     productId: string;
     qualifiedLeads: Array<{
       postId: string;
-      intentLevel: 'BUY_NOW' | 'COMPARING';
+      intentLevel: 'BUY_NOW';
       intentScore: number;
       reasoning: string;
     }>;
@@ -57,8 +58,8 @@ const batchAnalysisSchema = z.object({
       qualifiedLeads: z.array(
         z.object({
           postId: z.string(),
-          intentLevel: z.enum(['BUY_NOW', 'COMPARING']),
-          intentScore: z.number().int().min(75).max(100),
+          intentLevel: z.enum(['BUY_NOW']),
+          intentScore: z.number().int().min(0).max(100),
           reasoning: z.string(),
         })
       ),
@@ -151,6 +152,13 @@ export const analyzeUserPostsBatch = async (
       schema: batchAnalysisSchema,
     });
 
+    // Fetch user's alert setting to get their minIntentScore (Scan Sensitivity Threshold)
+    const alertSetting = await db.client.alertSetting.findUnique({
+      where: { userId }
+    });
+    const threshold = alertSetting?.minIntentScore ?? 85;
+    logger.info(`[ANALYSIS] Using Scan Sensitivity Threshold of ${threshold}% for user ${userId}`);
+
     // Convert AI response to our format
     const results: ProductAnalysisResult[] = [];
     let leadsFound = 0;
@@ -164,19 +172,15 @@ export const analyzeUserPostsBatch = async (
         const validLeads = [];
         
         for (const aiLead of aiResult.qualifiedLeads) {
-          // Only allow the two approved intent levels — anything else is silently dropped
-          if (aiLead.intentLevel !== 'BUY_NOW' && aiLead.intentLevel !== 'COMPARING') {
+          // Only allow BUY_NOW intent level
+          if (aiLead.intentLevel !== 'BUY_NOW') {
             continue;
           }
 
-          // Hard-enforce score thresholds in code — don't rely solely on the prompt
+          // Hard-enforce score threshold based on Scan Sensitivity Threshold
           const score = aiLead.intentScore || 0;
-          if (aiLead.intentLevel === 'BUY_NOW' && score < 85) {
-            logger.debug({ postId: aiLead.postId, score }, '[ANALYSIS] BUY_NOW lead below 85 threshold — dropped');
-            continue;
-          }
-          if (aiLead.intentLevel === 'COMPARING' && score < 75) {
-            logger.debug({ postId: aiLead.postId, score }, '[ANALYSIS] COMPARING lead below 75 threshold — dropped');
+          if (score < threshold) {
+            logger.debug({ postId: aiLead.postId, score, threshold }, '[ANALYSIS] BUY_NOW lead below Scan Sensitivity Threshold — dropped');
             continue;
           }
 

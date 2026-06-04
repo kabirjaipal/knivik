@@ -289,9 +289,9 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Row 1: Flow & Sentiment */}
+      {/* Row 1: Flow & Pipeline */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Lead Flow - Wide */}
+        {/* Lead Volume - Wide */}
         <Card className="lg:col-span-8 border border-border/40 bg-card/60 shadow-xl shadow-black/5 overflow-hidden">
           <CardHeader className="py-3 px-6 border-b border-border/40">
             <div className="flex items-center justify-between">
@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
                 <button
                   onClick={() => setTimeRange("7d")}
                   className={cn(
-                    "px-2 py-0.5 text-[10px] font-black rounded-sm transition-all uppercase tracking-widest",
+                    "px-2 py-0.5 text-xs font-black rounded-sm transition-all uppercase tracking-widest",
                     timeRange === "7d"
                       ? "bg-background shadow-xs text-primary"
                       : "text-muted-foreground hover:text-foreground",
@@ -314,7 +314,7 @@ export default function AnalyticsPage() {
                 <button
                   onClick={() => setTimeRange("30d")}
                   className={cn(
-                    "px-2 py-0.5 text-[10px] font-black rounded-sm transition-all uppercase tracking-widest",
+                    "px-2 py-0.5 text-xs font-black rounded-sm transition-all uppercase tracking-widest",
                     timeRange === "30d"
                       ? "bg-background shadow-xs text-primary"
                       : "text-muted-foreground hover:text-foreground",
@@ -339,49 +339,68 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Sentiment Mix - Compact */}
+        {/* Lead Pipeline Breakdown */}
         <Card className="lg:col-span-4 border border-border/40 bg-card/60 shadow-xl shadow-black/5">
           <CardHeader className="py-3 px-6 border-b border-border/40">
             <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-              <Brain className="w-3.5 h-3.5 text-primary" /> Sentiment & Intent
-              Mix
+              <Activity className="w-3.5 h-3.5 text-primary" /> Lead Pipeline Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
-            {Array.isArray(data.sentimentDistribution) &&
-            data.sentimentDistribution.length > 0 ? (
-              data.sentimentDistribution.map((item, i) => {
-                const total = data.sentimentDistribution.reduce(
+            {Array.isArray(data.statusDistribution) &&
+            data.statusDistribution.length > 0 ? (
+              (() => {
+                const totalStatus = data.statusDistribution.reduce(
                   (acc, curr) => acc + curr.count,
                   0,
                 );
-                const percentage = total > 0 ? (item.count / total) * 100 : 0;
-                const colorMap: Record<string, string> = {
-                  "BUY NOW": "bg-emerald-500",
-                  COMPARING: "bg-amber-400",
-                  NEUTRAL: "bg-slate-400",
-                };
-                return (
-                  <div key={i} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                      <span>{item.label}</span>
-                      <span className="text-muted-foreground">
-                        {Math.round(percentage)}%
-                      </span>
+                // Ordered to represent a marketing funnel/pipeline
+                const order = ['NEW', 'QUALIFIED', 'SAVED', 'CONTACTED', 'CONVERTED', 'DISMISSED'];
+                const sortedDistribution = [...data.statusDistribution].sort((a, b) => {
+                  return order.indexOf(a.label.toUpperCase()) - order.indexOf(b.label.toUpperCase());
+                });
+
+                return sortedDistribution.map((item, i) => {
+                  const percentage = totalStatus > 0 ? (item.count / totalStatus) * 100 : 0;
+                  const colorMap: Record<string, string> = {
+                    NEW: "bg-slate-400",
+                    QUALIFIED: "bg-emerald-500",
+                    SAVED: "bg-sky-500",
+                    CONTACTED: "bg-indigo-500",
+                    CONVERTED: "bg-green-500",
+                    DISMISSED: "bg-rose-500",
+                  };
+                  const labelMap: Record<string, string> = {
+                    NEW: "New",
+                    QUALIFIED: "Qualified",
+                    SAVED: "Saved",
+                    CONTACTED: "Contacted",
+                    CONVERTED: "Converted",
+                    DISMISSED: "Dismissed",
+                  };
+                  const labelUpper = item.label.toUpperCase();
+                  const labelDisplay = labelMap[labelUpper] || item.label;
+                  const barColor = colorMap[labelUpper] || "bg-primary";
+
+                  return (
+                    <div key={i} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+                        <span>{labelDisplay}</span>
+                        <span className="text-muted-foreground font-bold">
+                          {item.count} ({Math.round(percentage)}%)
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          className={cn("h-full rounded-full", barColor)}
+                        />
+                      </div>
                     </div>
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        className={cn(
-                          "h-full rounded-full",
-                          colorMap[item.label.toUpperCase()] || "bg-primary",
-                        )}
-                      />
-                    </div>
-                  </div>
-                );
-              })
+                  );
+                });
+              })()
             ) : (
               <EmptyListPlaceholder />
             )}
