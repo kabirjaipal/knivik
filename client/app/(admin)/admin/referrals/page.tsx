@@ -352,7 +352,7 @@ export default function AdminReferralsPage() {
 
       {/* Record Payout Dialog Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <form onSubmit={handleRecordPayout}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-1.5 text-base font-bold">

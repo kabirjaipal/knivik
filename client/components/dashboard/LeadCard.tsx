@@ -3,11 +3,7 @@
 import { memo, useState, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, ChevronDown,
-  RotateCw, Brain, Flame, Tags,
-  ThumbsUp, ThumbsDown, Info, Clock, Users, Lock,
-  Copy, Check
+import { ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, RotateCw, ThumbsUp, ThumbsDown, Info, Clock, Users, Lock, Copy, Check, Trash2
 } from "lucide-react"
 import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
 import {
@@ -15,6 +11,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -129,6 +127,7 @@ export interface LeadCardProps {
   onStatusChange: (id: string, status: LeadStatus) => void
   onNotesChange: (id: string, notes: string) => void
   onFeedbackChange: (id: string, feedback: number) => void
+  onDelete?: (id: string) => void
 }
 
 // ─── LeadCard ────────────────────────────────────────────────────────────────────
@@ -136,11 +135,12 @@ export interface LeadCardProps {
 export const LeadCard = memo(({
   lead, draftingLeadId, draftedReply, isExpanded,
   showProductName = true, isFreePlan = false,
-  onDraftReply, onToggleExpand, onStatusChange, onNotesChange, onFeedbackChange,
+  onDraftReply, onToggleExpand, onStatusChange, onNotesChange, onFeedbackChange, onDelete,
 }: LeadCardProps) => {
   const [showNotes, setShowNotes] = useState(false)
   const [localNotes, setLocalNotes] = useState(lead.notes || '')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(() => {
@@ -300,6 +300,19 @@ export const LeadCard = memo(({
             >
               <FileText className="w-3.5 h-3.5" />
             </Button>
+
+            {/* Delete Lead */}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setShowDeleteDialog(true)}
+                title="Delete Lead"
+                className="border border-border/40 hover:bg-destructive/10 text-muted-foreground/60 hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
  
             {/* Feedback */}
             <div className="flex bg-secondary rounded-lg border border-border overflow-hidden h-7 items-center">
@@ -406,36 +419,65 @@ export const LeadCard = memo(({
         </div>
       )}
 
+      {/* ── Dialog for Delete Confirmation ─────────────────────────────────── */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Lead</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this lead from your feed? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (onDelete) {
+                  onDelete(lead.id)
+                }
+                setShowDeleteDialog(false)
+              }}
+            >
+              Confirm Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Dialog for Full Content ───────────────────────────────────────── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[80vh] flex flex-col p-6 rounded-2xl border border-border bg-card shadow-2xl">
-          <DialogHeader className="pb-3 border-b border-border/40">
-            <DialogTitle className="text-base font-bold text-foreground">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
               {lead.title || 'Conversation Content'}
             </DialogTitle>
           </DialogHeader>
 
           {/* Scrollable Content Body */}
-          <div className="flex-1 overflow-y-auto py-4 text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed font-medium">
+          <div className="max-h-[60vh] overflow-y-auto px-6 py-5 text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed font-medium">
             {lead.content}
           </div>
 
-          {/* Footer actions */}
-          <div className="pt-3 border-t border-border/40 flex justify-end gap-3 shrink-0">
+          <DialogFooter>
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setIsDialogOpen(false)}
-              className="rounded-xl px-4 font-bold text-xs"
             >
               Close
             </Button>
-            <Button size="sm" asChild className="rounded-xl px-4 font-bold text-xs">
-              <a href={lead.url} target="_blank" rel="noreferrer">
+            <Button asChild>
+              <a href={lead.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5">
                 Open Post <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

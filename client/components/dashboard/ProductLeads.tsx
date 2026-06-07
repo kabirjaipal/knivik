@@ -87,6 +87,20 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
     setExpandedReplies(prev => ({ ...prev, [leadId]: !prev[leadId] }))
   }, [])
 
+  const handleDeleteLead = useCallback(async (leadId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('Failed to delete lead')
+      setLeads(prev => prev.filter(l => l.id !== leadId))
+      toast.success('Lead deleted successfully.')
+    } catch (e: any) {
+      toast.error('We could not delete the lead. Please try again.')
+    }
+  }, [])
+
   const handleStatusChange = useCallback(async (leadId: string, status: LeadStatus) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
     try {
@@ -358,6 +372,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                       onStatusChange={handleStatusChange}
                       onNotesChange={handleNotesChange}
                       onFeedbackChange={handleFeedbackChange}
+                      onDelete={handleDeleteLead}
                     />
                   ))}
                 </div>

@@ -215,3 +215,37 @@ export const updateLeadFeedback = async (req: Request, res: Response): Promise<v
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deleteLead = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id as string;
+    const leadId = req.params['id'] as string;
+
+    if (!userId || !leadId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Ownership check
+    const lead = await db.client.lead.findUnique({
+      where: { id: leadId },
+      include: { product: { select: { userId: true } } },
+    });
+
+    if (!lead || lead.product.userId !== userId) {
+      res.status(404).json({ error: 'Lead not found or unauthorized' });
+      return;
+    }
+
+    await db.client.lead.delete({
+      where: { id: leadId },
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    logger.error({ error }, 'Failed to delete lead');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+

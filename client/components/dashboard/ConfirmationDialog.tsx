@@ -76,27 +76,21 @@ export function ConfirmationDialog({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="p-0 overflow-hidden border-border/40 max-w-lg bg-card shadow-xl gap-0">
-        {/* Standard Modal Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 bg-card">
-          <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 border", variantConfig.bg, variantConfig.border)}>
-             <Icon className={cn("w-4 h-4", variantConfig.color)} />
-          </div>
-          <AlertDialogTitle className="text-lg font-bold text-foreground m-0">
-            {title}
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2.5">
+            <div className={cn("w-7 h-7 rounded-full flex items-center justify-center shrink-0 border", variantConfig.bg, variantConfig.border)}>
+              <Icon className={cn("w-3.5 h-3.5", variantConfig.color)} />
+            </div>
+            <span>{title}</span>
           </AlertDialogTitle>
-        </div>
-        
-        {/* Modal Body */}
-        <div className="px-6 py-5 bg-card">
-          <AlertDialogDescription className="text-sm font-normal text-muted-foreground leading-relaxed">
+          <AlertDialogDescription>
             {description}
           </AlertDialogDescription>
-        </div>
+        </AlertDialogHeader>
 
-        {/* Modal Footer */}
-        <div className="flex items-center justify-end px-6 py-4 bg-muted/30 border-t border-border/40 gap-3">
-          <AlertDialogCancel onClick={onClose} disabled={isLoading} className="mt-0 h-10 border-border/50 hover:bg-muted font-medium transition-colors">
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onClose} disabled={isLoading}>
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
@@ -105,16 +99,16 @@ export function ConfirmationDialog({
               onConfirm();
             }}
             disabled={isLoading}
-            className={cn("h-10 px-6 font-medium shadow-sm transition-transform active:scale-95", variantConfig.btn)}
+            variant={variant === "danger" ? "destructive" : "default"}
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 Processing...
               </span>
             ) : confirmText}
           </AlertDialogAction>
-        </div>
+        </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   )

@@ -186,6 +186,20 @@ export default function DashboardPage() {
     }).catch(() => {});
   };
 
+  const handleDeleteLead = async (leadId: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete lead");
+      setLeads((prev) => prev.filter((l) => l.id !== leadId));
+      toast.success("Lead deleted successfully.");
+    } catch (e: any) {
+      toast.error("We could not delete the lead. Please try again.");
+    }
+  };
+
   const handleExportCSV = useCallback(() => {
     const isPro = user?.plan?.toUpperCase() === "PRO";
     const success = exportLeadsToCSV(leads, "all_leads.csv", isPro);
@@ -581,6 +595,7 @@ export default function DashboardPage() {
                       onStatusChange={handleStatusChange}
                       onNotesChange={handleNotesChange}
                       onFeedbackChange={handleFeedbackChange}
+                      onDelete={handleDeleteLead}
                     />
                   ))}
                 </div>
