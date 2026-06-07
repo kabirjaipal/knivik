@@ -33,6 +33,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [showConfig, setShowConfig] = useState(false)
+  const [isDescExpanded, setIsDescExpanded] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [localScanning, setLocalScanning] = useState(false)
   const isCurrentlyScanning = localScanning || !!user?.isScanning
@@ -222,7 +223,29 @@ export default function ProductDetailPage() {
           {/* Description */}
           {product.description && (
             <p className="text-xs font-medium text-muted-foreground max-w-3xl leading-relaxed">
-              {product.description}
+              {product.description.length > 200 && !isDescExpanded ? (
+                <>
+                  {product.description.slice(0, 200)}...{" "}
+                  <button
+                    onClick={() => setIsDescExpanded(true)}
+                    className="text-primary hover:underline font-bold focus:outline-none"
+                  >
+                    Read more
+                  </button>
+                </>
+              ) : (
+                <>
+                  {product.description}{" "}
+                  {product.description.length > 200 && (
+                    <button
+                      onClick={() => setIsDescExpanded(false)}
+                      className="text-primary hover:underline font-bold focus:outline-none ml-1"
+                    >
+                      Show less
+                    </button>
+                  )}
+                </>
+              )}
             </p>
           )}
         </div>
