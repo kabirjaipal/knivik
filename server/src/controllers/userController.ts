@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UserService } from '../services/userService.js';
+import { auth } from '../lib/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import type { AuthenticatedRequest } from '../types/index.js';
 import { getPaymentHistory, getActiveSubscription, getPrices } from '../lib/billing.js';
@@ -134,6 +135,43 @@ export const deleteMe = asyncHandler(async (req: AuthenticatedRequest, res: Resp
         status: 401,
         code: 'UNAUTHORIZED',
         message: 'User session expired or invalid',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
+  const { password } = req.body;
+  if (!password) {
+    res.status(400).json({
+      success: false,
+      error: {
+        status: 400,
+        code: 'BAD_REQUEST',
+        message: 'Password is required to delete account',
+        requestId: req.requestId,
+      },
+      requestId: req.requestId,
+    });
+    return;
+  }
+
+  // Verify password using better-auth
+  try {
+    await auth.api.signInEmail({
+      body: {
+        email: req.user.email,
+        password,
+      },
+    });
+  } catch (err: any) {
+    res.status(401).json({
+      success: false,
+      error: {
+        status: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Incorrect password',
         requestId: req.requestId,
       },
       requestId: req.requestId,

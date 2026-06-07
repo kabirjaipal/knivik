@@ -12,6 +12,14 @@ import { SiZapier, SiMake } from "react-icons/si"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -23,6 +31,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [deletingAccount, setDeletingAccount] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmPassword, setDeleteConfirmPassword] = useState("")
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -36,15 +46,24 @@ export default function SettingsPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${apiUrl}/users/me`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ password: deleteConfirmPassword })
       });
 
       if (!res.ok) {
-        throw new Error("Failed to delete account");
+        let errMsg = "Failed to delete account";
+        try {
+          const data = await res.json();
+          errMsg = data.error?.message || data.error || errMsg;
+        } catch {}
+        throw new Error(errMsg);
       }
 
       toast.success("Your account has been deleted successfully.");
       setShowDeleteModal(false);
+      setDeleteConfirmPassword("");
+      setDeleteConfirmText("");
       await authClient.signOut();
       router.push('/login');
     } catch (err: any) {
@@ -609,43 +628,85 @@ export default function SettingsPage() {
         </Card>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="relative w-full max-w-sm bg-card border border-border rounded-md p-4 space-y-4 shadow-none">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-destructive/10 rounded-md text-destructive">
-                <AlertCircle className="w-4 h-4" />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowDeleteModal(false);
+          setDeleteConfirmPassword("");
+          setDeleteConfirmText("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-destructive/10 rounded-md text-destructive">
+                <AlertCircle className="w-4.5 h-4.5" />
               </div>
-              <h3 className="text-base font-semibold text-foreground tracking-tight">Delete Account?</h3>
+              <DialogTitle>Delete Account</DialogTitle>
             </div>
-
-            <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-              Are you sure you want to permanently delete your account? This action is irreversible and cannot be undone.
+            <DialogDescription>
+              Permanently delete your account and all associated data.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-6 space-y-4">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Once you delete your account, all your products, services, leads, and settings will be permanently removed from our active databases. <strong>This action is irreversible and cannot be undone.</strong>
             </p>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-md h-9 text-sm font-semibold border border-border hover:bg-muted"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deletingAccount}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1 rounded-md h-9 text-sm font-semibold uppercase tracking-wider gap-2 shadow-none"
-                onClick={handleDeleteAccount}
-                disabled={deletingAccount}
-              >
-                {deletingAccount ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                Confirm
-              </Button>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="delete-confirm-password" className="text-xs font-semibold text-muted-foreground">
+                  Verify Current Password
+                </Label>
+                <Input
+                  id="delete-confirm-password"
+                  type="password"
+                  value={deleteConfirmPassword}
+                  onChange={(e) => setDeleteConfirmPassword(e.target.value)}
+                  placeholder="Enter your current password"
+                  className="bg-background border-border/60 rounded-md h-9 text-sm"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="delete-confirm-text" className="text-xs font-semibold text-muted-foreground">
+                  Confirm email address: <span className="font-bold text-foreground select-all">{user?.email}</span>
+                </Label>
+                <Input
+                  id="delete-confirm-text"
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Type your email address to confirm"
+                  className="bg-background border-border/60 rounded-md h-9 text-sm"
+                  required
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={deletingAccount}
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeleteConfirmPassword("");
+                setDeleteConfirmText("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deletingAccount || !deleteConfirmPassword || deleteConfirmText !== user?.email}
+              onClick={handleDeleteAccount}
+              className="uppercase tracking-wider font-bold"
+            >
+              {deletingAccount ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
+              Confirm Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
