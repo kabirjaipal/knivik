@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context"
 import { ProductLeads } from "@/components/dashboard/ProductLeads"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp, Ban, Briefcase, Package } from "lucide-react"
+import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp, Ban, Briefcase, Package, Activity } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
@@ -39,8 +39,57 @@ export default function ProductDetailPage() {
   const [isDescExpanded, setIsDescExpanded] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [localScanning, setLocalScanning] = useState(false)
+  const [scanStep, setScanStep] = useState<string>(user?.isScanning ? "INITIALIZING" : "")
   const isCurrentlyScanning = localScanning || !!user?.isScanning
   const lastFetchedId = useRef<string | null>(null)
+
+  const getScanStepMessage = (step: string) => {
+    switch (step) {
+      case "INITIALIZING":
+        return "Booting scan worker and loading search keywords..."
+      case "COLLECTING":
+        return "Scanning Reddit, HackerNews, and Twitter for matching conversations..."
+      case "ANALYZING":
+        return "AI model classifying buying intent levels and scoring leads..."
+      case "SAVING":
+        return "Saving qualified leads and triggering instant email/Slack alerts..."
+      default:
+        return "Scan processing in background..."
+    }
+  }
+
+  const renderScanStepDot = (dotStep: string, currentStep: string) => {
+    const stepsOrder = ["INITIALIZING", "COLLECTING", "ANALYZING", "SAVING"]
+    const dotIndex = stepsOrder.indexOf(dotStep)
+    const effectiveCurrentStep = currentStep || "INITIALIZING"
+    const currentIndex = stepsOrder.indexOf(effectiveCurrentStep)
+    
+    let label = ""
+    if (dotStep === "INITIALIZING") label = "Setup"
+    if (dotStep === "COLLECTING") label = "Scrape"
+    if (dotStep === "ANALYZING") label = "AI Score"
+    if (dotStep === "SAVING") label = "Alert & Save"
+
+    if (dotIndex < currentIndex) {
+      return (
+        <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">
+          ✓ {label}
+        </span>
+      )
+    } else if (dotIndex === currentIndex) {
+      return (
+        <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-full animate-pulse shrink-0">
+          <span className="w-1 h-1 bg-indigo-400 rounded-full animate-ping" /> {label}
+        </span>
+      )
+    } else {
+      return (
+        <span className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-slate-500 bg-white/[0.02] border border-white/5 px-2 py-0.5 rounded-full shrink-0 opacity-60">
+          {label}
+        </span>
+      )
+    }
+  }
 
   const fetchProduct = useCallback(async () => {
     if (!productId || lastFetchedId.current === productId) return
@@ -93,8 +142,10 @@ export default function ProductDetailPage() {
       
       if (data.isScanning) {
         setLocalScanning(true);
+        setScanStep(data.status);
       } else {
         setLocalScanning(false);
+        setScanStep("");
         // Refresh product data and leads list
         fetchProduct();
         setRefreshTrigger(prev => prev + 1);
@@ -252,6 +303,36 @@ export default function ProductDetailPage() {
                 </>
               )}
             </p>
+          )}
+
+          {/* Real-time Scanning Progress Box */}
+          {isCurrentlyScanning && (
+            <div className="mt-4 p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-950/10 animate-in fade-in slide-in-from-top-1 duration-200 shadow-inner">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-4.5 h-4.5 animate-spin text-indigo-400 shrink-0" />
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5" /> Scan In Progress
+                    </p>
+                    <p className="text-xs font-semibold text-slate-300">
+                      {getScanStepMessage(scanStep)}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Visual steps */}
+                <div className="flex items-center gap-1.5 select-none overflow-x-auto custom-scrollbar pb-1 sm:pb-0">
+                  {renderScanStepDot("INITIALIZING", scanStep)}
+                  <div className="w-3 h-[1px] bg-white/[0.08] shrink-0" />
+                  {renderScanStepDot("COLLECTING", scanStep)}
+                  <div className="w-3 h-[1px] bg-white/[0.08] shrink-0" />
+                  {renderScanStepDot("ANALYZING", scanStep)}
+                  <div className="w-3 h-[1px] bg-white/[0.08] shrink-0" />
+                  {renderScanStepDot("SAVING", scanStep)}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

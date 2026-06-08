@@ -75,3 +75,4 @@ Use this rule when writing, refactoring, or reviewing TypeScript, React, and Nod
 ### No Database Resets
 *   **Never reset the database** (e.g., via `prisma db push --force` or resetting production/development tables) to apply schema changes or resolve conflicts.
 *   Always resolve migration conflicts in the best, non-destructive way (using custom SQL scripts, Prisma migration resolutions, or data migration scripts) to preserve existing development/production data.
+*   **Provide Production SQL Queries for Seeding updates**: Whenever you modify, delete, or insert new seed data (e.g., in `seed.ts`) or system config settings, always output the equivalent raw SQL insert/update/delete query in your response so the user can easily run it on their production database.

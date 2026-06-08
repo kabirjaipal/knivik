@@ -502,7 +502,7 @@ export const getConfig = async (_req: Request, res: Response) => {
     const defaults = {
       maintenanceMode: false,
       registrationEnabled: true,
-      aiModelVersatile: 'llama-3.3-70b-versatile',
+      aiModelVersatile: 'meta-llama/llama-4-scout-17b-16e-instruct',
       aiModelLite: 'llama-3.1-8b-instant'
     };
 

@@ -62,9 +62,10 @@ export class BatchProcessingService {
       } catch (err) {
         logger.error({ err, productId }, 'Failed to update lastBackgroundScanAt for product');
       }
-      emitScanStatus(userId, productId, true, 'STARTED');
+      emitScanStatus(userId, productId, true, 'INITIALIZING');
 
       // Step 1: Collect posts for this product
+      emitScanStatus(userId, productId, true, 'COLLECTING');
       const sourceBreakdown: Record<string, number> = {};
       const posts = await BatchCollectionService.collectProductPosts(product, sourceBreakdown);
       
@@ -86,6 +87,7 @@ export class BatchProcessingService {
       }
 
       // Step 2: Analyze in batch (using our batch analyzer for just this 1 product)
+      emitScanStatus(userId, productId, true, 'ANALYZING');
       const analysisInput = [{
         product: {
           id: product.id,
@@ -99,6 +101,7 @@ export class BatchProcessingService {
       const analysisResult = await analyzeUserPostsBatch(userId, analysisInput);
 
       // Step 3: Save results
+      emitScanStatus(userId, productId, true, 'SAVING');
       let leadsGenerated = 0;
       for (const result of analysisResult.results) {
         if (result.leads.length > 0) {

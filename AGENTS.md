@@ -92,6 +92,7 @@ Every line of code you write must conform to these modern design principles:
 *   Always use the established theme HSL colors for any UI or styling edits; never hardcode ad-hoc hex or CSS color strings.
 *   Keep files structured and use clean semantic HTML on the frontend.
 *   Use environment variables (`process.env.VAR`) for secrets and external API base URLs.
+*   Always provide the corresponding raw SQL queries (using ON CONFLICT for upserts) when modifying, inserting, or deleting database seed scripts (seed.ts) or settings, so the USER can run them directly in production without executing the full seed command.
 
 ### 🟡 ASK FIRST
 *   Adding new external packages or npm dependencies.

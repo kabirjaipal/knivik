@@ -152,6 +152,8 @@ export const analyzeUserPostsBatch = async (
       schema: batchAnalysisSchema,
     });
 
+    logger.info({ parsed }, '[ANALYSIS] Raw parsed AI response');
+
     // Fetch user's alert setting to get their minIntentScore (Scan Sensitivity Threshold)
     const alertSetting = await db.client.alertSetting.findUnique({
       where: { userId }

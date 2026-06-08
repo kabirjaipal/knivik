@@ -79,18 +79,61 @@ async function main() {
         outputPrice: 0.79,
         modelOptions: { source: 'groq', speed: 'best', reasoning_tokens_supported: true },
       },
+      {
+        id: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        inputPrice: 0.30,
+        outputPrice: 0.40,
+        modelOptions: { source: 'groq', speed: 'best' },
+      },
+      {
+        id: 'openai/gpt-oss-120b',
+        inputPrice: 0.60,
+        outputPrice: 0.80,
+        modelOptions: { source: 'groq', speed: 'best', reasoning_tokens_supported: true },
+      },
     ],
     skipDuplicates: true,
   });
 
   console.log('✅ LLM models seeded');
 
+  console.log('⚙️ Seeding system configurations...');
+
+  await prisma.systemConfig.createMany({
+    data: [
+      {
+        id: 'config-maintenanceMode',
+        key: 'maintenanceMode',
+        value: false,
+      },
+      {
+        id: 'config-registrationEnabled',
+        key: 'registrationEnabled',
+        value: true,
+      },
+      {
+        id: 'config-aiModelVersatile',
+        key: 'aiModelVersatile',
+        value: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      },
+      {
+        id: 'config-aiModelLite',
+        key: 'aiModelLite',
+        value: 'llama-3.1-8b-instant',
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log('✅ System configurations seeded');
+
   // Display summary
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📊 Summary:');
   console.log('👥 Users created: 1 (1 owner)');
   console.log('📦 Products: Clean start (0 products)');
-  console.log('🤖 LLM Models: 2 models registered');
+  console.log('🤖 LLM Models: 4 models registered');
+  console.log('⚙️ System Configs: 4 settings registered');
 
   console.log('\n Login Credentials (Password: KniOw2032!):');
   console.log('1. Owner: owner@knivik.xyz');

@@ -8,7 +8,7 @@ import { pipelineQueue } from '../lib/queue.js';
 
 const productSchema = z.object({
   name: z.string().min(1).max(255),
-  description: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
   websiteUrl: z.string().url().optional().or(z.literal('')),
   isActive: z.boolean().default(true),
   config: z.record(z.string(), z.any()).optional(),
@@ -280,8 +280,8 @@ export const analyzeProduct = async (req: Request, res: Response): Promise<void>
       res.status(400).json({ error: 'Product name must be 100 characters or fewer' });
       return;
     }
-    if (description.length > 500) {
-      res.status(400).json({ error: 'Product description must be 500 characters or fewer' });
+    if (description.length > 2000) {
+      res.status(400).json({ error: 'Product description must be 2000 characters or fewer' });
       return;
     }
 

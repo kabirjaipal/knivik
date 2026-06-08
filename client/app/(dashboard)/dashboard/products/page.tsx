@@ -506,14 +506,14 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
             Description <span className="text-muted-foreground font-normal text-xs ml-1">(Used by AI to find leads)</span>
           </label>
           <span className={`text-[10px] font-bold transition-colors ${
-            formData.description.length >= 500 ? 'text-destructive animate-pulse' : 'text-muted-foreground'
+            formData.description.length >= 2000 ? 'text-destructive animate-pulse' : 'text-muted-foreground'
           }`}>
-            {formData.description.length}/500
+            {formData.description.length}/2000
           </span>
         </div>
         <textarea 
           required 
-          maxLength={500}
+          maxLength={2000}
           value={formData.description} 
           onChange={e => setFormData({...formData, description: e.target.value})} 
           className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors h-28 resize-none" 
