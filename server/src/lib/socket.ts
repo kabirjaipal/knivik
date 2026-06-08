@@ -31,6 +31,11 @@ export const initSocket = async (httpServer: HttpServer) => {
   io.use(async (socket, next) => {
     logger.info({ socketId: socket.id, address: socket.handshake.address }, 'Socket handshake attempt');
     try {
+      const token = socket.handshake.auth?.token;
+      if (token && typeof token === 'string' && token.trim() !== '' && token !== 'undefined' && token !== 'null') {
+        socket.request.headers.authorization = `Bearer ${token}`;
+      }
+
       // Add a 10s timeout to session check to prevent hanging handshakes during heavy DB load
       const sessionPromise = auth.api.getSession({
         headers: fromNodeHeaders(socket.request.headers)

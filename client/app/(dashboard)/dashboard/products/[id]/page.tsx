@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { getSocket } from "@/lib/socket"
+import { useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
 
 interface Product {
@@ -26,9 +27,11 @@ interface Product {
 
 export default function ProductDetailPage() {
   const { user } = useAuth()
+  const { data: sessionData } = useSession()
   const router = useRouter()
   const params = useParams()
   const productId = params.id as string
+  const sessionToken = sessionData?.session?.token
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -66,7 +69,9 @@ export default function ProductDetailPage() {
 
   // ─── Real-time scan updates via WebSocket ──────────────────────────────────
   useEffect(() => {
-    const socket = getSocket();
+    if (!sessionToken) return;
+
+    const socket = getSocket(sessionToken);
     
     const joinRoom = () => {
       if (productId) {
@@ -100,7 +105,7 @@ export default function ProductDetailPage() {
       socket.off('connect', joinRoom);
       socket.off('scan-status');
     };
-  }, [productId, fetchProduct]);
+  }, [productId, fetchProduct, sessionToken]);
 
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return

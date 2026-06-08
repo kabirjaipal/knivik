@@ -2,17 +2,20 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-export const getSocket = () => {
+export const getSocket = (token?: string) => {
+  const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+  
+  if (!socketUrl) {
+    throw new Error('NEXT_PUBLIC_SOCKET_URL is not defined');
+  }
+
   if (!socket) {
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
-    
-    if (!socketUrl) {
-      throw new Error('NEXT_PUBLIC_SOCKET_URL is not defined');
-    }
-    
-    console.log('[SOCKET] Connecting to:', socketUrl);
+    console.log('[SOCKET] Connecting to:', socketUrl, token ? 'with token' : 'without token');
     
     socket = io(socketUrl, {
+      auth: {
+        token,
+      },
       withCredentials: true,
       transports: ['websocket', 'polling'],
       upgrade: true,
@@ -39,7 +42,14 @@ export const getSocket = () => {
 
     socket.on('connect_error', (error) => {
       // Intentionally not logging to avoid spam
+      console.error('Socket connection error:', error.message);
     });
+  } else if (token && (!socket.auth || (socket.auth as any).token !== token)) {
+    console.log('[SOCKET] Updating auth token');
+    socket.auth = { ...socket.auth, token };
+    if (socket.connected) {
+      socket.disconnect().connect();
+    }
   }
   return socket;
 };
