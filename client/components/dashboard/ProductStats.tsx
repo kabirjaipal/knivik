@@ -1,9 +1,9 @@
 "use client"
 
-import { Activity, Flame, BarChart2, CheckCircle2, Rss, Hash, ChevronDown, ChevronUp } from "lucide-react"
+import { Activity, Flame, BarChart2, CheckCircle2, Rss, Hash, ChevronDown, ChevronUp, Globe } from "lucide-react"
 import { memo, useState } from "react"
 import type { LeadCardData } from "./LeadCard"
-import { FaTwitter } from "react-icons/fa"
+import { FaTwitter, FaGithub } from "react-icons/fa"
 
 interface ProductStatsProps {
   leads: LeadCardData[]
@@ -23,6 +23,8 @@ export const ProductStats = memo(function ProductStats({ leads }: ProductStatsPr
     REDDIT: leads.filter(l => l.platform === 'REDDIT').length,
     HACKERNEWS: leads.filter(l => l.platform === 'HACKERNEWS').length,
     TWITTER: leads.filter(l => l.platform === 'TWITTER').length,
+    GITHUB: leads.filter(l => l.platform === 'GITHUB').length,
+    BLUESKY: leads.filter(l => l.platform === 'BLUESKY').length,
   }
 
   return (
@@ -62,6 +64,8 @@ export const ProductStats = memo(function ProductStats({ leads }: ProductStatsPr
               { key: 'REDDIT', label: 'Reddit', icon: Rss, bar: 'bg-orange-500/80' },
               { key: 'HACKERNEWS', label: 'HackerNews', icon: Hash, bar: 'bg-amber-500/80' },
               { key: 'TWITTER', label: 'Twitter', icon: FaTwitter, bar: 'bg-sky-500/80' },
+              { key: 'GITHUB', label: 'GitHub', icon: FaGithub, bar: 'bg-neutral-500/80' },
+              { key: 'BLUESKY', label: 'Bluesky', icon: Globe, bar: 'bg-sky-400/80' },
             ] as const).map(({ key, label, icon: Icon, bar }) => {
               const count = byPlatform[key]
               const pct = Math.round((count / total) * 100)

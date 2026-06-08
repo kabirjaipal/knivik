@@ -225,7 +225,7 @@ export const LeadCard = memo(({
 
           {lead.authorUsername && (
             <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-              u/{lead.authorUsername}
+              {lead.platform === 'REDDIT' ? 'u/' : '@'}{lead.authorUsername}
               <EnrichmentIcons enrichment={lead.enrichment} />
             </span>
           )}

@@ -62,12 +62,14 @@ export const getDashboardAnalytics = asyncHandler(async (req: AuthenticatedReque
     totals: { requestCount: totalRequestCount }
   };
 
-  // 4. Source Distribution (Reddit, Twitter, HN leads from the current month)
+  // 4. Source Distribution (Reddit, Twitter, HN, GitHub, Bluesky leads from the current month)
   const startOfMonth = new Date(year, month - 1, 1);
   const sourceDistribution: Record<string, number> = {
     'REDDIT': 0,
     'TWITTER': 0,
     'HACKERNEWS': 0,
+    'GITHUB': 0,
+    'BLUESKY': 0,
   };
 
   if (productIds.length > 0) {

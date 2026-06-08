@@ -393,6 +393,8 @@ enum Platform {
   REDDIT
   HACKERNEWS
   TWITTER
+  GITHUB
+  BLUESKY
 }
 
 enum IntentLevel {

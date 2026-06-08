@@ -5,7 +5,7 @@ import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Simple, Transparent Pricing Plans",
-  description: "Get started for free or upgrade to find high-intent buyers on Reddit, Twitter, and HackerNews automatically. Scalable lead generation for startups and marketing agencies.",
+  description: "Get started for free or upgrade to find high-intent buyers on Reddit, Twitter, HackerNews, GitHub, and Bluesky automatically. Scalable lead generation for startups and marketing agencies.",
   path: "/pricing",
 });
 

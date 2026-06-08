@@ -12,7 +12,7 @@ const steps = [
   {
     icon: <BrainCircuit className="h-8 w-8" />,
     title: "2. Scrape Social Media",
-    description: "Knivik automatically scrapes active discussion threads on Reddit, HackerNews, and X (Twitter) in real-time."
+    description: "Knivik automatically scrapes active discussions on Reddit, HackerNews, X (Twitter), GitHub, and Bluesky in real-time."
   },
   {
     icon: <Bell className="h-8 w-8" />,

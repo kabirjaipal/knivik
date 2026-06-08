@@ -75,7 +75,7 @@ export function Hero({ user }: HeroProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl font-medium"
           >
-            Knivik is the ultimate B2B AI Lead Finder tool. Simply add your product or service details, and our SaaS platform automatically scrapes Reddit, HackerNews, and X (Twitter) to find, filter, and score the best warm leads using advanced AI.
+            Knivik is the ultimate B2B AI Lead Finder tool. Simply add your product or service details, and our SaaS platform automatically scrapes Reddit, HackerNews, X (Twitter), GitHub, and Bluesky to find, filter, and score the best warm leads using advanced AI.
           </motion.p>
           
           <motion.div 

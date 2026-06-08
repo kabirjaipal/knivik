@@ -9,7 +9,7 @@ export const PLANS = {
     features: [
       "1 Product Tracking",
       "50 leads per month",
-      "Reddit & HackerNews scanning",
+      "Reddit, HackerNews, GitHub & Bluesky",
       "Automated scans every 24 hours",
       "1 manual force scan per day",
       "Basic intent detection",
@@ -36,7 +36,7 @@ export const PLANS = {
     features: [
       "Track up to 5 Products",
       "1,000 High-Intent leads / mo",
-      "Reddit, HN & Twitter (X)",
+      "Reddit, HN, Twitter (X), GitHub & Bluesky",
       "Automated scans every 2 hours (24/7 background)",
       "10 Manual Force Scans / day per product",
       "Advanced ROI & Intent Analytics",

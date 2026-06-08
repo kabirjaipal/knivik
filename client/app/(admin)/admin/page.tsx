@@ -78,6 +78,8 @@ export default function AdminPage() {
             { name: 'Reddit', status: 'Checking...' },
             { name: 'HackerNews', status: 'Checking...' },
             { name: 'Twitter/X', status: 'Checking...' },
+            { name: 'GitHub', status: 'Checking...' },
+            { name: 'Bluesky', status: 'Checking...' },
           ]).map((s, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="font-bold text-muted-foreground">{s.name}</span>

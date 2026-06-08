@@ -82,6 +82,8 @@ export class UsageController {
         'REDDIT': 0,
         'TWITTER': 0,
         'HACKERNEWS': 0,
+        'GITHUB': 0,
+        'BLUESKY': 0,
       };
 
       leads.forEach(l => {

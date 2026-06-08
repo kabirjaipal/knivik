@@ -68,6 +68,10 @@ async function discoverProfiles(
     await enrichFromReddit(username, enrichment);
   } else if (platform === Platform.HACKERNEWS) {
     await enrichFromHackerNews(username, enrichment);
+  } else if (platform === Platform.GITHUB) {
+    await enrichFromGitHub(username, enrichment);
+  } else if (platform === Platform.BLUESKY) {
+    await enrichFromBluesky(username, enrichment);
   }
 
   return Object.keys(enrichment).length > 0 ? enrichment : null;
@@ -101,6 +105,40 @@ async function enrichFromHackerNews(username: string, enrichment: EnrichmentData
     // HN "about" field often has HTML links and handles
     const about = (data?.about || '').replace(/<[^>]*>/g, ' ').toLowerCase();
     extractLinksFromText(about, enrichment);
+  } catch {
+    // Swallow silently
+  }
+}
+
+async function enrichFromGitHub(username: string, enrichment: EnrichmentData): Promise<void> {
+  // Set GitHub URL by default
+  enrichment.githubUrl = `https://github.com/${username}`;
+  try {
+    const res = await fetch(`https://api.github.com/users/${username}`, {
+      headers: { 'User-Agent': `${config.PROJECT_NAME}/1.0.0` },
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as any;
+
+    if (data?.twitter_username) {
+      enrichment.twitterUrl = `https://x.com/${data.twitter_username}`;
+    }
+
+    const textToSearch = [data?.blog, data?.bio, data?.company].filter(Boolean).join(' ').toLowerCase();
+    extractLinksFromText(textToSearch, enrichment);
+  } catch {
+    // Swallow silently
+  }
+}
+
+async function enrichFromBluesky(username: string, enrichment: EnrichmentData): Promise<void> {
+  try {
+    const res = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${username}`);
+    if (!res.ok) return;
+    const data = (await res.json()) as any;
+
+    const textToSearch = [data?.description, data?.displayName].filter(Boolean).join(' ').toLowerCase();
+    extractLinksFromText(textToSearch, enrichment);
   } catch {
     // Swallow silently
   }

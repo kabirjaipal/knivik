@@ -16,7 +16,7 @@ import { siteConfig } from "@/lib/seo"
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Knivik | AI Lead Finder & B2B Social Lead Generation Tool",
-  description: "Knivik is an advanced real-time AI Lead Finder that scans Reddit, HackerNews, and X (Twitter) for warm sales leads with high buying intent automatically.",
+  description: "Knivik is an advanced real-time AI Lead Finder that scans Reddit, HackerNews, X (Twitter), GitHub, and Bluesky for warm sales leads with high buying intent automatically.",
   path: "/",
   keywords: siteConfig.keywords
 })
@@ -49,6 +49,8 @@ export default async function LandingPage() {
       "Real-time Reddit lead finding",
       "HackerNews buyer intent tracking",
       "X (Twitter) conversational prospecting",
+      "GitHub issue & discussion tracking",
+      "Bluesky social listening & lead generation",
       "AI-powered Warm Outreach Suggestion",
       "Semantic keyword context filtering",
       "Slack, email & webhook CRM integrations"
