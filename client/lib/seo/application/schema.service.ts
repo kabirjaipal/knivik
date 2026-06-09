@@ -24,7 +24,11 @@ export class SchemaService {
         "@type": "Organization",
         "name": "Knivik",
         "url": baseUrl,
-        "logo": `${baseUrl}/favicon.svg`
+        "logo": `${baseUrl}/favicon.svg`,
+        "sameAs": [
+          "https://x.com/knivikai",
+          "https://instagram.com/knivikai"
+        ]
       },
       "offers": {
         "@type": "Offer",
@@ -40,6 +44,26 @@ export class SchemaService {
         "AI-powered Reply Angles",
         "Slack and Email alerts",
         "Zapier and Make integration"
+      ]
+    };
+  }
+
+  /**
+   * Generates Schema.org Organization JSON-LD object.
+   * Helps search engines establish the brand entity and link social media channels.
+   */
+  public static generateOrganizationSchema(): Record<string, any> {
+    const baseUrl = EnvConfig.getBaseUrl();
+    
+    return {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Knivik",
+      "url": baseUrl,
+      "logo": `${baseUrl}/favicon.svg`,
+      "sameAs": [
+        "https://x.com/knivikai",
+        "https://instagram.com/knivikai"
       ]
     };
   }

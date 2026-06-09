@@ -58,11 +58,13 @@ export default async function LandingPage() {
   });
 
   const websiteSchema = SchemaService.generateWebSiteSchema();
+  const organizationSchema = SchemaService.generateOrganizationSchema();
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <SchemaScript schema={softwareSchema} />
       <SchemaScript schema={websiteSchema} />
+      <SchemaScript schema={organizationSchema} />
       <main className="grow">
         <Hero user={user} />
         <PlatformSupport />
