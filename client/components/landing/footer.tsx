@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ShieldCheck } from "lucide-react";
 import { FaTwitter, FaGithub } from "react-icons/fa";
+import { toolsList } from "@/lib/tools";
 
 const competitors = [
   { name: "Apollo", slug: "apollo" },
@@ -40,46 +41,26 @@ export function Footer() {
               Free Tools
             </h4>
             <ul className="flex flex-col gap-2 text-xs font-bold text-foreground/70">
-              <li>
-                <Link
-                  href="/tools/search-builder"
-                  className="hover:text-primary transition-colors"
-                >
-                  Social Search Operator Builder
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/warmth-auditor"
-                  className="hover:text-primary transition-colors"
-                >
-                  Outreach Warmth & Spam Auditor
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/testimonial-generator"
-                  className="hover:text-primary transition-colors"
-                >
-                  Testimonial Card Generator
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/ask-hn-feed"
-                  className="hover:text-primary transition-colors"
-                >
-                  Ask HN Lead Finder Feed
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/tools/subreddit-directory"
-                  className="hover:text-primary transition-colors"
-                >
-                  Subreddit Niche Lead Directory
-                </Link>
-              </li>
+              {toolsList.slice(0, 5).map((tool) => (
+                <li key={tool.href}>
+                  <Link
+                    href={tool.href}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {tool.title}
+                  </Link>
+                </li>
+              ))}
+              {toolsList.length > 5 && (
+                <li>
+                  <Link
+                    href="/tools"
+                    className="hover:text-primary/80 text-muted-foreground/60 transition-colors"
+                  >
+                    ... more tools
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

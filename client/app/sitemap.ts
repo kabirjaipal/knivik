@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/privacy",
     "/refund-policy",
+    "/tools",
     "/tools/search-builder",
     "/tools/warmth-auditor",
     "/tools/testimonial-generator",
@@ -19,7 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: EnvConfig.resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
     changeFrequency: "weekly" as const,
-    priority: route === "" ? 1.0 : 0.8,
+    priority: route === "" || route === "/tools" ? 1.0 : 0.8,
   }));
 
   // Dynamically resolve comparison page routes for search-engine indexing
