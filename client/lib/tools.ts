@@ -4,6 +4,7 @@ import {
   ShieldAlert, 
   Quote, 
   Rss,
+  Sparkles,
   LucideIcon
 } from "lucide-react";
 
@@ -26,6 +27,15 @@ export const toolsList: ToolItem[] = [
     icon: Sliders,
     color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
     buttonText: "Launch Builder",
+  },
+  {
+    title: "AI Outreach Reply Generator",
+    description: "Generate personalized, high-converting reply templates and DMs for Reddit, X (Twitter), HackerNews, and LinkedIn posts in seconds.",
+    href: "/tools/reply-generator",
+    badge: "Free tool",
+    icon: Sparkles,
+    color: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+    buttonText: "Generate Reply",
   },
   {
     title: "Outreach Warmth & Spam Auditor",

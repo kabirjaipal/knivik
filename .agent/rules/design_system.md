@@ -62,6 +62,7 @@ An interactive interface must feel alive. Use transitions on every interactive s
 
 ## 📐 4. Responsive Layout Conventions
 
+*   **Container Layout:** Do not use explicit maximum width classes (like `max-w-6xl`, `max-w-5xl`, etc.) for outer page sections. Instead, always just use the standard `container` layout class (`container mx-auto px-6`) to maintain a clean and consistent grid alignment across the platform.
 *   **Grid & Flex:** Leverage responsive grids (`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3`) for dashboard layouts.
 *   **Mobile-First Design:** Write styles using mobile-first defaults, layering screen sizes (`sm:`, `md:`, `lg:`) to scale components naturally.
 *   **Scrollbars:** Custom-style scrollbars to be thin, dark, and rounded rather than standard thick browser scrollbars.

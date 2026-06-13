@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/refund-policy",
     "/tools",
     "/tools/search-builder",
+    "/tools/reply-generator",
     "/tools/warmth-auditor",
     "/tools/testimonial-generator",
     "/tools/ask-hn-feed",
