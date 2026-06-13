@@ -445,6 +445,86 @@ export class ComparisonRepository implements IComparisonRepository {
           answer: "Cognism is suited for enterprise outbound sales teams focused on cold calling. Knivik is optimized for startups and growth teams looking to engage with warm prospects on active social threads."
         }
       ]
+    },
+    mention: {
+      competitor: {
+        slug: "mention",
+        name: "Mention",
+        tagline: "Real-Time Web and Social Media Monitoring",
+        description: "Mention is a well-known social media listening and brand tracking tool. It allows companies to monitor brand name mentions, keywords, and competitor activity across social networks, forums, blogs, and news sites. While it provides excellent web monitoring and sentiment analysis for PR and marketing teams, it lacks direct buyer intent classification, automated AI outreach replies, and CRM pipeline tracking to convert those mentions into active sales.",
+        rating: 4.3,
+        pricing: "Starts at $41/mo (billed annually)",
+        platforms: ["Reddit", "HackerNews", "X (Twitter)", "Facebook", "Instagram", "Blogs", "News", "Forums"],
+        pros: [
+          "Broad real-time monitoring across diverse social networks and websites",
+          "Robust sentiment analysis, keyword filtering, and automated reporting",
+          "User-friendly interface with team collaboration and alert sharing features"
+        ],
+        limitations: [
+          "Heavy noise from keyword scraping without B2B buying intent filtering",
+          "No native AI outreach generation to craft immediate replies for leads",
+          "Lacks CRM pipeline features to manage and track lead statuses",
+          "No support for specific developer channels like GitHub or Bluesky"
+        ]
+      },
+      keyDifferences: [
+        "Mention is a PR-focused social listening tool; Knivik is an AI-powered sales lead acquisition system.",
+        "Mention triggers notifications for every single keyword mention, leading to alert fatigue; Knivik evaluates context to score buying intent (e.g. BUY_NOW, INTERESTED).",
+        "Knivik includes custom AI-crafted outreach recommendations based on post content; Mention only shows you the post and expects you to write the message.",
+        "Knivik offers a generous free-tier, whereas Mention requires paid plans to unlock essential filters."
+      ],
+      features: ComparisonRepository.defaultFeatures("Mention", true, true, true),
+      verdict: "Mention is a great fit for brands and marketing teams looking to monitor general brand sentiment, track PR campaigns, and follow industry trends across a wide range of social media. However, for sales teams, startups, agencies, and builders searching for active prospects asking for solutions on Reddit, HackerNews, or Twitter, Mention offers too much noise and no outreach assistance. Knivik acts as a focused AI sales development representative that cuts through the noise and helps you close leads.",
+      faq: [
+        {
+          question: "Can Mention help me generate reply drafts?",
+          answer: "No. Mention only reports where your keywords were found. It does not provide any AI assistance to write DMs, replies, or personalized pitches. Knivik automatically generates value-first response copies for every lead."
+        },
+        {
+          question: "Is Mention suitable for startups looking for customers?",
+          answer: "It can be, but you will waste a lot of time sorting through non-sales mentions (such as news reports or general chat). Knivik uses semantic analysis to filter out non-leads, saving you hours of manual vetting."
+        }
+      ]
+    },
+    awario: {
+      competitor: {
+        slug: "awario",
+        name: "Awario",
+        tagline: "Affordable Social Listening & Brand Monitoring Tool",
+        description: "Awario is an affordable social media monitoring tool designed for small businesses and solopreneurs to track keywords across social networks, blogs, and news. It boasts a 'leads' feature that attempts basic query matching to find prospects. However, it relies heavily on literal keyword matching without semantic understanding, meaning it misses high-intent conversations that don't use the exact keywords, and floods you with irrelevant results.",
+        rating: 4.1,
+        pricing: "Starts at $29/mo (billed annually)",
+        platforms: ["Reddit", "HackerNews", "X (Twitter)", "Facebook", "Instagram", "Blogs", "News", "Forums"],
+        pros: [
+          "Very affordable entry-level pricing for small businesses",
+          "Tracks a large volume of sources including blogs and forums",
+          "Includes a 'Leads' module for basic keyword-based prospect tracking"
+        ],
+        limitations: [
+          "Keyword-based prospect detection leads to high rates of false positives",
+          "No context-aware AI reply writer or outreach recommendation engine",
+          "Does not support tracking developer-centric platforms like GitHub or Bluesky",
+          "Lacks lead management CRM tracking to move candidates through a sales pipeline"
+        ]
+      },
+      keyDifferences: [
+        "Awario leads feature uses basic keyword query pairs; Knivik utilizes deep LLM semantic filters to score buying intent (e.g., BUY_NOW, FRUSTRATED_COMPETING).",
+        "Knivik drafts personalized outreach replies in seconds using local value templates; Awario leaves you to manually write and send every outreach response.",
+        "Awario is built primarily for general brand tracking; Knivik is engineered specifically to find and track qualified B2B customer leads.",
+        "Knivik offers a 100% free-forever starting tier; Awario's cheapest plans require a monthly paid subscription."
+      ],
+      features: ComparisonRepository.defaultFeatures("Awario", true, true, true),
+      verdict: "Awario is a budget-friendly option for brand tracking, PR monitoring, and simple social listening. While it has a built-in 'leads' tool, it lacks the semantic intelligence needed to filter out irrelevant posts, and does not help you draft warm-outreach reply recommendations. For developers, agency owners, and startup founders who need highly accurate intent filtering and instant AI reply drafts to reach buyers, Knivik is the superior sales pipeline companion.",
+      faq: [
+        {
+          question: "How does Awario's 'leads' feature differ from Knivik?",
+          answer: "Awario's leads module works by matching simple keyword combinations (like 'looking for' + 'recommendation'). This results in high noise and missed opportunities. Knivik uses semantic AI models that understand context, finding posts where people express intent even without using your exact keywords."
+        },
+        {
+          question: "Does Awario generate outreach reply templates?",
+          answer: "No. Awario identifies mentions but does not draft outreach responses. Knivik automatically creates tailored outreach messages based on the lead's post context and your product's value proposition."
+        }
+      ]
     }
   };
 
