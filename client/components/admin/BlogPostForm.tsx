@@ -236,10 +236,10 @@ export default function BlogPostForm({ postId }: BlogPostFormProps) {
       </div>
 
       {/* Main Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 items-stretch">
         {/* Left column: Article Body */}
-        <div className="space-y-6 lg:col-span-2">
-          <Card className="border-border/40 bg-card">
+        <div className="lg:col-span-2 flex flex-col">
+          <Card className="border-border/40 bg-card flex-1 flex flex-col">
             <CardHeader className="px-5 pt-3 pb-2">
               <CardTitle className="text-base font-bold text-foreground">Article Body</CardTitle>
               <CardDescription>
@@ -248,22 +248,27 @@ export default function BlogPostForm({ postId }: BlogPostFormProps) {
                   : "Write and format your article's main content below."}
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-5 pt-0">
+            <CardContent className="p-5 pt-0 flex-1 flex flex-col">
               <TiptapEditor value={content} onChange={setContent} />
             </CardContent>
           </Card>
         </div>
 
         {/* Right column: Post Settings & SEO */}
-        <div className="space-y-6">
-          <Card className="border-border/40 bg-card">
+        <div className="lg:col-span-1 flex flex-col">
+          <Card className="border-border/40 bg-card flex-1 flex flex-col">
             <CardHeader className="px-5 pt-3 pb-2">
-              <CardTitle className="text-base font-bold text-foreground">Post Settings & SEO</CardTitle>
+              <CardTitle className="text-base font-bold text-foreground flex items-center justify-between">
+                <span>Post Settings & SEO</span>
+                <Badge variant="secondary" className="text-[10px] font-mono font-bold uppercase tracking-wider py-0.5">
+                  {readTime}
+                </Badge>
+              </CardTitle>
               <CardDescription>Configure categorization, settings, and SEO meta tags.</CardDescription>
             </CardHeader>
-            <CardContent className="p-5 pt-0 space-y-4">
+            <CardContent className="p-5 pt-0 flex-1 flex flex-col space-y-4">
               {/* Title */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Title</label>
                 <input
                   type="text"
@@ -271,12 +276,12 @@ export default function BlogPostForm({ postId }: BlogPostFormProps) {
                   placeholder="How to Find B2B Sales Leads..."
                   value={title}
                   onChange={handleTitleChange}
-                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring text-xs sm:text-sm"
                 />
               </div>
 
               {/* Slug */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                   <span>Slug</span>
                   <button
@@ -293,102 +298,87 @@ export default function BlogPostForm({ postId }: BlogPostFormProps) {
                   placeholder="how-to-find-b2b-leads-on-reddit"
                   value={slug}
                   onChange={(e) => setSlug(slugify(e.target.value))}
-                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono text-sm"
+                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring font-mono text-xs"
                 />
               </div>
 
               {/* Short Description */}
-              <div className="space-y-2">
+              <div className="space-y-1 flex-1 flex flex-col min-h-[140px]">
                 <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
                   Short Description (SEO Meta)
                 </label>
                 <textarea
                   required
-                  rows={3}
                   placeholder="Discover the exact search operators and outreach strategies..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none text-sm"
+                  className="w-full flex-grow p-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none text-xs"
                 />
               </div>
 
-              {/* Category */}
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Category</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Lead Gen, Alternative Guides..."
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+              {/* Category & Tags Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Category */}
+                <div className="space-y-1">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Category</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Lead Gen"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring text-xs"
+                  />
+                </div>
 
-              {/* Tags */}
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                  Tags (Comma separated)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Reddit Marketing, Social Selling"
-                  value={tagsInput}
-                  onChange={(e) => setTagsInput(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              {/* Cover Image */}
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Cover Image</label>
-                {coverImage ? (
-                  <div className="relative w-full overflow-hidden rounded-md border border-border bg-muted/20 group" style={{ aspectRatio: "16/9" }}>
-                    <img src={coverImage} alt="Cover Preview" className="w-full h-full object-contain" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setCoverImage("")}
-                        className="font-bold"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" /> Remove
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-40 border border-dashed border-border rounded-md cursor-pointer bg-background hover:bg-muted/10 transition duration-200">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-foreground font-bold">Click to upload cover image</p>
-                      <p className="text-xs text-muted-foreground mt-1">WebP, PNG, JPG (compressed client-side)</p>
-                    </div>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
-                )}
-              </div>
-
-              {/* Read Time */}
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                  Read Time (Auto-calculated)
-                </label>
-                <div className="w-full h-10 px-3 rounded-md border border-border bg-muted/30 text-muted-foreground flex items-center text-sm font-medium font-mono">
-                  {readTime}
+                {/* Tags */}
+                <div className="space-y-1">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Tags</label>
+                  <input
+                    type="text"
+                    placeholder="SEO, Sales"
+                    value={tagsInput}
+                    onChange={(e) => setTagsInput(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring text-xs"
+                  />
                 </div>
               </div>
 
-              {/* Status info box */}
-              <div className={`rounded-md border p-3 text-xs leading-relaxed ${
-                currentStatus === "PUBLISHED"
-                  ? "border-success/30 bg-success/5 text-success"
-                  : "border-yellow-500/30 bg-yellow-500/5 text-yellow-400"
-              }`}>
-                {currentStatus === "PUBLISHED" ? (
-                  <><strong>Live</strong> — This post is publicly visible and indexed by search engines.</>
+              {/* Cover Image */}
+              <div className="space-y-1.5 flex-1 flex flex-col max-h-[300px]">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Cover Image</label>
+                {coverImage ? (
+                  <div className="relative flex-1 min-h-[120px] w-full rounded-md border border-border overflow-hidden bg-muted/10">
+                    <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                    
+                    {/* Delete button (Top Right) */}
+                    <button
+                      type="button"
+                      onClick={() => setCoverImage("")}
+                      className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-destructive text-white rounded-full backdrop-blur-sm transition-colors duration-200 border border-border/20 shadow-md"
+                      title="Remove Image"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Change button / indicator (Bottom Right) */}
+                    <label className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2.5 py-1 bg-black/70 hover:bg-background/90 text-foreground hover:text-primary border border-border/30 rounded text-[10px] font-black uppercase tracking-wider cursor-pointer backdrop-blur-sm transition-colors duration-200 shadow-md">
+                      <Upload className="w-3 h-3" />
+                      <span>Change</span>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    </label>
+                  </div>
                 ) : (
-                  <><strong>Draft</strong> — Only admins can see this post. It won't appear on the blog or in SEO results until published.</>
+                  <label className="flex-1 flex flex-col items-center justify-center gap-2 min-h-[120px] w-full border border-dashed border-border rounded-md cursor-pointer bg-background hover:bg-muted/10 transition duration-200 p-4">
+                    <div className="p-2 rounded-full bg-muted/20 border border-border/50">
+                      <Upload className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div className="text-center space-y-0.5">
+                      <span className="text-xs text-foreground font-black block">Select Cover Image</span>
+                      <span className="text-[10px] text-muted-foreground block">PNG, JPG up to 5MB</span>
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
                 )}
               </div>
             </CardContent>

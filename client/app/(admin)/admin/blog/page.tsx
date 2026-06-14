@@ -14,6 +14,7 @@ import {
   Trash2,
   Loader2,
   FileText,
+  Globe,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -41,6 +42,10 @@ export default function AdminBlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const totalPosts = posts.length;
+  const publishedPosts = posts.filter((p) => p.status === "PUBLISHED").length;
+  const draftPosts = posts.filter((p) => p.status === "DRAFT").length;
 
   const fetchPosts = async () => {
     try {
@@ -97,18 +102,6 @@ export default function AdminBlogPage() {
       post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const totalPosts = posts.length;
-  const publishedCount = posts.filter((p) => p.status === "PUBLISHED").length;
-  const draftCount = posts.filter((p) => p.status === "DRAFT").length;
-  const uniqueCategories = Array.from(new Set(posts.map((p) => p.category))).length;
-  const uniqueTags = Array.from(new Set(posts.flatMap((p) => p.tags))).length;
-
-  const statsList = [
-    { label: "Total Posts", value: totalPosts, icon: FileText, color: "text-primary bg-primary/10 border-primary/20" },
-    { label: "Published", value: publishedCount, icon: FolderOpen, color: "text-success bg-success/10 border-success/20" },
-    { label: "Drafts", value: draftCount, icon: Tag, color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
-  ];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -119,91 +112,92 @@ export default function AdminBlogPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border/40 pb-4">
-        <h2 className="text-xl font-black tracking-tight text-foreground">Blog</h2>
-        <Button variant="default" size="sm" className="font-bold gap-2" asChild>
-          <Link href="/admin/blog/create">
-            <Plus className="w-4 h-4" /> Create Post
-          </Link>
-        </Button>
+      {/* Consolidate Header & Search Toolbar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
+        <div>
+          <h2 className="text-xl font-black tracking-tight text-foreground">Blog Articles</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Draft, schedule, and publish search-optimized guides.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 pl-9 pr-4 text-xs rounded-md border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-0"
+            />
+          </div>
+          <Button variant="default" size="sm" className="font-bold gap-2 h-9" asChild>
+            <Link href="/admin/blog/create">
+              <Plus className="w-4 h-4" /> Create Post
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards - generated dynamically to avoid JSX repetition */}
-      <div className="grid gap-6 sm:grid-cols-3">
-        {statsList.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.label} className={`border ${stat.color}`}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  {stat.label}
-                </CardTitle>
-                <Icon className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-black text-foreground">{stat.value}</div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Compact Stats Grid */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4 max-w-3xl">
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card/50">
+          <div className="p-2 rounded-md bg-primary/10 text-primary">
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-black">Total Articles</p>
+            <p className="text-base font-black text-foreground">{totalPosts}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card/50">
+          <div className="p-2 rounded-md bg-success/10 text-success">
+            <Globe className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-black">Live & Public</p>
+            <p className="text-base font-black text-foreground">{publishedPosts}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card/50">
+          <div className="p-2 rounded-md bg-yellow-500/10 text-yellow-500">
+            <FileText className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-black">Drafts</p>
+            <p className="text-base font-black text-foreground">{draftPosts}</p>
+          </div>
+        </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center w-full max-w-md relative">
-        <Search className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
-        <input
-          type="text"
-          placeholder="Search by title, category, or tags..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-10 pl-9 pr-4 rounded-md border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        />
-      </div>
-
-      {/* Table listing */}
+      {/* Simplified Table listing */}
       <Card className="border-border/40 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/10 hover:bg-muted/10">
-              <TableHead className="font-bold">Article</TableHead>
-              <TableHead className="font-bold">Status</TableHead>
-              <TableHead className="font-bold">Category</TableHead>
-              <TableHead className="font-bold">Date</TableHead>
-              <TableHead className="font-bold">Author</TableHead>
-              <TableHead className="font-bold text-right">Actions</TableHead>
+              <TableHead className="font-bold text-xs">Article Details</TableHead>
+              <TableHead className="font-bold text-xs">Status</TableHead>
+              <TableHead className="font-bold text-xs">Category</TableHead>
+              <TableHead className="font-bold text-xs">Published Date</TableHead>
+              <TableHead className="font-bold text-xs text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPosts.map((post) => (
               <TableRow key={post.id} className="hover:bg-muted/5">
                 <TableCell>
-                  <div className="flex flex-col max-w-xs sm:max-w-md">
+                  <div className="flex flex-col">
                     <span className="font-bold text-sm text-foreground line-clamp-1">
                       {post.title}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      /{post.slug}
+                    <span className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                      /blog/{post.slug}
                     </span>
-                    {post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {post.tags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-[10px] py-0 px-1.5 uppercase font-bold tracking-wider">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {post.tags.length > 3 && (
-                          <span className="text-[10px] text-muted-foreground font-bold">
-                            +{post.tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge
-                    className={`text-[10px] font-black uppercase tracking-wider border-0 ${
+                    className={`text-[9px] font-black uppercase tracking-wider border-0 ${
                       post.status === "PUBLISHED"
                         ? "bg-success/15 text-success"
                         : "bg-yellow-500/15 text-yellow-400"
@@ -213,18 +207,16 @@ export default function AdminBlogPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="font-black uppercase tracking-widest text-[10px]">
+                  <Badge variant="outline" className="font-black uppercase tracking-widest text-[9px]">
                     {post.category}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground font-mono whitespace-nowrap">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                    {new Date(post.date).toLocaleDateString()}
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm font-medium text-foreground">
-                  {post.createdBy?.displayUsername || post.createdBy?.username || "Admin"}
+                <TableCell className="text-xs text-muted-foreground font-mono">
+                  {new Date(post.date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end items-center gap-2">
@@ -251,7 +243,7 @@ export default function AdminBlogPage() {
           <div className="p-12 text-center text-muted-foreground italic flex flex-col items-center justify-center gap-4">
             <span>No articles found.</span>
             {posts.length === 0 && (
-              <Button variant="outline-primary" size="sm" className="font-bold" asChild>
+              <Button variant="outline" size="sm" className="font-bold" asChild>
                 <Link href="/admin/blog/create">
                   Write Your First Article
                 </Link>
