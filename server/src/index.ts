@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
-import cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser'; // reload triggered
 import { rateLimit } from 'express-rate-limit';
 import { db } from './lib/db.js';
 import config from './lib/config.js';

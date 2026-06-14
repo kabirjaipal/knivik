@@ -84,9 +84,25 @@ export function Footer() {
 
           <div className="flex flex-col md:items-end gap-2.5">
             <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-              Legal
+              Company
             </h4>
             <ul className="flex flex-wrap md:flex-col md:items-end gap-4 md:gap-2 text-xs font-bold text-foreground/70">
+              <li>
+                <Link
+                  href="/blog"
+                  className="hover:text-primary transition-colors"
+                >
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="hover:text-primary transition-colors"
+                >
+                  Contact
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/privacy"
@@ -109,14 +125,6 @@ export function Footer() {
                   className="hover:text-primary transition-colors"
                 >
                   Refunds
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-primary transition-colors"
-                >
-                  Contact
                 </Link>
               </li>
             </ul>

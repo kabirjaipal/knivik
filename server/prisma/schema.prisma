@@ -43,6 +43,7 @@ model User {
   referredBy         Referral?      @relation("ReferredUser")
   referralPartner    ReferralPartner?
   referralPayouts    ReferralPayout[] @relation("CreatorPayouts")
+  blogPosts          BlogPost[]       @relation("BlogPostsCreated")
 
   @@index([plan])
   @@map("ir_users")
@@ -501,5 +502,33 @@ model ReferralPartner {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ir_referral_partners")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogPost {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  description   String
+  content       String     @db.Text
+  coverImage    String
+  status        PostStatus @default(DRAFT)
+  date          DateTime   @default(now())
+  readTime      String
+  category      String
+  tags          String[]
+  createdById   String
+  createdBy     User       @relation("BlogPostsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@map("ir_blog_posts")
 }
 

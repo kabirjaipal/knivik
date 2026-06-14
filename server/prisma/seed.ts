@@ -39,6 +39,7 @@ async function main() {
     prisma.requestLog.deleteMany({}),
     prisma.llmModel.deleteMany({}),
     prisma.systemConfig.deleteMany({}),
+    prisma.blogPost.deleteMany({}),
   ]);
 
   console.log('👥 Creating owner user...');

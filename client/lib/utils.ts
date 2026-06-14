@@ -69,3 +69,83 @@ export function exportLeadsToCSV(leads: LeadCardData[], filename = "leads.csv", 
   document.body.removeChild(link)
   return true
 }
+
+/**
+ * Calculates the estimated reading time of HTML content.
+ * Follows the standard reading speed of 200 words per minute (WPM)
+ * and adjusts for embedded images (Medium style).
+ */
+export function calculateReadTime(content: string): string {
+  if (!content || !content.trim()) {
+    return "0 min read";
+  }
+
+  // 1. Strip HTML tags and extract text content to count words
+  const cleanText = content.replace(/<[^>]*>/g, " ");
+  const words = cleanText.trim().split(/\s+/).filter((w) => w.length > 0).length;
+
+  // Average reading speed: 200 words per minute
+  const WORDS_PER_MINUTE = 200;
+  let totalSeconds = (words / WORDS_PER_MINUTE) * 60;
+
+  // 2. Account for images (if any)
+  // Medium's algorithm: 12s for 1st image, 11s for 2nd, 10s for 3rd, ..., down to 3s for 10th+
+  const imageCount = (content.match(/<img[^>]*>/g) || []).length;
+  let imageSeconds = 0;
+  let currentImageSec = 12;
+  for (let i = 0; i < imageCount; i++) {
+    imageSeconds += currentImageSec;
+    if (currentImageSec > 3) {
+      currentImageSec--;
+    }
+  }
+  totalSeconds += imageSeconds;
+
+  const minutes = Math.max(1, Math.ceil(totalSeconds / 60));
+  return `${minutes} min read`;
+}
+
+/**
+ * Compresses an image file client-side to WebP format with 0.82 quality.
+ * Returns a Base64 data URL.
+ */
+export function compressImage(file: File, maxWidth = 1200): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        // Resize if it exceeds maxWidth
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Export to WebP with 0.82 quality
+        const dataUrl = canvas.toDataURL("image/webp", 0.82);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+

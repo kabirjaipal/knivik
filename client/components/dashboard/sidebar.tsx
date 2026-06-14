@@ -20,6 +20,7 @@ import {
   Sliders,
   ShieldAlert,
   Settings,
+  BookOpen,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -76,6 +77,7 @@ export function Sidebar({ className }: SidebarProps) {
   const adminLinks: NavLink[] = useMemo(() => [
     { href: "/admin", label: "System Overview", icon: LayoutDashboard },
     { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/blog", label: "Blog Creator", icon: BookOpen },
     { href: "/admin/revenue", label: "Revenue", icon: Coins },
     { href: "/admin/referrals", label: "Referrals Manager", icon: ShieldAlert },
     { href: "/admin/usage", label: "LLM Usage", icon: Brain },

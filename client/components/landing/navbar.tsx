@@ -53,6 +53,7 @@ export function Navbar({ user }: { user: any }) {
     { label: "Integrations", href: "/#integrations" },
     { label: "Pricing", href: "/pricing" },
     { label: "Tools", href: "/tools" },
+    { label: "Blog", href: "/blog" },
     { label: "FAQ", href: "/#faq" },
     { label: "Contact", href: "/contact" },
   ]

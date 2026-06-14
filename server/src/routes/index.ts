@@ -12,6 +12,7 @@ import billingRoutes from './billing.routes.js';
 import usageRoutes from './usage.routes.js';
 import feedbackRoutes from './feedback.routes.js';
 import referralRoutes from './referral.routes.js';
+import blogRoutes from './blog.routes.js';
 import { optionalAuth } from '../middleware/auth.middleware.js';
 import { checkMaintenanceMode } from '../middleware/maintenance.middleware.js';
 
@@ -38,5 +39,6 @@ router.use('/api/billing', billingRoutes);
 router.use('/api/usage', usageRoutes);
 router.use('/api/feedback', feedbackRoutes);
 router.use('/api/referrals', referralRoutes);
+router.use('/api/blog', blogRoutes);
 
 export default router;
