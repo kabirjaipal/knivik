@@ -9,6 +9,7 @@ import Highlight from "@tiptap/extension-highlight";
 import Typography from "@tiptap/extension-typography";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Bold,
   Italic,
@@ -40,6 +41,11 @@ interface TiptapEditorProps {
 
 export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -62,7 +68,7 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     editorProps: {
       attributes: {
         class:
-          "blog-prose tiptap min-h-[200px] h-[560px] w-full max-w-full rounded-b-lg border border-t-0 border-border bg-card p-6 text-foreground overflow-y-auto focus:outline-none",
+          "blog-prose tiptap h-[68vh] w-full max-w-full rounded-b-lg border border-t-0 border-border bg-card p-6 text-foreground overflow-y-auto focus:outline-none",
       },
       // Strip AI-tool junk: font-family / font-size / color inline styles while keeping structural formatting
       transformPastedHTML(html) {
@@ -230,7 +236,7 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     },
   ];
 
-  return (
+  const editorMarkup = (
     <div className={`flex flex-col w-full relative ${isFullScreen ? "fullscreen-editor" : ""}`}>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between rounded-t-lg border border-border bg-muted/95 backdrop-blur-sm px-2 py-1.5 sticky top-0 z-10 editor-toolbar gap-1">
@@ -275,26 +281,42 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         .fullscreen-editor {
           position: fixed !important;
           inset: 0 !important;
-          z-index: 9999 !important;
+          z-index: 99999 !important;
           background-color: hsl(var(--background)) !important;
-          padding: 1.5rem !important;
+          padding: 0 !important;
           height: 100vh !important;
           width: 100vw !important;
           display: flex !important;
           flex-direction: column !important;
+          overflow: hidden !important;
+        }
+        .fullscreen-editor > div:not(.editor-toolbar) {
+          flex: 1 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          min-height: 0 !important;
         }
         .fullscreen-editor .tiptap {
           flex: 1 !important;
-          height: calc(100vh - 120px) !important;
-          border-radius: 0 0 0.5rem 0.5rem !important;
-          border: 1px solid hsl(var(--border)) !important;
-          border-top: none !important;
+          height: 100% !important;
+          border-radius: 0 !important;
+          border: none !important;
+          padding: 2.5rem !important;
+          box-sizing: border-box !important;
+          overflow-y: auto !important;
         }
         .fullscreen-editor .editor-toolbar {
-          border-radius: 0.5rem 0.5rem 0 0 !important;
-          border: 1px solid hsl(var(--border)) !important;
+          border-radius: 0 !important;
+          border: none !important;
+          border-bottom: 1px solid hsl(var(--border)) !important;
         }
       ` }} />
     </div>
   );
+
+  if (isFullScreen && mounted) {
+    return createPortal(editorMarkup, document.body);
+  }
+
+  return editorMarkup;
 }
