@@ -1,6 +1,8 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { Extension } from "@tiptap/core";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
@@ -8,8 +10,86 @@ import TextAlign from "@tiptap/extension-text-align";
 import Highlight from "@tiptap/extension-highlight";
 import Typography from "@tiptap/extension-typography";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect, useState } from "react";
+import { Markdown } from "@tiptap/markdown";
+import ImageResize from "tiptap-extension-resize-image";
+import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
+
+const isImageUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return /\.(jpeg|jpg|gif|png|webp|svg)$/i.test(parsed.pathname);
+  } catch (_) {
+    return false;
+  }
+};
+
+const CustomImageResize = ImageResize.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      align: {
+        default: "center",
+        renderHTML: attributes => {
+          if (attributes.align === "left") {
+            return { class: "align-left" };
+          }
+          if (attributes.align === "right") {
+            return { class: "align-right" };
+          }
+          return { class: "align-center" };
+        },
+      },
+    };
+  },
+});
+
+const PasteMarkdown = Extension.create({
+  name: "pasteMarkdown",
+
+  addProseMirrorPlugins() {
+    const { editor } = this;
+
+    return [
+      new Plugin({
+        key: new PluginKey("pasteMarkdown"),
+        props: {
+          handlePaste(view, event) {
+            const text = event.clipboardData?.getData("text/plain");
+            if (!text) return false;
+
+            // Direct image URL pasting
+            if (isImageUrl(text)) {
+              editor.commands.setImage({ src: text });
+              return true;
+            }
+
+            // Heuristics to check if pasted text has Markdown formatting
+            const looksLikeMarkdown =
+              /^#{1,6}\s/m.test(text) || // Headings
+              /(\*\*|__)(.*?)\1/.test(text) || // Bold
+              /(\*|_)(.*?)\1/.test(text) || // Italic
+              /\[.*?\]\(.*?\)/.test(text) || // Links
+              /^\s*[-*+]\s/m.test(text) || // Bullet lists
+              /^\s*\d+\.\s/m.test(text) || // Ordered lists
+              /^```/m.test(text) || // Code blocks
+              /^\s*>\s/m.test(text) || // Blockquotes
+              /^\s*([-*_]){3,}\s*$/m.test(text); // Horizontal rules (---, ***, ___)
+
+            if (looksLikeMarkdown) {
+              const json = editor.storage.markdown?.manager?.parse(text) || (editor as any).markdown?.parse(text);
+              if (json) {
+                editor.commands.insertContent(json);
+                return true; // Mark as handled
+              }
+            }
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
 import {
   Bold,
   Italic,
@@ -32,6 +112,7 @@ import {
   AlignCenter,
   AlignRight,
   Minus,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface TiptapEditorProps {
@@ -42,6 +123,7 @@ interface TiptapEditorProps {
 export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -64,6 +146,17 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       Highlight.configure({ multicolor: false }),
       Typography,
       Placeholder.configure({ placeholder: "Start writing your article here…" }),
+      CustomImageResize.configure({
+        HTMLAttributes: {
+          class: "rounded-lg max-w-full my-6 mx-auto block border border-border transition-all duration-200",
+        },
+      }),
+      Markdown.configure({
+        markedOptions: {
+          breaks: true,
+        },
+      }),
+      PasteMarkdown,
     ],
     editorProps: {
       attributes: {
@@ -83,6 +176,31 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       onChange(editor.getHTML());
     },
   });
+
+  const handleImageAction = () => {
+    const url = window.prompt("Enter image URL (leave empty to upload from device):");
+    if (url === null) return; // cancelled
+    if (url.trim() !== "") {
+      editor?.chain().focus().setImage({ src: url.trim() }).run();
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result) {
+        editor?.chain().focus().setImage({ src: result }).run();
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
 
   // Sync content if it changes externally (e.g. after loading data in edit mode)
   useEffect(() => {
@@ -155,20 +273,38 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     {
       icon: AlignLeft,
       label: "Align Left",
-      isActive: () => editor.isActive({ textAlign: "left" }),
-      onClick: () => editor.chain().focus().setTextAlign("left").run(),
+      isActive: () => editor.isActive("image", { align: "left" }) || editor.isActive({ textAlign: "left" }),
+      onClick: () => {
+        if (editor.isActive("image")) {
+          editor.chain().focus().updateAttributes("image", { align: "left" }).run();
+        } else {
+          editor.chain().focus().setTextAlign("left").run();
+        }
+      },
     },
     {
       icon: AlignCenter,
       label: "Align Center",
-      isActive: () => editor.isActive({ textAlign: "center" }),
-      onClick: () => editor.chain().focus().setTextAlign("center").run(),
+      isActive: () => editor.isActive("image", { align: "center" }) || editor.isActive({ textAlign: "center" }),
+      onClick: () => {
+        if (editor.isActive("image")) {
+          editor.chain().focus().updateAttributes("image", { align: "center" }).run();
+        } else {
+          editor.chain().focus().setTextAlign("center").run();
+        }
+      },
     },
     {
       icon: AlignRight,
       label: "Align Right",
-      isActive: () => editor.isActive({ textAlign: "right" }),
-      onClick: () => editor.chain().focus().setTextAlign("right").run(),
+      isActive: () => editor.isActive("image", { align: "right" }) || editor.isActive({ textAlign: "right" }),
+      onClick: () => {
+        if (editor.isActive("image")) {
+          editor.chain().focus().updateAttributes("image", { align: "right" }).run();
+        } else {
+          editor.chain().focus().setTextAlign("right").run();
+        }
+      },
     },
     { separator: true },
     {
@@ -220,6 +356,12 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       label: "Remove Link",
       isActive: () => false,
       onClick: () => editor.chain().focus().unsetLink().run(),
+    },
+    {
+      icon: ImageIcon,
+      label: "Insert Image",
+      isActive: () => editor.isActive("image"),
+      onClick: handleImageAction,
     },
     { separator: true },
     {
@@ -275,6 +417,15 @@ export default function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       </div>
 
       <EditorContent editor={editor} />
+
+      {/* Hidden file input for image upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleImageUpload}
+        accept="image/*"
+        className="hidden"
+      />
 
       <style dangerouslySetInnerHTML={{ __html: `
         /* Fullscreen mode layout */
