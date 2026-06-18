@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAllBlogPosts,
   getBlogPostBySlug,
+  getBlogPostImage,
   createBlogPost,
   updateBlogPost,
   deleteBlogPost,
@@ -13,6 +14,7 @@ const router = Router();
 // Public Routes
 router.get('/', getAllBlogPosts);
 router.get('/:slug', getBlogPostBySlug);
+router.get('/:slug/image', getBlogPostImage);
 
 // Admin-Only Protected Routes
 router.post('/', requireAuth, requireAdmin, createBlogPost);

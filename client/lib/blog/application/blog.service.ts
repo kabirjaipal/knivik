@@ -3,6 +3,7 @@ import { BlogPost } from "../domain/blog.model";
 
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 import { SchemaService } from "@/lib/seo/application/schema.service";
+import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
 
 export class BlogService {
   private static getApiUrl(): string {
@@ -104,12 +105,16 @@ export class BlogService {
       });
     }
 
+    const ogImage = post.coverImage.startsWith("data:")
+      ? `/api/blog/${post.slug}/image`
+      : post.coverImage;
+
     return MetadataService.constructPageMetadata({
       title: `${post.title} | Knivik Blog`,
       description: post.description,
       path: `/blog/${post.slug}`,
       keywords: post.tags,
-      ogImage: post.coverImage,
+      ogImage,
       type: "article",
     });
   }
@@ -130,12 +135,15 @@ export class BlogService {
    */
   public static generateArticleSchema(post: BlogPost): Record<string, any> {
     const dateStr = typeof post.date === 'string' ? post.date : new Date(post.date).toISOString().split('T')[0];
+    const imageUrl = post.coverImage.startsWith("data:")
+      ? EnvConfig.resolveUrl(`/api/blog/${post.slug}/image`)
+      : post.coverImage;
     return {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
       "headline": post.title,
       "description": post.description,
-      "image": post.coverImage,
+      "image": imageUrl,
       "datePublished": dateStr,
       "dateModified": dateStr,
       "author": {
