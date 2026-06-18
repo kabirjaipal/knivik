@@ -31,12 +31,18 @@ The color palette of the image MUST align with our platform's dark theme:
 - **Secondary Accent**: Electric violet / indigo (#8080ff)
 
 ## 5. JSON Output Requirement
-Return the final output strictly as a JSON object with the following fields:
+### Meta data of blog 
 ```json
 {
-  "content": "The full HTML body content of the article using the permitted HTML tags.",
-  "category": "A clean, single-word or short phrase category (e.g., 'Lead Gen', 'Social Selling', 'Automation').",
-  "tags": ["A list of 3-5 relevant keyword tags for search indexing."],
+  "title": "",
+  "slug" : "",
+  "description": "",
+  "category": "",
+  "tags": "",
   "coverImagePrompt": "A highly detailed, descriptive prompt specifically optimized for ChatGPT's built-in image generator, using our specified colors and style."
 }
+```
+### content of blog 
+```markdown
+put here markdown
 ```
