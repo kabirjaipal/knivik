@@ -15,7 +15,6 @@ import {
 import { toast } from "sonner";
 import { PlanBadge } from "@/components/billing/PricingUtils";
 import { PLANS } from "@/lib/plans";
-import { SUPPORT_EMAIL } from "@/lib/constants";
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -281,7 +280,7 @@ export default function BillingPage() {
                 <p className="text-[11px] text-muted-foreground mt-0.5">For billing issues or questions, contact support.</p>
               </div>
               <Button variant="outline" size="sm" className="w-full font-semibold text-xs border-border/50 hover:bg-muted" asChild>
-                <a href={`mailto:${SUPPORT_EMAIL}`}>Email Support</a>
+                <a href="/contact">Contact Support</a>
               </Button>
             </CardContent>
           </Card>

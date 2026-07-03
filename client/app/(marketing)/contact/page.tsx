@@ -1,7 +1,5 @@
 import { Metadata } from "next";
-import { Mail } from "lucide-react";
 import { FaInstagram, FaTwitter } from "react-icons/fa";
-import { SUPPORT_EMAIL } from "@/lib/constants";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
@@ -12,16 +10,6 @@ export const metadata: Metadata = MetadataService.constructPageMetadata({
 
 export default function Contact() {
   const contactMethods = [
-    {
-      icon: Mail,
-      iconColor: "text-primary",
-      title: "Email Support",
-      description: "Best for account issues and technical support. We aim to reply within 24 hours.",
-      link: `mailto:${SUPPORT_EMAIL}`,
-      linkText: `${SUPPORT_EMAIL} →`,
-      linkColor: "text-primary",
-      isExternal: false,
-    },
     {
       icon: FaTwitter,
       iconColor: "text-sky-400",
@@ -51,7 +39,7 @@ export default function Contact() {
         Need help? Have a feature request? Or just want to talk about lead generation? We're here.
       </p>
 
-      <div className="grid md:grid-cols-3 gap-8 text-left">
+      <div className="grid md:grid-cols-2 gap-8 text-left max-w-4xl mx-auto">
         {contactMethods.map((method, index) => {
           const Icon = method.icon;
           return (

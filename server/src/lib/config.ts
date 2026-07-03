@@ -40,12 +40,9 @@ const configSchema = z.object({
   DB_POOL_MIN: z.coerce.number().default(process.env.NODE_ENV === 'production' ? 2 : 1),
   DB_POOL_IDLE_TIMEOUT_MS: z.coerce.number().default(30000),
   DB_POOL_CONNECTION_TIMEOUT_MS: z.coerce.number().default(5000),
-  // SMTP credentials (for Nodemailer)
-  SMTP_HOST: z.string().default('smtp.ethereal.email'),
-  SMTP_PORT: z.coerce.number().default(587),
-  SMTP_USER: z.string().default(''),
-  SMTP_PASS: z.string().default(''),
-  SMTP_FROM: z.string().default('support@knivik.xyz'),
+  // Email settings (Resend API)
+  SMTP_FROM: z.string().default('no-reply@knivik.xyz'),
+  RESEND_API_KEY: z.string().min(1),
   // Add:
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

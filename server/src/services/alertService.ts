@@ -2,9 +2,8 @@ import { db } from '../lib/db.js';
 import logger from '../lib/logger.js';
 import config from '../lib/config.js';
 import { AlertChannel } from '@prisma/client';
-import nodemailer from 'nodemailer';
 import { hasCapability } from '../lib/plans.js';
-import { renderBaseEmail } from '../lib/mailer.js';
+import { renderBaseEmail, sendEmail } from '../lib/mailer.js';
 
 export const sendLeadAlert = async (leadId: string) => {
   try {
@@ -44,11 +43,9 @@ export const sendLeadAlert = async (leadId: string) => {
       await sendWebhookAlert(alertSetting, lead);
     }
 
-    // 3. Email (Nodemailer Simulation)
-    if (alertSetting.emailEnabled) {
-      const emailDest = alertSetting.emailTarget || lead.product.user.email;
-      await sendEmailAlert(emailDest, lead);
-    }
+    // 3. Email Alerts (Disabled in favor of Daily Digest)
+    // Real-time email alerts are disabled to reduce outbound email costs.
+    // Daily digests are aggregated and sent via schedulers/dailyDigest.ts.
 
   } catch (error) {
     logger.error({ error, leadId }, 'Failed to process lead alert');
@@ -247,16 +244,6 @@ async function sendWebhookAlert(alertSetting: any, lead: any) {
 
 async function sendEmailAlert(email: string, lead: any) {
   try {
-    const transporter = nodemailer.createTransport({
-      host: config.SMTP_HOST,
-      port: config.SMTP_PORT,
-      secure: config.SMTP_PORT === 465,
-      auth: {
-        user: config.SMTP_USER,
-        pass: config.SMTP_PASS,
-      },
-    });
-
     const bodyHtml = `
       <p>A new high-intent lead matching your search rules was detected on <strong>${lead.platform}</strong>.</p>
       <div style="background-color: #f8fafc; border-left: 4px solid #5b3df5; padding: 16px; margin: 20px 0; border-radius: 8px; font-style: italic; color: #334155; font-size: 14px; border: 1px solid #e2e8f0;">
@@ -283,12 +270,11 @@ async function sendEmailAlert(email: string, lead: any) {
       footerText: `Sent to ${email} based on your keyword tracking settings for ${lead.product.name}.`
     });
 
-    await transporter.sendMail({
-      from: config.SMTP_FROM,
-      to: email,
-      subject: `🚀 [${config.PROJECT_NAME}] New Lead: ${lead.product.name} (${lead.intentScore}%)`,
-      html: htmlTemplate,
-    });
+    await sendEmail(
+      email,
+      `🚀 [${config.PROJECT_NAME}] New Lead: ${lead.product.name} (${lead.intentScore}%)`,
+      htmlTemplate
+    );
 
     // Create success log record
     await db.client.alertLog.upsert({

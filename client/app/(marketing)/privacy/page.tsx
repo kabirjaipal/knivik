@@ -1,4 +1,4 @@
-import { PROJECT_NAME, SUPPORT_EMAIL } from "@/lib/constants"
+import { PROJECT_NAME } from "@/lib/constants"
 import { Metadata } from "next";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
@@ -70,7 +70,7 @@ export default function PrivacyPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">8. Contact Us</h2>
             <p>
-              If you have any questions about this Privacy Policy, please contact us at {SUPPORT_EMAIL}.
+              If you have any questions about this Privacy Policy, please reach out to us via direct message on our official Twitter / X (<strong>@knivikai</strong>) or Instagram (<strong>@knivikai</strong>).
             </p>
           </section>
         </div>

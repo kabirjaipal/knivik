@@ -1,4 +1,4 @@
-import { SUPPORT_EMAIL, PROJECT_NAME } from "@/lib/constants"
+import { PROJECT_NAME } from "@/lib/constants"
 import { Metadata } from "next";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
@@ -52,7 +52,7 @@ export default function RefundPolicy() {
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground border-b border-border pb-2 inline-block">5. Requesting a Refund</h2>
             <p>
-              To request a refund for a Yearly plan (within the 14-day window), please send an email to <strong>{SUPPORT_EMAIL}</strong> using the email address associated with your workspace. Our support team will coordinate with Dodo Payments to process your refund within 3 to 5 business days.
+              To request a refund for a Yearly plan (within the 14-day window), please reach out to us via direct message on our official Twitter / X (<strong>@knivikai</strong>) or Instagram (<strong>@knivikai</strong>) with the account details associated with your workspace. Our support team will coordinate with Dodo Payments to process your refund within 3 to 5 business days.
             </p>
           </section>
         </div>

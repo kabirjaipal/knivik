@@ -1,16 +1,8 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { config } from './config.js';
 import logger from './logger.js';
 
-const transporter = nodemailer.createTransport({
-  host: config.SMTP_HOST,
-  port: config.SMTP_PORT,
-  secure: config.SMTP_PORT === 465,
-  auth: {
-    user: config.SMTP_USER,
-    pass: config.SMTP_PASS,
-  },
-});
+const resend = new Resend(config.RESEND_API_KEY);
 
 export const renderBaseEmail = ({
   title,
@@ -153,6 +145,7 @@ export const renderBaseEmail = ({
             <div class="footer">
               <div class="footer-logo">KNIVIK</div>
               <p>${footerText || "This is an automated system email. If you did not trigger this action, you can safely ignore this message."}</p>
+              <p style="font-size: 11px; margin-top: 12px; color: #94a3b8; font-style: italic;">This is an automated no-reply email. Please do not reply directly to this message.</p>
               <p>&copy; ${new Date().getFullYear()} Knivik. All rights reserved.</p>
             </div>
           </div>
@@ -165,14 +158,19 @@ export const renderBaseEmail = ({
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"${config.PROJECT_NAME}" <${config.SMTP_FROM === 'support@knivik.xyz' ? config.SMTP_USER : config.SMTP_FROM}>`,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: `"${config.PROJECT_NAME}" <${config.SMTP_FROM}>`,
+      to: [to],
       subject,
       html,
     });
-    logger.info({ messageId: info.messageId }, 'Email sent successfully via Nodemailer');
+
+    if (error) {
+      throw error;
+    }
+
+    logger.info({ messageId: data?.id }, 'Email sent successfully via Resend SDK');
   } catch (error) {
-    logger.error({ error }, 'Failed to send email via Nodemailer');
+    logger.error({ error }, 'Failed to send email via Resend SDK');
   }
 };
