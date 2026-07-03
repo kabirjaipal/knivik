@@ -156,13 +156,14 @@ export const renderBaseEmail = ({
   `;
 };
 
-export const sendEmail = async (to: string, subject: string, html: string) => {
+export const sendEmail = async (to: string, subject: string, html: string, replyTo?: string) => {
   try {
     const { data, error } = await resend.emails.send({
       from: `"${config.PROJECT_NAME}" <${config.SMTP_FROM}>`,
       to: [to],
       subject,
       html,
+      ...(replyTo ? { replyTo } : {}),
     });
 
     if (error) {

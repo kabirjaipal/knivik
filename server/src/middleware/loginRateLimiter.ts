@@ -78,4 +78,16 @@ export const impersonateLimiter = rateLimit({
   },
 });
 
+/** Strict limiter for contact form submissions (3 attempts per hour per IP). */
+export const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many contact messages sent. Please try again in an hour.',
+  },
+});
+
 
