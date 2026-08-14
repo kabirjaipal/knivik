@@ -75,3 +75,4 @@ Thumbs.db
 *.sublime-project
 *.sw?
 *~
+.env*
