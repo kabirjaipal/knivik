@@ -8,7 +8,7 @@ Please read this file carefully before performing any tasks, and ensure that eve
 
 ## 🚀 1. Project Overview & Architecture
 
-**Knivik** is an AI-powered Buying Intent Lead Finder. It scans online conversations (Reddit, HackerNews, Twitter) to detect people actively looking for products or solutions, scores their buying intent, and automatically suggests warm-lead outreach replies.
+**Knivik** is an AI-powered Buying Intent Lead Finder. It scans online conversations (Reddit, HackerNews, Twitter, GitHub, Bluesky) to detect people actively looking for products or solutions, scores their buying intent, and automatically suggests warm-lead outreach replies.
 
 ### Directory Structure
 ```
@@ -78,14 +78,23 @@ Every line of code you write must conform to these modern design principles:
     }
     ```
 
-### 🛑 Explicit Error Handling
+### 🛑 Explicit Error Handling & Zero Placeholders
 *   Never catch errors silently. Every caught error must be logged or properly handled.
 *   Always use try-catch blocks in async actions, especially for database calls and network requests.
 *   Provide clear, user-friendly error boundaries on the frontend and descriptive JSON error responses on the backend.
+*   **Zero Placeholders:** Never write comments like `// TODO: Implement later`. Implement robust, complete code with real features and data validation.
 
 ---
 
-## 🚦 4. Guardrails & Protocols
+## 📂 4. Modular Directory Extensions & Skills
+
+You must dynamically consult and apply the detailed rules and skills located in these directories:
+*   **Workspace Rules:** Check `.agent/rules/` for concern-specific guidelines (e.g., `design_system.md`, `error_handling.md`).
+*   **Workspace Skills:** Check `.agent/skills/` for folder-packaged skills. Each folder contains a `SKILL.md` detailing specialized procedures (e.g., `modern-aesthetics`, `database-migrations`).
+
+---
+
+## 🚦 5. Guardrails & Protocols
 
 ### 🟢 ALWAYS
 *   Always use the established theme HSL colors for any UI or styling edits; never hardcode ad-hoc hex or CSS color strings.
@@ -96,7 +105,7 @@ Every line of code you write must conform to these modern design principles:
 ### 🟡 ASK FIRST
 *   Adding new external packages or npm dependencies.
 *   Modifying database models (`schema.prisma`) or running schema migrations.
-*   Refactoring core shared files or libraries (e.g., in `/client/lib` or `/server/src/services`).
+*   Refactoring core shared files or libraries.
 
 ### 🔴 NEVER
 *   Never run background development servers, dev tasks, or build processes (e.g., `npm run dev`, `npm run build`, `next dev`, `npm start`). The USER will manage and execute all active dev/build commands.
