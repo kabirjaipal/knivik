@@ -5,6 +5,7 @@ import { MetadataService } from "@/lib/seo/application/metadata.service";
 import { SchemaService } from "@/lib/seo/application/schema.service";
 import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
 import { API_URL } from "@/lib/constants";
+import { db } from "@/lib/db";
 
 export class BlogService {
   private static getApiUrl(): string {
@@ -27,6 +28,39 @@ export class BlogService {
    */
   public static async getAllPosts(): Promise<BlogPost[]> {
     try {
+      if (typeof window === "undefined") {
+        const posts = await db.client.blogPost.findMany({
+          where: { status: 'PUBLISHED' },
+          orderBy: { date: 'desc' },
+          include: {
+            createdBy: {
+              select: {
+                username: true,
+                displayUsername: true,
+              },
+            },
+          },
+        });
+        return posts.map((post) => ({
+          slug: post.slug,
+          title: post.title,
+          description: post.description,
+          content: post.content,
+          coverImage: post.coverImage,
+          date: post.date.toISOString(),
+          readTime: post.readTime,
+          category: post.category,
+          tags: post.tags,
+          author: {
+            name: post.createdBy?.displayUsername || post.createdBy?.username || "Knivik",
+            role: "AI Buyer Intent SDR",
+            avatarUrl: "",
+            twitter: "https://x.com/knivikai",
+            instagram: "https://instagram.com/knivikai",
+          },
+        }));
+      }
+
       // ?published=true ensures drafts are never served publicly
       const res = await fetch(`${this.getApiUrl()}/blog?published=true`, {
         cache: "no-store",
@@ -35,7 +69,15 @@ export class BlogService {
       const data = await res.json();
       const posts: any[] = data.posts || [];
       const mappedPosts: BlogPost[] = posts.map(post => ({
-        ...post,
+        slug: post.slug,
+        title: post.title,
+        description: post.description,
+        content: post.content,
+        coverImage: post.coverImage,
+        date: post.date,
+        readTime: post.readTime,
+        category: post.category,
+        tags: post.tags || [],
         author: {
           name: "Knivik",
           role: "AI Buyer Intent SDR",
@@ -46,7 +88,7 @@ export class BlogService {
       }));
       return mappedPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (err) {
-      console.warn("⚠️ Blog API fetch failed: ", err);
+      console.warn("⚠️ Blog fetch failed: ", err);
       return [];
     }
   }
@@ -56,6 +98,39 @@ export class BlogService {
    */
   public static async getPostBySlug(slug: string): Promise<BlogPost | undefined> {
     try {
+      if (typeof window === "undefined") {
+        const post = await db.client.blogPost.findUnique({
+          where: { slug },
+          include: {
+            createdBy: {
+              select: {
+                username: true,
+                displayUsername: true,
+              },
+            },
+          },
+        });
+        if (!post) return undefined;
+        return {
+          slug: post.slug,
+          title: post.title,
+          description: post.description,
+          content: post.content,
+          coverImage: post.coverImage,
+          date: post.date.toISOString(),
+          readTime: post.readTime,
+          category: post.category,
+          tags: post.tags,
+          author: {
+            name: post.createdBy?.displayUsername || post.createdBy?.username || "Knivik",
+            role: "AI Buyer Intent SDR",
+            avatarUrl: "",
+            twitter: "https://x.com/knivikai",
+            instagram: "https://instagram.com/knivikai",
+          },
+        };
+      }
+
       const res = await fetch(`${this.getApiUrl()}/blog/${slug}`, {
         cache: "no-store",
       });
@@ -73,7 +148,7 @@ export class BlogService {
         }
       };
     } catch (err) {
-      console.warn(`⚠️ Blog API fetch failed for slug ${slug}: `, err);
+      console.warn(`⚠️ Blog fetch failed for slug ${slug}: `, err);
       return undefined;
     }
   }

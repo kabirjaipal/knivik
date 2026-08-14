@@ -3,7 +3,7 @@ import { Metadata } from "next";
 export const siteConfig = {
   name: "Knivik",
   description: "Knivik is an advanced AI Lead Finder and B2B social sales intelligence platform for products and services. It scans Reddit, HackerNews, and X (Twitter) in real-time to discover warm leads with genuine buying intent.",
-  url: process.env.NEXT_PUBLIC_SITE_URL as string,
+  url: process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://www.knivik.xyz",
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
     twitter: "https://x.com/knivikai",
@@ -130,7 +130,7 @@ export function constructMetadata({
       creator: "@knivik",
     },
     icons,
-    metadataBase: new URL(siteConfig.url),
+    metadataBase: new URL(siteConfig.url || "https://www.knivik.xyz"),
     ...(noIndex && {
       robots: {
         index: false,

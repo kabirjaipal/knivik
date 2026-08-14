@@ -95,7 +95,7 @@ export class IPProtection {
     try {
       await this.enforceRateLimit();
       
-      const defaultHeaders = this.platform === 'REDDIT' ? {
+      const defaultHeaders: Record<string, string> = this.platform === 'REDDIT' ? {
         'User-Agent': this.getRandomUserAgent(),
         'Accept': 'application/json',
         'Accept-Language': 'en-US,en;q=0.9',
@@ -120,7 +120,7 @@ export class IPProtection {
         'Pragma': 'no-cache'
       };
 
-      const headers = { ...defaultHeaders, ...customHeaders };
+      const headers: Record<string, string> = { ...defaultHeaders, ...(customHeaders as Record<string, string> || {}) };
       
       const response = await fetch(url, { 
         headers,

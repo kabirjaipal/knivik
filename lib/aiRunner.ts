@@ -74,10 +74,8 @@ export async function logLlmUsage(params: {
         update: {},
         create: {
           id: modelId,
-          name: modelId,
-          provider: 'groq',
-          costPerInputToken: 0.00000005,
-          costPerOutputToken: 0.00000008,
+          inputPrice: 0.05,
+          outputPrice: 0.08,
           isActive: true
         }
       }).catch(() => {});

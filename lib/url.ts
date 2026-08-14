@@ -7,8 +7,8 @@ import { config } from './config';
  * Fallbacks to the first configured URL if no match is found.
  */
 export function getFrontendUrl(req?: Request | NextRequest): string {
-  const urls = config.FRONTEND_URL.split(',').map((url) => url.trim());
-  if (urls.length === 0) {
+  const urls: string[] = config.FRONTEND_URL.split(',').map((url: string) => url.trim());
+  if (urls.length === 0 || !urls[0]) {
     return 'http://localhost:3000';
   }
 
@@ -19,7 +19,7 @@ export function getFrontendUrl(req?: Request | NextRequest): string {
   // Check origin header first
   const origin = req.headers?.get ? req.headers.get('origin') : (req as any).get?.('origin');
   if (origin) {
-    const matched = urls.find((url) => origin.startsWith(url));
+    const matched = urls.find((url: string) => origin.startsWith(url));
     if (matched) {
       return matched;
     }
@@ -28,7 +28,7 @@ export function getFrontendUrl(req?: Request | NextRequest): string {
   // Fallback to referer header
   const referer = req.headers?.get ? req.headers.get('referer') : (req as any).get?.('referer');
   if (referer) {
-    const matched = urls.find((url) => referer.startsWith(url));
+    const matched = urls.find((url: string) => referer.startsWith(url));
     if (matched) {
       return matched;
     }

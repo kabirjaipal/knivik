@@ -29,8 +29,10 @@ interface User {
   role: string;
   plan: string;
   isScanning: boolean;
-  suspended: boolean;
-  referralsDisabled: boolean;
+  suspended?: boolean;
+  referralsDisabled?: boolean;
+  allowReferrals?: boolean;
+  metadata?: any;
   createdAt: string;
   _count?: {
     products: number;

@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { API_URL } from "@/lib/constants"
 
 interface Product {
   id: string

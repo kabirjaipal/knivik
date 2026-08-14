@@ -2,8 +2,21 @@ import { z } from 'zod';
 import { db } from '../db';
 import { auth } from '../auth';
 import { fromNodeHeaders } from 'better-auth/node';
-import { AppError } from '../middleware/errorHandler';
 import type { CreateUserInput, LoginInput, User } from '../types/index';
+
+export class AppError extends Error {
+  statusCode: number;
+  code: string;
+  requestId?: string;
+
+  constructor(message: string, statusCode = 500, code = 'INTERNAL_ERROR', requestId?: string) {
+    super(message);
+    this.name = 'AppError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.requestId = requestId;
+  }
+}
 
 const createUserSchema = z.object({
   email: z.string().email(),
