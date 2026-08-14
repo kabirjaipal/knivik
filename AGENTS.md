@@ -89,8 +89,8 @@ Every line of code you write must conform to these modern design principles:
 ## 📂 4. Modular Directory Extensions & Skills
 
 You must dynamically consult and apply the detailed rules and skills located in these directories:
-*   **Workspace Rules:** Check `.agent/rules/` for concern-specific guidelines (e.g., `design_system.md`, `error_handling.md`).
-*   **Workspace Skills:** Check `.agent/skills/` for folder-packaged skills. Each folder contains a `SKILL.md` detailing specialized procedures (e.g., `modern-aesthetics`, `database-migrations`).
+*   **Workspace Rules:** Check `.agents/rules/` for concern-specific guidelines (e.g., `design_system.md`, `code_quality.md`).
+*   **Workspace Skills:** Check `.agents/skills/` for folder-packaged skills. Each folder contains a `SKILL.md` detailing specialized procedures (e.g., `modern-aesthetics`, `prisma`, `web-design-guidelines`).
 
 ---
 
