@@ -10,12 +10,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login")
+    if (!loading) {
+      if (!user) {
+        router.push("/login")
+      } else if (user.role === 'admin') {
+        router.push("/admin")
+      }
     }
   }, [user, loading, router])
 
-  if (loading || !user) {
+  if (loading || !user || user.role === 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />

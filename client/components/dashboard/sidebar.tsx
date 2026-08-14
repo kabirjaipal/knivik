@@ -179,41 +179,6 @@ export function Sidebar({ className }: SidebarProps) {
           })}
         </nav>
 
-        {/* Admin Switcher (If Admin is on User Dashboard) */}
-        {!isAtAdmin && user?.role === 'admin' && (
-          <div className="px-4 py-2">
-            <Link 
-              href="/admin"
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group",
-                isCollapsed && "justify-center px-0"
-              )}
-              title={isCollapsed ? "Go to Admin" : undefined}
-            >
-              <ShieldAlert className="h-5 w-5" />
-              {!isCollapsed && <span className="text-xs font-black uppercase tracking-widest">Go to Admin</span>}
-            </Link>
-          </div>
-        )}
-
-        {/* App Switcher (If on Admin Dashboard) */}
-        {isAtAdmin && (
-          <div className="px-4 py-2">
-            <Link 
-              href="/dashboard"
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all group",
-                isCollapsed && "justify-center px-0"
-              )}
-              title={isCollapsed ? "Return to App" : undefined}
-            >
-              <div className="relative h-5 w-5 shrink-0 flex items-center justify-center">
-                <Logo size={20} />
-              </div>
-              {!isCollapsed && <span className="text-xs font-black uppercase tracking-widest">Return to App</span>}
-            </Link>
-          </div>
-        )}
 
         {/* Footer Area */}
         <div className="border-t border-border/40 p-4 space-y-4">
