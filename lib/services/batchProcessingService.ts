@@ -3,10 +3,10 @@ import logger from '../logger';
 import { IntentLevel, LeadStatus } from '@prisma/client';
 import { BatchCollectionService } from './batchCollectionService';
 import { analyzeUserPostsBatch } from './batchAnalysisService';
-
 import { enrichLead } from './enrichmentService';
 import { sendLeadAlert } from './alertService';
 import { emitScanStatus } from '../scanEmitter';
+import { checkLeadQuota, incrementLeadUsage } from './usageService';
 
 /**
  * Main Batch Processing Service
@@ -299,7 +299,6 @@ export class BatchProcessingService {
       }
 
       // Check lead limit quota
-      const { checkLeadQuota, incrementLeadUsage } = await import('./usageService');
       const user = await db.client.user.findUnique({ where: { id: userId } });
       
       if (!user || !(await checkLeadQuota(userId, user.plan as any))) {
