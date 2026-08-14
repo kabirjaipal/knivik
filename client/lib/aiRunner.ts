@@ -17,8 +17,13 @@ const groq = createGroq({
   baseURL: config.GROQ_BASE_URL,
 });
 
-// Resolve model ID dynamically from systemConfig, throwing an error if not configured
+// Resolve model ID dynamically from systemConfig, with robust fallbacks
 async function resolveModelId(modelInput: string): Promise<string> {
+  const defaultModels: Record<string, string> = {
+    lite: 'llama-3.1-8b-instant',
+    versatile: 'llama-3.3-70b-versatile',
+  };
+
   const configKey = {
     lite: 'aiModelLite',
     versatile: 'aiModelVersatile',
@@ -28,15 +33,19 @@ async function resolveModelId(modelInput: string): Promise<string> {
     return modelInput;
   }
 
-  const sysConfig = await db.client.systemConfig.findUnique({
-    where: { key: configKey }
-  });
+  try {
+    const sysConfig = await db.client.systemConfig.findUnique({
+      where: { key: configKey }
+    });
 
-  if (!sysConfig || sysConfig.value === null || sysConfig.value === undefined) {
-    throw new Error(`LLM Model '${configKey}' is not configured in system settings.`);
+    if (sysConfig && typeof sysConfig.value === 'string' && sysConfig.value.trim().length > 0) {
+      return sysConfig.value;
+    }
+  } catch (err) {
+    logger.warn({ err, configKey }, 'Could not read dynamic model from systemConfig; using default.');
   }
 
-  return sysConfig.value as string;
+  return defaultModels[modelInput] || 'llama-3.3-70b-versatile';
 }
 
 export async function logLlmUsage(params: {
@@ -60,7 +69,18 @@ export async function logLlmUsage(params: {
     });
 
     if (!existingModel) {
-      throw new Error(`LLM Model '${modelId}' is not registered in the database.`);
+      await db.client.llmModel.upsert({
+        where: { id: modelId },
+        update: {},
+        create: {
+          id: modelId,
+          name: modelId,
+          provider: 'groq',
+          costPerInputToken: 0.00000005,
+          costPerOutputToken: 0.00000008,
+          isActive: true
+        }
+      }).catch(() => {});
     }
 
     await db.client.llmUsageLog.create({

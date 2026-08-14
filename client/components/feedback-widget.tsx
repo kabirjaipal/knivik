@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth-context"
 import { motion, AnimatePresence } from "framer-motion"
 import { MessageSquare, X, Star, Send, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { API_URL } from "@/lib/constants"
 
 type FeedbackCategory = "UI/UX" | "Scraping" | "AI Accuracy" | "Pricing" | "Other"
 
@@ -34,7 +35,7 @@ export function FeedbackWidget() {
     setIsSubmitting(true)
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "/api"}/feedback`, {
+      const res = await fetch(`${API_URL}/feedback`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

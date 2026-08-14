@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { API_URL } from "@/lib/constants"
 
 interface ProductFormData {
   name: string;
@@ -64,8 +65,7 @@ export default function ProductsPage() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/products`, { 
+      const res = await fetch(`${API_URL}/products`, { 
         credentials: 'include',
         cache: 'no-store'
       })
@@ -98,8 +98,7 @@ export default function ProductsPage() {
     const isService = formData.config.productType === 'service';
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const url = editingProductId ? `${apiUrl}/products/${editingProductId}` : `${apiUrl}/products`;
+      const url = editingProductId ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`;
       
       let cleanWebsiteUrl = formData.websiteUrl.trim();
       if (cleanWebsiteUrl === 'https://' || cleanWebsiteUrl === 'http://') {
@@ -178,8 +177,7 @@ export default function ProductsPage() {
     const isService = productToDelete.config?.productType === 'service';
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/products/${productToDelete.id}`, {
+      const res = await fetch(`${API_URL}/products/${productToDelete.id}`, {
         method: 'DELETE',
         credentials: 'include'
       })

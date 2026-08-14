@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import type { NextRequest } from 'next/server';
 import { config } from './config';
 
 /**
@@ -6,7 +6,7 @@ import { config } from './config';
  * in config.FRONTEND_URL, matching the incoming request origin/referer.
  * Fallbacks to the first configured URL if no match is found.
  */
-export function getFrontendUrl(req?: Request): string {
+export function getFrontendUrl(req?: Request | NextRequest): string {
   const urls = config.FRONTEND_URL.split(',').map((url) => url.trim());
   if (urls.length === 0) {
     return 'http://localhost:3000';
@@ -17,7 +17,7 @@ export function getFrontendUrl(req?: Request): string {
   }
 
   // Check origin header first
-  const origin = req.get('origin');
+  const origin = req.headers?.get ? req.headers.get('origin') : (req as any).get?.('origin');
   if (origin) {
     const matched = urls.find((url) => origin.startsWith(url));
     if (matched) {
@@ -26,7 +26,7 @@ export function getFrontendUrl(req?: Request): string {
   }
 
   // Fallback to referer header
-  const referer = req.get('referer');
+  const referer = req.headers?.get ? req.headers.get('referer') : (req as any).get?.('referer');
   if (referer) {
     const matched = urls.find((url) => referer.startsWith(url));
     if (matched) {

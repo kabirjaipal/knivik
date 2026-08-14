@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
+import { API_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -95,8 +96,7 @@ export default function AnalyticsPage() {
 
   const fetchAnalytics = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/analytics`, {
+      const res = await fetch(`${API_URL}/analytics`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to fetch analytics");

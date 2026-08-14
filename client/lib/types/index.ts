@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import type { NextRequest } from 'next/server';
 
 export interface ApiError {
   status: number;
@@ -42,7 +42,7 @@ export interface LoginInput {
   password: string;
 }
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends NextRequest {
   user?: User;
   requestId: string;
 }

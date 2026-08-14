@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "./auth-context";
 import { toast } from "sonner";
+import { API_URL } from "@/lib/constants";
 
 interface BillingUser {
   id: string;
@@ -41,7 +42,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
   const fetchBillingHub = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/billing-hub`, {
+      const response = await fetch(`${API_URL}/users/billing-hub`, {
         credentials: "include",
       });
 

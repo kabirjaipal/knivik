@@ -4,11 +4,12 @@ import { BlogPost } from "../domain/blog.model";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 import { SchemaService } from "@/lib/seo/application/schema.service";
 import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
+import { API_URL } from "@/lib/constants";
 
 export class BlogService {
   private static getApiUrl(): string {
     const isServer = typeof window === "undefined";
-    const nextUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+    const nextUrl = API_URL;
     
     if (isServer) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.FRONTEND_URL || "http://localhost:3000";

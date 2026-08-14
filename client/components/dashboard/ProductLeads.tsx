@@ -7,6 +7,7 @@ import { useAuth } from "@/context/auth-context"
 import { LeadCard, type LeadCardData, type LeadStatus } from "./LeadCard"
 import { Button } from "@/components/ui/button"
 import { exportLeadsToCSV } from "@/lib/utils"
+import { API_URL } from "@/lib/constants"
 
 type FilterTab = 'ALL' | 'NEW' | 'QUALIFIED' | 'SAVED' | 'CONTACTED' | 'CONVERTED' | 'DISMISSED'
 
@@ -35,7 +36,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
 
     lastFetchRef.current = { id: productId, trigger: refreshTrigger }
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads?productId=${productId}`, {
+      const res = await fetch(`${API_URL}/leads?productId=${productId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch leads")
@@ -67,7 +68,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   const handleDraftReply = useCallback(async (leadId: string) => {
     setDraftingLeadId(leadId)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/reply`, {
+      const res = await fetch(`${API_URL}/leads/${leadId}/reply`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -89,7 +90,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
 
   const handleDeleteLead = useCallback(async (leadId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}`, {
+      const res = await fetch(`${API_URL}/leads/${leadId}`, {
         method: 'DELETE',
         credentials: 'include',
       })
@@ -104,7 +105,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   const handleStatusChange = useCallback(async (leadId: string, status: LeadStatus) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/status`, {
+      await fetch(`${API_URL}/leads/${leadId}/status`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -119,7 +120,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   const handleNotesChange = useCallback(async (leadId: string, notes: string) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, notes } : l))
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/notes`, {
+      await fetch(`${API_URL}/leads/${leadId}/notes`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -134,14 +135,15 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
   const handleFeedbackChange = useCallback(async (leadId: string, feedback: number) => {
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, feedback } : l))
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/feedback`, {
+      await fetch(`${API_URL}/leads/${leadId}/feedback`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ feedback }),
       })
+      toast.success('Feedback recorded.')
     } catch {
-      toast.error('We could not update the feedback right now.')
+      toast.error('Could not save feedback.')
     }
   }, [])
 

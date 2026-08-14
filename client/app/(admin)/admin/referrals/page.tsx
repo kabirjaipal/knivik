@@ -44,6 +44,7 @@ import {
   ChevronUp
 } from "lucide-react"
 import { toast } from "sonner"
+import { API_URL } from "@/lib/constants"
 
 interface Creator {
   id: string
@@ -98,8 +99,7 @@ export default function AdminReferralsPage() {
 
   const fetchReferralDetails = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/referrals/admin/payouts`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/referrals/admin/payouts`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch referral details')
       const json = await res.json()
       if (json.success) {
@@ -131,8 +131,7 @@ export default function AdminReferralsPage() {
     setSubmittingPayout(true)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/referrals/admin/payouts`, {
+      const res = await fetch(`${API_URL}/referrals/admin/payouts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

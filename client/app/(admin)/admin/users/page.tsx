@@ -20,6 +20,7 @@ import { Search, ShieldAlert, Loader2, LogIn } from "lucide-react"
 import { toast } from "sonner"
 import { AdminPagination } from "@/components/admin/admin-pagination"
 import { useAuth } from "@/context/auth-context"
+import { API_URL } from "@/lib/constants"
 
 interface User {
   id: string;
@@ -28,24 +29,22 @@ interface User {
   role: string;
   plan: string;
   isScanning: boolean;
+  suspended: boolean;
+  referralsDisabled: boolean;
   createdAt: string;
-  metadata: any;
-  allowReferrals: boolean;
-  _count: {
+  _count?: {
     products: number;
     leads: number;
-  }
+  };
 }
 
 export default function AdminUsersPage() {
   const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  
-  // Pagination state
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [searchQuery, setSearchQuery] = useState("")
   
   // Action states
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -60,7 +59,7 @@ export default function AdminUsersPage() {
       limit: "20"
     })
     
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users?${params}`, { credentials: 'include' })
+    fetch(`${API_URL}/admin/users?${params}`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -85,7 +84,7 @@ export default function AdminUsersPage() {
     if (user.plan === plan) return
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${user.id}/update-plan`, {
+      const res = await fetch(`${API_URL}/admin/users/${user.id}/update-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
@@ -106,7 +105,7 @@ export default function AdminUsersPage() {
 
   const handleToggleStatus = async (user: User) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${user.id}/toggle-status`, {
+      const res = await fetch(`${API_URL}/admin/users/${user.id}/toggle-status`, {
         method: 'POST',
         credentials: 'include'
       })
@@ -123,7 +122,7 @@ export default function AdminUsersPage() {
 
   const handleToggleReferrals = async (user: User) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/referrals/admin/users/${user.id}/toggle-referrals`, {
+      const res = await fetch(`${API_URL}/referrals/admin/users/${user.id}/toggle-referrals`, {
         method: 'POST',
         credentials: 'include'
       })
@@ -144,7 +143,7 @@ export default function AdminUsersPage() {
     if (!selectedUser) return
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${selectedUser.id}`, {
+      const res = await fetch(`${API_URL}/admin/users/${selectedUser.id}`, {
         method: 'DELETE',
         credentials: 'include'
       })
@@ -167,7 +166,7 @@ export default function AdminUsersPage() {
     setImpersonatingId(user.id)
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${user.id}/impersonate`, {
+      const res = await fetch(`${API_URL}/admin/users/${user.id}/impersonate`, {
         method: 'POST',
         credentials: 'include'
       })

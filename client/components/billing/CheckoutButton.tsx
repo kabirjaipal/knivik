@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { API_URL } from "@/lib/constants";
 
 interface CheckoutButtonProps {
   productId: string;
@@ -48,10 +49,7 @@ export function CheckoutButton({
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) throw new Error("API URL not configured");
-
-      const response = await fetch(`${apiUrl}/billing/create-checkout`, {
+      const response = await fetch(`${API_URL}/billing/create-checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

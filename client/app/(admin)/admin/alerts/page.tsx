@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 import { AdminPagination } from "@/components/admin/admin-pagination"
+import { API_URL } from "@/lib/constants"
 
 interface AlertLog {
   id: string;
@@ -43,7 +44,7 @@ export default function AdminAlertsPage() {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/alerts?page=${page}&limit=20`, { credentials: 'include' })
+    fetch(`${API_URL}/admin/alerts?page=${page}&limit=20`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {

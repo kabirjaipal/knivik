@@ -20,6 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { API_URL } from "@/lib/constants"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -43,8 +44,7 @@ export default function SettingsPage() {
     setDeletingAccount(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/users/me`, {
+      const res = await fetch(`${API_URL}/users/me`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -123,8 +123,7 @@ export default function SettingsPage() {
 
   const fetchAlertSettings = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/alerts`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/alerts`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch settings')
       const data = await res.json()
       if (data.settings) {
@@ -173,8 +172,7 @@ export default function SettingsPage() {
     setLoading(true)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/users/password`, {
+      const res = await fetch(`${API_URL}/users/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword }),
@@ -200,8 +198,7 @@ export default function SettingsPage() {
     setSavingProfile(true)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/users/profile`, {
+      const res = await fetch(`${API_URL}/users/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -231,8 +228,7 @@ export default function SettingsPage() {
     setSavingAlerts(true)
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${apiUrl}/alerts`, {
+      const res = await fetch(`${API_URL}/alerts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

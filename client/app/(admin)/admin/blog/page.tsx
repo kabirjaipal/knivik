@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { API_URL } from "@/lib/constants";
 
 interface BlogPost {
   id: string;
@@ -50,7 +51,7 @@ export default function AdminBlogPage() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "/api"}/blog`, {
+      const res = await fetch(`${API_URL}/blog`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to fetch blog posts");
@@ -78,7 +79,7 @@ export default function AdminBlogPage() {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "/api"}/blog/${id}`, {
+      const res = await fetch(`${API_URL}/blog/${id}`, {
         method: "DELETE",
         credentials: "include",
       });

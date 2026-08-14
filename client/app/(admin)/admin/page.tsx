@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, LayoutDashboard, Radar, Zap, Activity, Star, MessageSquare, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { API_URL } from "@/lib/constants"
 
 interface AdminStats {
   userCount: number;
@@ -25,11 +26,11 @@ export default function AdminPage() {
     const fetchData = async () => {
       try {
         const [statsRes, healthRes, feedbackRes, usersRes, revenueRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/stats`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/health`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/feedback`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users?limit=5`, { credentials: 'include' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/revenue`, { credentials: 'include' })
+          fetch(`${API_URL}/admin/stats`, { credentials: 'include' }),
+          fetch(`${API_URL}/admin/health`, { credentials: 'include' }),
+          fetch(`${API_URL}/feedback`, { credentials: 'include' }),
+          fetch(`${API_URL}/admin/users?limit=5`, { credentials: 'include' }),
+          fetch(`${API_URL}/admin/revenue`, { credentials: 'include' })
         ])
         
         const statsData = await statsRes.json()

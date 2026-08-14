@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { API_URL } from "@/lib/constants";
 
 interface SystemConfig {
   maintenanceMode: boolean;
@@ -35,10 +36,10 @@ export default function AdminSettingsPage() {
     setLoading(true);
     try {
       const [configRes, modelsRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/config`, {
+        fetch(`${API_URL}/admin/config`, {
           credentials: "include",
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/models`, {
+        fetch(`${API_URL}/admin/models`, {
           credentials: "include",
         }),
       ]);
@@ -62,7 +63,7 @@ export default function AdminSettingsPage() {
   const handleUpdate = async (key: string, value: any) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/admin/config`,
+        `${API_URL}/admin/config`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

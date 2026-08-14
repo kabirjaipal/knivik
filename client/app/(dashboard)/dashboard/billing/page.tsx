@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { PlanBadge } from "@/components/billing/PricingUtils";
 import { PLANS } from "@/lib/plans";
+import { API_URL } from "@/lib/constants";
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -71,7 +72,7 @@ export default function BillingPage() {
     if (isRedirecting) return;
     setIsRedirecting(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/portal`, {
+      const response = await fetch(`${API_URL}/users/portal`, {
         method: "GET",
         credentials: "include",
       });

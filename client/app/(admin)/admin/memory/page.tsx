@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Cpu, Server, Users, Wrench, ShieldCheck, ShieldAlert, Clock, ArrowUpRight, Zap, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { API_URL } from "@/lib/constants";
 
 interface QueueJob {
   id: string;
@@ -65,7 +66,7 @@ export default function AdminMemoryPage() {
   const fetchMemoryStats = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/memory`, {
+      const res = await fetch(`${API_URL}/admin/memory`, {
         credentials: "include",
       });
       const result = await res.json();

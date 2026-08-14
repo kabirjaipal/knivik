@@ -95,7 +95,7 @@ export default function ProductDetailPage() {
     
     lastFetchedId.current = productId
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}`, {
+      const res = await fetch(`${API_URL}/products/${productId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to load details")
@@ -122,7 +122,7 @@ export default function ProductDetailPage() {
     let eventSource: EventSource | null = null;
 
     if (isCurrentlyScanning) {
-      eventSource = new EventSource(`/api/products/${productId}/scan-stream`);
+      eventSource = new EventSource(`${API_URL}/products/${productId}/scan-stream`);
 
       eventSource.onmessage = (event) => {
         try {
@@ -161,7 +161,7 @@ export default function ProductDetailPage() {
     setLocalScanning(true);
     setScanStep("INITIALIZING");
     try {
-      const res = await fetch(`/api/products/${productId}/scan`, {
+      const res = await fetch(`${API_URL}/products/${productId}/scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });

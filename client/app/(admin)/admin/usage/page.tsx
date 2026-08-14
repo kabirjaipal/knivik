@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Brain, DollarSign, Cpu, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { API_URL } from "@/lib/constants"
 
 interface UsageStats {
   totalCost: number;
@@ -29,7 +30,7 @@ export default function AdminUsagePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/llm-usage`, { credentials: 'include' })
+    fetch(`${API_URL}/admin/llm-usage`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.success) setUsage(data.data)

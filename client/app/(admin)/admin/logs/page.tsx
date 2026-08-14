@@ -13,6 +13,7 @@ import {
   Filter,
 } from "lucide-react"
 import { toast } from "sonner"
+import { API_URL } from "@/lib/constants"
 
 interface RequestLog {
   id: string;
@@ -103,7 +104,7 @@ export default function AdminLogsPage() {
         statusCode,
         onlyErrors: onlyErrors.toString(),
       })
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/logs?${params}`, { credentials: "include" })
+      const res = await fetch(`${API_URL}/admin/logs?${params}`, { credentials: "include" })
       const result = await res.json()
       if (result.success) {
         setLogs(result.data)

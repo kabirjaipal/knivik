@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import TiptapEditor from "@/components/admin/TiptapEditor";
 import { calculateReadTime, compressImage } from "@/lib/utils";
+import { API_URL } from "@/lib/constants";
 
 type PostStatus = "DRAFT" | "PUBLISHED";
 
@@ -18,7 +19,7 @@ interface BlogPostFormProps {
   postId?: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_BASE = API_URL;
 
 const slugify = (text: string): string =>
   text

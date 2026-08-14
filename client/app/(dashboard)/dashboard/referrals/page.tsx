@@ -19,6 +19,7 @@ import {
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { notFound } from "next/navigation"
+import { API_URL } from "@/lib/constants"
 
 interface CreatorStats {
   totalSignups: number
@@ -73,8 +74,7 @@ export default function ReferralsPage() {
 
   const fetchReferralStats = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${apiUrl}/referrals/stats`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/referrals/stats`, { credentials: 'include' })
       if (!res.ok) throw new Error('Failed to fetch referral statistics')
       const data = await res.json()
       if (data.success) {

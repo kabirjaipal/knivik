@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PROJECT_NAME } from "@/lib/constants"
+import { PROJECT_NAME, API_URL } from "@/lib/constants"
 import { Logo } from "@/components/logo"
  
 function ResetPasswordForm() {
@@ -45,8 +45,7 @@ function ResetPasswordForm() {
         throw new Error("Password must be at least 8 characters long.")
       }
  
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const response = await fetch(`${apiUrl}/auth/reset-password`, {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: password })

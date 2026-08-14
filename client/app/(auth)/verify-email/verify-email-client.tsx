@@ -7,7 +7,7 @@ import { Loader2, CheckCircle2, XCircle } from "lucide-react"
  
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PROJECT_NAME } from "@/lib/constants"
+import { PROJECT_NAME, API_URL } from "@/lib/constants"
 import { Logo } from "@/components/logo"
  
 function VerifyEmailLogic() {
@@ -29,8 +29,7 @@ function VerifyEmailLogic() {
  
     const verify = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL
-        const response = await fetch(`${apiUrl}/auth/verify-email`, {
+        const response = await fetch(`${API_URL}/auth/verify-email`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token })

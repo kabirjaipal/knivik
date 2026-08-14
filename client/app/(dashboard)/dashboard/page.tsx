@@ -30,6 +30,7 @@ import {
   type LeadCardData,
   type LeadStatus,
 } from "@/components/dashboard/LeadCard";
+import { API_URL } from "@/lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,11 +86,10 @@ export default function DashboardPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const api = process.env.NEXT_PUBLIC_API_URL;
       const [leadsRes, productsRes, llmRes] = await Promise.all([
-        fetch(`${api}/leads`, { credentials: "include" }),
-        fetch(`${api}/products`, { credentials: "include" }),
-        fetch(`${api}/analytics/llm`, { credentials: "include" }),
+        fetch(`${API_URL}/leads`, { credentials: "include" }),
+        fetch(`${API_URL}/products`, { credentials: "include" }),
+        fetch(`${API_URL}/analytics/llm`, { credentials: "include" }),
       ]);
 
       if (leadsRes.ok) {
@@ -133,7 +133,7 @@ export default function DashboardPage() {
     setDraftingLeadId(leadId);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/reply`,
+        `${API_URL}/leads/${leadId}/reply`,
         { method: "POST", credentials: "include" },
       );
       if (!res.ok) throw new Error("Failed");
@@ -154,7 +154,7 @@ export default function DashboardPage() {
     setLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, status } : l)),
     );
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/status`, {
+    await fetch(`${API_URL}/leads/${leadId}/status`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -166,7 +166,7 @@ export default function DashboardPage() {
     setLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, notes } : l)),
     );
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/notes`, {
+    await fetch(`${API_URL}/leads/${leadId}/notes`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -178,7 +178,7 @@ export default function DashboardPage() {
     setLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, feedback } : l)),
     );
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}/feedback`, {
+    await fetch(`${API_URL}/leads/${leadId}/feedback`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -188,7 +188,7 @@ export default function DashboardPage() {
 
   const handleDeleteLead = async (leadId: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/leads/${leadId}`, {
+      const res = await fetch(`${API_URL}/leads/${leadId}`, {
         method: "DELETE",
         credentials: "include",
       });

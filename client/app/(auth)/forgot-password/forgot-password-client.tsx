@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { PROJECT_NAME } from "@/lib/constants"
+import { PROJECT_NAME, API_URL } from "@/lib/constants"
 import { Logo } from "@/components/logo"
  
 export default function ForgotPasswordClient() {
@@ -26,8 +26,7 @@ export default function ForgotPasswordClient() {
     setError("")
  
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL
-      const response = await fetch(`${apiUrl}/auth/forgot-password`, {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })

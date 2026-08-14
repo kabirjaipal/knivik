@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CreditCard, Loader2 } from "lucide-react"
+import { API_URL } from "@/lib/constants"
 
 interface RevenueStats {
   totalRevenue: number;
@@ -30,7 +31,7 @@ export default function AdminRevenuePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/revenue`, { credentials: 'include' })
+    fetch(`${API_URL}/admin/revenue`, { credentials: 'include' })
       .then(res => res.json())
       .then(json => {
         if (json.success) setData(json.data)
