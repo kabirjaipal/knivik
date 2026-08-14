@@ -1,0 +1,77 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js Build Outputs
+/.next/
+/out/
+/build
+/dist
+
+# Environment variables
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+.env.prod
+.env.backup
+!.env.example
+
+# Logs & Telemetry
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing & Code Coverage
+/coverage
+/.nyc_output
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel Deployment Cache
+.vercel
+
+# SQLite / Local DB files (if any)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# SSL / Private Keys
+*.pem
+*.key
+*.crt
+
+# IDEs and Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+*.sublime-project
+*.sw?
+*~

@@ -13,32 +13,31 @@ Please read this file carefully before performing any tasks, and ensure that eve
 ### Directory Structure
 ```
 knivik/
- ├── client/         # Next.js 15 (App Router), React 19, Tailwind CSS, Shadcn UI
- ├── server/         # Node.js, Express, TypeScript, Prisma (PostgreSQL)
- ├── scrapers/       # Ingestion scripts for Reddit, HackerNews, etc.
- └── ai/             # Intent classification & lead scoring engine
+ ├── app/            # Next.js 15 (App Router): UI pages & API route handlers (/app/api/...)
+ ├── components/     # React 19 UI components & Shadcn primitives
+ ├── context/        # React context providers (auth, billing)
+ ├── lib/            # Shared services, AI engine, scrapers, Better-Auth, mailer & db
+ ├── prisma/         # Prisma 7 schema, migrations & seed scripts
+ └── public/         # Static assets & icons
 ```
 
 ### Essential Dev Commands
-*   **Frontend Development:** `npm run dev` (run from `/client`)
-*   **Backend Development:** `npm run dev` (run from `/server`)
-*   **Prisma Studio:** `npx prisma studio` (run from `/server`)
-*   **Database Migration:** `npx prisma migrate dev` (run from `/server`)
+*   **Development Server:** `npm run dev` (run from project root)
+*   **Prisma Studio:** `npx prisma studio` (run from project root)
+*   **Database Migration:** `npx prisma migrate dev` (run from project root)
+*   **Prisma Generate:** `npx prisma generate` (run from project root)
 
 ---
 
 ## 🛠️ 2. Core Tech Stack Rules
 
-### Frontend (Next.js & React)
+### Fullstack Architecture (Next.js 15 App Router & React 19)
+*   **Monolith Design:** All frontend pages, backend API route handlers (`/app/api/...`), ingestion scrapers, AI qualification engines, and authentication reside in this single Next.js project.
 *   **React Server Components (RSC) by Default:** Components are server-side by default. Only use `'use client'` when interactive state, React hooks (`useState`, `useEffect`), or client APIs are required.
 *   **Data Fetching:** Fetch data on the server in Server Components whenever possible. Use robust caching and revalidation.
 *   **Styling & UI:** Use **Tailwind CSS** alongside **Shadcn UI**. Follow a strict, premium visual design system (see `.agent/rules/design_system.md`).
-*   **State Management:** Leverage standard React context, URL state, or local state. Keep state as close to where it is used as possible.
-
-### Backend (Node.js & Express)
+*   **Database Access:** Always use **Prisma Client** (`@/lib/db`) for database transactions.
 *   **TypeScript Strictness:** Strict mode is enabled. No implicit `any`. Avoid non-null assertions (`!`) unless fully verified.
-*   **Database Access:** Always use **Prisma Client** for database transactions. Write robust migrations and keep schema models cohesive.
-*   **Robust Routing:** Organize routes using Controllers and Services. Keep router files thin.
 
 ---
 
