@@ -41,7 +41,9 @@ export const generateReply = async (
       productId: productInfo.id,
       responseFormat: 'text'
     });
-    return text;
+    return typeof text === 'string' && text.trim().length > 0
+      ? text
+      : 'Hi! Based on your post, our tool might be exactly what you need. Would love to chat more if you are interested.';
   } catch (error: any) {
     logger.error({ error: error.message }, 'Failed to generate outreach reply');
     return 'Hi! Based on your post, our tool might be exactly what you need. Would love to chat more if you are interested.';
