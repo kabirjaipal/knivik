@@ -19,20 +19,34 @@ async function handleCronScan(req: NextRequest) {
     // 1. Authorize Cron trigger
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET || config.CRON_SECRET;
-    
-    // Allow Vercel Cron (sends CRON_SECRET or specific Vercel header) or bearer token
+
+    // Allow Vercel Cron (sends x-vercel-cron header) or external bearer token
     const isVercelCron = req.headers.get('x-vercel-cron') === '1';
     const isBearerAuthorized = authHeader === `Bearer ${cronSecret}`;
-    
+
     if (process.env.NODE_ENV === 'production' && !isVercelCron && !isBearerAuthorized) {
       return NextResponse.json({ success: false, error: 'Unauthorized cron request' }, { status: 401 });
     }
 
-    logger.info('🛰️ Starting automated serverless cron scan cycle...');
+    // 2. Determine which tier to scan via `?tier=` query param:
+    //    - Vercel daily cron (no param / tier=free) → FREE users only  (every 24h)
+    //    - External 2-hourly cron → ?tier=pro                          (PRO users only)
+    //    - Manual / admin trigger → ?tier=all                          (everyone)
+    const { searchParams } = new URL(req.url);
+    const tierParam = searchParams.get('tier') ?? 'free';
+    const targetTier: 'FREE' | 'PRO' | 'all' =
+      tierParam === 'all' ? 'all' : tierParam === 'pro' ? 'PRO' : 'FREE';
 
-    // 2. Find active products to scan
+    logger.info(`🛰️ Starting cron scan cycle — tier: ${targetTier}`);
+
+    // 3. Fetch active products scoped to the requested tier
     const activeProducts = await db.client.product.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        ...(targetTier !== 'all' && {
+          user: { plan: targetTier },
+        }),
+      },
       select: {
         id: true,
         userId: true,
@@ -47,42 +61,46 @@ async function handleCronScan(req: NextRequest) {
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
     const twoHoursAgo = now - 2 * 60 * 60 * 1000;
 
-    // Filter products: PRO scanned every 2 hours; FREE scanned every 24 hours
+    // 4. Skip products that were scanned recently enough for their tier's cadence
     const productsToScan = activeProducts.filter((product) => {
-      const productConfig = (product.config as Record<string, any>) || {};
-      const lastBgScan = productConfig['lastBackgroundScanAt'];
+      const productConfig = (product.config as Record<string, unknown>) || {};
+      const lastBgScan = productConfig['lastBackgroundScanAt'] as string | undefined;
       if (!lastBgScan) return true;
 
       const lastScanTime = new Date(lastBgScan).getTime();
-      if (product.user?.plan === 'PRO') {
-        return lastScanTime < twoHoursAgo;
-      }
-      return lastScanTime < oneDayAgo;
+      return product.user?.plan === 'PRO'
+        ? lastScanTime < twoHoursAgo
+        : lastScanTime < oneDayAgo;
     });
 
-    // Limit to 3 products per cron run to guarantee execution under 60 seconds
+    // 5. Process up to 3 products per invocation to stay within 60s limit
     const batch = productsToScan.slice(0, 3);
-    logger.info(`📊 Processing ${batch.length} products in this cron invocation (${productsToScan.length} pending total)`);
+    logger.info(
+      `📊 Processing ${batch.length} products (${productsToScan.length} pending, tier: ${targetTier})`
+    );
 
     const results = [];
     for (const product of batch) {
       try {
         const result = await BatchProcessingService.processProduct(product.id);
         results.push({ productId: product.id, ...result });
-      } catch (err: any) {
-        logger.error({ err: err.message, productId: product.id }, 'Cron product scan error');
-        results.push({ productId: product.id, success: false, error: err.message });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        logger.error({ err: message, productId: product.id }, 'Cron product scan error');
+        results.push({ productId: product.id, success: false, error: message });
       }
     }
 
     return NextResponse.json({
       success: true,
+      tier: targetTier,
       scannedCount: batch.length,
       pendingCount: Math.max(0, productsToScan.length - batch.length),
       results,
     });
-  } catch (error: any) {
-    logger.error({ error: error.message }, 'Cron scan handler error');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    logger.error({ error: message }, 'Cron scan handler error');
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
