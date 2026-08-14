@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import { config } from './config';
 import logger from './logger';
 
-const resend = new Resend(config.RESEND_API_KEY);
+const resend = config.RESEND_API_KEY ? new Resend(config.RESEND_API_KEY) : null;
 
 export const renderBaseEmail = ({
   title,
@@ -158,6 +158,10 @@ export const renderBaseEmail = ({
 
 export const sendEmail = async (to: string, subject: string, html: string, replyTo?: string) => {
   try {
+    if (!resend) {
+      logger.warn({ to, subject }, 'Resend API key not configured. Skipping email send.');
+      return;
+    }
     const { data, error } = await resend.emails.send({
       from: `"${config.PROJECT_NAME}" <${config.SMTP_FROM}>`,
       to: [to],
