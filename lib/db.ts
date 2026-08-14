@@ -4,8 +4,13 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 const prismaClientSingleton = () => {
+  const rawUrl = process.env.DATABASE_URL ?? '';
+  const isRemote = Boolean(rawUrl && !rawUrl.includes('localhost'));
+  const connectionString = rawUrl.replace(/[?&]sslmode=[^&]*/g, '');
+
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
+    ssl: isRemote ? { rejectUnauthorized: false } : false,
     max: process.env.NODE_ENV === 'production' ? 10 : 5,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
