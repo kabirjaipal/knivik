@@ -40,14 +40,8 @@ const configSchema = z.object({
   DODO_PAYMENTS_WEBHOOK_KEY: z.string().optional().default(process.env.DODO_PAYMENTS_WEBHOOK_KEY || ''),
   DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID: z.string().optional().default(process.env.DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || ''),
   DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID: z.string().optional().default(process.env.DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID || process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID || ''),
-  // Reddit API credentials
-  REDDIT_CLIENT_ID: z.string().optional().default(process.env.REDDIT_CLIENT_ID || ''),
-  REDDIT_CLIENT_SECRET: z.string().optional().default(process.env.REDDIT_CLIENT_SECRET || ''),
-  REDDIT_USERNAME: z.string().optional().default(process.env.REDDIT_USERNAME || ''),
-  REDDIT_PASSWORD: z.string().optional().default(process.env.REDDIT_PASSWORD || ''),
-  REDDIT_USER_AGENT: z.string().default(process.env.REDDIT_USER_AGENT || 'node:knivik:v1.0.0 (by /u/username)'),
   // Secret for securing serverless cron triggers
-  CRON_SECRET: z.string().optional().default(process.env.CRON_SECRET || 'knivik-cron-secret-12345'),
+  CRON_SECRET: z.string().optional().default(process.env.CRON_SECRET || ''),
 });
 
 const configResult = configSchema.safeParse(process.env);
