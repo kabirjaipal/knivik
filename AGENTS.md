@@ -29,78 +29,54 @@ knivik/
 
 ---
 
-## 🛠️ 2. Core Tech Stack Rules
+## 🛠️ 2. Core Tech Stack & Framework Rules
 
-### Fullstack Architecture (Next.js 15 App Router & React 19)
-*   **Monolith Design:** All frontend pages, backend API route handlers (`/app/api/...`), ingestion scrapers, AI qualification engines, and authentication reside in this single Next.js project.
-*   **React Server Components (RSC) by Default:** Components are server-side by default. Only use `'use client'` when interactive state, React hooks (`useState`, `useEffect`), or client APIs are required.
-*   **Data Fetching:** Fetch data on the server in Server Components whenever possible. Use robust caching and revalidation.
-*   **Styling & UI:** Use **Tailwind CSS** alongside **Shadcn UI**. Follow a strict, premium visual design system (see `.agent/rules/design_system.md`).
-*   **Database Access:** Always use **Prisma Client** (`@/lib/db`) for database transactions.
-*   **TypeScript Strictness:** Strict mode is enabled. No implicit `any`. Avoid non-null assertions (`!`) unless fully verified.
-
----
-
-## 💎 3. Modern Code Quality Standards
-
-Every line of code you write must conform to these modern design principles:
-
-### 🧩 Simplicity over Complexity
-*   Write small, single-responsibility functions. Keep components under 150 lines.
-*   Favor simple, descriptive, and readable code over "clever" one-liners or premature optimizations.
-*   Keep helper utilities pure and side-effect free.
-*   **Avoid JSX Repetition:** If JSX nodes (such as navigation links, menu items, or tables rows) are repeated, store the configuration data in an array or object and map over it dynamically instead of duplicating JSX structure.
-
-### 🛡️ Robust Type Safety
-*   **Strict Typing:** Never use `any`. Always use package-provided types; if they do not exist, define custom types or interfaces. If a type is truly dynamic or unknown, use `unknown` combined with type guards.
-*   **Discriminated Unions:** Prefer discriminated unions (e.g., `{ success: true; data: T } | { success: false; error: string }`) for API responses and operational results.
-*   **Interfaces:** Use interfaces for component props and standard objects; use type aliases for unions, intersections, and primitives.
-
-### 🪚 Early Return Pattern
-*   Reduce cognitive load by returning early from conditionals.
-*   Avoid nesting levels beyond 2 deep.
-*   *Example:*
-    ```typescript
-    // Incorrect:
-    function processUser(user) {
-      if (user) {
-        if (user.isActive) {
-          saveUser(user);
-        }
-      }
-    }
-
-    // Correct:
-    function processUser(user) {
-      if (!user) return;
-      if (!user.isActive) return;
-      saveUser(user);
-    }
-    ```
-
-### 🛑 Explicit Error Handling & Zero Placeholders
-*   Never catch errors silently. Every caught error must be logged or properly handled.
-*   Always use try-catch blocks in async actions, especially for database calls and network requests.
-*   Provide clear, user-friendly error boundaries on the frontend and descriptive JSON error responses on the backend.
-*   **Zero Placeholders:** Never write comments like `// TODO: Implement later`. Implement robust, complete code with real features and data validation.
+### Fullstack Next.js 15 App Router & React 19
+*   **Monolith Design:** All frontend pages, backend API route handlers (`/app/api/...`), scrapers, AI qualification engines, and auth reside in this single Next.js project.
+*   **RSC by Default:** Server Components by default. Only use `'use client'` when interactive state, React hooks (`useState`, `useEffect`), or client APIs are required.
+*   **Async Route Params:** In Next.js 15, route handler `params` are asynchronous: `{ params }: { params: Promise<{ id: string }> }`. Always `await params`.
+*   **Data Fetching & Mutations:** Fetch data on the server in Server Components. Use Server Actions or API Route Handlers for mutations with proper `revalidatePath` / `revalidateTag`.
+*   **Styling & Modern Aesthetics:** Use **Tailwind CSS** + **Shadcn UI** with HSL theme tokens (never hardcode arbitrary hex). Enforce modern aesthetics: dark mode (`#030712`), glassmorphism cards (`backdrop-blur-md`), micro-animations (`transition-all duration-200`), and tactile click states (`active:scale-[0.98]`).
+*   **Database Transactions:** Always use **Prisma Client** (`@/lib/db`). For multi-table operations, wrap inside `prisma.$transaction`.
+*   **TypeScript Strictness:** Strict mode enabled. No implicit `any`. Avoid non-null assertions (`!`) unless fully verified.
 
 ---
 
-## 📂 4. Modular Directory Extensions & Skills
+## 🤖 3. AI & LLM Integration Standards
 
-You must dynamically consult and apply the detailed rules and skills located in these directories:
-*   **Workspace Rules:** Check `.agents/rules/` for concern-specific guidelines (e.g., `design_system.md`, `code_quality.md`).
-*   **Workspace Skills:** Check `.agents/skills/` for folder-packaged skills. Each folder contains a `SKILL.md` detailing specialized procedures (e.g., `modern-aesthetics`, `prisma`, `web-design-guidelines`).
+*   **Structured Outputs:** Enforce schema validation on LLM responses using Zod schemas (`Output.object` via Vercel AI SDK or structured parsers). Never assume raw text is valid JSON.
+*   **Rate Limits & Backoff:** Implement exponential backoff with jitter on `429` / transient `5xx` errors. Never retry `400` validation errors.
+*   **Telemetry & Costs:** Log all model token consumption, latency, and costs via `logLlmUsage` in `@/lib/aiRunner`.
+*   **Model Routing:** Use fast models (e.g. `llama-3.1-8b-instant`) for lightweight filtering and versatile models (`llama-3.3-70b-versatile`) for deep reasoning & qualification.
 
 ---
 
-## 🚦 5. Guardrails & Protocols
+## 💎 4. Modern Code Quality & Error Handling
+
+*   **Simplicity:** Write small, single-responsibility functions. Keep components under 150 lines.
+*   **No JSX Repetition:** Store repetitive JSX configurations in arrays/objects and map dynamically.
+*   **Early Return Pattern:** Flatten conditionals; return early on invalid parameters or error conditions (maximum 2 levels of nesting).
+*   **Bulletproof Controllers & Routes:**
+    - Always validate input with Zod and return typed error schemas: `{ success: false, error: string, details?: unknown }`.
+    - Catch all async errors with structured `logger.error` and return `500` JSON (never leak internal stack traces).
+*   **Zero Placeholders:** Never write `// TODO: Implement later`. Always implement real, complete code.
+
+---
+
+## 📂 5. Modular Directory Extensions & Skills
+
+Dynamic runbooks and guidelines are located in:
+*   **Workspace Rules:** Check `.agents/rules/` (`design_system.md`, `code_quality.md`, `prisma.md`, `scraper_reliability.md`).
+*   **Workspace Skills:** Check `.agents/skills/` (`frontend-design`, `vercel-react-best-practices`).
+
+---
+
+## 🚦 6. Guardrails & Protocols
 
 ### 🟢 ALWAYS
-*   Always use the established theme HSL colors for any UI or styling edits; never hardcode ad-hoc hex or CSS color strings.
-*   Keep files structured and use clean semantic HTML on the frontend.
+*   Use established theme HSL colors; never hardcode ad-hoc hex values.
 *   Use environment variables (`process.env.VAR`) for secrets and external API base URLs.
-*   Always provide the corresponding raw SQL queries (using ON CONFLICT for upserts) when modifying, inserting, or deleting database seed scripts (seed.ts) or settings, so the USER can run them directly in production without executing the full seed command.
+*   Provide raw SQL queries (using `ON CONFLICT` for upserts) when modifying seed data or settings.
 
 ### 🟡 ASK FIRST
 *   Adding new external packages or npm dependencies.
@@ -108,9 +84,9 @@ You must dynamically consult and apply the detailed rules and skills located in 
 *   Refactoring core shared files or libraries.
 
 ### 🔴 NEVER
-*   Never run background development servers, dev tasks, or build processes (e.g., `npm run dev`, `npm run build`, `next dev`, `npm start`). The USER will manage and execute all active dev/build commands.
-*   Never run heavy compiler, type-checking, builder, or lint commands (such as `tsc --noEmit`, `npm run build`, or `npm run lint`) yourself. Always tell the user to run them in their terminal.
+*   Never run background development servers, dev tasks, or build processes (`npm run dev`, `npm run build`, `next dev`, `npm start`).
+*   Never run heavy compiler, type-checking, or lint commands (`tsc --noEmit`, `npm run build`, `npm run lint`) yourself. Tell the user to run them.
 *   Never commit `.env` or sensitive security credentials to git.
 *   Never force-push or skip git pre-commit hook checks.
-*   Never bypass TypeScript checks with `// @ts-ignore` or `any` unless explicitly instructed with a detailed comment explaining why it is unavoidable.
-*   Never reset the database to apply schema changes or resolve conflicts. Always solve migration issues in the best, non-destructive way (using custom SQL scripts, Prisma migration resolutions, or data migration scripts).
+*   Never bypass TypeScript checks with `// @ts-ignore` or `any`.
+*   Never reset the database to apply schema changes or resolve conflicts.
