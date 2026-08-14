@@ -48,10 +48,13 @@ export function Hero({ user }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary mb-8 border border-primary/20"
+            className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-[10px] sm:text-xs font-black uppercase tracking-widest text-primary mb-8 border border-primary/25 shadow-sm shadow-primary/10 backdrop-blur-md"
           >
-            <Zap className="h-3.5 w-3.5 mr-2 fill-primary animate-pulse" />
-            Autonomous AI Lead Finder SaaS & Social Media Tool
+            <span className="relative flex h-2 w-2 mr-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+            Autonomous AI Lead Discovery & Social Pipeline Engine
           </motion.div>
           
           <motion.h1 
@@ -62,8 +65,8 @@ export function Hero({ user }: HeroProps) {
           >
             Find your next customer <br />
             <span className="relative">
-               <span className="text-primary italic">before</span>
-              <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
+               <span className="text-primary italic font-serif tracking-normal">before</span>
+              <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/40 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <path d="M0 5 Q 25 0 50 5 T 100 5" fill="none" stroke="currentColor" strokeWidth="4" />
               </svg>
             </span> they find you.
@@ -75,24 +78,24 @@ export function Hero({ user }: HeroProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl font-medium"
           >
-            Knivik is the ultimate B2B AI Lead Finder tool. Simply add your product or service details, and our SaaS platform automatically scrapes Reddit, HackerNews, X (Twitter), GitHub, and Bluesky to find, filter, and score the best warm leads using advanced AI.
+            Knivik is the real-time B2B AI Social Selling tool. Simply add your product details, and our platform autonomously monitors Reddit, HackerNews, X (Twitter), GitHub, and Bluesky to uncover, filter, and score high-intent sales opportunities with instant AI replies.
           </motion.p>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full sm:w-auto mb-12"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-12"
           >
             <Link href={user ? "/dashboard" : "/register"} className="w-full sm:w-auto">
-              <Button size="lg" className="h-14 px-10 text-base font-black rounded-2xl w-full bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 group">
+              <Button size="lg" className="h-14 px-10 text-base font-black rounded-2xl w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98] group cursor-pointer">
                 {user ? "Enter Dashboard" : "Get First Leads Free"}
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link href="#sample-leads" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="h-14 px-8 text-base font-black rounded-2xl border-2 hover:bg-secondary/50 transition-all w-full">
-                See sample leads
+              <Button variant="outline" size="lg" className="h-14 px-8 text-base font-black rounded-2xl border-2 border-border/80 hover:border-primary/50 hover:bg-secondary/50 transition-all active:scale-[0.98] w-full cursor-pointer">
+                See Live Simulation
               </Button>
             </Link>
           </motion.div>
@@ -116,7 +119,7 @@ export function Hero({ user }: HeroProps) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
               </div>
-              Monitoring Live
+              Monitoring 5 Social Networks Live
             </div>
           </motion.div>
         </div>

@@ -149,19 +149,19 @@ export function Navbar({ user }: { user: any }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background border-b border-border/50 overflow-hidden"
+            className="lg:hidden bg-background/95 backdrop-blur-2xl border-b border-border/60 overflow-hidden shadow-2xl"
           >
-            <div className="container mx-auto px-6 py-12 flex flex-col gap-8">
-              <nav className="flex flex-col gap-6">
+            <div className="container mx-auto px-6 py-8 flex flex-col gap-6">
+              <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => {
                   const active = isLinkActive(link.href)
                   return (
                     <Link 
-                      key={link.label}
+                      key={link.label} 
                       href={link.href} 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`text-4xl font-black tracking-tighter transition-colors ${
-                        active ? "text-primary" : "text-foreground hover:text-primary"
+                      className={`text-2xl sm:text-3xl font-black tracking-tight transition-all active:scale-95 ${
+                        active ? "text-primary translate-x-1" : "text-foreground hover:text-primary"
                       }`}
                     >
                       {link.label}
@@ -173,12 +173,12 @@ export function Navbar({ user }: { user: any }) {
               <div className="h-px w-full bg-border/50" />
               
               {!user && (
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                   <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full h-14 text-lg font-bold rounded-2xl border-2">Log in</Button>
+                    <Button variant="outline" className="w-full h-12 text-base font-bold rounded-xl border-border/80 active:scale-[0.98]">Log in</Button>
                   </Link>
                   <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full h-14 text-lg font-black rounded-2xl shadow-xl shadow-primary/20">Get Started Free</Button>
+                    <Button className="w-full h-12 text-base font-black rounded-xl shadow-xl shadow-primary/20 bg-primary text-primary-foreground active:scale-[0.98]">Get Started Free</Button>
                   </Link>
                 </div>
               )}

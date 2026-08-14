@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { Search, Calendar, Clock, ArrowRight } from "lucide-react";
 import { BlogPost } from "@/lib/blog/domain/blog.model";
@@ -14,17 +14,29 @@ interface BlogClientProps {
 export function BlogClient({ posts, categories }: BlogClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [, startTransition] = useTransition();
 
-  const filteredPosts = posts.filter((post) => {
-    const matchesCategory =
-      activeCategory === "All" || post.category === activeCategory;
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  const handleCategoryClick = (cat: string) => {
+    startTransition(() => {
+      setActiveCategory(cat);
+    });
+  };
 
-    return matchesCategory && matchesSearch;
-  });
+  const filteredPosts = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return posts.filter((post) => {
+      const matchesCategory =
+        activeCategory === "All" || post.category === activeCategory;
+      if (!matchesCategory) return false;
+      if (!q) return true;
+
+      return (
+        post.title.toLowerCase().includes(q) ||
+        post.description.toLowerCase().includes(q) ||
+        post.tags.some((tag) => tag.toLowerCase().includes(q))
+      );
+    });
+  }, [posts, activeCategory, searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -38,7 +50,7 @@ export function BlogClient({ posts, categories }: BlogClientProps) {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryClick(cat)}
                 className={`px-4 py-2 rounded-xl border text-xs font-bold transition-all active:scale-95 cursor-pointer ${
                   active
                     ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/10"

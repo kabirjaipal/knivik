@@ -65,10 +65,10 @@ export default function PricingClient() {
             </p>
 
             {/* Billing Toggle */}
-            <div className="flex items-center gap-4 bg-secondary p-1.5 rounded-2xl border border-border/50">
+            <div className="flex items-center gap-4 bg-secondary p-1.5 rounded-2xl border border-border/50 shadow-inner">
               <button 
                 onClick={() => setBillingCycle("monthly")}
-                className={`px-6 py-2 rounded-xl text-sm font-black transition-all ${
+                className={`px-6 py-2 rounded-xl text-sm font-black transition-all cursor-pointer active:scale-95 ${
                   billingCycle === "monthly" 
                   ? "bg-background text-foreground shadow-lg" 
                   : "text-muted-foreground hover:text-foreground"
@@ -78,7 +78,7 @@ export default function PricingClient() {
               </button>
               <button 
                 onClick={() => setBillingCycle("yearly")}
-                className={`px-6 py-2 rounded-xl text-sm font-black transition-all flex items-center gap-2 ${
+                className={`px-6 py-2 rounded-xl text-sm font-black transition-all flex items-center gap-2 cursor-pointer active:scale-95 ${
                   billingCycle === "yearly" 
                   ? "bg-background text-foreground shadow-lg" 
                   : "text-muted-foreground hover:text-foreground"
@@ -92,7 +92,7 @@ export default function PricingClient() {
 
           <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto mb-24">
             {/* Free Plan */}
-            <div className={`relative flex flex-col p-8 rounded-[2.5rem] border ${currentPlan === "FREE" ? "border-primary/50 bg-primary/5" : "border-border/50 bg-background"} transition-all`}>
+            <div className={`relative flex flex-col p-8 rounded-[2.5rem] border ${currentPlan === "FREE" ? "border-primary/50 bg-primary/5" : "border-border/50 bg-background"} transition-all duration-300 hover:shadow-xl hover:border-primary/30`}>
               {currentPlan === "FREE" && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
                   Current Plan
@@ -124,8 +124,8 @@ export default function PricingClient() {
               <Link href={user ? "/dashboard" : "/register"} className="w-full">
                 <Button 
                   size="lg" 
-                  className={`w-full h-14 text-base font-bold rounded-2xl ${
-                    currentPlan === "FREE" ? "bg-secondary text-foreground cursor-default" : "bg-primary hover:bg-primary/90"
+                  className={`w-full h-14 text-base font-bold rounded-2xl transition-all ${
+                    currentPlan === "FREE" ? "bg-secondary text-foreground cursor-default" : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 active:scale-[0.98]"
                   }`}
                   disabled={currentPlan === "FREE"}
                 >

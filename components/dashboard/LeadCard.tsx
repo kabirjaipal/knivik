@@ -161,25 +161,25 @@ export const LeadCard = memo(({
   const isDrafting = draftingLeadId === lead.id
 
   return (
-    <div className={`group relative bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-border/60 border-l-4 ${getAccentBorder(lead.detectedBy)}`}>
+    <div className={`group relative bg-card rounded-xl border border-border/40 overflow-hidden shadow-sm transition-all hover:shadow-lg hover:border-primary/30 border-l-4 ${getAccentBorder(lead.detectedBy)} content-visibility-auto`}>
       <div className="p-4 hover:bg-muted/5 transition-colors">
 
         {/* ── Row 1: badges + score + engage ──────────────────────────── */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        <div className="flex items-center gap-2 flex-wrap mb-2.5">
           {/* Platform */}
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+          <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground bg-muted/80 px-2 py-0.5 rounded-md border border-border/50">
             {lead.platform}
           </span>
 
           {/* Score */}
-          <span className="text-xs font-black px-1.5 py-0.5 bg-primary/10 text-primary rounded">
-            ★ {lead.intentScore}%
+          <span className="text-[11px] font-black px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-md shadow-xs flex items-center gap-1 font-mono">
+            <Zap className="w-3 h-3 fill-primary" /> {lead.intentScore}% Intent
           </span>
 
           {/* Spacer + Engage button pushed right */}
-          <Button size="xs" variant="default" asChild className="ml-auto uppercase tracking-widest text-xs font-black shadow-sm shadow-primary/20">
+          <Button size="xs" variant="default" asChild className="ml-auto uppercase tracking-widest text-[11px] font-black shadow-sm shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
             <a href={lead.url} target="_blank" rel="noreferrer">
-              Engage <ExternalLink className="w-2.5 h-2.5" />
+              Engage <ExternalLink className="w-3 h-3 ml-1" />
             </a>
           </Button>
         </div>

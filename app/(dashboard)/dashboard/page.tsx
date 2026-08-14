@@ -22,7 +22,7 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -67,6 +67,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>("ALL");
+  const [isPending, startTransition] = useTransition();
   const [draftingLeadId, setDraftingLeadId] = useState<string | null>(null);
   const [draftedReplies, setDraftedReplies] = useState<Record<string, string>>(
     {},
@@ -210,30 +211,44 @@ export default function DashboardPage() {
     }
   }, [leads, user?.plan]);
 
-  // ─── Derived metrics ──────────────────────────────────────────────────────
+  const handleTabSelect = (tab: FilterTab) => {
+    startTransition(() => {
+      setActiveTab(tab);
+    });
+  };
 
-  const total = leads.length;
-  const highIntent = leads.filter((l) => l.intentScore >= 80).length;
-  const last24h = leads.filter(
-    (l) => Date.now() - new Date(l.createdAt).getTime() < 86_400_000,
-  ).length;
-  const converted = leads.filter((l) => l.status === "CONVERTED").length;
-  const avgScore =
-    total > 0
-      ? Math.round(leads.reduce((s, l) => s + l.intentScore, 0) / total)
-      : 0;
-  const saved = leads.filter((l) => l.status === "SAVED").length;
+  // ─── Derived metrics (Memoized) ──────────────────────────────────────────
 
-  // Per-product lead counts computed from local leads
-  const leadsByProduct = leads.reduce<Record<string, number>>((acc, l) => {
-    const name = l.product?.name ?? "Unknown";
-    acc[name] = (acc[name] ?? 0) + 1;
-    return acc;
-  }, {});
+  const { total, highIntent, last24h, converted, avgScore, saved } = useMemo(() => {
+    const total = leads.length;
+    let highIntent = 0;
+    let last24h = 0;
+    let converted = 0;
+    let totalScore = 0;
+    let saved = 0;
+
+    const now = Date.now();
+    for (const l of leads) {
+      if (l.intentScore >= 80) highIntent++;
+      if (now - new Date(l.createdAt).getTime() < 86_400_000) last24h++;
+      if (l.status === "CONVERTED") converted++;
+      if (l.status === "SAVED") saved++;
+      totalScore += l.intentScore;
+    }
+
+    return {
+      total,
+      highIntent,
+      last24h,
+      converted,
+      avgScore: total > 0 ? Math.round(totalScore / total) : 0,
+      saved,
+    };
+  }, [leads]);
 
   // ─── Tabs & filtering ─────────────────────────────────────────────────────
 
-  const TABS: { key: FilterTab; label: string; count: number; icon: React.ComponentType<any> }[] = [
+  const TABS: { key: FilterTab; label: string; count: number; icon: React.ComponentType<any> }[] = useMemo(() => [
     { key: "ALL", label: "All Active", count: leads.filter(l => l.status !== 'DISMISSED').length, icon: Activity },
     { key: "NEW", label: "New", count: leads.filter(l => l.status === 'NEW').length, icon: Sparkles },
     { key: "QUALIFIED", label: "Qualified", count: leads.filter(l => l.status === 'QUALIFIED').length, icon: Target },
@@ -241,18 +256,12 @@ export default function DashboardPage() {
     { key: "CONTACTED", label: "Contacted", count: leads.filter(l => l.status === 'CONTACTED').length, icon: Send },
     { key: "CONVERTED", label: "Converted", count: leads.filter(l => l.status === 'CONVERTED').length, icon: CheckCircle2 },
     { key: "DISMISSED", label: "Dismissed", count: leads.filter(l => l.status === 'DISMISSED').length, icon: XCircle },
-  ];
+  ], [leads]);
 
-  const filteredLeads = leads.filter((l) => {
-    if (activeTab === "ALL") return l.status !== "DISMISSED";
-    if (activeTab === "NEW") return l.status === "NEW";
-    if (activeTab === "QUALIFIED") return l.status === "QUALIFIED";
-    if (activeTab === "SAVED") return l.status === "SAVED";
-    if (activeTab === "CONTACTED") return l.status === "CONTACTED";
-    if (activeTab === "CONVERTED") return l.status === "CONVERTED";
-    if (activeTab === "DISMISSED") return l.status === "DISMISSED";
-    return true;
-  });
+  const filteredLeads = useMemo(() => {
+    if (activeTab === "ALL") return leads.filter((l) => l.status !== "DISMISSED");
+    return leads.filter((l) => l.status === activeTab);
+  }, [leads, activeTab]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -534,10 +543,10 @@ export default function DashboardPage() {
                 return (
                   <button
                     key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border ${
+                    onClick={() => handleTabSelect(tab.key)}
+                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all rounded-lg border cursor-pointer active:scale-95 ${
                       activeTab === tab.key
-                        ? "bg-primary border-primary text-primary-foreground"
+                        ? "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/20"
                         : "bg-transparent border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                   >
@@ -545,7 +554,7 @@ export default function DashboardPage() {
                     {tab.label}
                     {tab.count > 0 && (
                       <span
-                        className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${activeTab === tab.key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/20"}`}
+                        className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-mono ${activeTab === tab.key ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted-foreground/20"}`}
                       >
                         {tab.count}
                       </span>

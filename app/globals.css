@@ -212,5 +212,38 @@
   }
 }
 
+/* Performance and Aesthetic Utilities */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 160px;
+}
+
+.glass-card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glow-primary {
+  box-shadow: 0 0 25px -5px rgba(var(--primary-rgb), 0.25);
+}
+
+.glow-primary-sm {
+  box-shadow: 0 0 15px -3px rgba(var(--primary-rgb), 0.2);
+}
+
+.radar-sweep {
+  animation: radar 3s linear infinite;
+}
+
+@keyframes radar {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+
 
 
