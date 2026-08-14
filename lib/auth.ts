@@ -8,6 +8,9 @@ import logger from './logger';
 
 export const auth: any = betterAuth({
   database: prismaAdapter(db.client, { provider: 'postgresql' }),
+  experimental: {
+    joins: true,
+  },
   secret: process.env.BETTER_AUTH_SECRET || config.BETTER_AUTH_SECRET,
   baseURL: `${process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth`,
 

@@ -1,13 +1,14 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+import { Pool } from 'pg';
 
 const prismaClientSingleton = () => {
-  const connectionString = process.env.DATABASE_URL;
-  const pool = new pg.Pool({
-    connectionString,
-    ssl: connectionString && !connectionString.includes('localhost') ? { rejectUnauthorized: false } : false,
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: process.env.NODE_ENV === 'production' ? 10 : 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
   });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({
@@ -16,40 +17,22 @@ const prismaClientSingleton = () => {
   });
 };
 
-declare const globalThis: {
-  prismaGlobal: ReturnType<typeof prismaClientSingleton> | undefined;
-} & typeof global;
+type GlobalForPrisma = typeof globalThis & {
+  prisma?: ReturnType<typeof prismaClientSingleton>;
+};
 
-export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+const globalForPrisma = globalThis as GlobalForPrisma;
+
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prismaGlobal = prisma;
+  globalForPrisma.prisma = prisma;
 }
 
 export const db = {
   client: prisma,
-  connect: async () => {
-    try {
-      await prisma.$connect();
-    } catch (error) {
-      console.error('Database connection error:', error);
-    }
-  },
-  disconnect: async () => {
-    try {
-      await prisma.$disconnect();
-    } catch (error) {
-      console.error('Database disconnection error:', error);
-    }
-  },
-  healthCheck: async () => {
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      return true;
-    } catch {
-      return false;
-    }
-  },
 };
 
 export default db;
+
+
