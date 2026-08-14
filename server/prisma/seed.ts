@@ -81,15 +81,15 @@ async function main() {
         modelOptions: { source: 'groq', speed: 'best', reasoning_tokens_supported: true },
       },
       {
-        id: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        inputPrice: 0.30,
-        outputPrice: 0.40,
-        modelOptions: { source: 'groq', speed: 'best' },
+        id: 'openai/gpt-oss-20b',
+        inputPrice: 0.075,
+        outputPrice: 0.30,
+        modelOptions: { source: 'groq', speed: 'fast', reasoning_tokens_supported: true },
       },
       {
         id: 'openai/gpt-oss-120b',
-        inputPrice: 0.60,
-        outputPrice: 0.80,
+        inputPrice: 0.15,
+        outputPrice: 0.60,
         modelOptions: { source: 'groq', speed: 'best', reasoning_tokens_supported: true },
       },
     ],
@@ -115,7 +115,7 @@ async function main() {
       {
         id: 'config-aiModelVersatile',
         key: 'aiModelVersatile',
-        value: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        value: 'llama-3.3-70b-versatile',
       },
       {
         id: 'config-aiModelLite',

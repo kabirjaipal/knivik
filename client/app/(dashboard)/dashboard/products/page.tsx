@@ -101,6 +101,13 @@ export default function ProductsPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const url = editingProductId ? `${apiUrl}/products/${editingProductId}` : `${apiUrl}/products`;
       
+      let cleanWebsiteUrl = formData.websiteUrl.trim();
+      if (cleanWebsiteUrl === 'https://' || cleanWebsiteUrl === 'http://') {
+        cleanWebsiteUrl = '';
+      } else if (cleanWebsiteUrl && !/^https?:\/\//i.test(cleanWebsiteUrl)) {
+        cleanWebsiteUrl = `https://${cleanWebsiteUrl}`;
+      }
+
       const res = await fetch(url, {
         method: editingProductId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,7 +116,7 @@ export default function ProductsPage() {
         body: JSON.stringify({
           name: formData.name,
           description: formData.description,
-          websiteUrl: formData.websiteUrl,
+          websiteUrl: cleanWebsiteUrl,
           isActive: formData.isActive,
           config: formData.config,
         })
@@ -203,7 +210,13 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-4">
         <h2 className="text-xl font-black tracking-tight text-foreground">Products & Services</h2>
         
-        <Button size={"default"} onClick={() => setIsCreating(true)}>
+        <Button size={"default"} onClick={() => {
+          setFormData({ 
+            name: "", description: "", websiteUrl: "", isActive: true,
+            config: { customPersona: "", negativeKeywords: [], excludedAuthors: [], productType: "product" }
+          });
+          setIsCreating(true);
+        }}>
           <Plus className="w-4 h-4" /> New Offering
         </Button>
       </div>
@@ -490,13 +503,24 @@ function ProductForm({ formData, setFormData, isSubmitting, isAiLoading, setIsAi
           <label className="block text-sm font-medium text-foreground">
             {isService ? 'Website / Portfolio' : 'Website'}
           </label>
-          <input 
-            type="url"
-            value={formData.websiteUrl} 
-            onChange={e => setFormData({...formData, websiteUrl: e.target.value})} 
-            className="w-full border border-input bg-background rounded-sm px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors" 
-            placeholder="https://example.com" 
-          />
+          <div className="flex rounded-sm border border-input bg-background focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-colors overflow-hidden">
+            <span className="inline-flex items-center px-3 text-xs font-semibold text-muted-foreground bg-muted/50 border-r border-input select-none font-mono">
+              https://
+            </span>
+            <input 
+              type="text"
+              value={formData.websiteUrl.replace(/^https?:\/\//i, '')} 
+              onChange={e => {
+                const raw = e.target.value.trim().replace(/^https?:\/\//i, '');
+                setFormData({
+                  ...formData, 
+                  websiteUrl: raw ? `https://${raw}` : ''
+                });
+              }} 
+              className="w-full bg-transparent px-3 py-2 text-sm focus:outline-none placeholder:text-muted-foreground/50" 
+              placeholder="example.com" 
+            />
+          </div>
         </div>
       </div>
 
