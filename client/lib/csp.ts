@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function applyCsp(request: NextRequest, pathname: string): NextResponse {
-  const backendUrl = process.env.BACKEND_URL;
-  if (!backendUrl) throw new Error("BACKEND_URL is not defined");
-
-  const wsUrl = backendUrl.replace(/^http/, "ws");
-  const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || wsUrl;
-  const socketWsUrl = socketUrl.replace(/^http/, "ws");
+export function applyCsp(_request: NextRequest, _pathname: string): NextResponse {
+  const backendUrl = process.env.BACKEND_URL || "";
+  const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "";
 
   const connectSources = [
     "'self'",
@@ -18,8 +14,7 @@ export function applyCsp(request: NextRequest, pathname: string): NextResponse {
     "https://*.analytics.google.com",
     backendUrl,
     socketUrl,
-    socketWsUrl,
-  ];
+  ].filter(Boolean);
 
   const cspHeader = [
     "default-src 'self'",

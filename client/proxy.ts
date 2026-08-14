@@ -3,23 +3,6 @@ import type { NextRequest } from "next/server";
 import { getSessionCookie, getCookieCache } from "better-auth/cookies";
 import { applyCsp } from "@/lib/csp";
 
-async function getRoleFromBackend(request: NextRequest): Promise<string | null> {
-  try {
-    const backendUrl = process.env.BACKEND_URL;
-    if (!backendUrl) return null;
-
-    const res = await fetch(`${backendUrl}/api/auth/get-session`, {
-      headers: { cookie: request.headers.get("cookie") ?? "" },
-    });
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    return (data?.user?.role as string | undefined) ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -38,11 +21,22 @@ export async function proxy(request: NextRequest) {
       const session = await getCookieCache(request);
       role = (session?.user as { role?: string } | undefined)?.role ?? null;
     } catch {
-      // fall through to backend fetch
+      // fall through
     }
 
     if (!role) {
-      role = await getRoleFromBackend(request);
+      try {
+        const sessionUrl = new URL("/api/auth/get-session", request.url);
+        const res = await fetch(sessionUrl, {
+          headers: { cookie: request.headers.get("cookie") ?? "" },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          role = (data?.user?.role as string | undefined) ?? null;
+        }
+      } catch {
+        // ignore
+      }
     }
 
     if (role !== "admin" && pathname.startsWith("/admin")) {

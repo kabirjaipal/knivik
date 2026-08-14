@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false, // Security: Minimize fingerprinting
   compress: true,        // Performance: Enable Gzip compression
   skipTrailingSlashRedirect: true, // PostHog Rewrite compatibility
+  serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "pg", "bcryptjs", "dodopayments"],
 
   // 2. Experimental & Performance
   experimental: {
@@ -48,12 +49,7 @@ const nextConfig: NextConfig = {
 
   // 4. API Proxy / Rewrites
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL;
     return [
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
-      },
       {
         source: "/ingest/static/:path*",
         destination: "https://us-assets.i.posthog.com/static/:path*",

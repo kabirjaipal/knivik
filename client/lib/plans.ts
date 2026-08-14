@@ -1,4 +1,4 @@
-import { UserPlan } from "./constants";
+import type { UserPlan } from "@prisma/client";
 
 const getIntervalText = () => {
   const ms = Number(process.env.NEXT_PUBLIC_SCRAPER_INTERVAL_MS) || 3600000;
@@ -65,10 +65,10 @@ export const PLANS = {
       manualScansPerDay: 10,
     },
     monthly: { 
-      productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID!,
+      productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || process.env.DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || "prod_monthly",
     },
     yearly: { 
-      productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID!,
+      productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID || process.env.DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID || "prod_yearly",
     },
     capabilities: {
       canAccessTwitter: true,
@@ -82,15 +82,23 @@ export const PLANS = {
 } as const;
 
 export type PlanKey = keyof typeof PLANS;
+export type CapabilityKey = keyof typeof PLANS.FREE.capabilities;
 
-export function getPlanProductId(plan: string, billingCycle: "monthly" | "yearly"): string | null {
+export function hasCapability(plan: UserPlan | string, capability: CapabilityKey): boolean {
+  const planKey = plan as PlanKey;
+  const planConfig = PLANS[planKey];
+  if (!planConfig) return false;
+  return !!(planConfig as any).capabilities?.[capability];
+}
+
+export function getPlanProductId(plan: UserPlan | string, billingCycle: "monthly" | "yearly"): string | null {
   if (plan === "FREE") return null;
   const planConfig = PLANS[plan as PlanKey];
-  if (!planConfig || !("monthly" in planConfig)) return null;
+  if (!planConfig || !(billingCycle in planConfig)) return null;
   return (planConfig as any)[billingCycle].productId;
 }
 
-export function getPlanFromProductId(productId: string): { plan: string; billingCycle: "monthly" | "yearly" } | null {
+export function getPlanFromProductId(productId: string): { plan: UserPlan | string; billingCycle: "monthly" | "yearly" } | null {
   for (const [planKey, planConfig] of Object.entries(PLANS)) {
     if (planKey === "FREE") continue;
     const config = planConfig as any;
@@ -102,4 +110,15 @@ export function getPlanFromProductId(productId: string): { plan: string; billing
     }
   }
   return null;
+}
+
+export function getPlanLimits(plan: UserPlan | string): { products: number; leadsPerMonth: number; manualScansPerDay: number } {
+  const planConfig = PLANS[plan as PlanKey];
+  if (!planConfig) return { products: 1, leadsPerMonth: 50, manualScansPerDay: 1 };
+  return planConfig.limits;
+}
+
+export function canAddProduct(currentProductCount: number, plan: UserPlan | string): boolean {
+  const limits = getPlanLimits(plan);
+  return currentProductCount < limits.products;
 }

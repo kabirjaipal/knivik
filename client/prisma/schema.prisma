@@ -1,0 +1,538 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String         @id @default(cuid())
+  email              String         @unique
+  emailVerified      Boolean        @default(false)
+  image              String?
+  username           String         @unique
+  displayUsername    String?
+  password           String?
+  role               UserRole       @default(user)
+  plan               UserPlan       @default(FREE)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  metadata           Json?
+  lastScanStatus     String?
+  isScanning         Boolean?       @default(false)
+  dodoCustomerId     String?        @unique
+  subscriptionStatus String?
+  billingCycle       String?
+  currentPeriodEnd   DateTime?
+  allowReferrals     Boolean        @default(false)
+  banned             Boolean?       @default(false)
+  banReason          String?
+  banExpires         DateTime?
+  accounts           Account[]
+  alertSetting       AlertSetting?
+  llmUsageLogs       LlmUsageLog[]
+  oauthAccounts      OAuthAccount[]
+  otpCodes           OtpCode[]
+  payments           Payment[]
+  products           Product[]
+  replies            Reply[]
+  sessions           Session[]
+  subscriptions      Subscription[]
+  usages             UsageRecord[]
+  feedbacks          SiteFeedback[]
+  referralCodes      ReferralCode[] @relation("CreatorReferralCodes")
+  referredBy         Referral?      @relation("ReferredUser")
+  referralPartner    ReferralPartner?
+  referralPayouts    ReferralPayout[] @relation("CreatorPayouts")
+  blogPosts          BlogPost[]       @relation("BlogPostsCreated")
+
+  @@index([plan])
+  @@map("ir_users")
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  userId         String
+  token          String   @unique
+  expiresAt      DateTime
+  userAgent      String?
+  ipAddress      String?
+  impersonatedBy String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("ir_sessions")
+}
+
+model OtpCode {
+  id        String    @id @default(cuid())
+  userId    String?
+  email     String
+  code      String
+  type      OtpType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, type])
+  @@index([expiresAt])
+  @@map("ir_otp_codes")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("ir_accounts")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@unique([identifier, value])
+  @@map("ir_verifications")
+}
+
+model OAuthAccount {
+  id                String        @id @default(cuid())
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("ir_oauth_accounts")
+}
+
+model Product {
+  id               String            @id @default(cuid())
+  userId           String
+  name             String
+  description      String?
+  websiteUrl       String?
+  isActive         Boolean           @default(true)
+  config           Json?
+  searchQueries    Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  leads            Lead[]
+  llmUsageLogs     LlmUsageLog[]
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("ir_products")
+}
+
+
+
+model Lead {
+  id             String      @id @default(cuid())
+  productId      String
+  platform       Platform
+  externalPostId String
+  title          String?
+  content        String
+  url            String
+  authorUsername String?
+  intentLevel    IntentLevel
+  intentScore    Int
+  status         LeadStatus  @default(NEW)
+  postedAt       DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  metadata       Json?
+  notes          String?
+  feedback       Int?
+  detectedBy     String      @default("KEYWORD")
+  reasoning      String?
+  enrichment     Json?
+  alertLogs      AlertLog[]
+  product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  replies        Reply[]
+
+  @@unique([platform, externalPostId, productId])
+  @@index([productId])
+  @@index([productId, status])
+  @@index([productId, intentLevel])
+  @@index([productId, intentScore(sort: Desc)])
+  @@index([productId, createdAt(sort: Desc)])
+  @@index([createdAt])
+  @@map("ir_leads")
+}
+
+
+
+model Reply {
+  id            String   @id @default(cuid())
+  leadId        String
+  userId        String
+  generatedText String
+  tone          String   @default("helpful")
+  createdAt     DateTime @default(now())
+  lead          Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([userId])
+  @@map("ir_replies")
+}
+
+model AlertSetting {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  emailEnabled   Boolean    @default(false)
+  emailTarget    String?
+  slackEnabled   Boolean    @default(false)
+  slackWebhook   String?
+  webhookType    String     @default("SLACK")
+  minIntentScore Int        @default(70)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  alertLogs      AlertLog[]
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ir_alert_settings")
+}
+
+model AlertLog {
+  id             String       @id @default(cuid())
+  alertSettingId String
+  leadId         String
+  channel        AlertChannel
+  status         String       @default("sent") // "sent", "failed"
+  errorMessage   String?
+  sentAt         DateTime     @default(now())
+  alertSetting   AlertSetting @relation(fields: [alertSettingId], references: [id], onDelete: Cascade)
+  lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@unique([alertSettingId, leadId, channel])
+  @@index([alertSettingId])
+  @@index([leadId])
+  @@index([sentAt])
+  @@map("ir_alert_logs")
+}
+
+model ScrapeCache {
+  id             String   @id @default(cuid())
+  platform       Platform
+  externalPostId String
+  processedAt    DateTime @default(now())
+
+  @@unique([platform, externalPostId])
+  @@index([processedAt])
+  @@map("ir_scrape_cache")
+}
+
+model RequestLog {
+  id           String   @id @default(cuid())
+  requestId    String   @unique
+  method       String
+  url          String
+  ip           String?
+  userId       String?
+  statusCode   Int?
+  requestBody  Json?
+  responseBody Json?
+  headers      Json?
+  query        Json?
+  params       Json?
+  error        String?
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([method])
+  @@index([statusCode])
+  @@index([userId])
+  @@map("ir_request_logs")
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  count     Int      @default(1)
+  month     Int
+  year      Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, month, year])
+  @@index([userId, month, year])
+  @@map("ir_usage_records")
+}
+
+model LlmModel {
+  id           String        @id
+  inputPrice   Float
+  outputPrice  Float
+  cachedPrice  Float?
+  modelOptions Json?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  usageLogs    LlmUsageLog[]
+
+  @@map("ir_llm_models")
+}
+
+model LlmUsageLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  productId    String?
+  action       String
+  modelId      String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  totalTokens  Int      @default(0)
+  latencyMs    Int?
+  status       String   @default("success")
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  model        LlmModel @relation(fields: [modelId], references: [id])
+  product      Product? @relation(fields: [productId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@index([modelId])
+  @@map("ir_llm_usage_logs")
+}
+
+model Subscription {
+  id                         String    @id @default(cuid())
+  userId                     String
+  dodoSubscriptionId         String?   @unique
+  dodoCustomerId             String?
+  plan                       UserPlan
+  billingCycle               String
+  status                     String
+  currentPeriodEnd           DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+  user                       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ir_subscriptions")
+}
+
+model Payment {
+  id                    String   @id @default(cuid())
+  userId                String
+  dodoPaymentId         String?  @unique
+  amount                Int
+  tax                   Int      @default(0)
+  currency              String
+  status                String
+  invoiceUrl            String?
+  createdAt             DateTime        @default(now())
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ir_payments")
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  eventName String
+  payload   Json
+  processed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ir_webhook_events")
+}
+
+model SystemConfig {
+  id        String   @id @default("global")
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("ir_system_config")
+}
+
+enum UserPlan {
+  FREE
+  PRO
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum Platform {
+  REDDIT
+  HACKERNEWS
+  TWITTER
+  GITHUB
+  BLUESKY
+}
+
+enum IntentLevel {
+  BUY_NOW
+  COMPARING
+}
+
+enum LeadStatus {
+  NEW
+  QUALIFIED
+  SAVED
+  CONTACTED
+  CONVERTED
+  DISMISSED
+}
+
+enum AlertChannel {
+  EMAIL
+  SLACK
+  DASHBOARD
+}
+
+enum OtpType {
+  LOGIN
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+  TWITTER
+  DISCORD
+}
+
+model SiteFeedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  rating    Int      // Rating from 1 to 5
+  comment   String?
+  category  String?  // e.g., "UI/UX", "Scraping", "AI Accuracy", "Pricing", "Other"
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("ir_site_feedbacks")
+}
+
+model ReferralCode {
+  id          String     @id @default(cuid())
+  creatorId   String
+  code        String     @unique
+  createdAt   DateTime   @default(now())
+  creator     User       @relation("CreatorReferralCodes", fields: [creatorId], references: [id], onDelete: Cascade)
+  referrals   Referral[]
+
+  @@index([creatorId])
+  @@map("ir_referral_codes")
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referralCodeId String
+  referredUserId String         @unique
+  status         ReferralStatus @default(SIGNED_UP)
+  createdAt      DateTime       @default(now())
+  referralCode   ReferralCode   @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+  referredUser   User           @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([referralCodeId])
+  @@map("ir_referrals")
+}
+
+enum ReferralStatus {
+  SIGNED_UP
+  CONVERTED
+}
+
+model ReferralPayout {
+  id          String       @id @default(cuid())
+  creatorId   String
+  amount      Int
+  currency    String       @default("USD")
+  status      PayoutStatus @default(PAID)
+  notes       String?
+  createdAt   DateTime     @default(now())
+  creator     User         @relation("CreatorPayouts", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+  @@map("ir_referral_payouts")
+}
+
+
+enum PayoutStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model ReferralPartner {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ir_referral_partners")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogPost {
+  id            String     @id @default(cuid())
+  slug          String     @unique
+  title         String
+  description   String
+  content       String     @db.Text
+  coverImage    String
+  status        PostStatus @default(DRAFT)
+  date          DateTime   @default(now())
+  readTime      String
+  category      String
+  tags          String[]
+  createdById   String
+  createdBy     User       @relation("BlogPostsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@map("ir_blog_posts")
+}
+

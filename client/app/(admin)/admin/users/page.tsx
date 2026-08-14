@@ -173,11 +173,11 @@ export default function AdminUsersPage() {
       })
       
       const data = await res.json()
-      if (data.success) {
+      if (res.ok && data.success !== false) {
         toast.success(`Logging in as ${user.username}...`)
         window.location.href = '/dashboard'
       } else {
-        toast.error(data.error || "Failed to impersonate")
+        toast.error(data.error || data.message || "Failed to impersonate")
         setImpersonatingId(null)
       }
     } catch (err) {

@@ -7,7 +7,6 @@ import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, Chevr
 import { Badge } from "@/components/ui/badge"
 import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { getSocket } from "@/lib/socket"
 import { useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
 
@@ -116,69 +115,74 @@ export default function ProductDetailPage() {
     }
   }, [user?.id, productId, fetchProduct])
 
-  // ─── Real-time scan updates via WebSocket ──────────────────────────────────
+  // ─── Real-time scan updates via Server-Sent Events (SSE) ────────────────────
   useEffect(() => {
-    if (!sessionToken) return;
+    if (!productId) return;
 
-    const socket = getSocket(sessionToken);
-    
-    const joinRoom = () => {
-      if (productId) {
-        console.log('Emitting join-product for:', productId);
-        socket.emit('join-product', productId);
-      }
-    };
+    let eventSource: EventSource | null = null;
 
-    // Join if already connected, otherwise wait for connect event
-    if (socket.connected) {
-      joinRoom();
+    if (isCurrentlyScanning) {
+      eventSource = new EventSource(`/api/products/${productId}/scan-stream`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.isScanning) {
+            setLocalScanning(true);
+            setScanStep(data.status);
+          } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.status === 'ERROR') {
+            setLocalScanning(false);
+            setScanStep("");
+            if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
+              toast.success("Scan completed! Fresh leads loaded.");
+            }
+            fetchProduct();
+            setRefreshTrigger((prev) => prev + 1);
+            eventSource?.close();
+          }
+        } catch (_) {}
+      };
+
+      eventSource.onerror = () => {
+        // Close broken connection
+        eventSource?.close();
+      };
     }
-
-    // Always listen for connect/reconnect to ensure we are in the room
-    socket.on('connect', joinRoom);
-
-    socket.on('scan-status', (data: { isScanning: boolean; status: string }) => {
-      console.log('Real-time scan update:', data);
-      
-      if (data.isScanning) {
-        setLocalScanning(true);
-        setScanStep(data.status);
-      } else {
-        setLocalScanning(false);
-        setScanStep("");
-        // Refresh product data and leads list
-        fetchProduct();
-        setRefreshTrigger(prev => prev + 1);
-      }
-    });
 
     return () => {
-      socket.off('connect', joinRoom);
-      socket.off('scan-status');
+      if (eventSource) {
+        eventSource.close();
+      }
     };
-  }, [productId, fetchProduct, sessionToken]);
+  }, [productId, isCurrentlyScanning, fetchProduct]);
 
   const handleScanNow = async () => {
-    if (isCurrentlyScanning) return
-    setLocalScanning(true)
+    if (isCurrentlyScanning) return;
+    setLocalScanning(true);
+    setScanStep("INITIALIZING");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/scan`, {
-        method: "POST", credentials: "include",
-      })
-      
-      if (res.status === 202) return
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || "Scan failed")
+      const res = await fetch(`/api/products/${productId}/scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (res.status === 202) {
+        toast.info("Scan started! Tracking progress...");
+        return;
       }
-      setLocalScanning(false)
-      fetchProduct()
-      setRefreshTrigger(prev => prev + 1)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Scan failed");
+      }
+      setLocalScanning(false);
+      fetchProduct();
+      setRefreshTrigger(prev => prev + 1);
     } catch (err: any) {
-      toast.error(err.message || "Scan failed")
-      setLocalScanning(false)
+      toast.error(err.message || "Scan failed");
+      setLocalScanning(false);
+      setScanStep("");
     }
-  }
+  };
 
   if (loading) {
     return (

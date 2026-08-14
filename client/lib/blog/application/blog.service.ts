@@ -11,11 +11,11 @@ export class BlogService {
     const nextUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
     
     if (isServer) {
-      const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.FRONTEND_URL || "http://localhost:3000";
       if (nextUrl.startsWith("/")) {
-        return `${backendUrl}${nextUrl}`;
+        return `${siteUrl}${nextUrl}`;
       }
-      return backendUrl;
+      return nextUrl;
     }
     
     return nextUrl;

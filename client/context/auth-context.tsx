@@ -4,7 +4,6 @@ import React, { createContext, useContext, useMemo, useEffect, useCallback, useS
 import posthog from 'posthog-js'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession, signOut } from '@/lib/auth-client'
-import { disconnectSocket } from '@/lib/socket'
 import { Wrench, Loader2 } from 'lucide-react'
 
 // Keep same User interface for backward compatibility
@@ -136,7 +135,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    disconnectSocket()
     await signOut()
     router.push('/login')
     router.refresh()
