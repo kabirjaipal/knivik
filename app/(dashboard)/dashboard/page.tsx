@@ -443,7 +443,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <span className="text-xs font-black text-primary bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10 group-hover:border-primary/20 transition-all">
-                      {leadsByProduct[p.name] ?? 0}
+                      {p._count?.leads ?? 0}
                     </span>
                   </button>
                 ))
