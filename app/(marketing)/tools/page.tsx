@@ -11,12 +11,14 @@ import { MetadataService } from "@/lib/seo/application/metadata.service";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { toolsList } from "@/lib/tools";
 
+import { SchemaScript } from "@/components/seo/schema-script";
+import { SchemaService } from "@/lib/seo/application/schema.service";
+
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Free AI Marketing & Social Outreach Tools Suite",
   description: "Boost your lead generation and B2B sales outreach with our free tools. Build Reddit search queries, audit cold message spam, generate testimonial cards, and monitor HackerNews intent.",
   path: "/tools",
 });
-
 
 export default function ToolsPage() {
   const breadcrumbItems = [
@@ -24,9 +26,16 @@ export default function ToolsPage() {
     { name: "Free Tools", item: "/tools" },
   ];
 
+  const collectionSchema = SchemaService.generateCollectionPageSchema({
+    name: "Knivik Free Marketing & Social Outreach Tools Suite",
+    description: "Free tools for building Reddit search queries, auditing outreach warmth, generating testimonials, and monitoring buyer intent.",
+    path: "/tools",
+  });
+
   return (
     <div className="flex flex-col min-h-screen">
       <BreadcrumbJsonLd items={breadcrumbItems} />
+      <SchemaScript schema={collectionSchema} />
 
       <section className="pt-32 pb-20 bg-background relative overflow-hidden">
         {/* Decorative Grid Background and Radial Glows */}

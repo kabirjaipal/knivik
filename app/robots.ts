@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard/", "/admin/", "/api/"],
+        disallow: ["/dashboard/", "/admin/", "/api/", "/_next/"],
       },
       {
         userAgent: [
@@ -24,12 +24,17 @@ export default function robots(): MetadataRoute.Robots {
           "CCBot",
           "Bytespider",
           "Diffbot",
+          "Meta-ExternalAgent",
+          "FacebookBot",
+          "GoogleOther",
         ],
-        allow: ["/", "/blog/", "/alternatives/", "/tools/", "/pricing"],
-        disallow: ["/dashboard/", "/admin/", "/api/"],
+        allow: ["/", "/llms.txt", "/llms-full.txt"],
+        disallow: ["/dashboard/", "/admin/", "/api/", "/_next/"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }
+
 

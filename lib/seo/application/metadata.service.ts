@@ -5,12 +5,25 @@ import { siteConfig } from "../../seo";
 
 export class MetadataService {
   private static readonly defaultKeywords = siteConfig.keywords;
-
   private static readonly defaultOgImage = "/og-image.png";
+
+  private static formatTitle(rawTitle: string): string {
+    const clean = rawTitle.trim();
+    if (clean.toLowerCase().endsWith("| knivik")) {
+      return clean;
+    }
+    if (clean.toLowerCase().endsWith("- knivik")) {
+      return clean;
+    }
+    if (clean.toLowerCase() === "knivik") {
+      return "Knivik | AI Lead Finder & B2B Social Lead Generation Tool";
+    }
+    return `${clean} | Knivik`;
+  }
 
   /**
    * Builds a production-grade, highly structured Next.js Metadata object.
-   * Auto-resolves canonical URLs and sets up search-optimal robot configurations.
+   * Auto-resolves canonical URLs, absolute titles, and search-optimal robot configurations.
    */
   public static constructPageMetadata(options: MetadataOptions): Metadata {
     const baseUrl = EnvConfig.getBaseUrl();
@@ -19,10 +32,7 @@ export class MetadataService {
       ? (options.ogImage.startsWith("http") ? options.ogImage : EnvConfig.resolveUrl(options.ogImage))
       : EnvConfig.resolveUrl(this.defaultOgImage);
 
-    const titleTemplate = {
-      default: `${options.title} | Knivik`,
-      template: `%s | Knivik`,
-    };
+    const formattedTitle = this.formatTitle(options.title);
 
     // Construct robots settings based on indexing requirements
     const robotsConfig = options.noIndex
@@ -51,7 +61,9 @@ export class MetadataService {
         };
 
     return {
-      title: titleTemplate,
+      title: {
+        absolute: formattedTitle,
+      },
       description: options.description,
       keywords: options.keywords || this.defaultKeywords,
       metadataBase: new URL(baseUrl),
@@ -60,7 +72,7 @@ export class MetadataService {
       },
       robots: robotsConfig,
       openGraph: {
-        title: `${options.title} | Knivik`,
+        title: formattedTitle,
         description: options.description,
         url: absoluteCanonicalUrl,
         siteName: "Knivik",
@@ -71,15 +83,16 @@ export class MetadataService {
             url: absoluteOgImageUrl,
             width: 1200,
             height: 630,
-            alt: `${options.title} Social Share Card`,
+            alt: `${options.title} - Knivik`,
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: `${options.title} | Knivik`,
+        title: formattedTitle,
         description: options.description,
         images: [absoluteOgImageUrl],
+        site: "@knivikai",
         creator: "@knivikai",
       },
       icons: {

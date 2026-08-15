@@ -49,11 +49,17 @@ export default function TestimonialGeneratorPage() {
   ];
 
   const faqSchema = SchemaService.generateFAQSchema(faqs);
+  const webAppSchema = SchemaService.generateWebApplicationSchema({
+    name: "Reddit & HackerNews Testimonial Card Generator",
+    description: "Free tool to generate polished testimonial cards from Reddit and HackerNews quotes.",
+    path: "/tools/testimonial-generator",
+  });
 
   return (
     <div className="flex flex-col bg-background">
       <BreadcrumbJsonLd items={breadcrumbs} />
       <SchemaScript schema={faqSchema} />
+      <SchemaScript schema={webAppSchema} />
       <TestimonialGeneratorClient />
     </div>
   );

@@ -46,11 +46,17 @@ export default function AskHnFeedPage() {
   ];
 
   const faqSchema = SchemaService.generateFAQSchema(faqs);
+  const webAppSchema = SchemaService.generateWebApplicationSchema({
+    name: "Ask HN Lead Finder Feed",
+    description: "Scan HackerNews and Ask HN threads for real-time customer intent and tool suggestions.",
+    path: "/tools/ask-hn-feed",
+  });
 
   return (
     <div className="flex flex-col bg-background">
       <BreadcrumbJsonLd items={breadcrumbs} />
       <SchemaScript schema={faqSchema} />
+      <SchemaScript schema={webAppSchema} />
       <AskHnFeedClient />
     </div>
   );

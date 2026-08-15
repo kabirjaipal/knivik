@@ -68,7 +68,7 @@ export class ComparisonService {
     const competitor = data.competitor;
     return SchemaService.generateBreadcrumbsSchema([
       { name: "Home", item: "/" },
-      { name: "Alternatives", item: `/alternatives/${competitor.slug}` },
+      { name: "Alternatives", item: "/alternatives" },
       { name: `${competitor.name} Alternative`, item: `/alternatives/${competitor.slug}` }
     ]);
   }

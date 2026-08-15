@@ -65,7 +65,7 @@ export default async function LandingPage() {
       <SchemaScript schema={softwareSchema} />
       <SchemaScript schema={websiteSchema} />
       <SchemaScript schema={organizationSchema} />
-      <main className="grow">
+      <div className="grow">
         <Hero user={user} />
         <PlatformSupport />
         <Workflow />
@@ -74,7 +74,7 @@ export default async function LandingPage() {
         <Integrations />
         <FAQ />
         <FinalCTA user={user} />
-      </main>
+      </div>
     </div>
   )
 }

@@ -15,6 +15,8 @@ const competitors = [
   { name: "F5Bot", slug: "f5bot" },
   { name: "BuzzSumo", slug: "buzzsumo" },
   { name: "Cognism", slug: "cognism" },
+  { name: "Mention", slug: "mention" },
+  { name: "Awario", slug: "awario" },
 ];
 
 export function Footer() {
@@ -37,9 +39,9 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-2.5">
-            <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-              Free Tools
-            </h4>
+            <Link href="/tools" className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors">
+              Free Tools →
+            </Link>
             <ul className="flex flex-col gap-2 text-xs font-bold text-foreground/70">
               {toolsList.slice(0, 5).map((tool) => (
                 <li key={tool.href}>
@@ -65,9 +67,9 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-2.5">
-            <h4 className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-              Alternatives
-            </h4>
+            <Link href="/alternatives" className="font-black text-[9px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors">
+              Alternatives Hub →
+            </Link>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-bold text-foreground/70">
               {competitors.map((c) => (
                 <li key={c.slug}>

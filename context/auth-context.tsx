@@ -259,21 +259,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  if (loading) {
-    return (
-      <AuthContext.Provider value={value}>
-        <div className="fixed inset-0 w-full h-full flex flex-col items-center justify-center bg-background text-foreground z-[99999]">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        </div>
-      </AuthContext.Provider>
-    );
-  }
-
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export const useAuth = () => {

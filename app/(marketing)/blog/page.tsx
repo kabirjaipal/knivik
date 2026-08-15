@@ -4,8 +4,11 @@ import { BlogClient } from "./BlogClient";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { MetadataService } from "@/lib/seo/application/metadata.service";
 
+import { SchemaScript } from "@/components/seo/schema-script";
+import { SchemaService } from "@/lib/seo/application/schema.service";
+
 export const metadata: Metadata = MetadataService.constructPageMetadata({
-  title: "B2B Sales Lead Finder & Social Selling Blog | Knivik",
+  title: "B2B Sales Lead Finder & Social Selling Blog",
   description: "Read the latest tips, guides, and strategies for social selling, automated buyer intent alerts, and building B2B pipelines on Reddit, HackerNews, and X.",
   path: "/blog",
   keywords: [
@@ -26,9 +29,16 @@ export default async function BlogPage() {
     { name: "Blog", item: "/blog" },
   ];
 
+  const collectionSchema = SchemaService.generateCollectionPageSchema({
+    name: "Knivik B2B Sales & Social Selling Guides",
+    description: "Actionable guides on social prospecting, buying intent scoring, and warm lead outreach.",
+    path: "/blog",
+  });
+
   return (
     <div className="flex flex-col min-h-screen">
       <BreadcrumbJsonLd items={breadcrumbItems} />
+      <SchemaScript schema={collectionSchema} />
 
       <section className="pt-24 pb-12 bg-background relative overflow-hidden flex-grow">
         {/* Decorative Grid Background and Radial Glows */}

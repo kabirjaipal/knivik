@@ -46,11 +46,17 @@ export default function WarmthAuditorPage() {
   ];
 
   const faqSchema = SchemaService.generateFAQSchema(faqs);
+  const webAppSchema = SchemaService.generateWebApplicationSchema({
+    name: "Outreach Warmth & Spam Auditor",
+    description: "Free tool to audit cold outreach email drafts and social DMs for warmth, trust, and spam risk.",
+    path: "/tools/warmth-auditor",
+  });
 
   return (
     <div className="flex flex-col bg-background">
       <BreadcrumbJsonLd items={breadcrumbs} />
       <SchemaScript schema={faqSchema} />
+      <SchemaScript schema={webAppSchema} />
       <WarmthAuditorClient />
     </div>
   );

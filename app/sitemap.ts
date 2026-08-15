@@ -9,10 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
     "/pricing",
-    "/contact",
-    "/terms",
-    "/privacy",
-    "/refund-policy",
+    "/alternatives",
     "/tools",
     "/tools/search-builder",
     "/tools/reply-generator",
@@ -21,11 +18,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/tools/ask-hn-feed",
     "/tools/subreddit-directory",
     "/blog",
+    "/contact",
+    "/terms",
+    "/privacy",
+    "/refund-policy",
   ].map((route) => ({
     url: EnvConfig.resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
-    changeFrequency: "weekly" as const,
-    priority: route === "" || route === "/tools" || route === "/blog" ? 1.0 : 0.8,
+    changeFrequency: (route === "" || route === "/blog" ? "daily" : "weekly") as "daily" | "weekly",
+    priority: route === "" ? 1.0 : route === "/alternatives" || route === "/tools" || route === "/blog" || route === "/pricing" ? 0.9 : 0.8,
   }));
 
   // Dynamically resolve comparison page routes for search-engine indexing

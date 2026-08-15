@@ -47,11 +47,17 @@ export default function SearchBuilderPage() {
   ];
 
   const faqSchema = SchemaService.generateFAQSchema(faqs);
+  const webAppSchema = SchemaService.generateWebApplicationSchema({
+    name: "Social Search Operator Builder",
+    description: "Generate advanced Google, Reddit, HackerNews, and X (Twitter) search queries instantly to find high-intent leads.",
+    path: "/tools/search-builder",
+  });
 
   return (
     <div className="flex flex-col bg-background">
       <BreadcrumbJsonLd items={breadcrumbs} />
       <SchemaScript schema={faqSchema} />
+      <SchemaScript schema={webAppSchema} />
       <Suspense fallback={<div className="min-h-screen bg-background" />}>
         <SearchBuilderClient />
       </Suspense>

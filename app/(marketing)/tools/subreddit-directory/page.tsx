@@ -45,11 +45,17 @@ export default function SubredditDirectoryPage() {
   ];
 
   const faqSchema = SchemaService.generateFAQSchema(faqs);
+  const webAppSchema = SchemaService.generateWebApplicationSchema({
+    name: "Subreddit Niche Lead Directory",
+    description: "Explore high-value subreddits categorized by business niche with common pain points and triggers.",
+    path: "/tools/subreddit-directory",
+  });
 
   return (
     <div className="flex flex-col bg-background">
       <BreadcrumbJsonLd items={breadcrumbs} />
       <SchemaScript schema={faqSchema} />
+      <SchemaScript schema={webAppSchema} />
       <SubredditDirectoryClient />
     </div>
   );

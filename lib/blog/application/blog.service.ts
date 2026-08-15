@@ -186,7 +186,7 @@ export class BlogService {
       : post.coverImage;
 
     return MetadataService.constructPageMetadata({
-      title: `${post.title} | Knivik Blog`,
+      title: `${post.title} - Blog`,
       description: post.description,
       path: `/blog/${post.slug}`,
       keywords: post.tags,
@@ -210,10 +210,13 @@ export class BlogService {
    * Generates Article JSON-LD schema for search engines.
    */
   public static generateArticleSchema(post: BlogPost): Record<string, any> {
+    const baseUrl = EnvConfig.getBaseUrl();
     const dateStr = typeof post.date === 'string' ? post.date : new Date(post.date).toISOString().split('T')[0];
     const imageUrl = post.coverImage.startsWith("data:")
       ? EnvConfig.resolveUrl(`/api/blog/${post.slug}/image`)
       : post.coverImage;
+    const postUrl = EnvConfig.resolveUrl(`/blog/${post.slug}`);
+    
     return {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
@@ -222,10 +225,11 @@ export class BlogService {
       "image": imageUrl,
       "datePublished": dateStr,
       "dateModified": dateStr,
+      "inLanguage": "en-US",
       "author": {
         "@type": "Person",
-        "name": post.author?.name || "Admin",
-        "jobTitle": post.author?.role || "Team",
+        "name": post.author?.name || "Knivik Growth Team",
+        "jobTitle": post.author?.role || "B2B Sales Specialist",
         "sameAs": [
           post.author?.twitter,
           post.author?.instagram
@@ -233,15 +237,16 @@ export class BlogService {
       },
       "publisher": {
         "@type": "Organization",
+        "@id": `${baseUrl}/#organization`,
         "name": "Knivik",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.knivik.xyz/logo.png"
+          "url": `${baseUrl}/favicon.svg`
         }
       },
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": `https://www.knivik.xyz/blog/${post.slug}`
+        "@id": postUrl
       }
     };
   }

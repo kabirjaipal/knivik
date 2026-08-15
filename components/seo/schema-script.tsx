@@ -1,5 +1,4 @@
 import React from "react";
-import Script from "next/script";
 
 interface SchemaScriptProps {
   schema: Record<string, any>;
@@ -20,14 +19,13 @@ function safeJsonStringify(data: any): string {
 }
 
 /**
- * Safe, light presentation component that injects a schema block
- * directly inside the document using next/script. It compiles perfectly in both Server
- * and Client contexts.
+ * Presentation component that injects a valid JSON-LD schema block
+ * directly into the SSR document for 0ms delay crawler extraction.
  */
 export function SchemaScript({ schema, id }: SchemaScriptProps) {
   const scriptId = id || `schema-${schema["@type"] || "ld-json"}`;
   return (
-    <Script
+    <script
       id={scriptId}
       type="application/ld+json"
       dangerouslySetInnerHTML={{
@@ -36,3 +34,4 @@ export function SchemaScript({ schema, id }: SchemaScriptProps) {
     />
   );
 }
+
