@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import logger from '@/lib/logger';
 import config from '@/lib/config';
-import { BatchProcessingService } from '@/lib/services/batchProcessingService';
+import { BatchProcessingService } from '@/lib/services/batch-processing';
 
 export const maxDuration = 60; // Max allowed execution for serverless cron
 

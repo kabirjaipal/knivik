@@ -4,7 +4,7 @@ import logger from '@/lib/logger';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth-server';
 import { hasCapability } from '@/lib/plans';
-import { SearchQueryService } from '@/lib/services/searchQueryService';
+import { SearchQueryService } from '@/lib/services/search-query-service';
 
 const productSchema = z.object({
   name: z.string().min(1).max(255),

@@ -1,7 +1,6 @@
 import { MetadataRoute } from "next";
-import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
-import { ComparisonService } from "@/lib/seo/application/comparison.service";
-import { BlogService } from "@/lib/blog/application/blog.service";
+import { resolveUrl, ComparisonService } from "@/lib/seo";
+import { BlogService } from "@/lib/services/blog-service";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/privacy",
     "/refund-policy",
   ].map((route) => ({
-    url: EnvConfig.resolveUrl(route),
+    url: resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
     changeFrequency: (route === "" || route === "/blog" ? "daily" : "weekly") as "daily" | "weekly",
     priority: route === "" ? 1.0 : route === "/alternatives" || route === "/tools" || route === "/blog" || route === "/pricing" ? 0.9 : 0.8,
@@ -32,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamically resolve comparison page routes for search-engine indexing
   const competitorSlugs = ComparisonService.getAllSlugs();
   const comparisonRoutes = competitorSlugs.map((slug) => ({
-    url: EnvConfig.resolveUrl(`/alternatives/${slug}`),
+    url: resolveUrl(`/alternatives/${slug}`),
     lastModified: new Date().toISOString().split("T")[0],
     changeFrequency: "weekly" as const,
     priority: 0.7,
@@ -43,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogRoutes = posts.map((post) => {
     const dateStr = typeof post.date === 'string' ? post.date : new Date(post.date).toISOString().split('T')[0];
     return {
-      url: EnvConfig.resolveUrl(`/blog/${post.slug}`),
+      url: resolveUrl(`/blog/${post.slug}`),
       lastModified: dateStr,
       changeFrequency: "monthly" as const,
       priority: 0.7,

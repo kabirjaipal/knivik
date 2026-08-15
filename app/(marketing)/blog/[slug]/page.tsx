@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock, Sparkles } from "lucide-react";
 import { FaTwitter, FaInstagram } from "react-icons/fa";
-import { BlogService } from "@/lib/blog/application/blog.service";
+import { BlogService } from "@/lib/services/blog-service";
 import { SchemaScript } from "@/components/seo/schema-script";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { Badge } from "@/components/ui/badge";

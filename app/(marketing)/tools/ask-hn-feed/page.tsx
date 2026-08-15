@@ -1,8 +1,7 @@
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { SchemaScript } from "@/components/seo/schema-script";
-import { SchemaService } from "@/lib/seo/application/schema.service";
-import { AskHnFeedClient } from "./AskHnFeedClient";
+import { AskHnFeedClient } from "./ask-hn-feed-client";
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Free Ask HN Lead Finder Feed | Track HackerNews Buying Intent",

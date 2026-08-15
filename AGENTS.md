@@ -46,7 +46,7 @@ knivik/
 
 *   **Structured Outputs:** Enforce schema validation on LLM responses using Zod schemas (`Output.object` via Vercel AI SDK or structured parsers). Never assume raw text is valid JSON.
 *   **Rate Limits & Backoff:** Implement exponential backoff with jitter on `429` / transient `5xx` errors. Never retry `400` validation errors.
-*   **Telemetry & Costs:** Log all model token consumption, latency, and costs via `logLlmUsage` in `@/lib/aiRunner`.
+*   **Telemetry & Costs:** Log all model token consumption, latency, and costs via `logLlmUsage` in `@/lib/ai-runner`.
 *   **Model Routing:** Use fast models (e.g. `llama-3.1-8b-instant`) for lightweight filtering and versatile models (`llama-3.3-70b-versatile`) for deep reasoning & qualification.
 
 ---

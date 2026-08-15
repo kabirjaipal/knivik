@@ -3,7 +3,7 @@
 import { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { Search, Calendar, Clock, ArrowRight } from "lucide-react";
-import { BlogPost } from "@/lib/blog/domain/blog.model";
+import { BlogPost } from "@/lib/services/blog-service";
 import { Badge } from "@/components/ui/badge";
 
 interface BlogClientProps {

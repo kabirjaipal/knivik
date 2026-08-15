@@ -1,7 +1,6 @@
 import React from "react";
-import { SchemaService } from "@/lib/seo/application/schema.service";
+import { SchemaService, BreadcrumbItem } from "@/lib/seo";
 import { SchemaScript } from "./schema-script";
-import { BreadcrumbItem } from "@/lib/seo/domain/seo.types";
 
 interface BreadcrumbJsonLdProps {
   items: BreadcrumbItem[];

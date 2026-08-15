@@ -29,7 +29,7 @@ import {
   LeadCard,
   type LeadCardData,
   type LeadStatus,
-} from "@/components/dashboard/LeadCard";
+} from "@/components/dashboard/lead-card";
 import { API_URL } from "@/lib/constants";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

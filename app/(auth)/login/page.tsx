@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import LoginClient from "./login-client";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService } from "@/lib/seo";
 import { Loader2 } from "lucide-react";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({

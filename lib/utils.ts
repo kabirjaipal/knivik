@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { type LeadCardData } from "@/components/dashboard/LeadCard"
+import { type LeadCardData } from "@/components/dashboard/lead-card"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -148,4 +148,17 @@ export function compressImage(file: File, maxWidth = 1200): Promise<string> {
   });
 }
 
-
+/**
+ * Safe JSON parsing helper. Attempts to parse a value if it is a string,
+ * returning the parsed JavaScript object. If parsing fails, returns as-is.
+ */
+export function parseJson(val: unknown): unknown {
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return val;
+    }
+  }
+  return val;
+}

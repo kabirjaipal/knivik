@@ -1,8 +1,7 @@
-import { MetadataService } from "@/lib/seo/application/metadata.service";
-import { SchemaService } from "@/lib/seo/application/schema.service";
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { SchemaScript } from "@/components/seo/schema-script";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
-import { ReplyGeneratorClient } from "@/app/(marketing)/tools/reply-generator/ReplyGeneratorClient";
+import { ReplyGeneratorClient } from "./reply-generator-client";
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Free AI Outreach Reply Generator | High-Converting DMs",

@@ -8,7 +8,7 @@ import { ArrowLeft, Trash2, Save, Loader2, Sparkles, Upload, Globe, FileText } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import TiptapEditor from "@/components/admin/TiptapEditor";
+import TiptapEditor from "@/components/admin/tiptap-editor";
 import { calculateReadTime, compressImage } from "@/lib/utils";
 import { API_URL } from "@/lib/constants";
 

@@ -1,12 +1,12 @@
 import { db } from '../db';
 import logger from '../logger';
 import { IntentLevel, LeadStatus } from '@prisma/client';
-import { BatchCollectionService } from './batchCollectionService';
-import { analyzeUserPostsBatch } from './batchAnalysisService';
-import { enrichLead } from './enrichmentService';
-import { sendLeadAlert } from './alertService';
-import { emitScanStatus } from '../scanEmitter';
-import { checkLeadQuota, incrementLeadUsage } from './usageService';
+import { BatchCollectionService } from './batch-collection';
+import { analyzeUserPostsBatch } from './batch-analysis';
+import { enrichLead } from './enrichment-service';
+import { sendLeadAlert } from './alert-service';
+import { emitScanStatus } from '../scan-emitter';
+import { checkLeadQuota, incrementLeadUsage } from './usage-service';
 
 /**
  * Main Batch Processing Service

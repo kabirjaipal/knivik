@@ -1,9 +1,8 @@
 import { Suspense } from "react";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { SchemaScript } from "@/components/seo/schema-script";
-import { SchemaService } from "@/lib/seo/application/schema.service";
-import { SearchBuilderClient } from "@/app/(marketing)/tools/search-builder/SearchBuilderClient";
+import { SearchBuilderClient } from "./search-builder-client";
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Free Social Search Operator Builder | Reddit, HackerNews & X Lead Finder",

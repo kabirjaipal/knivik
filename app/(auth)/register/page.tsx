@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import RegisterClient from "./register-client";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService } from "@/lib/seo";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Create Account",

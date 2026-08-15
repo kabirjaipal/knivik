@@ -2,7 +2,7 @@ import { Navbar } from "@/components/landing/navbar";
 import { Footer } from "@/components/landing/footer";
 import { getSession } from "@/lib/auth-client";
 import { headers } from "next/headers";
-import { ReferralTracker } from "@/components/ReferralTracker";
+import { ReferralTracker } from "@/components/referral-tracker";
 
 export default async function MarketingLayout({
   children,

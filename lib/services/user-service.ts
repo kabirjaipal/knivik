@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { db } from '../db';
 import { auth } from '../auth';
 import { fromNodeHeaders } from 'better-auth/node';
-import type { CreateUserInput, LoginInput, User } from '../types/index';
+import type { CreateUserInput, LoginInput, User } from '../types';
 
 export class AppError extends Error {
   statusCode: number;

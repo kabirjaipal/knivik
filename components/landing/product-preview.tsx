@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { CheckCircle2, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
-import { LeadCard, LeadCardData, LeadStatus } from "@/components/dashboard/LeadCard"
+import { LeadCard, LeadCardData, LeadStatus } from "@/components/dashboard/lead-card"
 
 const initialSampleLeads: LeadCardData[] = [
   {

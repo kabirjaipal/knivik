@@ -1,7 +1,6 @@
 import React from "react";
-import { SchemaService } from "@/lib/seo/application/schema.service";
+import { SchemaService, FAQItem } from "@/lib/seo";
 import { SchemaScript } from "./schema-script";
-import { FAQItem } from "@/lib/seo/domain/seo.types";
 
 interface DynamicFaqJsonLdProps {
   customFaqs?: FAQItem[];

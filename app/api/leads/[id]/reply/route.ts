@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import logger from '@/lib/logger';
 import { requireAuth } from '@/lib/auth-server';
 import { hasCapability } from '@/lib/plans';
-import { generateReply } from '@/lib/services/aiService';
+import { generateReply } from '@/lib/services/ai-service';
 
 export const maxDuration = 45;
 

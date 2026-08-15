@@ -3,9 +3,9 @@ import config from '../config';
 import logger from '../logger';
 import * as outreachReplyPrompt from '../prompts/outreachReply';
 import * as productStrategyPrompt from '../prompts/productStrategy';
-import { aiLlmRunner, MODELS } from '../aiRunner';
+import { aiLlmRunner, MODELS } from '../ai-runner';
 
-export { logLlmUsage } from '../aiRunner';
+export { logLlmUsage } from '../ai-runner';
 
 /**
  * Generates a helpful, non-spammy reply to a prospect.

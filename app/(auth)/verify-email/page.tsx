@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import VerifyEmailClient from "./verify-email-client";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService } from "@/lib/seo";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Verify Email",

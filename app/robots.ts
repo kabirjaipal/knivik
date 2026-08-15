@@ -1,8 +1,8 @@
 import { MetadataRoute } from "next";
-import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
+import { getBaseUrl } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = EnvConfig.getBaseUrl();
+  const baseUrl = getBaseUrl();
   return {
     rules: [
       {
@@ -36,5 +36,3 @@ export default function robots(): MetadataRoute.Robots {
     host: baseUrl,
   };
 }
-
-

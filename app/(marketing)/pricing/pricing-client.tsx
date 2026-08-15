@@ -7,7 +7,7 @@ import { Check, Info, Loader2, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { CheckoutButton } from "@/components/billing/CheckoutButton";
+import { CheckoutButton } from "@/components/billing/checkout-button";
 import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
 import { PricingComparison } from "./pricing-comparison";

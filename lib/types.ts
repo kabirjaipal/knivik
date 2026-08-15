@@ -1,0 +1,61 @@
+import type { NextRequest } from 'next/server';
+
+export interface ApiError {
+  status: number;
+  code: string;
+  message: string;
+  details?: unknown;
+  requestId?: string;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: ApiError;
+  requestId: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  metadata?: any | null;
+  role: string;
+  plan: string;
+  subscriptionStatus: string | null;
+  billingCycle: string | null;
+  currentPeriodEnd: Date | null;
+  dodoCustomerId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateUserInput {
+  email: string;
+  username: string;
+  password: string;
+  role?: string;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthenticatedRequest extends NextRequest {
+  user?: User;
+  requestId: string;
+}
+
+export interface RequestLogData {
+  requestId: string;
+  method: string;
+  url: string;
+  ip?: string | undefined;
+  userId?: string | undefined;
+  statusCode?: number | undefined;
+  requestBody?: unknown;
+  responseBody?: unknown;
+  headers?: Record<string, string> | undefined;
+  query?: Record<string, unknown> | undefined;
+}

@@ -2,7 +2,7 @@
 
 import { Activity, Flame, BarChart2, CheckCircle2, Rss, Hash, ChevronDown, ChevronUp, Globe } from "lucide-react"
 import { memo, useState } from "react"
-import type { LeadCardData } from "./LeadCard"
+import type { LeadCardData } from "./lead-card"
 import { FaTwitter, FaGithub } from "react-icons/fa"
 
 interface ProductStatsProps {

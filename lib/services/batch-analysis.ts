@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { IntentLevel } from '@prisma/client';
 import { db } from '../db';
 import logger from '../logger';
-import { aiLlmRunner, MODELS } from '../aiRunner';
+import { aiLlmRunner, MODELS } from '../ai-runner';
 import * as batchAnalysisPrompt from '../prompts/batchAnalysis';
 
 export interface CollectedPost {

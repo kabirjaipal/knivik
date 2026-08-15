@@ -1,6 +1,6 @@
 import { db } from '../db';
 import logger from '../logger';
-import { generateProductStrategy } from './aiService';
+import { generateProductStrategy } from './ai-service';
 
 /**
  * AI-Powered Search Query Generation Service

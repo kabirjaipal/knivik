@@ -1,11 +1,9 @@
 import { Metadata } from "next";
-import { BlogService } from "@/lib/blog/application/blog.service";
-import { BlogClient } from "./BlogClient";
+import { BlogService } from "@/lib/services/blog-service";
+import { BlogClient } from "./blog-client";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
-
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { SchemaScript } from "@/components/seo/schema-script";
-import { SchemaService } from "@/lib/seo/application/schema.service";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "B2B Sales Lead Finder & Social Selling Blog",

@@ -7,12 +7,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { toolsList } from "@/lib/tools";
-
 import { SchemaScript } from "@/components/seo/schema-script";
-import { SchemaService } from "@/lib/seo/application/schema.service";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Free AI Marketing & Social Outreach Tools Suite",

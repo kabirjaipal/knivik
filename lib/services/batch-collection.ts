@@ -2,9 +2,9 @@ import { db } from '../db';
 import logger from '../logger';
 import config from '../config';
 import { Platform } from '@prisma/client';
-import { CollectedPost } from './batchAnalysisService';
+import { CollectedPost } from './batch-analysis';
 import { hasCapability } from '../plans';
-import { twitterProtection } from '../utils/ipProtection';
+import { twitterProtection } from './rate-limiter';
 
 // Define ProductWithDetails interface locally
 interface ProductWithDetails {
@@ -153,7 +153,7 @@ export class BatchCollectionService {
       logger.info(`[COLLECTION] Product "${product.name}" has existing leads. Performing incremental scan (3-day lookback).`);
     }
 
-    const { SearchQueryService } = await import('./searchQueryService');
+    const { SearchQueryService } = await import('./search-query-service');
     const searchQueries = await SearchQueryService.getStoredQueries(product.id);
     logger.info(`[COLLECTION] Starting scan for product "${product.name}" using ${searchQueries.length} pre-loaded queries globally.`);
 

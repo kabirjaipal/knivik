@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import ForgotPasswordClient from "./forgot-password-client";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService } from "@/lib/seo";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Forgot Password",

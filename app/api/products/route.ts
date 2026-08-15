@@ -4,8 +4,8 @@ import logger from '@/lib/logger';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth-server';
 import { canAddProduct } from '@/lib/plans';
-import { SearchQueryService } from '@/lib/services/searchQueryService';
-import { BatchProcessingService } from '@/lib/services/batchProcessingService';
+import { SearchQueryService } from '@/lib/services/search-query-service';
+import { BatchProcessingService } from '@/lib/services/batch-processing';
 
 const productSchema = z.object({
   name: z.string().min(1).max(255),

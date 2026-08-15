@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logger';
 import { requireAuth } from '@/lib/auth-server';
-import { generateProductStrategy } from '@/lib/services/aiService';
+import { generateProductStrategy } from '@/lib/services/ai-service';
 
 export const maxDuration = 45;
 

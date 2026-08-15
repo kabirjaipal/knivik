@@ -1,10 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, XCircle, Sparkles, Shield, Zap, Search, Layers } from "lucide-react";
-import { ComparisonService } from "@/lib/seo/application/comparison.service";
-import { ComparisonRepository } from "@/lib/seo/infrastructure/comparison.repository";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
-import { SchemaService } from "@/lib/seo/application/schema.service";
+import { ComparisonService, MetadataService, SchemaService, getComparison } from "@/lib/seo";
 import { SchemaScript } from "@/components/seo/schema-script";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { Badge } from "@/components/ui/badge";
@@ -30,10 +27,9 @@ export const metadata: Metadata = MetadataService.constructPageMetadata({
 });
 
 export default function AlternativesHubPage() {
-  const repository = new ComparisonRepository();
   const slugs = ComparisonService.getAllSlugs();
   const comparisons = slugs
-    .map((slug) => repository.getByCompetitorSlug(slug))
+    .map((slug) => getComparison(slug))
     .filter((comp): comp is NonNullable<typeof comp> => comp !== undefined);
 
   const breadcrumbs = [

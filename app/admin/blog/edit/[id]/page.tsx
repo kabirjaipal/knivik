@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import BlogPostForm from "@/components/admin/BlogPostForm";
+import BlogPostForm from "@/components/admin/blog-post-form";
 
 export default function EditBlogPostPage() {
   const params = useParams();

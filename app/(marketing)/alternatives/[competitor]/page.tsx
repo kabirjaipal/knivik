@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, XCircle, Sparkles } from "lucide-react";
-import { ComparisonService } from "@/lib/seo/application/comparison.service";
+import { ComparisonService } from "@/lib/seo";
 import { SchemaScript } from "@/components/seo/schema-script";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

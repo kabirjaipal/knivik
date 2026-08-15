@@ -1,6 +1,6 @@
 import { Metadata } from "next";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
-import ContactClient from "./ContactClient";
+import { MetadataService } from "@/lib/seo";
+import ContactClient from "./contact-client";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({
   title: "Contact Us",

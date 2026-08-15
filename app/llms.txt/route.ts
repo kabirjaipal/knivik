@@ -1,12 +1,11 @@
-import { BlogService } from "@/lib/blog/application/blog.service";
-import { ComparisonService } from "@/lib/seo/application/comparison.service";
-import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
+import { BlogService } from "@/lib/services/blog-service";
+import { ComparisonService, getBaseUrl } from "@/lib/seo";
 import { toolsList } from "@/lib/tools";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const baseUrl = EnvConfig.getBaseUrl();
+  const baseUrl = getBaseUrl();
   const posts = await BlogService.getAllPosts();
   const competitorSlugs = ComparisonService.getAllSlugs();
 
@@ -58,4 +57,3 @@ export async function GET() {
     },
   });
 }
-

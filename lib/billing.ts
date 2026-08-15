@@ -35,15 +35,42 @@ export async function getPrices() {
       intervalCount: 1,
     }));
 
-    cachedPrices = mapped;
+    cachedPrices = mapped.length > 0 ? mapped : defaultFallbackPrices;
     cacheTimestamp = now;
-    return mapped;
-  } catch (error) {
-    logger.error({ error }, "Error in getPrices from Dodo");
-    // Fallback to stale cached prices if fetch fails, to prevent API errors
-    return cachedPrices || [];
+    return cachedPrices;
+  } catch (error: any) {
+    if (error?.status === 401 || error?.message?.includes("401")) {
+      logger.warn("Dodo Payments API key is unauthorized or unconfigured. Using fallback pricing.");
+    } else {
+      logger.error({ error }, "Error in getPrices from Dodo");
+    }
+    // Set fallback prices to prevent repeated failing requests
+    cachedPrices = cachedPrices || defaultFallbackPrices;
+    cacheTimestamp = now;
+    return cachedPrices;
   }
 }
+
+const defaultFallbackPrices = [
+  {
+    id: "p_pro_monthly",
+    productId: "p_pro_monthly",
+    name: "Pro Monthly",
+    amount: 39,
+    currency: "USD",
+    interval: "month",
+    intervalCount: 1,
+  },
+  {
+    id: "p_pro_yearly",
+    productId: "p_pro_yearly",
+    name: "Pro Yearly",
+    amount: 390,
+    currency: "USD",
+    interval: "year",
+    intervalCount: 1,
+  },
+];
 
 /**
  * Get user's effective plan

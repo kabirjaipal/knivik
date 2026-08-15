@@ -9,10 +9,8 @@ import { Benefits } from "@/components/landing/benefits"
 import { Integrations } from "@/components/landing/integrations"
 import { FAQ } from "@/components/landing/faq"
 import { FinalCTA } from "@/components/landing/cta"
-import { MetadataService } from "@/lib/seo/application/metadata.service"
-import { SchemaService } from "@/lib/seo/application/schema.service"
+import { MetadataService, SchemaService, siteConfig } from "@/lib/seo"
 import { SchemaScript } from "@/components/seo/schema-script"
-import { siteConfig } from "@/lib/seo"
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Knivik | AI Lead Finder & B2B Social Lead Generation Tool",

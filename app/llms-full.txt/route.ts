@@ -1,14 +1,11 @@
-import { BlogService } from "@/lib/blog/application/blog.service";
-import { ComparisonService } from "@/lib/seo/application/comparison.service";
-import { ComparisonRepository } from "@/lib/seo/infrastructure/comparison.repository";
-import { EnvConfig } from "@/lib/seo/infrastructure/env.config";
+import { BlogService } from "@/lib/services/blog-service";
+import { ComparisonService, getComparison, getBaseUrl } from "@/lib/seo";
 import { toolsList } from "@/lib/tools";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const baseUrl = EnvConfig.getBaseUrl();
-  const repository = new ComparisonRepository();
+  const baseUrl = getBaseUrl();
   const competitorSlugs = ComparisonService.getAllSlugs();
   const posts = await BlogService.getAllPosts();
 
@@ -35,7 +32,7 @@ export async function GET() {
 
   text += `## 3. Competitor Comparisons & Architectural Analysis\n\n`;
   competitorSlugs.forEach((slug) => {
-    const comp = repository.getByCompetitorSlug(slug);
+    const comp = getComparison(slug);
     if (comp) {
       text += `### Knivik vs ${comp.competitor.name}\n`;
       text += `- **URL:** ${baseUrl}/alternatives/${comp.competitor.slug}\n`;

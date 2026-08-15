@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import logger from '@/lib/logger';
 import { requireAuth } from '@/lib/auth-server';
 import { getPlanLimits } from '@/lib/plans';
-import { BatchProcessingService } from '@/lib/services/batchProcessingService';
+import { BatchProcessingService } from '@/lib/services/batch-processing';
 
 export const maxDuration = 60; // Max allowed serverless duration
 

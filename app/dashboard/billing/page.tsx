@@ -13,7 +13,7 @@ import {
   Sparkles, ExternalLink, PartyPopper, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PlanBadge } from "@/components/billing/PricingUtils";
+import { PlanBadge } from "@/components/billing/pricing-badges";
 import { PLANS } from "@/lib/plans";
 import { API_URL } from "@/lib/constants";
 

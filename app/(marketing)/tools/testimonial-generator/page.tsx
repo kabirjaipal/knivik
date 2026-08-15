@@ -1,8 +1,7 @@
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { SchemaScript } from "@/components/seo/schema-script";
-import { SchemaService } from "@/lib/seo/application/schema.service";
-import { TestimonialGeneratorClient } from "@/app/(marketing)/tools/testimonial-generator/TestimonialGeneratorClient";
+import { TestimonialGeneratorClient } from "./testimonial-generator-client";
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Free Reddit & HackerNews Testimonial Card Generator | Turn Quotes Into Social Proof",

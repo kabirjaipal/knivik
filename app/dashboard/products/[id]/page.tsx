@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/context/auth-context"
-import { ProductLeads } from "@/components/dashboard/ProductLeads"
+import { ProductLeads } from "@/components/dashboard/product-leads"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2, ExternalLink, Radar, Zap, Globe, ChevronDown, ChevronUp, Ban, Briefcase, Package, Activity } from "lucide-react"
 import { Badge } from "@/components/ui/badge"

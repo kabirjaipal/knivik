@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import PricingClient from "./pricing-client";
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 
 export const metadata: Metadata = MetadataService.constructPageMetadata({

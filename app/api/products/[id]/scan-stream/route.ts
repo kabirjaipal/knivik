@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { db } from '@/lib/db';
-import { scanEmitter } from '@/lib/scanEmitter';
+import { scanEmitter } from '@/lib/scan-emitter';
 
 export const dynamic = 'force-dynamic';
 

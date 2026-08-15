@@ -1,8 +1,7 @@
-import { MetadataService } from "@/lib/seo/application/metadata.service";
+import { MetadataService, SchemaService } from "@/lib/seo";
 import { BreadcrumbJsonLd } from "@/components/seo/breadcrumb-json-ld";
 import { SchemaScript } from "@/components/seo/schema-script";
-import { SchemaService } from "@/lib/seo/application/schema.service";
-import { SubredditDirectoryClient } from "@/app/(marketing)/tools/subreddit-directory/SubredditDirectoryClient";
+import { SubredditDirectoryClient } from "./subreddit-directory-client";
 
 export const metadata = MetadataService.constructPageMetadata({
   title: "Free Subreddit Niche Lead Directory | Sourcing Social Leads",

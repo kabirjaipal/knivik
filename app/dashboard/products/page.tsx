@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ConfirmationDialog } from "@/components/dashboard/ConfirmationDialog"
+import { ConfirmationDialog } from "@/components/dashboard/confirmation-dialog"
 import {
   Sheet,
   SheetContent,
