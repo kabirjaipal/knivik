@@ -10,6 +10,12 @@ export const siteConfig = {
     github: "https://github.com/knivik",
   },
   keywords: [
+    "Knivik",
+    "Knivik AI",
+    "knivik.xyz",
+    "knvik",
+    "knivik lead finder",
+    "knivik b2b lead generation",
     "how to find clients on reddit",
     "how to find leads on twitter",
     "reddit lead generation tool",

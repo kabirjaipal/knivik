@@ -59,10 +59,12 @@ export class SchemaService {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Knivik",
+      "alternateName": ["Knivik AI", "knvik", "Knivik Lead Finder"],
       "url": baseUrl,
       "logo": `${baseUrl}/favicon.svg`,
       "sameAs": [
         "https://x.com/knivikai",
+        "https://github.com/knivik",
         "https://instagram.com/knivikai"
       ]
     };
@@ -79,7 +81,7 @@ export class SchemaService {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Knivik",
-      "alternateName": ["Knivik AI", "Knivik Lead Finder"],
+      "alternateName": ["Knivik AI", "knvik", "Knivik Lead Finder", "knivik.xyz"],
       "url": baseUrl,
       "description": "Advanced AI Lead Finder and B2B social sales intelligence platform for products and services."
     };
