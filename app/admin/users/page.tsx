@@ -285,7 +285,7 @@ export default function AdminUsersPage() {
                   </TableCell>
                   
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {new Date(user.createdAt).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
                   </TableCell>
                   
                   <TableCell className="text-right">

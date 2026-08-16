@@ -215,10 +215,9 @@ export const LeadCard = memo(({
 
         {/* ── Row 5: meta + all action controls ──────────────────────── */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-2 border-t border-border/40">
-          {/* Meta info */}
-          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground" suppressHydrationWarning>
             <Clock className="w-2.5 h-2.5" />
-            {new Date(lead.postedAt || lead.createdAt).toLocaleDateString(undefined, {
+            {new Date(lead.postedAt || lead.createdAt).toLocaleDateString("en-US", {
               month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
             })}
           </span>

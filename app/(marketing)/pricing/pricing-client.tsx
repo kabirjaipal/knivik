@@ -3,10 +3,11 @@
 import { useAuth } from "@/context/auth-context";
 import { useBilling } from "@/context/billing-context";
 import { useState } from "react";
-import { Check, Info, Loader2, Sparkles, Zap } from "lucide-react";
+import { Check, Info, Loader2, Sparkles, Zap, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { CheckoutButton } from "@/components/billing/checkout-button";
 import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
@@ -20,6 +21,8 @@ export default function PricingClient({ initialPrices = [] }: PricingClientProps
   const { user } = useAuth();
   const { billingData, isLoading: isBillingLoading } = useBilling();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const searchParams = useSearchParams();
+  const promoCode = (searchParams.get("promo") || searchParams.get("coupon") || searchParams.get("code") || "").trim().toUpperCase();
 
   const livePrices = (billingData?.prices && billingData.prices.length > 0)
     ? billingData.prices
@@ -100,6 +103,15 @@ export default function PricingClient({ initialPrices = [] }: PricingClientProps
                 <Badge className="bg-primary/20 text-primary border-none text-[10px] font-black px-2 py-0">2 MONTHS FREE</Badge>
               </button>
             </div>
+
+            {promoCode && (
+              <div className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-bold animate-in fade-in duration-300">
+                <Tag className="h-3.5 w-3.5" />
+                <span>
+                  Promo code <strong className="font-mono font-black">{promoCode}</strong> applied — 20% discount unlocked at checkout!
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto mb-24">
@@ -205,6 +217,7 @@ export default function PricingClient({ initialPrices = [] }: PricingClientProps
                 name={(user as any)?.displayUsername || user?.username || ""}
                 userId={user?.id || ""}
                 planName="Pro"
+                discountCode={promoCode || undefined}
                 className={`w-full h-14 text-base font-bold rounded-2xl transition-all ${
                   currentPlan === "PRO" 
                   ? "bg-secondary text-foreground cursor-default" 
@@ -229,6 +242,7 @@ export default function PricingClient({ initialPrices = [] }: PricingClientProps
                   name={(user as any)?.displayUsername || user?.username || ""}
                   userId={user?.id || ""}
                   planName="Pro"
+                  discountCode={promoCode || undefined}
                   skipTrial={true}
                   variant="outline"
                   className="w-full h-12 text-sm font-bold rounded-2xl mt-3 border-primary/20 hover:border-primary/40 hover:bg-primary/5 hover:scale-[1.01] transition-all"

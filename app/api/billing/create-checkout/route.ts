@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const userId = session.user.id;
     const body = await req.json();
-    const { productId, email, name, skipTrial } = body;
+    const { productId, email, name, skipTrial, discountCode } = body;
 
     if (!productId) {
       return NextResponse.json({ success: false, error: 'productId is required' }, { status: 400 });
@@ -61,6 +61,9 @@ export async function POST(req: NextRequest) {
       metadata: {
         userId,
       },
+      discount_code: typeof discountCode === 'string' && discountCode.trim().length > 0
+        ? discountCode.trim()
+        : undefined,
       subscription_data: skipTrial
         ? {
             trial_period_days: 0,

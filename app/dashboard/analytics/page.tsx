@@ -632,7 +632,7 @@ const leadVolumeChartConfig = {
 
 export function LeadVolumeChart({ data }: { data: { date: string; count: number }[] }) {
   const chartData = data.map((d) => ({
-    date: new Date(d.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    date: new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     count: d.count,
   }));
 

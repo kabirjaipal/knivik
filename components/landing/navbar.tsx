@@ -9,6 +9,7 @@ import { Logo } from "@/components/logo"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
+import { AnnouncementBanner } from "./announcement-banner"
 
 export function Navbar({ user }: { user: any }) {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -66,13 +67,14 @@ export function Navbar({ user }: { user: any }) {
 
   return (
     <header 
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         isScrolled 
-          ? "py-3 bg-background/95 border-b border-border/50 shadow-sm" 
-          : "py-6 bg-transparent"
+          ? "bg-background/95 border-b border-border/50 shadow-sm backdrop-blur-md" 
+          : "bg-background/80 backdrop-blur-sm"
       }`}
     >
-      <div className="container mx-auto flex items-center justify-between px-6">
+      <AnnouncementBanner />
+      <div className={`container mx-auto flex items-center justify-between px-6 transition-all duration-300 ${isScrolled ? "py-3" : "py-4"}`}>
         <Link href="/" className="flex items-center gap-2.5 group relative">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl text-primary group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
             <Logo size={28} />

@@ -13,6 +13,7 @@ interface CheckoutButtonProps {
   name?: string;
   userId: string;
   planName: string;
+  discountCode?: string;
   skipTrial?: boolean;
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   className?: string;
@@ -28,6 +29,7 @@ export function CheckoutButton({
   name,
   userId,
   planName,
+  discountCode,
   skipTrial = false,
   variant = "default",
   className = "",
@@ -41,7 +43,7 @@ export function CheckoutButton({
 
   const handleCheckout = async () => {
     if (!userId || !email) {
-      const returnUrl = encodeURIComponent(window.location.pathname);
+      const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
       router.push(`/login?redirect=${returnUrl}`);
       return;
     }
@@ -59,6 +61,7 @@ export function CheckoutButton({
           email,
           name,
           skipTrial,
+          discountCode,
         }),
       });
 
