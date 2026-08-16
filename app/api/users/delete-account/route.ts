@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
       where: { id: session.user.id },
     });
 
-    logger.info({ userId: session.user.id }, 'User deleted own account');
     return NextResponse.json({ success: true, message: 'Account deleted successfully' });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Delete account error');

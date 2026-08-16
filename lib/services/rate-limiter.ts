@@ -80,7 +80,7 @@ export class IPProtection {
     
     const remainingDelay = delay - timeSinceLastRequest;
     if (remainingDelay > 0) {
-      logger.info(`[${this.platform}] Rate limiting: waiting ${remainingDelay}ms`);
+      logger.debug(`[${this.platform}] Rate limiting: waiting ${remainingDelay}ms`);
       await this.sleep(remainingDelay);
     }
     
@@ -135,7 +135,7 @@ export class IPProtection {
         // Try exponential backoff
         for (let attempt = 1; attempt < this.config.MAX_RETRIES; attempt++) {
           const backoffDelay = this.config.BURST_DELAY_MS * Math.pow(this.config.BACKOFF_MULTIPLIER, attempt - 1);
-          logger.info(`[${this.platform}] Backing off for ${backoffDelay}ms (attempt ${attempt + 1})...`);
+          logger.debug(`[${this.platform}] Backing off for ${backoffDelay}ms (attempt ${attempt + 1})...`);
           await this.sleep(backoffDelay);
           
           try {
@@ -241,5 +241,4 @@ export function resetAllIPProtection() {
   redditProtection.resetCounters();
   hackerNewsProtection.resetCounters();
   twitterProtection.resetCounters();
-  logger.info('[IP_PROTECTION] All counters reset');
 }

@@ -82,7 +82,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    logger.info({ postId: post.id, slug: post.slug }, 'Blog post created successfully');
     return NextResponse.json({ success: true, post }, { status: 201 });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Create blog post error');

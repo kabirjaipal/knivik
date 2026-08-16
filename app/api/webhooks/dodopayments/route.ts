@@ -11,8 +11,6 @@ import { getPlanFromProductId } from '@/lib/plans';
 import { dodo } from '@/lib/dodo';
 
 export async function POST(req: NextRequest) {
-  logger.info('🔔 Webhook request received at /api/webhooks/dodopayments');
-
   try {
     const rawBody = await req.text();
 
@@ -43,7 +41,6 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingEvent) {
-      logger.info({ eventId, eventName }, 'Webhook event already processed (idempotent skip)');
       return NextResponse.json({ success: true, message: 'Already processed' });
     }
 
@@ -87,7 +84,7 @@ async function processDodoEvent(eventName: string, data: any) {
       break;
 
     default:
-      logger.info({ eventName }, 'Unhandled Dodo Payments event type');
+      console.log({ eventName }, 'Unhandled Dodo Payments event type');
   }
 }
 

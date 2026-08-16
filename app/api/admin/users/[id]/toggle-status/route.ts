@@ -32,7 +32,6 @@ export async function POST(
       },
     });
 
-    logger.info({ adminId: session.user.id, targetUserId: id, isSuspended }, 'Admin toggled user suspension');
     return NextResponse.json({ success: true, suspended: isSuspended });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Admin Toggle Status Error');

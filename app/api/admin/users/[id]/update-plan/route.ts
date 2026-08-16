@@ -24,7 +24,6 @@ export async function POST(
       data: { plan },
     });
 
-    logger.info({ adminId: session.user.id, targetUserId: id, newPlan: plan }, 'Admin updated user plan');
     return NextResponse.json({ success: true });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Admin Update Plan Error');

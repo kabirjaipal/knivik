@@ -79,11 +79,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    logger.info(
-      { referralId: referral.id, referredUserId: currentUserId, code: normalizedCode },
-      'User claimed a referral code successfully'
-    );
-
     return NextResponse.json(
       {
         success: true,

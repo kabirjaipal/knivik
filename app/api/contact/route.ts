@@ -64,8 +64,6 @@ export async function POST(req: NextRequest) {
       email
     );
 
-    logger.info({ sender: email, subject }, 'Contact form submitted successfully');
-
     return NextResponse.json({
       success: true,
       message: 'Your message has been sent successfully. We will get back to you soon!',

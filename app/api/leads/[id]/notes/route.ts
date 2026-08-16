@@ -7,6 +7,20 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  return handleNotesUpdate(req, params);
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return handleNotesUpdate(req, params);
+}
+
+async function handleNotesUpdate(
+  req: NextRequest,
+  params: Promise<{ id: string }>
+) {
   try {
     const { session, errorResponse } = await requireAuth();
     if (errorResponse) return errorResponse;

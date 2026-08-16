@@ -37,9 +37,12 @@ export async function GET(
 
   const stream = new ReadableStream({
     start(controller) {
+      // 1. Tell browser EventSource to auto-reconnect every 3 seconds if disconnected
+      controller.enqueue(encoder.encode('retry: 3000\n\n'));
+
       const isCurrentlyScanning = dbUser?.isScanning ?? false;
       
-      // If actively scanning on connect, send the initial in-progress state
+      // 2. If actively scanning on initial connect, send immediate progress state
       if (isCurrentlyScanning) {
         const initialPayload = `data: ${JSON.stringify({
           productId,
@@ -47,6 +50,13 @@ export async function GET(
           status: 'INITIALIZING',
         })}\n\n`;
         controller.enqueue(encoder.encode(initialPayload));
+      } else {
+        const idlePayload = `data: ${JSON.stringify({
+          productId,
+          isScanning: false,
+          status: 'IDLE',
+        })}\n\n`;
+        controller.enqueue(encoder.encode(idlePayload));
       }
 
       const listener = (data: { productId: string; userId: string; isScanning: boolean; status: string }) => {
@@ -54,7 +64,7 @@ export async function GET(
           const payload = `data: ${JSON.stringify(data)}\n\n`;
           controller.enqueue(encoder.encode(payload));
           if (!data.isScanning) {
-            // Finished
+            // Keep open briefly so client receives completion confirmation, then close
             setTimeout(() => {
               try {
                 controller.close();
@@ -66,7 +76,7 @@ export async function GET(
 
       scanEmitter.on(`scan:${productId}`, listener);
 
-      // Keep-alive heartbeat ping every 15s
+      // 3. Keep-alive heartbeat ping every 15s to prevent Vercel / proxy timeout
       const interval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`: ping\n\n`));
@@ -75,21 +85,25 @@ export async function GET(
         }
       }, 15000);
 
-      req.signal.addEventListener('abort', () => {
+      const cleanup = () => {
         clearInterval(interval);
         scanEmitter.off(`scan:${productId}`, listener);
-      });
+      };
+
+      req.signal.addEventListener('abort', cleanup);
     },
     cancel() {
-      // Stream cancelled by client
+      // Client closed or aborted connection
     },
   });
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform, no-store, must-revalidate',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      'Content-Encoding': 'none',
     },
   });
 }

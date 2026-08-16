@@ -128,6 +128,29 @@ export default function DashboardPage() {
     fetchAll();
   }, [user, authLoading, fetchAll]);
 
+  // ─── Real-time Lead Updates via Server-Sent Events (SSE) ──────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    const eventSource = new EventSource(`${API_URL}/users/scan-stream`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (!data.isScanning && (data.status === 'SUCCESS' || data.status === 'COMPLETED')) {
+          fetchAll();
+        }
+      } catch (_) {}
+    };
+
+    eventSource.onerror = () => {
+      // Graceful reconnect
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [user?.id, fetchAll]);
+
   // ─── Lead actions ─────────────────────────────────────────────────────────
 
   const handleDraftReply = async (leadId: string) => {

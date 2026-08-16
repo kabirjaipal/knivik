@@ -35,7 +35,6 @@ export async function POST(
       asResponse: true,
     });
 
-    logger.info({ adminId: session.user.id, targetUserId: targetUser.id }, 'Admin impersonated user');
     return result;
   } catch (error: any) {
     logger.error({ error: error.message }, 'Admin Impersonation Error');

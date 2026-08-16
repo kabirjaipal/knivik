@@ -120,42 +120,34 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!productId) return;
 
-    let eventSource: EventSource | null = null;
+    const eventSource = new EventSource(`${API_URL}/products/${productId}/scan-stream`);
 
-    if (isCurrentlyScanning) {
-      eventSource = new EventSource(`${API_URL}/products/${productId}/scan-stream`);
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.isScanning) {
-            setLocalScanning(true);
-            setScanStep(data.status);
-          } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.status === 'ERROR') {
-            setLocalScanning(false);
-            setScanStep("");
-            if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
-              toast.success("Scan completed! Fresh leads loaded.");
-            }
-            fetchProduct();
-            setRefreshTrigger((prev) => prev + 1);
-            eventSource?.close();
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.isScanning) {
+          setLocalScanning(true);
+          setScanStep(data.status || "INITIALIZING");
+        } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.status === 'ERROR' || data.status === 'FAILED') {
+          setLocalScanning(false);
+          setScanStep("");
+          if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
+            toast.success("Scan completed! Fresh leads loaded.");
           }
-        } catch (_) {}
-      };
+          fetchProduct();
+          setRefreshTrigger((prev) => prev + 1);
+        }
+      } catch (_) {}
+    };
 
-      eventSource.onerror = () => {
-        // Close broken connection
-        eventSource?.close();
-      };
-    }
+    eventSource.onerror = () => {
+      // Allow graceful recovery
+    };
 
     return () => {
-      if (eventSource) {
-        eventSource.close();
-      }
+      eventSource.close();
     };
-  }, [productId, isCurrentlyScanning, fetchProduct]);
+  }, [productId, fetchProduct]);
 
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return;

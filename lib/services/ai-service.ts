@@ -97,11 +97,6 @@ export const generateProductStrategy = async (
     const validTwitterHandles = rawTwitterHandles
       .filter((h: any) => typeof h === 'string' && h.trim().length > 0);
 
-    logger.info({ 
-      rawSubreddits: rawSubreddits.length, 
-      rawTwitter: rawTwitterHandles.length 
-    }, 'Processed AI-generated communities');
-
     // Clean generated search queries
     const searchQueries: string[] = Array.isArray(parsed.searchQueries) ? parsed.searchQueries : [];
     const validSearchQueries = searchQueries

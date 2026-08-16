@@ -41,8 +41,6 @@ export class BatchCollectionService {
   static async collectUserPosts(userId: string): Promise<CollectionResult> {
     const startTime = Date.now();
     
-    logger.info(`[COLLECTION] Starting collection for user ${userId}`);
-    
     // Overall timeout wrapper - max 5 minutes for entire collection
     const timeoutPromise = new Promise<CollectionResult>((_, reject) => {
       setTimeout(() => reject(new Error('Collection timeout')), 5 * 60 * 1000);
@@ -83,8 +81,6 @@ export class BatchCollectionService {
         };
       }
 
-      logger.info(`[COLLECTION] Found ${activeProducts.length} active products for user ${userId}`);
-      
       const productsWithPosts = [];
       let totalPosts = 0;
 
@@ -98,18 +94,8 @@ export class BatchCollectionService {
             posts: productPosts,
           });
           totalPosts += productPosts.length;
-          
-          // Log per-product summary with source breakdown
-          const sourceSummary = Object.entries(sourceBreakdown)
-            .map(([source, count]) => `${source}:${count}`)
-            .join(', ');
-          logger.info(`[COLLECTION] Product "${product.name}": ${productPosts.length} posts (${sourceSummary})`);
-        } else {
-          logger.warn(`[COLLECTION] Product "${product.name}": 0 posts collected`);
         }
       }
-
-      logger.info(`[COLLECTION] User ${userId}: ${totalPosts} total posts across ${productsWithPosts.length} products in ${Date.now() - startTime}ms`);
 
       return {
         userId,
@@ -146,16 +132,13 @@ export class BatchCollectionService {
     if (existingLeadsCount === 0) {
       // First scan / new product: scan up to 30 days back to populate the dashboard
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      logger.info(`[COLLECTION] Product "${product.name}" has 0 leads. Performing historical scan (30-day lookback).`);
     } else {
       // Routine scan: scan up to 3 days back for fresh leads
       oneMonthAgo.setDate(oneMonthAgo.getDate() - 3);
-      logger.info(`[COLLECTION] Product "${product.name}" has existing leads. Performing incremental scan (3-day lookback).`);
     }
 
     const { SearchQueryService } = await import('./search-query-service');
     const searchQueries = await SearchQueryService.getStoredQueries(product.id);
-    logger.info(`[COLLECTION] Starting scan for product "${product.name}" using ${searchQueries.length} pre-loaded queries globally.`);
 
     // Determine which platforms this user can access based on their plan
     const user = await db.client.user.findUnique({ where: { id: product.userId }, select: { plan: true } });
@@ -164,14 +147,9 @@ export class BatchCollectionService {
       ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER, Platform.GITHUB, Platform.BLUESKY]
       : [Platform.REDDIT, Platform.HACKERNEWS, Platform.GITHUB, Platform.BLUESKY];
 
-    if (!canUseTwitter) {
-      logger.info(`[COLLECTION] Twitter scanning skipped for product "${product.name}" — plan does not include Twitter access.`);
-    }
-
     // Collect from each platform globally
     for (const platform of platforms) {
       try {
-        logger.info(`[COLLECTION] [${platform}] Processing global engine`);
         const sourcePosts = await this.collectFromPlatform(product, platform, oneMonthAgo, searchQueries);
         allPosts.push(...sourcePosts);
         
@@ -204,8 +182,6 @@ export class BatchCollectionService {
 
         // Keep only posts that have NOT been scanned before
         const filteredPosts = uniquePosts.filter(p => !scannedSet.has(`${p.platform}-${p.externalPostId}`));
-        
-        logger.info(`[COLLECTION] Filtered out ${uniquePosts.length - filteredPosts.length} already scanned posts from scrapeCache for product "${product.name}".`);
         
         // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
         return filteredPosts.slice(0, 25);
@@ -349,7 +325,6 @@ export class BatchCollectionService {
       }
     }
 
-    logger.info(`[COLLECTION] [REDDIT] Collected ${posts.length} candidate posts across ${priorityQueries.length} queries`);
     return posts;
   }
 
@@ -418,7 +393,6 @@ export class BatchCollectionService {
           detectionMode: 'SEMANTIC'
         });
       });
-      logger.info(`[COLLECTION] [REDDIT] Successfully fallback-scraped ${posts.length} posts from RSS feed for query: "${query}"`);
     } catch (err: any) {
       logger.debug(`[COLLECTION] [REDDIT] RSS fallback failed: ${err.message}`);
     }
@@ -551,13 +525,11 @@ export class BatchCollectionService {
             detectionMode: 'SEMANTIC'
           });
         }
-        logger.info(`[COLLECTION] [HACKERNEWS] Ask HN strategy: ${askHnHits.length} hits fetched`);
       }
     } catch (askErr: any) {
       logger.warn({ errorMsg: askErr.message }, '[COLLECTION] [HACKERNEWS] Ask HN query failed');
     }
 
-    logger.info(`[COLLECTION] [HACKERNEWS] Total posts collected: ${posts.length}`);
     return posts;
   }
 
@@ -774,7 +746,6 @@ export class BatchCollectionService {
           detectionMode: 'SEMANTIC'
         });
       });
-      logger.info(`[COLLECTION] [TWITTER] Yahoo fallback scraped ${posts.length} posts for query: "${query}"`);
     } catch (err: any) {
       logger.error({ err: err.message }, 'Failed Yahoo Twitter fallback search');
     }
@@ -926,7 +897,6 @@ export class BatchCollectionService {
       }
     }
 
-    logger.info(`[COLLECTION] [GITHUB] Total posts collected: ${posts.length}`);
     return posts;
   }
 
@@ -1006,7 +976,6 @@ export class BatchCollectionService {
       }
     }
 
-    logger.info(`[COLLECTION] [BLUESKY] Total posts collected: ${posts.length}`);
     return posts;
   }
 }

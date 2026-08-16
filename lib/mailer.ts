@@ -174,7 +174,6 @@ export const sendEmail = async (to: string, subject: string, html: string, reply
       throw error;
     }
 
-    logger.info({ messageId: data?.id }, 'Email sent successfully via Resend SDK');
   } catch (error) {
     logger.error({ error }, 'Failed to send email via Resend SDK');
   }

@@ -401,11 +401,8 @@ export const LeadCard = memo(({
       {showNotes && (
         <div className="border-t border-border/40 px-5 py-4 bg-muted/10 relative overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="absolute left-0 top-0 w-1 h-full bg-muted-foreground/30" />
-          <h4 className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-black text-muted-foreground/90 mb-2">
-            <FileText className="w-3.5 h-3.5" /> Private CRM Notes
-          </h4>
-          <p className="text-xs text-muted-foreground/75 mb-3 leading-normal font-medium">
-            Keep track of outreach status, meeting follow-ups, or notes about this prospect. These comments are visible only to your team.
+          <p className="text-xs text-muted-foreground/75 mb-3 font-medium">
+            Private team notes for tracking outreach and follow-ups.
           </p>
           <textarea
             className="w-full h-20 text-sm text-foreground bg-card border border-border/60 rounded-lg p-3 outline-none resize-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground/40 shadow-sm font-medium"

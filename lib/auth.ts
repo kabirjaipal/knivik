@@ -63,7 +63,7 @@ export const auth: any = betterAuth({
     sendOnSignIn: true,
     sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
       if (process.env.NODE_ENV !== 'production') {
-        logger.info(`🔗 DEV VERIFY LINK for ${user.email}: ${url}`);
+        console.log(`🔗 DEV VERIFY LINK for ${user.email}: ${url}`);
       }
 
       const htmlTemplate = renderBaseEmail({

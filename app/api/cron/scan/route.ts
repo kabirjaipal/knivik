@@ -37,8 +37,6 @@ async function handleCronScan(req: NextRequest) {
     const targetTier: 'FREE' | 'PRO' | 'all' =
       tierParam === 'all' ? 'all' : tierParam === 'pro' ? 'PRO' : 'FREE';
 
-    logger.info(`🛰️ Starting cron scan cycle — tier: ${targetTier}`);
-
     // 3. Fetch active products scoped to the requested tier
     const activeProducts = await db.client.product.findMany({
       where: {
@@ -75,9 +73,6 @@ async function handleCronScan(req: NextRequest) {
 
     // 5. Process up to 3 products per invocation to stay within 60s limit
     const batch = productsToScan.slice(0, 3);
-    logger.info(
-      `📊 Processing ${batch.length} products (${productsToScan.length} pending, tier: ${targetTier})`
-    );
 
     const results = [];
     for (const product of batch) {

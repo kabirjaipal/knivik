@@ -49,7 +49,7 @@ export const enrichLead = async (
       data: { enrichment: result as any },
     });
 
-    logger.info({ leadId, username, found: Object.keys(result) }, 'Lead enrichment succeeded');
+    logger.debug({ leadId, username, found: Object.keys(result) }, 'Lead enrichment succeeded');
   } catch (error) {
     // Non-critical, never fail the pipeline
     logger.debug({ error, leadId, username }, 'Lead enrichment failed (non-fatal)');

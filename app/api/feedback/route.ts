@@ -38,8 +38,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    logger.info({ feedbackId: feedback.id, userId }, 'User feedback submitted successfully');
-
     return NextResponse.json({
       success: true,
       message: 'Feedback submitted successfully',

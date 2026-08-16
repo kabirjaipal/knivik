@@ -47,7 +47,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    logger.info({ adminId: session.user.id, key, value }, 'Admin updated system configuration');
     return NextResponse.json({ success: true });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Admin Update Config Error');

@@ -6,11 +6,8 @@ const globalEmitter = globalThis as unknown as {
 };
 
 export const scanEmitter = globalEmitter.scanEmitter ?? new EventEmitter();
-scanEmitter.setMaxListeners(100);
-
-if (process.env.NODE_ENV !== 'production') {
-  globalEmitter.scanEmitter = scanEmitter;
-}
+scanEmitter.setMaxListeners(200);
+globalEmitter.scanEmitter = scanEmitter;
 
 export const emitScanStatus = (
   userId: string,

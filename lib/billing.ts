@@ -19,7 +19,7 @@ export async function getPrices() {
   }
 
   try {
-    logger.info("Fetching fresh prices from Dodo Payments");
+    logger.debug("Fetching fresh prices from Dodo Payments");
     const products = await dodo.products.list({
       page_size: 10,
     });
@@ -173,7 +173,6 @@ export async function updateUserPlan(
       },
     });
 
-    logger.info({ userId, plan, subscriptionStatus }, "User plan updated");
   } catch (error) {
     logger.error({ error, userId }, "Failed to update user plan");
     throw error;
@@ -200,7 +199,6 @@ export async function downgradeToFree(userId: string): Promise<void> {
         data: { status: 'canceled' }
       })
     ]);
-    logger.info({ userId }, "User downgraded to Free");
   } catch (error) {
     logger.error({ error, userId }, "Failed to downgrade user");
     throw error;
@@ -236,7 +234,6 @@ export async function recordPayment(
         ...(invoiceUrl && { invoiceUrl }),
       },
     });
-    logger.info({ userId, dodoPaymentId, amount, tax, invoiceUrl }, "Payment recorded");
   } catch (error) {
     logger.error({ error, userId, dodoPaymentId }, "Failed to record payment");
     throw error;
@@ -274,7 +271,6 @@ export async function upsertSubscription(
         currentPeriodEnd,
       },
     });
-    logger.info({ userId, dodoSubscriptionId, status }, "Subscription upserted");
   } catch (error) {
     logger.error({ error, userId, dodoSubscriptionId }, "Failed to upsert subscription");
     throw error;

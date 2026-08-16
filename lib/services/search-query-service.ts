@@ -35,7 +35,6 @@ export class SearchQueryService {
       const productType = existingConfig.productType || 'product';
 
       // Generate queries & strategy using our merged AI function
-      logger.info({ productId, productName: product.name, productType }, '[STRATEGY] Generating unified strategy & search queries...');
       const strategy = await generateProductStrategy(
         product.name,
         product.description || '',
@@ -76,13 +75,6 @@ export class SearchQueryService {
         },
       });
 
-      const elapsed = Date.now() - startTime;
-      logger.info({ 
-        productId, 
-        queryCount: strategy.searchQueries.length,
-        timeMs: elapsed 
-      }, 'AI-generated and saved search queries & strategy profile');
-      
       return strategy.searchQueries;
     } catch (error: any) {
       logger.error({ error, productId }, 'Failed to generate AI search queries and strategy');
@@ -135,7 +127,6 @@ export class SearchQueryService {
       }
     }
 
-    logger.info({ updated, failed }, 'Bulk AI query and strategy regeneration complete');
     return { updated, failed };
   }
 }

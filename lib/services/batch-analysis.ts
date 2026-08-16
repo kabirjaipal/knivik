@@ -58,7 +58,6 @@ export const analyzeUserPostsBatch = async (
   const startTime = Date.now();
   
   if (collectedPostsByProduct.length === 0) {
-    logger.info(`[ANALYSIS] No posts to analyze for user ${userId}`);
     return {
       userId,
       results: [],
@@ -68,16 +67,6 @@ export const analyzeUserPostsBatch = async (
   }
 
   const totalPosts = collectedPostsByProduct.reduce((sum, p) => sum + p.posts.length, 0);
-  logger.info(`[ANALYSIS] Starting AI analysis for user ${userId}: ${totalPosts} posts across ${collectedPostsByProduct.length} products`);
-
-  // Debug: Log all posts being analyzed
-  for (const { product, posts } of collectedPostsByProduct) {
-    logger.info(`[ANALYSIS] Product "${product.name}" posts to analyze:`);
-    posts.forEach((post, i) => {
-      logger.info(`[ANALYSIS]  ${i + 1}. [${post.platform}] ${post.title?.substring(0, 80) || 'No title'}... (${post.detectionMode})`);
-      logger.info(`[ANALYSIS]     Content: ${post.content?.substring(0, 150) || 'No content'}...`);
-    });
-  }
 
   // Build comprehensive context for AI
   const productsContext = collectedPostsByProduct.map(({ product, posts }) => ({
@@ -102,8 +91,6 @@ export const analyzeUserPostsBatch = async (
   const systemPrompt = batchAnalysisPrompt.systemPrompt;
   const userPrompt = batchAnalysisPrompt.getUserPrompt(productsContext);
 
-  logger.info(`[ANALYSIS] System prompt size: ${systemPrompt.length} chars, User prompt size: ${userPrompt.length} chars, sending to AI...`);
-
   // If we only analyzed one product, link this log to it
   const singleProductId = collectedPostsByProduct.length === 1 
     ? collectedPostsByProduct[0].product.id 
@@ -122,14 +109,11 @@ export const analyzeUserPostsBatch = async (
       schema: batchAnalysisSchema,
     });
 
-    logger.info({ parsed }, '[ANALYSIS] Raw parsed AI response');
-
     // Fetch user's alert setting to get their minIntentScore (Scan Sensitivity Threshold)
     const alertSetting = await db.client.alertSetting.findUnique({
       where: { userId }
     });
     const threshold = alertSetting?.minIntentScore ?? 85;
-    logger.info(`[ANALYSIS] Using Scan Sensitivity Threshold of ${threshold}% for user ${userId}`);
 
     // Convert AI response to our format
     const results: ProductAnalysisResult[] = [];
@@ -188,8 +172,6 @@ export const analyzeUserPostsBatch = async (
         });
       }
     }
-
-    logger.info(`[ANALYSIS] Complete: ${leadsFound}/${collectedPostsByProduct.length} products have leads (found ${leadsFound} total valid leads)`);
 
     return {
       userId,

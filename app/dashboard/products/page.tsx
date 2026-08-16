@@ -91,6 +91,29 @@ export default function ProductsPage() {
     fetchProducts()
   }, [user, authLoading, fetchProducts])
 
+  // ─── Real-time Product & Lead count updates via SSE ───────────────────────
+  useEffect(() => {
+    if (!user?.id) return;
+    const eventSource = new EventSource(`${API_URL}/users/scan-stream`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (!data.isScanning && (data.status === 'SUCCESS' || data.status === 'COMPLETED')) {
+          fetchProducts();
+        }
+      } catch (_) {}
+    };
+
+    eventSource.onerror = () => {
+      // Graceful reconnect
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [user?.id, fetchProducts]);
+
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
