@@ -43,6 +43,9 @@ interface AuthContextType {
   registrationEnabled: boolean
 }
 
+let cachedPublicConfig: { maintenanceMode: boolean; registrationEnabled: boolean } | null = null;
+let publicConfigPromise: Promise<{ maintenanceMode: boolean; registrationEnabled: boolean }> | null = null;
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -113,24 +116,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [session?.user?.id, isPending, dbUser?.id, session?.user]);
 
-  // Fetch public configuration on mount
+  // Fetch public configuration once with deduping & caching
   useEffect(() => {
-    const controller = new AbortController();
+    let isMounted = true;
     const fetchConfig = async () => {
+      if (cachedPublicConfig) {
+        setPublicConfig(cachedPublicConfig);
+        return;
+      }
       try {
-        const response = await fetch('/api/config/public', { signal: controller.signal });
-        const result = await response.json();
-        if (result.success && result.data) {
-          setPublicConfig(result.data);
+        if (!publicConfigPromise) {
+          publicConfigPromise = fetch('/api/config/public')
+            .then((res) => res.json())
+            .then((result) => {
+              if (result.success && result.data) {
+                cachedPublicConfig = result.data;
+                return result.data;
+              }
+              return { maintenanceMode: false, registrationEnabled: true };
+            })
+            .catch(() => ({ maintenanceMode: false, registrationEnabled: true }));
         }
-      } catch (err: any) {
-        // Silently ignore aborts/errors
+        const data = await publicConfigPromise;
+        if (isMounted) {
+          setPublicConfig(data);
+        }
+      } catch {
+        // Silently ignore
       }
     };
     fetchConfig();
 
     return () => {
-      controller.abort();
+      isMounted = false;
     };
   }, []);
 

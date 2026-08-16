@@ -49,19 +49,33 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const result = await response.json();
         setBillingData(result.data);
+      } else if (response.status === 401) {
+        setBillingData(null);
       }
-    } catch (error) {
-      toast.error("Could not load your billing information at this time.");
+    } catch {
+      // Avoid showing toast on background unauthenticated failures
+      if (user?.id) {
+        toast.error("Could not load your billing information at this time.");
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     // WAIT for auth to finish its initial session check
     if (loading) return;
 
     const currentUserId = user?.id || null;
+
+    // If user is not logged in, do not call the protected billing-hub API
+    if (!currentUserId) {
+      setBillingData(null);
+      setIsLoading(false);
+      lastUserId.current = null;
+      hasFetched.current = true;
+      return;
+    }
     
     // Only fetch if identity actually changed or we've never fetched
     if (!hasFetched.current || lastUserId.current !== currentUserId) {
@@ -69,7 +83,7 @@ export function BillingProvider({ children }: { children: React.ReactNode }) {
       lastUserId.current = currentUserId;
       fetchBillingHub();
     }
-  }, [user, loading, fetchBillingHub]);
+  }, [user?.id, loading, fetchBillingHub]);
 
   const value = React.useMemo(() => ({
     billingData,

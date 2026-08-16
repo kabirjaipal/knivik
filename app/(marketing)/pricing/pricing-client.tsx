@@ -12,17 +12,24 @@ import { PLANS } from "@/lib/plans";
 import { toast } from "sonner";
 import { PricingComparison } from "./pricing-comparison";
 
-export default function PricingClient() {
+interface PricingClientProps {
+  initialPrices?: any[];
+}
+
+export default function PricingClient({ initialPrices = [] }: PricingClientProps) {
   const { user } = useAuth();
-  const { billingData, isLoading: isLoadingPrices } = useBilling();
+  const { billingData, isLoading: isBillingLoading } = useBilling();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
-  const livePrices = billingData?.prices || [];
+  const livePrices = (billingData?.prices && billingData.prices.length > 0)
+    ? billingData.prices
+    : initialPrices;
+
+  const isLoadingPrices = isBillingLoading && livePrices.length === 0;
   const currentPlan = (billingData?.user?.plan || user?.plan || "FREE").toUpperCase();
 
   const formatPrice = (planKey: keyof typeof PLANS, cycle: 'monthly' | 'yearly') => {
-    const currency = livePrices[0]?.currency;
-    if (!currency) return "--";
+    const currency = livePrices[0]?.currency || "USD";
 
     const formatValue = (val: number, curr?: string) => 
       new Intl.NumberFormat("en-US", {
@@ -38,12 +45,17 @@ export default function PricingClient() {
     if (!("monthly" in plan)) return formatValue(0);
 
     const productId = (plan as any)[cycle].productId;
-    const livePrice = livePrices.find(p => String(p.id) === String(productId));
+    const livePrice = livePrices.find(
+      (p) => String(p.id) === String(productId) || String(p.productId) === String(productId)
+    );
     
-    if (livePrice) {
+    if (livePrice && typeof livePrice.amount === "number") {
       return formatValue(livePrice.amount, livePrice.currency);
     }
-    return formatValue(0).replace("0", "--");
+
+    // Default standard fallback if live price ID is not yet synced
+    const fallbackAmount = cycle === "monthly" ? 39 : 390;
+    return formatValue(fallbackAmount, currency);
   };
 
   return (
