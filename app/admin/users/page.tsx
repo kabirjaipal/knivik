@@ -65,7 +65,8 @@ export default function AdminUsersPage() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          const sorted = [...data.data].sort((a, b) => {
+          const filtered = data.data.filter((u: User) => u.id !== currentUser?.id)
+          const sorted = [...filtered].sort((a, b) => {
             if (a.role === "admin" && b.role !== "admin") return -1
             if (a.role !== "admin" && b.role === "admin") return 1
             return 0

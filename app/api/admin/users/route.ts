@@ -5,23 +5,27 @@ import { requireAdmin } from '@/lib/auth-server';
 
 export async function GET(req: NextRequest) {
   try {
-    const { errorResponse } = await requireAdmin();
+    const { session, errorResponse } = await requireAdmin();
     if (errorResponse) return errorResponse;
 
+    const currentUserId = session.user.id;
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const skip = (page - 1) * limit;
     const search = searchParams.get('search') || '';
 
-    const where = search
-      ? {
-          OR: [
-            { email: { contains: search, mode: 'insensitive' as const } },
-            { username: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    const where: any = {
+      NOT: { id: currentUserId },
+      ...(search
+        ? {
+            OR: [
+              { email: { contains: search, mode: 'insensitive' as const } },
+              { username: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
 
     const [users, totalCount] = await Promise.all([
       db.client.user.findMany({
