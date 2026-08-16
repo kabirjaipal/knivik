@@ -77,6 +77,28 @@ CONSTRAINTS:
 - Return strictly ONLY JSON. Do not include markdown code block fences (e.g. \`\`\`json), trailing commas, or explaining notes.
 - Be highly selective. Reject noise, freelancers, and meta-questions.`;
 
+import { z } from 'zod';
+
+export const batchAnalysisSchema = z.object({
+  results: z.array(
+    z.object({
+      productId: z.string(),
+      qualifiedLeads: z.array(
+        z.object({
+          postId: z.string(),
+          intentLevel: z.enum(['BUY_NOW']),
+          intentScore: z.number().int().min(0).max(100),
+          reasoning: z.string(),
+        })
+      ),
+      analysisSummary: z.string(),
+    })
+  ),
+  overallSummary: z.string(),
+});
+
+export type BatchAnalysisOutput = z.infer<typeof batchAnalysisSchema>;
+
 export interface BatchAnalysisInputItem {
   productId: string;
   productName: string;

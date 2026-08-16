@@ -47,6 +47,21 @@ CONSTRAINTS:
 - Focus on high-buying-intent/hiring-intent, specific terms.
 - The "twitterHandles" MUST correspond to the active, official Twitter/X accounts of the competitors/agencies specified in PILLAR 3 (prefixed with @), enabling the system to run precise competitor-poaching queries (e.g. "@supabase" or "@agencyName").`;
 
+import { z } from 'zod';
+
+export const strategyResponseSchema = z.object({
+  keywords: z.array(z.string()),
+  negativeKeywords: z.array(z.string()),
+  competitors: z.array(z.string()),
+  subreddits: z.array(z.string()),
+  twitterHandles: z.array(z.string()),
+  linkedinSearchFlags: z.array(z.string()),
+  productHuntCommunities: z.array(z.string()),
+  searchQueries: z.array(z.string()),
+});
+
+export type StrategyResponse = z.infer<typeof strategyResponseSchema>;
+
 export interface ProductStrategyInputs {
   projectName: string;
   productName: string;

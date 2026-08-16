@@ -37,37 +37,7 @@ export interface BatchAnalysisResult {
   processingTime: number;
 }
 
-interface BatchAnalysisOutput {
-  results: Array<{
-    productId: string;
-    qualifiedLeads: Array<{
-      postId: string;
-      intentLevel: 'BUY_NOW';
-      intentScore: number;
-      reasoning: string;
-    }>;
-    analysisSummary: string;
-  }>;
-  overallSummary: string;
-}
-
-const batchAnalysisSchema = z.object({
-  results: z.array(
-    z.object({
-      productId: z.string(),
-      qualifiedLeads: z.array(
-        z.object({
-          postId: z.string(),
-          intentLevel: z.enum(['BUY_NOW']),
-          intentScore: z.number().int().min(0).max(100),
-          reasoning: z.string(),
-        })
-      ),
-      analysisSummary: z.string(),
-    })
-  ),
-  overallSummary: z.string(),
-});
+import { batchAnalysisSchema, BatchAnalysisOutput } from '../prompts/batchAnalysis';
 
 /**
  * Batch AI Analysis - Processes all collected posts for a user in a single AI call

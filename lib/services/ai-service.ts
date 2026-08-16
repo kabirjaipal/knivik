@@ -57,27 +57,7 @@ export const generateReply = async (
 // - Negative keywords for filtering noise
 // - Competitor names for poaching
 // ─────────────────────────────────────────────
-export interface ProductStrategyResult {
-  keywords: string[];
-  negativeKeywords: string[];
-  competitors: string[];
-  subreddits: string[];
-  twitterHandles: string[];
-  linkedinSearchFlags: string[];
-  productHuntCommunities: string[];
-  searchQueries: string[];
-}
-
-const strategyResponseSchema = z.object({
-  keywords: z.array(z.string()),
-  negativeKeywords: z.array(z.string()),
-  competitors: z.array(z.string()),
-  subreddits: z.array(z.string()),
-  twitterHandles: z.array(z.string()),
-  linkedinSearchFlags: z.array(z.string()),
-  productHuntCommunities: z.array(z.string()),
-  searchQueries: z.array(z.string()),
-});
+export type ProductStrategyResult = productStrategyPrompt.StrategyResponse;
 
 export const generateProductStrategy = async (
   name: string,
@@ -104,7 +84,7 @@ export const generateProductStrategy = async (
       userId,
       productId,
       responseFormat: 'json',
-      schema: strategyResponseSchema,
+      schema: productStrategyPrompt.strategyResponseSchema,
     });
 
     // Filter suggestions to ensure they are valid strings, preserving casing and length from the AI

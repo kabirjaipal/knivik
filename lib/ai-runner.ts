@@ -1,4 +1,4 @@
-import { generateText, Output } from 'ai';
+import { generateText, generateObject } from 'ai';
 import { createGroq } from '@ai-sdk/groq';
 import { z } from 'zod';
 import config from './config';
@@ -141,21 +141,24 @@ export async function aiLlmRunner<T = any>(
   try {
     if (responseFormat === 'json') {
       const jsonParams = params as RunnerObjectParams<T>;
-      const { output, usage } = await generateText({
+      const jsonSystem = system.toLowerCase().includes('json')
+        ? system
+        : `${system}\n\nRespond in valid JSON format matching the schema.`;
+
+      const { object, usage } = await generateObject({
         model: groq(modelId),
-        system,
+        mode: 'json',
+        system: jsonSystem,
         prompt,
         temperature,
-        output: Output.object({
-          schema: jsonParams.schema,
-        }),
+        schema: jsonParams.schema,
         providerOptions: {
           groq: {
             structuredOutputs: false,
           },
         },
       });
-      result = output as T;
+      result = object as T;
       inputTokens = usage.inputTokens || 0;
       outputTokens = usage.outputTokens || 0;
     } else {
