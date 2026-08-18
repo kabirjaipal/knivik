@@ -148,6 +148,7 @@ model Product {
   updatedAt        DateTime          @updatedAt
   leads            Lead[]
   llmUsageLogs     LlmUsageLog[]
+  scrapeCaches     ScrapeCache[]
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -246,11 +247,14 @@ model AlertLog {
 
 model ScrapeCache {
   id             String   @id @default(cuid())
+  productId      String
   platform       Platform
   externalPostId String
   processedAt    DateTime @default(now())
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([platform, externalPostId])
+  @@unique([productId, platform, externalPostId])
+  @@index([productId])
   @@index([processedAt])
   @@map("ir_scrape_cache")
 }

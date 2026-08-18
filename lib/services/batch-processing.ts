@@ -112,10 +112,11 @@ export class BatchProcessingService {
         }
       }
 
-      // Step 3.5: Cache all processed posts globally in scrapeCache
+      // Step 3.5: Cache all processed posts per product in scrapeCache
       if (posts.length > 0) {
         await db.client.scrapeCache.createMany({
           data: posts.map(p => ({
+            productId,
             platform: p.platform as any,
             externalPostId: p.externalPostId,
           })),
@@ -220,14 +221,17 @@ export class BatchProcessingService {
         }
       }
 
-      // Step 3.5: Cache all processed posts globally in scrapeCache
-      const allProcessedPosts = collectionResult.productsWithPosts.flatMap(item => item.posts);
-      if (allProcessedPosts.length > 0) {
+      // Step 3.5: Cache all processed posts per product in scrapeCache
+      const cacheEntries = collectionResult.productsWithPosts.flatMap(item =>
+        item.posts.map(p => ({
+          productId: item.product.id,
+          platform: p.platform as any,
+          externalPostId: p.externalPostId,
+        }))
+      );
+      if (cacheEntries.length > 0) {
         await db.client.scrapeCache.createMany({
-          data: allProcessedPosts.map(p => ({
-            platform: p.platform as any,
-            externalPostId: p.externalPostId,
-          })),
+          data: cacheEntries,
           skipDuplicates: true
         }).catch(err => {
           logger.error({ err: err.message }, 'Failed to save processed posts to scrapeCache');

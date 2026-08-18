@@ -163,12 +163,13 @@ export class BatchCollectionService {
     // Remove duplicates and apply final filtering
     const uniquePosts = this.deduplicateAndFilter(allPosts, product);
     
-    // Filter out already processed posts in scrapeCache to protect Groq API costs
+    // Filter out already processed posts in scrapeCache for this specific product to protect Groq API costs
     if (uniquePosts.length > 0) {
       try {
         const postKeys = uniquePosts.map(p => p.externalPostId);
         const alreadyScanned = await db.client.scrapeCache.findMany({
           where: {
+            productId: product.id,
             externalPostId: { in: postKeys },
           },
           select: {
@@ -177,10 +178,10 @@ export class BatchCollectionService {
           }
         });
 
-        // Create a fast-lookup Set of platform-externalPostId strings
+        // Create a fast-lookup Set of platform-externalPostId strings for this product
         const scannedSet = new Set(alreadyScanned.map(s => `${s.platform}-${s.externalPostId}`));
 
-        // Keep only posts that have NOT been scanned before
+        // Keep only posts that have NOT been scanned before for this product
         const filteredPosts = uniquePosts.filter(p => !scannedSet.has(`${p.platform}-${p.externalPostId}`));
         
         // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
