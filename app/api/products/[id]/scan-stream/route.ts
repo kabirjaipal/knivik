@@ -76,16 +76,41 @@ export async function GET(
 
       scanEmitter.on(`scan:${productId}`, listener);
 
-      // 3. Keep-alive heartbeat ping every 15s to prevent Vercel / proxy timeout
-      const interval = setInterval(() => {
+      // 3. Heartbeat + Database Sync Polling (for multi-container serverless support)
+      let isClosed = false;
+      const interval = setInterval(async () => {
+        if (isClosed) return;
         try {
+          // Check DB state across separate serverless lambda containers
+          const userState = await db.client.user.findUnique({
+            where: { id: userId },
+            select: { isScanning: true, lastScanStatus: true },
+          });
+
+          if (userState && !userState.isScanning) {
+            isClosed = true;
+            clearInterval(interval);
+            const finalPayload = `data: ${JSON.stringify({
+              productId,
+              userId,
+              isScanning: false,
+              status: userState.lastScanStatus || 'SUCCESS',
+            })}\n\n`;
+            controller.enqueue(encoder.encode(finalPayload));
+            setTimeout(() => {
+              try { controller.close(); } catch (_) {}
+            }, 1000);
+            return;
+          }
+
           controller.enqueue(encoder.encode(`: ping\n\n`));
         } catch (_) {
-          clearInterval(interval);
+          // Keep stream alive
         }
-      }, 15000);
+      }, 2500);
 
       const cleanup = () => {
+        isClosed = true;
         clearInterval(interval);
         scanEmitter.off(`scan:${productId}`, listener);
       };

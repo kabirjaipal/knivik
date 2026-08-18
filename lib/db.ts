@@ -22,9 +22,10 @@ const getPool = () => {
   const pool = new Pool({
     connectionString,
     ssl: isRemote ? { rejectUnauthorized: false } : false,
-    max: 5,
-    idleTimeoutMillis: 10000,
+    max: isRemote ? 3 : 5,
+    idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
+    allowExitOnIdle: true,
   });
 
   if (process.env.NODE_ENV !== 'production') {

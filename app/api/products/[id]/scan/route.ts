@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import logger from '@/lib/logger';
 import { requireAuth } from '@/lib/auth-server';
@@ -75,9 +75,13 @@ export async function POST(
       data: { isScanning: true },
     });
 
-    // Run scanning in background
-    BatchProcessingService.processProduct(productId).catch((error) => {
-      logger.error({ error, productId }, 'Manual scan failed in background execution');
+    // Run scanning in background with serverless lifecycle guarantee via after()
+    after(async () => {
+      try {
+        await BatchProcessingService.processProduct(productId);
+      } catch (error) {
+        logger.error({ error, productId }, 'Manual scan failed in background execution');
+      }
     });
 
     return NextResponse.json(
