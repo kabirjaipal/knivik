@@ -17,35 +17,40 @@ const groq = createGroq({
   baseURL: config.GROQ_BASE_URL,
 });
 
-// Resolve model ID dynamically from systemConfig, with robust fallbacks
+// Resolve model ID strictly from database (systemConfig & llmModel)
 async function resolveModelId(modelInput: string): Promise<string> {
-  const defaultModels: Record<string, string> = {
-    lite: 'llama-3.1-8b-instant',
-    versatile: 'llama-3.3-70b-versatile',
+  const configKeyMap: Record<string, string> = {
+    [MODELS.LITE]: 'aiModelLite',
+    [MODELS.VERSATILE]: 'aiModelVersatile',
   };
 
-  const configKey = {
-    lite: 'aiModelLite',
-    versatile: 'aiModelVersatile',
-  }[modelInput];
+  const configKey = configKeyMap[modelInput];
+  let modelId = modelInput;
 
-  if (!configKey) {
-    return modelInput;
-  }
-
-  try {
-    const sysConfig = await db.client.systemConfig.findUnique({
-      where: { key: configKey }
+  // 1. Resolve alias from systemConfig
+  if (configKey) {
+    const configRow = await db.client.systemConfig.findUnique({
+      where: { key: configKey },
     });
 
-    if (sysConfig && typeof sysConfig.value === 'string' && sysConfig.value.trim().length > 0) {
-      return sysConfig.value;
+    if (!configRow?.value || typeof configRow.value !== 'string' || !configRow.value.trim()) {
+      throw new Error(`AI configuration missing: "${configKey}" is not configured in the database.`);
     }
-  } catch (err) {
-    logger.warn({ err, configKey }, 'Could not read dynamic model from systemConfig; using default.');
+
+    modelId = configRow.value.trim();
   }
 
-  return defaultModels[modelInput] || 'llama-3.3-70b-versatile';
+  // 2. Validate model is active in llmModel table if registered
+  const modelRecord = await db.client.llmModel.findUnique({
+    where: { id: modelId },
+    select: { id: true, isActive: true },
+  });
+
+  if (modelRecord && !modelRecord.isActive) {
+    throw new Error(`AI model "${modelId}" is disabled in the database.`);
+  }
+
+  return modelId;
 }
 
 export async function logLlmUsage(params: {
@@ -152,11 +157,6 @@ export async function aiLlmRunner<T = any>(
         prompt,
         temperature,
         schema: jsonParams.schema,
-        providerOptions: {
-          groq: {
-            structuredOutputs: false,
-          },
-        },
       });
       result = object as T;
       inputTokens = usage.inputTokens || 0;

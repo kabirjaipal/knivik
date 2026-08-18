@@ -11,8 +11,6 @@ export async function GET() {
     const defaults = {
       maintenanceMode: false,
       registrationEnabled: true,
-      aiModelVersatile: 'llama-3.3-70b-versatile',
-      aiModelLite: 'llama-3.1-8b-instant',
     };
 
     return NextResponse.json({ success: true, data: { ...defaults, ...configMap } });
