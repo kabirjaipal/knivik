@@ -115,10 +115,7 @@ export default function AdminBlogPage() {
     <div className="space-y-6">
       {/* Consolidate Header & Search Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-foreground">Blog Articles</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Draft, schedule, and publish search-optimized guides.</p>
-        </div>
+        <h2 className="text-xl font-black tracking-tight text-foreground">Blog Articles</h2>
         <div className="flex items-center gap-3">
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

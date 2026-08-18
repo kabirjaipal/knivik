@@ -82,12 +82,9 @@ export default function AdminUsagePage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground">LLM Usage & Telemetry</h1>
-          <p className="text-sm text-muted-foreground mt-1">Live token consumption, cost monitoring, and AI inference latency.</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => fetchUsage()} disabled={loading} className="self-start sm:self-auto gap-2">
+      <div className="flex items-center justify-between border-b border-border/40 pb-4">
+        <h2 className="text-xl font-black tracking-tight text-foreground">LLM Usage</h2>
+        <Button variant="outline" size="sm" onClick={() => fetchUsage()} disabled={loading} className="gap-2">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>

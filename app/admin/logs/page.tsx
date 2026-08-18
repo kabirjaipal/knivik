@@ -229,33 +229,24 @@ export default function AdminLogsPage() {
 
   return (
     <div className="space-y-5 pb-12">
-      {/* Top Header & Filters */}
-      <div className="space-y-4 border-b border-border/40 pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
-              <Terminal className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> API Logs
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Inspect HTTP calls, response codes, payloads, and error traces.
-            </p>
-          </div>
+      {/* Top Header */}
+      <div className="flex items-center justify-between border-b border-border/40 pb-4">
+        <h2 className="text-xl font-black tracking-tight text-foreground">API Logs</h2>
+        {activeFiltersCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1"
+          >
+            <X className="w-3.5 h-3.5" />
+            Reset Filters ({activeFiltersCount})
+          </Button>
+        )}
+      </div>
 
-          {activeFiltersCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAllFilters}
-              className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1 self-start sm:self-auto"
-            >
-              <X className="w-3.5 h-3.5" />
-              Reset Filters ({activeFiltersCount})
-            </Button>
-          )}
-        </div>
-
-        {/* Top Select Menus & Search */}
-        <div className="flex flex-wrap items-center gap-2.5">
+      {/* Top Select Menus & Search */}
+      <div className="flex flex-wrap items-center gap-2.5">
           {/* Search Input */}
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -351,7 +342,6 @@ export default function AdminLogsPage() {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
       {/* Summary Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -165,12 +165,7 @@ export default function AdminMemoryPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2.5">
-            <Cpu className="w-6 h-6 text-primary" /> Memory & System Monitor
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Live V8 memory usage, scraper queue execution status, and IP health.</p>
-        </div>
+        <h2 className="text-xl font-black tracking-tight text-foreground">Memory Monitor</h2>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
