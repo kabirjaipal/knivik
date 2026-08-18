@@ -75,22 +75,14 @@ export async function POST(
       data: { isScanning: true },
     });
 
-    // Run scanning in background with serverless lifecycle guarantee via after()
-    after(async () => {
-      try {
-        await BatchProcessingService.processProduct(productId);
-      } catch (error) {
-        logger.error({ error, productId }, 'Manual scan failed in background execution');
-      }
-    });
+    // Execute scanning synchronously within serverless request lifetime
+    const scanResult = await BatchProcessingService.processProduct(productId);
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Scan started in background. Connecting to stream...',
-      },
-      { status: 202 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: 'Scan completed successfully',
+      result: scanResult,
+    });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Scan Product error');
     return NextResponse.json({ success: false, error: error.message || 'Manual scan failed' }, { status: 500 });

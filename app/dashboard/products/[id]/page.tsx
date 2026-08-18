@@ -152,25 +152,36 @@ export default function ProductDetailPage() {
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return;
     setLocalScanning(true);
-    setScanStep("INITIALIZING");
+    setScanStep("SETUP");
+
+    const timer1 = setTimeout(() => setScanStep("SCRAPE"), 1000);
+    const timer2 = setTimeout(() => setScanStep("AI SCORE"), 2500);
+    const timer3 = setTimeout(() => setScanStep("ALERT & SAVE"), 4000);
+
     try {
       const res = await fetch(`${API_URL}/products/${productId}/scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
-      if (res.status === 202) {
-        toast.info("Scan started! Tracking progress...");
-        return;
-      }
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Scan failed");
       }
+
+      toast.success("Scan completed! Fresh leads loaded.");
       setLocalScanning(false);
+      setScanStep("");
       fetchProduct();
-      setRefreshTrigger(prev => prev + 1);
+      setRefreshTrigger((prev) => prev + 1);
     } catch (err: any) {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
       toast.error(err.message || "Scan failed");
       setLocalScanning(false);
       setScanStep("");
