@@ -78,7 +78,7 @@ const SUBREDDITS_DATA: SubredditInfo[] = [
     nicheLabel: "SaaS & Tech",
     subscribers: 32000,
     subscribersLabel: "32K",
-    description: "Inspired by the Indie Hackers community. Solo founders sharing code milestones, payment provider setup issues, and launching tips.",
+    description: "Inspired by the bootstrapped founders community. Solo founders sharing code milestones, payment provider setup issues, and launching tips.",
     postFrequency: "Medium",
     commonPainPoints: ["Stripe country support", "Zero-budget marketing", "Email newsletter setup", "Hosting costs scaling"],
     intentKeywords: ["stripe alternative", "launching today", "newsletter tool", "cheap database"],

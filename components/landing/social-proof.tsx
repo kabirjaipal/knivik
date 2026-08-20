@@ -1,85 +1,93 @@
-"use client"
-
-import { motion } from "framer-motion"
+import React from "react";
+import { FaReddit, FaHackerNews, FaLinkedin } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
+import { Sparkles } from "lucide-react";
 
 export function PlatformSupport() {
   const platforms = [
     {
       name: "Reddit",
-      icon: "https://www.redditstatic.com/desktop2x/img/favicon/favicon-32x32.png",
+      icon: FaReddit,
+      tag: "Live Monitoring",
+      description: "Subreddits & buyer discussion threads",
+      status: "active",
     },
     {
-      name: "Twitter (X)",
-      icon: "https://abs.twimg.com/favicons/twitter.2.ico",
+      name: "Twitter / X",
+      icon: FaXTwitter,
+      tag: "Live Monitoring",
+      description: "Conversations, mentions & pain points",
+      status: "active",
     },
     { 
       name: "Hacker News", 
-      icon: "https://news.ycombinator.com/favicon.ico" 
+      icon: FaHackerNews,
+      tag: "Live Monitoring",
+      description: "Ask HN discussions & founder posts",
+      status: "active",
     },
     {
-      name: "Indie Hackers",
-      icon: "https://www.google.com/s2/favicons?domain=indiehackers.com&sz=64",
-      comingSoon: true,
-    },
-    {
-      name: "Dev.to",
-      icon: "https://www.google.com/s2/favicons?domain=dev.to&sz=64",
-      comingSoon: true,
+      name: "LinkedIn",
+      icon: FaLinkedin,
+      tag: "Coming Soon",
+      description: "B2B professional feed signals",
+      status: "soon",
     },
   ];
 
-  // We duplicate the platforms to create a seamless infinite scroll loop
-  const doubledPlatforms = [...platforms, ...platforms];
-
   return (
-    <section className="py-12 md:py-16 border-y border-border/50 bg-secondary/5 relative overflow-hidden">
-      <div className="absolute inset-0 bg-grid opacity-5 pointer-events-none select-none transform-gpu" />
-      <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="flex flex-col items-center gap-8 md:gap-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60 text-center">
-            Monitoring High-Intent Leads Across
-          </p>
-
-          <div className="w-full overflow-hidden relative py-2">
-            {/* Soft gradient masks for seamless sides */}
-            <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
-            
-            <motion.div 
-              className="flex items-center gap-8 md:gap-16 whitespace-nowrap w-max transform-gpu will-change-transform"
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            >
-              {doubledPlatforms.map((platform, i) => (
-                <div
-                  key={`${platform.name}-${i}`}
-                  className="flex items-center gap-3 md:gap-4 opacity-75 hover:opacity-100 transition-all duration-300 group cursor-default"
-                >
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-muted/85 flex items-center justify-center p-1.5 md:p-2 border border-border group-hover:border-primary/40 group-hover:shadow-2xl group-hover:shadow-primary/10 transition-all transform group-hover:scale-105">
-                    <img
-                      src={platform.icon}
-                      alt={platform.name}
-                      className={`w-full h-full object-contain ${platform.name === "Twitter (X)" ? "dark:invert" : ""}`}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm md:text-base font-black tracking-tighter text-foreground/80 group-hover:text-foreground transition-colors">
-                      {platform.name}
-                    </span>
-                    {platform.comingSoon && (
-                      <span className="px-1.5 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-[8px] font-black uppercase tracking-tighter text-primary whitespace-nowrap">
-                        Soon
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
+    <section className="py-16 md:py-24 border-y border-border/50 bg-secondary/5 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid opacity-5 pointer-events-none select-none" />
+      <div className="container mx-auto px-6 relative z-10 max-w-6xl">
+        <div className="flex flex-col items-center text-center mb-12 md:mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-6 border border-primary/20">
+            <Sparkles className="h-3 w-3" />
+            Supported Channels
           </div>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-foreground mb-4">
+            Monitoring High-Intent Conversations 24/7
+          </h2>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl font-medium">
+            Knivik continuously scans active communities for buying signals, competitor complaints, and recommendation requests.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+          {platforms.map((platform) => {
+            const Icon = platform.icon;
+            const isSoon = platform.status === "soon";
+            return (
+              <div
+                key={platform.name}
+                className="flex flex-col p-6 rounded-2xl bg-card border border-border/60 hover:border-border transition-all duration-200 shadow-sm group"
+              >
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-foreground border border-border/50 transition-colors group-hover:border-primary/30">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  {isSoon ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-secondary border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      Soon
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-foreground mb-1.5">
+                    {platform.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                    {platform.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

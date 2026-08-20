@@ -111,7 +111,7 @@ const MOCK_POSTS: HNPost[] = [
     timeAgo: "6 hours ago",
     category: "pain-points",
     intent: "medium",
-    body: "I'm looking to build a micro-CRM for indie hackers and small agencies. What are your biggest frustrations with existing tools? What feature do you wish they had?",
+    body: "I'm looking to build a micro-CRM for solo founders and small agencies. What are your biggest frustrations with existing tools? What feature do you wish they had?",
     topics: ["CRM", "B2B Sales", "Sales Operations"],
     educationalAdvice: "focusing on a single source of truth for communication history and reducing manual data entry for contacts",
     featureMatch: "a hyper-focused, minimal CRM view designed strictly to help small teams prioritize active deals without standard enterprise bloat",

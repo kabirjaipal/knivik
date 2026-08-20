@@ -27,7 +27,7 @@ Knivik detects these warm leads and alerts businesses.
 Primary users:
 
 * SaaS founders
-* indie hackers
+* solo entrepreneurs
 * agencies
 * B2B startups
 * marketers

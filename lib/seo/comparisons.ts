@@ -433,7 +433,7 @@ export const comparisons: Record<string, ComparisonData> = {
       "Cognism is built for enterprise sales development representatives making cold calls; Knivik is designed for startups, founders, agencies, freelancers, and modern SDRs doing warm social selling."
     ],
     features: defaultFeatures("Cognism", true, false, false),
-    verdict: "Cognism is a top-tier B2B database for enterprise sales teams targeting Europe via cold calling and compliant direct dials. For startup founders, agencies, freelancers, builders, and indie hackers looking to identify and convert high-intent buyers on active online threads (Reddit, HackerNews, X), Knivik is the much more precise and accessible AI lead finder.",
+    verdict: "Cognism is a top-tier B2B database for enterprise sales teams targeting Europe via cold calling and compliant direct dials. For startup founders, agencies, freelancers, builders, and solo founders looking to identify and convert high-intent buyers on active online threads (Reddit, HackerNews, X), Knivik is the much more precise and accessible AI lead finder.",
     faq: [
       {
         question: "Does Cognism track Reddit and X (Twitter) mentions?",
