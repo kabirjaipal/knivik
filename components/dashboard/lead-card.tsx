@@ -102,7 +102,6 @@ const EnrichmentIcons = ({ enrichment }: { enrichment?: LeadEnrichment | null })
           <FaTwitter className="w-3.5 h-3.5" />
         </a>
       )}
-      )}
     </span>
   )
 }
