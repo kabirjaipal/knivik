@@ -8,7 +8,7 @@ Please read this file carefully before performing any tasks, and ensure that eve
 
 ## 🚀 1. Project Overview & Architecture
 
-**Knivik** is an AI-powered Buying Intent Lead Finder. It scans online conversations (Reddit, HackerNews, Twitter, Bluesky) to detect people actively looking for products or solutions, scores their buying intent, and automatically suggests warm-lead outreach replies.
+**Knivik** is an AI-powered Buying Intent Lead Finder. It scans online conversations (Reddit, HackerNews, Twitter) to detect people actively looking for products or solutions, scores their buying intent, and automatically suggests warm-lead outreach replies.
 
 ### Directory Structure
 ```

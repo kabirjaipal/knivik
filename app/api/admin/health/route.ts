@@ -11,7 +11,6 @@ export async function GET() {
       { name: 'Reddit', url: 'https://www.reddit.com/r/saas/.rss' },
       { name: 'HackerNews', url: 'https://hn.algolia.com/api/v1/search_by_date?tags=story&hitsPerPage=1' },
       { name: 'Twitter/X', url: 'https://nitter.net/search/rss?f=tweets&q=saas' },
-      { name: 'Bluesky', url: 'https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=saas&limit=1' },
     ];
 
     const results = await Promise.all(

@@ -17,10 +17,6 @@ export function PlatformSupport() {
       icon: "https://news.ycombinator.com/favicon.ico" 
     },
     {
-      name: "Bluesky",
-      icon: "https://www.google.com/s2/favicons?domain=bsky.app&sz=64",
-    },
-    {
       name: "Indie Hackers",
       icon: "https://www.google.com/s2/favicons?domain=indiehackers.com&sz=64",
       comingSoon: true,

@@ -11,7 +11,7 @@ You will receive a JSON array representing offerings and their candidate posts t
     "posts": [
       {
         "id": "string (The post ID)",
-        "platform": "string (e.g. REDDIT, HACKERNEWS, TWITTER, BLUESKY)",
+        "platform": "string (e.g. REDDIT, HACKERNEWS, TWITTER)",
         "source": "string (e.g. subreddit or community)",
         "title": "string",
         "content": "string (The post body)",

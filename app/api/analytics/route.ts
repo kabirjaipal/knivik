@@ -59,7 +59,6 @@ export async function GET() {
       REDDIT: 0,
       TWITTER: 0,
       HACKERNEWS: 0,
-      BLUESKY: 0,
     };
 
     if (productIds.length > 0) {

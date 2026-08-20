@@ -12,7 +12,6 @@ import {
   Globe
 } from "lucide-react";
 import { FaLinkedin, FaTwitter } from "react-icons/fa";
-import { SiBluesky } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -196,24 +195,6 @@ const templates: Record<string, Record<string, string[]>> = {
       "Hi,\n\nI saw your post about the frustration with managing {keywords}. We got tired of the manual process too, which is why we built {productName}. It {productDescription}.\n\nI'd love to give you free access to see if it makes your life easier.\n\nBest,\n[Your Name]",
       "Hi,\n\nDealing with the friction of {keywords} is a common challenge. We built {productName} specifically to eliminate this headache. It {productDescription}.\n\nLet me know if you'd like to check it out.\n\nBest regards,\n[Your Name]"
     ]
-  },
-  bluesky: {
-    helpful: [
-      "I saw you're working on {keywords}. I actually built {productName} to solve this exact problem. It {productDescription}. Let me know if you want to check it out!",
-      "For {keywords}, automating the workflow makes a huge difference. I created {productName} which {productDescription}. Hope this helps you out!"
-    ],
-    direct: [
-      "Check out {productName}. It's designed to solve this exact issue: it {productDescription}. Perfect for streamlining {keywords}!",
-      "I built {productName} to solve this. It {productDescription}. Super useful if you want to optimize your {keywords} workflow."
-    ],
-    question: [
-      "Are you looking to automate {keywords} or keep it manual? I built {productName} to help with this. It {productDescription}. What's your current approach?",
-      "How are you currently managing {keywords}? I built {productName} to help streamline it. It {productDescription}. Would love to know what you think!"
-    ],
-    frustration: [
-      "Totally get the frustration with {keywords}. I was too, so I built {productName}. It {productDescription}. Let me know if you want to try it out!",
-      "I got so tired of the friction with {keywords} that I built {productName} to make it painless. It {productDescription}."
-    ]
   }
 };
 
@@ -317,7 +298,6 @@ export function ReplyGeneratorClient() {
     { id: "twitter", label: "Twitter / X", icon: FaTwitter },
     { id: "hn", label: "HackerNews", icon: Globe },
     { id: "linkedin", label: "LinkedIn", icon: FaLinkedin },
-    { id: "bluesky", label: "Bluesky", icon: SiBluesky },
     { id: "email", label: "Cold Email", icon: Mail },
   ];
 

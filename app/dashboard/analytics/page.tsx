@@ -485,7 +485,6 @@ export default function AnalyticsPage() {
                     TWITTER: "text-sky-500 bg-sky-500/10 border-sky-500/20",
                     HACKERNEWS:
                       "text-amber-600 bg-amber-600/10 border-amber-600/20",
-                    BLUESKY: "text-sky-400 bg-sky-400/10 border-sky-400/20",
                   };
 
                   return (

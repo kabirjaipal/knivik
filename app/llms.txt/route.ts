@@ -10,13 +10,13 @@ export async function GET() {
   const competitorSlugs = ComparisonService.getAllSlugs();
 
   let markdown = `# Knivik\n\n`;
-  markdown += `> Knivik is an AI-powered Buying Intent Lead Finder and social selling intelligence platform. It continuously monitors live online conversations across Reddit, HackerNews, X (Twitter), and Bluesky to detect prospects actively seeking products, services, or software recommendations. Knivik scores buyer intent and crafts tailored, contextual outreach reply angles.\n\n`;
+  markdown += `> Knivik is an AI-powered Buying Intent Lead Finder and social selling intelligence platform. It continuously monitors live online conversations across Reddit, HackerNews, and X (Twitter) to detect prospects actively seeking products, services, or software recommendations. Knivik scores buyer intent and crafts tailored, contextual outreach reply angles.\n\n`;
   markdown += `For full documentation, deep feature comparisons, and comprehensive articles, see: [Full Knowledge Text](${baseUrl}/llms-full.txt)\n\n`;
 
   markdown += `## Product Overview\n`;
   markdown += `- **Category:** AI Lead Generation, Social Selling, Buyer Intent Intelligence, B2B Prospecting.\n`;
   markdown += `- **Target Users:** Startup founders, B2B sales teams, growth marketers, marketing agencies, SaaS builders, and freelancers.\n`;
-  markdown += `- **Supported Channels:** Reddit, HackerNews, X (Twitter), and Bluesky.\n`;
+  markdown += `- **Supported Channels:** Reddit, HackerNews, and X (Twitter).\n`;
   markdown += `- **Core Value Proposition:** Cuts through noisy keyword alerts by using LLM semantic understanding to identify high-intent buyers (e.g., "looking for an alternative to X", "recommend me a tool for Y") and draft conversion-ready outreach replies.\n`;
   markdown += `- **Pricing:** Free tier available ($0/month forever) with scalable paid Pro tiers for heavy monitoring and unlimited tracking.\n\n`;
 

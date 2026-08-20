@@ -463,7 +463,7 @@ export const comparisons: Record<string, ComparisonData> = {
         "Heavy noise from keyword scraping without B2B buying intent filtering",
         "No native AI outreach generation to craft immediate replies for leads",
         "Lacks CRM pipeline features to manage and track lead statuses",
-        "No support for specialized channels like Bluesky"
+        "Does not offer automated multi-tier fallback scrapers"
       ]
     },
     keyDifferences: [
@@ -502,7 +502,6 @@ export const comparisons: Record<string, ComparisonData> = {
       limitations: [
         "Keyword-based prospect detection leads to high rates of false positives",
         "No context-aware AI reply writer or outreach recommendation engine",
-        "Does not support tracking modern channels like Bluesky",
         "Lacks lead management CRM tracking to move candidates through a sales pipeline"
       ]
     },

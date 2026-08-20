@@ -1,6 +1,10 @@
+---
+trigger: always_on
+---
+
 # Rule: Resilient Web Scraping & Ingestion
 
-Use this rule whenever you are writing, refactoring, or reviewing web scrapers, crawler services, HTTP clients, or selector parsers (Reddit, HackerNews, Twitter/X, GitHub, Bluesky).
+Use this rule whenever you are writing, refactoring, or reviewing web scrapers, crawler services, HTTP clients, or selector parsers (Reddit, HackerNews, Twitter/X).
 
 ---
 

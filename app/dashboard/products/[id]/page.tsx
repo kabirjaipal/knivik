@@ -48,7 +48,7 @@ export default function ProductDetailPage() {
       case "INITIALIZING":
         return "Booting scan worker and loading search keywords..."
       case "COLLECTING":
-        return "Scanning Reddit, HackerNews, X (Twitter), and Bluesky for matching conversations..."
+        return "Scanning Reddit, HackerNews, and X (Twitter) for matching conversations..."
       case "ANALYZING":
         return "AI model classifying buying intent levels and scoring leads..."
       case "SAVING":

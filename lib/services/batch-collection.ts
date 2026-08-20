@@ -144,8 +144,8 @@ export class BatchCollectionService {
     const user = await db.client.user.findUnique({ where: { id: product.userId }, select: { plan: true } });
     const canUseTwitter = user ? hasCapability(user.plan as any, 'canAccessTwitter') : false;
     const platforms = canUseTwitter
-      ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER, Platform.BLUESKY]
-      : [Platform.REDDIT, Platform.HACKERNEWS, Platform.BLUESKY];
+      ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER]
+      : [Platform.REDDIT, Platform.HACKERNEWS];
 
     // Collect from each platform globally
     for (const platform of platforms) {
@@ -178,23 +178,29 @@ export class BatchCollectionService {
           }
         });
 
-        // Create a fast-lookup Set of platform-externalPostId strings for this product
-        const scannedSet = new Set(alreadyScanned.map(s => `${s.platform}-${s.externalPostId}`));
-
-        // Keep only posts that have NOT been scanned before for this product
-        const filteredPosts = uniquePosts.filter(p => !scannedSet.has(`${p.platform}-${p.externalPostId}`));
+        const scannedMap = new Set(alreadyScanned.map(s => `${s.platform}:${s.externalPostId}`));
+        const filteredPosts = uniquePosts.filter(p => !scannedMap.has(`${p.platform}:${p.externalPostId}`));
         
-        // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
-        return filteredPosts.slice(0, 25);
-      } catch (cacheError: any) {
-        logger.error({ err: cacheError.message }, 'Failed to query scrapeCache. Proceeding without cache filtering.');
+        if (filteredPosts.length < uniquePosts.length) {
+          logger.info(
+            { productId: product.id, skipped: uniquePosts.length - filteredPosts.length, remaining: filteredPosts.length },
+            '[COLLECTION] Skipped already processed/cached posts'
+          );
+        }
+        
+        return filteredPosts;
+      } catch (err: any) {
+        logger.warn({ error: err.message, productId: product.id }, '[COLLECTION] ScrapeCache lookup failed, proceeding with unique posts');
+        return uniquePosts;
       }
     }
 
-    // Limit to top 25 posts per product to stay within AI token limits (Groq: 12K max)
-    return uniquePosts.slice(0, 25);
+    return uniquePosts;
   }
 
+  /**
+   * Collect posts from a specific platform globally
+   */
   private static async collectFromPlatform(
     product: ProductWithDetails,
     platform: Platform,
@@ -215,10 +221,6 @@ export class BatchCollectionService {
       case Platform.TWITTER:
         const twitterPosts = await this.collectFromTwitter(product, oneMonthAgo, searchQueries);
         posts.push(...twitterPosts);
-        break;
-      case Platform.BLUESKY:
-        const blueskyPosts = await this.collectFromBluesky(product, oneMonthAgo, searchQueries);
-        posts.push(...blueskyPosts);
         break;
       default:
         // Unsupported platform
@@ -311,6 +313,18 @@ export class BatchCollectionService {
             if (!processedIds.has(post.externalPostId)) {
               processedIds.add(post.externalPostId);
               posts.push(post);
+              fetchedQueryPosts++;
+            }
+          }
+        }
+
+        // 3. Fallback Strategy: Search Engine SERP Scrape if Reddit blocked direct requests (429/403)
+        if (fetchedQueryPosts < 3) {
+          const serpPosts = await this.fetchRedditFromYahoo(query, oneMonthAgo, product);
+          for (const post of serpPosts) {
+            if (!processedIds.has(post.externalPostId)) {
+              processedIds.add(post.externalPostId);
+              posts.push(post);
             }
           }
         }
@@ -392,6 +406,70 @@ export class BatchCollectionService {
       });
     } catch (err: any) {
       logger.debug(`[COLLECTION] [REDDIT] RSS fallback failed: ${err.message}`);
+    }
+    return posts;
+  }
+
+  /**
+   * Third Fallback for Reddit: Search using Yahoo Search SERP indexing (site:reddit.com/r/ ...)
+   * Highly resistant to Reddit direct API 429/403 IP rate limit blocks
+   */
+  private static async fetchRedditFromYahoo(
+    query: string,
+    oneMonthAgo: Date,
+    product: ProductWithDetails
+  ): Promise<CollectedPost[]> {
+    const posts: CollectedPost[] = [];
+    try {
+      const cheerio = await import('cheerio');
+      const searchUrl = `https://search.yahoo.com/search?p=${encodeURIComponent(`site:reddit.com/r/ ${query}`)}`;
+      const response = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!response.ok) return posts;
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+
+      $('.algo').each((_, el) => {
+        const rawUrl = $(el).find('a').attr('href') || '';
+        let targetUrl = rawUrl;
+        const ruMatch = rawUrl.match(/RU=([^/&]+)/);
+        if (ruMatch) {
+          try { targetUrl = decodeURIComponent(ruMatch[1] ?? ''); } catch { /* ignore */ }
+        }
+
+        if (!targetUrl.includes('reddit.com/r/') || !targetUrl.includes('/comments/')) return;
+
+        const rawText = $(el).find('.compTitle + div').text() || $(el).find('.fz-ms').text() || $(el).find('.compText').text() || $(el).text() || '';
+        const title = $(el).find('h3').text() || $(el).find('.compTitle').text() || '';
+        const combinedText = `${title} ${rawText}`;
+
+        if (!this.passesBasicFilters(combinedText, null, product)) return;
+
+        const match = targetUrl.match(/\/comments\/([a-z0-9]+)\//i);
+        const externalPostId = match ? match[1]! : Buffer.from(targetUrl).toString('base64').slice(0, 12);
+
+        posts.push({
+          id: `reddit-${externalPostId}`,
+          platform: 'REDDIT',
+          externalPostId,
+          title,
+          content: rawText,
+          url: targetUrl.split('?')[0] || targetUrl,
+          authorUsername: 'reddit_user',
+          postedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          source: targetUrl.match(/reddit\.com\/r\/([^/]+)/)?.[1] || 'global',
+          detectionMode: 'SEMANTIC'
+        });
+      });
+    } catch (err: any) {
+      logger.debug(`[COLLECTION] [REDDIT] SERP fallback failed: ${err.message}`);
     }
     return posts;
   }
@@ -820,85 +898,5 @@ export class BatchCollectionService {
       'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1',
     ];
     return agents[Math.floor(Math.random() * agents.length)]!;
-  }
-
-
-  /**
-   * Collect posts from Bluesky using open AppView search API
-   */
-  private static async collectFromBluesky(
-    product: any,
-    oneMonthAgo: Date,
-    searchQueries: string[] = []
-  ): Promise<CollectedPost[]> {
-    const posts: CollectedPost[] = [];
-
-    if (searchQueries.length === 0) {
-      logger.warn(`[COLLECTION] No search queries available for Bluesky scan of "${product.name}"`);
-      return posts;
-    }
-
-    // Pick 3 random base queries
-    const priorityQueries = [...searchQueries]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, Math.min(3, searchQueries.length));
-
-    for (const query of priorityQueries) {
-      try {
-        const url = `https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=${encodeURIComponent(query)}&limit=15`;
-        const response = await fetch(url, {
-          headers: {
-            'User-Agent': 'Knivik-Lead-Finder/1.0.0',
-            'Accept': 'application/json'
-          },
-          signal: AbortSignal.timeout(10000)
-        });
-
-        if (!response.ok) {
-          logger.warn({ status: response.status, query }, '[COLLECTION] [BLUESKY] Search request failed');
-          continue;
-        }
-
-        const data = await response.json() as any;
-        const items = data?.posts || [];
-
-        for (const item of items) {
-          const record = item.record || {};
-          const postedAt = record.createdAt ? new Date(record.createdAt) : new Date();
-          if (postedAt < oneMonthAgo) continue;
-
-          const content = record.text || '';
-          const author = item.author?.handle || item.author?.did || 'unknown';
-
-          if (!this.passesBasicFilters(content, author, product)) continue;
-
-          // Parse rkey from uri
-          const parts = (item.uri || '').split('/');
-          const rkey = parts[parts.length - 1] || item.cid;
-          const postUrl = `https://bsky.app/profile/${author}/post/${rkey}`;
-
-          posts.push({
-            id: `bluesky-${rkey}`,
-            platform: 'BLUESKY',
-            externalPostId: rkey,
-            title: null,
-            content,
-            url: postUrl,
-            authorUsername: author,
-            postedAt,
-            source: 'global',
-            detectionMode: 'SEMANTIC'
-          });
-        }
-
-        // Space out calls politely
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-      } catch (error: any) {
-        logger.warn({ errorMsg: error.message, query }, '[COLLECTION] [BLUESKY] Search request error');
-      }
-    }
-
-    return posts;
   }
 }

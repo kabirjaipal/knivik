@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "How does the lead finding and filtering process work?",
-    answer: "Once you add your product or service, our background scraping engine continuously scans active discussion streams on Reddit, HackerNews, X (Twitter), and Bluesky. Our advanced AI then filters and scores these posts based on buying intent to deliver only the best, highest-converting leads directly to your dashboard."
+    answer: "Once you add your product or service, our background scraping engine continuously scans active discussion streams on Reddit, HackerNews, and X (Twitter). Our advanced AI then filters and scores these posts based on buying intent to deliver only the best, highest-converting leads directly to your dashboard."
   },
   {
     question: "How does the AI find high-quality leads?",
@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     question: "Where does Knivik find these leads?",
-    answer: "We monitor major social platforms including Reddit, X (Twitter), HackerNews, and Bluesky. We find high-intent conversations in real-time, giving you the first-mover advantage before your competitors even know they exist."
+    answer: "We monitor major social platforms including Reddit, X (Twitter), and HackerNews. We find high-intent conversations in real-time, giving you the first-mover advantage before your competitors even know they exist."
   },
   {
     question: "How do I reach out without sounding like a salesperson?",
