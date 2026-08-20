@@ -38,7 +38,7 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const { session, errorResponse } = await requireAuth();
     if (errorResponse) return errorResponse;
@@ -57,10 +57,11 @@ export async function PUT(req: NextRequest) {
     const data = parsed.data;
     const user = await db.client.user.findUnique({ where: { id: userId } });
 
-    if (data.emailEnabled || data.slackEnabled || data.slackWebhook) {
+    // Webhook integrations (Slack/Discord/Zapier/Make) are restricted to Pro plans
+    if (data.slackEnabled || (data.slackWebhook && data.slackWebhook.trim() !== '')) {
       if (!user || !hasCapability(user.plan, 'canAccessAlerts')) {
         return NextResponse.json(
-          { success: false, error: 'Automated alerts (Email/Slack/Discord) are only available on premium plans.' },
+          { success: false, error: 'Premium Webhook alerts (Slack/Discord/Zapier/Make) are only available on Pro plans.' },
           { status: 403 }
         );
       }
@@ -70,18 +71,18 @@ export async function PUT(req: NextRequest) {
       where: { userId },
       update: {
         emailEnabled: data.emailEnabled,
-        emailTarget: data.emailTarget || null,
+        emailTarget: data.emailTarget?.trim() || null,
         slackEnabled: data.slackEnabled,
-        slackWebhook: data.slackWebhook || null,
+        slackWebhook: data.slackWebhook?.trim() || null,
         webhookType: data.webhookType,
         minIntentScore: data.minIntentScore,
       },
       create: {
         userId,
         emailEnabled: data.emailEnabled,
-        emailTarget: data.emailTarget || null,
+        emailTarget: data.emailTarget?.trim() || null,
         slackEnabled: data.slackEnabled,
-        slackWebhook: data.slackWebhook || null,
+        slackWebhook: data.slackWebhook?.trim() || null,
         webhookType: data.webhookType,
         minIntentScore: data.minIntentScore,
       },

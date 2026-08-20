@@ -235,10 +235,13 @@ export default function SettingsPage() {
         body: JSON.stringify(alertSettings)
       })
 
-      if (!res.ok) throw new Error('Failed to update settings')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to update settings')
+      }
       toast.success("Alert settings saved successfully.")
     } catch (e: any) {
-      toast.error(e.message)
+      toast.error(e.message || "Could not save alert settings.")
     } finally {
       setSavingAlerts(false)
     }
@@ -559,30 +562,34 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-primary" />
                     <label className="text-sm font-medium text-muted-foreground">
-                      Email Deliveries 
-                      <span className="ml-2 text-xs font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase tracking-wider">PRO ONLY</span>
+                      Email Deliveries
                     </label>
                   </div>
-                  {user?.plan !== 'FREE' ? (
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={alertSettings.emailEnabled} onChange={e => setAlertSettings({...alertSettings, emailEnabled: e.target.checked})} />
-                      <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:bg-foreground after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-muted-foreground after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                    </label>
-                  ) : (
-                    <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-md border border-border/40"><Lock className="w-3 h-3 text-muted-foreground/80"/> Locked</div>
-                  )}
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={alertSettings.emailEnabled} onChange={e => setAlertSettings({...alertSettings, emailEnabled: e.target.checked})} />
+                    <div className="w-9 h-5 bg-muted rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:bg-foreground after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-muted-foreground after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
                 </div>
                 
-                <div className={`space-y-1 mt-2 ${!alertSettings.emailEnabled || user?.plan === 'FREE' ? 'hidden' : ''}`}>
-                  <Label className="text-sm font-medium text-muted-foreground">Target Email Address</Label>
+                <div className={`space-y-1 mt-2 ${!alertSettings.emailEnabled ? 'hidden' : ''}`}>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-muted-foreground">Target Email Address</Label>
+                    <span className="text-[11px] text-muted-foreground">
+                      Default: <strong className="text-foreground font-mono">{user?.email}</strong>
+                    </span>
+                  </div>
                   <Input 
-                    placeholder={user?.email || "team@yourcompany.com"}
+                    placeholder={user?.email || "custom-team@yourcompany.com"}
                     value={alertSettings.emailTarget}
                     onChange={e => setAlertSettings({...alertSettings, emailTarget: e.target.value})}
                     className="font-mono text-sm bg-background border-border/60 rounded-md h-9"
                   />
                   <p className="text-xs text-muted-foreground px-1 font-medium">
-                    Leave blank to automatically deliver to your primary account email.
+                    {alertSettings.emailTarget?.trim() ? (
+                      <>Delivering alerts to custom address: <strong className="text-primary font-mono">{alertSettings.emailTarget.trim()}</strong></>
+                    ) : (
+                      <>Delivering directly to your account email (<strong className="text-foreground font-mono">{user?.email}</strong>). Enter a custom email to route elsewhere.</>
+                    )}
                   </p>
                 </div>
               </div>

@@ -66,7 +66,7 @@ export class BatchProcessingService {
       }
       emitScanStatus(userId, productId, true, 'INITIALIZING');
 
-      // Step 1: Collect posts for this product
+      // Step 1: Collect posts for this product across platforms
       emitScanStatus(userId, productId, true, 'COLLECTING');
       const sourceBreakdown: Record<string, number> = {};
       const posts = await BatchCollectionService.collectProductPosts(product, sourceBreakdown);
@@ -100,7 +100,7 @@ export class BatchProcessingService {
         };
       }
 
-      // Step 2: Analyze in batch (using our batch analyzer for just this 1 product)
+      // Step 2: Analyze in batch using LLM buying intent evaluation
       emitScanStatus(userId, productId, true, 'ANALYZING');
       const analysisInput = [{
         product: {
@@ -114,7 +114,7 @@ export class BatchProcessingService {
 
       const analysisResult = await analyzeUserPostsBatch(userId, analysisInput);
 
-      // Step 3: Save results
+      // Step 3: Save results & dispatch alerts
       emitScanStatus(userId, productId, true, 'SAVING');
       let leadsGenerated = 0;
       const pendingTasks: Promise<any>[] = [];
@@ -170,7 +170,12 @@ export class BatchProcessingService {
       // Finalize
       const processingTime = Date.now() - startTime;
       logger.info(
-        { productId, postsCollected: posts.length, leadsGenerated, processingTimeMs: processingTime },
+        {
+          productId,
+          postsCollected: posts.length,
+          leadsGenerated,
+          processingTimeMs: processingTime,
+        },
         `[SCAN] Completed scan for product "${product.name}" in ${(processingTime / 1000).toFixed(2)}s`
       );
 
@@ -182,7 +187,7 @@ export class BatchProcessingService {
       };
 
     } catch (error: any) {
-      logger.error({ error, productId }, 'Product processing failed');
+      logger.error({ error: error.message, productId }, 'Product scan failed');
       
       if (userId) {
         await db.client.user.update({

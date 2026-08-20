@@ -36,9 +36,9 @@ const getComparisonFeatures = () => [
         pro: PLANS.PRO.capabilities.canAccessTwitter 
       },
       { 
-        name: "Real-time Alerts", 
-        free: PLANS.FREE.capabilities.canAccessAlerts, 
-        pro: PLANS.PRO.capabilities.canAccessAlerts 
+        name: "Real-time Webhook Alerts", 
+        free: false, 
+        pro: true 
       },
     ],
   },
@@ -68,13 +68,13 @@ const getComparisonFeatures = () => [
     features: [
       { 
         name: "Email Alerts", 
-        free: PLANS.FREE.capabilities.canAccessAlerts, 
-        pro: PLANS.PRO.capabilities.canAccessAlerts 
+        free: true, 
+        pro: true 
       },
       { 
-        name: "Slack & Discord", 
-        free: PLANS.FREE.capabilities.canAccessAlerts, 
-        pro: PLANS.PRO.capabilities.canAccessAlerts 
+        name: "Slack & Discord Webhooks", 
+        free: false, 
+        pro: true 
       },
       { 
         name: "Priority Support", 

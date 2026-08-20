@@ -28,25 +28,27 @@ export const sendLeadAlert = async (leadId: string) => {
 
     const { alertSetting } = lead.product.user;
 
-    // 0. Plan Capability Check
-    if (!hasCapability(lead.product.user.plan as any, 'canAccessAlerts')) {
-      return;
-    }
-
     // 1. Check intent score threshold
     if (lead.intentScore < alertSetting.minIntentScore) {
       return;
     }
 
-    // 2. Webhook (Slack/Discord/Custom)
-    if (alertSetting.slackEnabled && alertSetting.slackWebhook) {
+    // 2. Webhooks (Slack/Discord/Custom) - Pro Only
+    if (
+      alertSetting.slackEnabled &&
+      alertSetting.slackWebhook &&
+      hasCapability(lead.product.user.plan as any, 'canAccessAlerts')
+    ) {
       await sendWebhookAlert(alertSetting, lead);
     }
 
-    // 3. Email Alerts (Disabled in favor of Daily Digest)
-    // Real-time email alerts are disabled to reduce outbound email costs.
-    // Daily digests are aggregated and sent via schedulers/dailyDigest.ts.
-
+    // 3. Email Alerts - Available for both Free and Pro
+    if (alertSetting.emailEnabled) {
+      const email = alertSetting.emailTarget?.trim() || lead.product.user.email;
+      if (email) {
+        await sendEmailAlert(email, lead);
+      }
+    }
   } catch (error) {
     logger.error({ error, leadId }, 'Failed to process lead alert');
   }

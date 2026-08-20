@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { db } from '@/lib/db';
-import { scanEmitter } from '@/lib/scan-emitter';
+import { createScanEventStream } from '@/lib/scan-emitter';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,111 +34,14 @@ export async function GET(
   }
 
   const productConfig = (product.config as Record<string, any>) || {};
-  const isCurrentlyScanning = productConfig.isScanning ?? dbUser?.isScanning ?? false;
+  const isCurrentlyScanning = Boolean(productConfig.isScanning ?? dbUser?.isScanning ?? false);
+  const initialStatus = productConfig.lastScanStatus || (isCurrentlyScanning ? 'INITIALIZING' : 'IDLE');
 
-  const encoder = new TextEncoder();
-
-  const stream = new ReadableStream({
-    start(controller) {
-      // 1. Tell browser EventSource to auto-reconnect every 3 seconds if disconnected
-      controller.enqueue(encoder.encode('retry: 3000\n\n'));
-      
-      // 2. If actively scanning on initial connect, send immediate progress state
-      if (isCurrentlyScanning) {
-        const initialPayload = `data: ${JSON.stringify({
-          productId,
-          isScanning: true,
-          status: productConfig.lastScanStatus || 'INITIALIZING',
-        })}\n\n`;
-        controller.enqueue(encoder.encode(initialPayload));
-      } else {
-        const idlePayload = `data: ${JSON.stringify({
-          productId,
-          isScanning: false,
-          status: 'IDLE',
-        })}\n\n`;
-        controller.enqueue(encoder.encode(idlePayload));
-      }
-
-      const listener = (data: { productId: string; userId: string; isScanning: boolean; status: string }) => {
-        try {
-          const payload = `data: ${JSON.stringify(data)}\n\n`;
-          controller.enqueue(encoder.encode(payload));
-          if (!data.isScanning) {
-            // Keep open briefly so client receives completion confirmation, then close
-            setTimeout(() => {
-              try {
-                controller.close();
-              } catch (_) {}
-            }, 1000);
-          }
-        } catch (_) {}
-      };
-
-      scanEmitter.on(`scan:${productId}`, listener);
-
-      // 3. Heartbeat + Database Sync Polling (for multi-container serverless support)
-      let isClosed = false;
-      let wasScanningState = isCurrentlyScanning;
-
-      const interval = setInterval(async () => {
-        if (isClosed) return;
-        try {
-          // Check DB state across separate serverless lambda containers
-          const [prodState, userState] = await Promise.all([
-            db.client.product.findUnique({
-              where: { id: productId },
-              select: { config: true },
-            }),
-            db.client.user.findUnique({
-              where: { id: userId },
-              select: { isScanning: true, lastScanStatus: true },
-            }),
-          ]);
-
-          const pConfig = (prodState?.config as Record<string, any>) || {};
-          const isProdScanning = pConfig.isScanning ?? userState?.isScanning ?? false;
-
-          if (isProdScanning) {
-            wasScanningState = true;
-          } else if (wasScanningState && !isProdScanning) {
-            // Only emit completion if a scan was actively running during this session
-            wasScanningState = false;
-            const finalPayload = `data: ${JSON.stringify({
-              productId,
-              userId,
-              isScanning: false,
-              status: pConfig.lastScanStatus || userState?.lastScanStatus || 'SUCCESS',
-            })}\n\n`;
-            controller.enqueue(encoder.encode(finalPayload));
-          }
-
-          controller.enqueue(encoder.encode(`: ping\n\n`));
-        } catch (_) {
-          // Keep stream alive
-        }
-      }, 5000);
-
-      const cleanup = () => {
-        isClosed = true;
-        clearInterval(interval);
-        scanEmitter.off(`scan:${productId}`, listener);
-      };
-
-      req.signal.addEventListener('abort', cleanup);
-    },
-    cancel() {
-      // Client closed or aborted connection
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform, no-store, must-revalidate',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no',
-      'Content-Encoding': 'none',
-    },
+  return createScanEventStream({
+    req,
+    userId,
+    productId,
+    initialIsScanning: isCurrentlyScanning,
+    initialStatus,
   });
 }
