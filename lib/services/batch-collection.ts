@@ -147,16 +147,22 @@ export class BatchCollectionService {
       ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER]
       : [Platform.REDDIT, Platform.HACKERNEWS];
 
-    // Collect from each platform globally
-    for (const platform of platforms) {
-      try {
+    // Collect from each platform in parallel for maximum throughput
+    const platformResults = await Promise.allSettled(
+      platforms.map(async (platform) => {
         const sourcePosts = await this.collectFromPlatform(product, platform, oneMonthAgo, searchQueries);
+        return { platform, posts: sourcePosts };
+      })
+    );
+
+    for (const res of platformResults) {
+      if (res.status === 'fulfilled') {
+        const { platform, posts: sourcePosts } = res.value;
         allPosts.push(...sourcePosts);
-        
         const sourceKey = `${platform}:global`;
         sourceBreakdown[sourceKey] = (sourceBreakdown[sourceKey] || 0) + sourcePosts.length;
-      } catch (error: any) {
-        logger.warn({ errorMsg: error.message, stack: error.stack, productId: product.id, platform }, 'Failed to collect from platform');
+      } else {
+        logger.warn({ errorMsg: res.reason?.message, stack: res.reason?.stack, productId: product.id }, 'Failed to collect from platform');
       }
     }
 
@@ -211,128 +217,132 @@ export class BatchCollectionService {
 
     switch (platform) {
       case Platform.REDDIT:
-        const redditPosts = await this.collectFromReddit(product, oneMonthAgo, searchQueries);
-        posts.push(...redditPosts);
-        break;
+        return await this.collectFromReddit(product, oneMonthAgo, searchQueries);
       case Platform.HACKERNEWS:
-        const hnPosts = await this.collectFromHackerNews(product, oneMonthAgo, searchQueries);
-        posts.push(...hnPosts);
-        break;
+        return await this.collectFromHackerNews(product, oneMonthAgo, searchQueries);
       case Platform.TWITTER:
-        const twitterPosts = await this.collectFromTwitter(product, oneMonthAgo, searchQueries);
-        posts.push(...twitterPosts);
-        break;
+        return await this.collectFromTwitter(product, oneMonthAgo, searchQueries);
       default:
-        // Unsupported platform
+        return posts;
     }
-
-    return posts;
   }
 
   /**
    * Collect posts from Reddit using free public search endpoints and edge-cached RSS feeds.
-   * No Reddit API credentials or Snoowrap SDK required ($0 cost).
+   * Hardened with micro-staggering (120ms jitter to prevent 429s), compound query expansion, and adaptive fallbacks.
    */
   private static async collectFromReddit(
     product: ProductWithDetails,
     oneMonthAgo: Date,
     searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
-    const posts: CollectedPost[] = [];
-    const processedIds = new Set<string>();
-    
     if (searchQueries.length === 0) {
       logger.warn(`[COLLECTION] No search queries available for Reddit scan of "${product.name}"`);
-      return posts;
+      return [];
     }
 
-    const priorityQueries = [...searchQueries]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, Math.min(5, searchQueries.length));
+    // Build compound high-coverage query list from available search queries
+    const distinctQueries = [...new Set(searchQueries)].sort(() => 0.5 - Math.random());
+    const compoundQueries: string[] = [];
+    
+    for (let i = 0; i < distinctQueries.length && compoundQueries.length < 3; i += 2) {
+      if (i + 1 < distinctQueries.length) {
+        // Group pairs using OR to get double the query coverage per request
+        compoundQueries.push(`(${distinctQueries[i]}) OR (${distinctQueries[i + 1]})`);
+      } else {
+        compoundQueries.push(distinctQueries[i]!);
+      }
+    }
 
-    for (const query of priorityQueries) {
+    const queryTasks = compoundQueries.map(async (query, idx) => {
+      // Micro-stagger (120ms) between concurrent queries to prevent burst-pattern 429 IP flags
+      if (idx > 0) {
+        await new Promise((resolve) => setTimeout(resolve, idx * 120));
+      }
+
+      const queryPosts: CollectedPost[] = [];
+      let jsonSucceeded = false;
+
+      // 1. Primary Strategy: Free Public Reddit JSON API (3.5s fast timeout)
       try {
-        let fetchedQueryPosts = 0;
+        const jsonUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=month`;
+        const response = await fetch(jsonUrl, {
+          headers: {
+            'User-Agent': this.getRandomUserAgent(),
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin',
+          },
+          signal: AbortSignal.timeout(3500),
+        });
 
-        // 1. Primary Strategy: Free Public Reddit JSON API
-        try {
-          const jsonUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=month`;
-          const response = await fetch(jsonUrl, {
-            headers: {
-              'User-Agent': this.getRandomUserAgent(),
-              'Accept': 'application/json',
-            },
-            signal: AbortSignal.timeout(8000),
-          });
+        if (response.ok) {
+          const data = await response.json();
+          const children = data?.data?.children || [];
 
-          if (response.ok) {
-            const data = await response.json();
-            const children = data?.data?.children || [];
+          for (const child of children) {
+            const item = child?.data;
+            if (!item || !item.id) continue;
 
-            for (const child of children) {
-              const item = child?.data;
-              if (!item || !item.id || processedIds.has(item.id)) continue;
+            const permalink = item.permalink || '';
+            if (!permalink.includes('/comments/')) continue;
 
-              const permalink = item.permalink || '';
-              if (!permalink.includes('/comments/')) continue;
+            const postedAt = item.created_utc ? new Date(item.created_utc * 1000) : new Date();
+            if (postedAt < oneMonthAgo) continue;
 
-              const postedAt = item.created_utc ? new Date(item.created_utc * 1000) : new Date();
-              if (postedAt < oneMonthAgo) continue;
+            const author = item.author || 'unknown';
+            const title = item.title || '';
+            const content = item.selftext || '';
+            const combinedText = `${title} ${content}`;
 
-              const author = item.author || 'unknown';
-              const title = item.title || '';
-              const content = item.selftext || '';
-              const combinedText = `${title} ${content}`;
+            if (!this.passesBasicFilters(combinedText, author, product)) continue;
 
-              if (!this.passesBasicFilters(combinedText, author, product)) continue;
-
-              processedIds.add(item.id);
-              fetchedQueryPosts++;
-              posts.push({
-                id: `reddit-${item.id}`,
-                platform: 'REDDIT',
-                externalPostId: item.id,
-                title,
-                content,
-                url: `https://reddit.com${permalink}`,
-                authorUsername: author,
-                postedAt,
-                source: item.subreddit || 'global',
-                detectionMode: 'SEMANTIC',
-              });
-            }
+            queryPosts.push({
+              id: `reddit-${item.id}`,
+              platform: 'REDDIT',
+              externalPostId: item.id,
+              title,
+              content,
+              url: `https://reddit.com${permalink}`,
+              authorUsername: author,
+              postedAt,
+              source: item.subreddit || 'global',
+              detectionMode: 'SEMANTIC',
+            });
           }
-        } catch (jsonErr: any) {
-          logger.debug(`[COLLECTION] [REDDIT] JSON search endpoint failed, trying RSS: ${jsonErr.message}`);
+          jsonSucceeded = true;
+        } else if (response.status === 429 || response.status === 403) {
+          logger.debug({ status: response.status, query }, '[COLLECTION] [REDDIT] JSON hit rate limit, switching to RSS fallback immediately');
         }
+      } catch (jsonErr: any) {
+        logger.debug(`[COLLECTION] [REDDIT] JSON search failed for "${query}", switching to RSS: ${jsonErr.message}`);
+      }
 
-        // 2. Fallback Strategy: Free Public Reddit RSS Feed if JSON produced low results
-        if (fetchedQueryPosts < 3) {
-          const rssPosts = await this.fetchRedditRss(query, oneMonthAgo, product);
-          for (const post of rssPosts) {
-            if (!processedIds.has(post.externalPostId)) {
-              processedIds.add(post.externalPostId);
-              posts.push(post);
-              fetchedQueryPosts++;
-            }
+      // 2. Adaptive Fallback: Edge-cached RSS Feed if JSON failed, was rate-limited, or yielded 0 leads
+      if (!jsonSucceeded || queryPosts.length === 0) {
+        // Strip nested parentheses if querying RSS for cleaner XML parsing
+        const cleanQuery = query.replace(/[()]/g, '');
+        const rssPosts = await this.fetchRedditRss(cleanQuery, oneMonthAgo, product);
+        queryPosts.push(...rssPosts);
+      }
+
+      return queryPosts;
+    });
+
+    const results = await Promise.allSettled(queryTasks);
+    const posts: CollectedPost[] = [];
+    const processedIds = new Set<string>();
+
+    for (const res of results) {
+      if (res.status === 'fulfilled') {
+        for (const post of res.value) {
+          if (!processedIds.has(post.externalPostId)) {
+            processedIds.add(post.externalPostId);
+            posts.push(post);
           }
         }
-
-        // 3. Fallback Strategy: Search Engine SERP Scrape if Reddit blocked direct requests (429/403)
-        if (fetchedQueryPosts < 3) {
-          const serpPosts = await this.fetchRedditFromYahoo(query, oneMonthAgo, product);
-          for (const post of serpPosts) {
-            if (!processedIds.has(post.externalPostId)) {
-              processedIds.add(post.externalPostId);
-              posts.push(post);
-            }
-          }
-        }
-
-        // Polite delay between queries
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-      } catch (err: any) {
-        logger.warn({ errorMsg: err.message, query }, '[COLLECTION] [REDDIT] Query scan failed');
       }
     }
 
@@ -355,7 +365,7 @@ export class BatchCollectionService {
           'User-Agent': this.getRandomUserAgent(),
           'Accept': 'application/xml, application/rss+xml'
         },
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(4000)
       });
 
       if (!response.ok) return posts;
@@ -428,7 +438,7 @@ export class BatchCollectionService {
           'User-Agent': this.getRandomUserAgent(),
           'Accept': 'text/html,application/xhtml+xml',
         },
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(4000)
       });
 
       if (!response.ok) return posts;
@@ -476,133 +486,160 @@ export class BatchCollectionService {
 
   /**
    * Collect posts from HackerNews
-   * Uses Algolia search API for keyword-based discovery + Firebase for recent stories
+   * Uses Algolia search API for keyword-based discovery + Ask HN queries in parallel.
+   * High performance, compound query coverage, and zero artificial blocking sleeps.
    */
   private static async collectFromHackerNews(
     product: ProductWithDetails,
     oneMonthAgo: Date,
     searchQueries: string[] = []
   ): Promise<CollectedPost[]> {
-    const posts: CollectedPost[] = [];
-    const processedIds = new Set<string>(); // Track processed posts to avoid duplicates
+    const processedIds = new Set<string>();
+    const tasks: Promise<CollectedPost[]>[] = [];
 
-    // Strategy 1: Search via Algolia for keyword-based results
+    // Strategy 1: Keyword-based queries on Algolia
     if (searchQueries.length > 0) {
-      // Randomize query selection to use full variety (not always first 3 which are the most generic)
-      const shuffledQueries = [...searchQueries].sort(() => Math.random() - 0.5);
-      const priorityQueries = shuffledQueries.slice(0, Math.min(4, shuffledQueries.length));
-      
-      for (const query of priorityQueries) {
-        try {
-          // Fetch up to 50 results; filter to engagement >= 3 at the API level to skip low-signal posts
-          const algoliaUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=(story,comment)&hitsPerPage=50&numericFilters=points%3E%3D3`;
-          
-          const response = await fetch(algoliaUrl, { 
-            headers: { 'Accept': 'application/json' },
-            signal: AbortSignal.timeout(10000) 
-          });
-          
-          if (!response.ok) {
-            logger.warn({ status: response.status, query }, '[COLLECTION] [HACKERNEWS] Algolia query failed');
-            continue;
+      const distinctQueries = [...new Set(searchQueries)].sort(() => Math.random() - 0.5);
+      const compoundQueries: string[] = [];
+
+      for (let i = 0; i < distinctQueries.length && compoundQueries.length < 3; i += 2) {
+        if (i + 1 < distinctQueries.length) {
+          compoundQueries.push(`"${distinctQueries[i]}" OR "${distinctQueries[i + 1]}"`);
+        } else {
+          compoundQueries.push(distinctQueries[i]!);
+        }
+      }
+
+      for (let idx = 0; idx < compoundQueries.length; idx++) {
+        const query = compoundQueries[idx]!;
+        tasks.push((async () => {
+          if (idx > 0) {
+            await new Promise((resolve) => setTimeout(resolve, idx * 60));
           }
 
-          const data = await response.json() as any;
-          const hits = data?.hits || [];
+          const queryPosts: CollectedPost[] = [];
+          try {
+            const algoliaUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=(story,comment)&hitsPerPage=50&numericFilters=points%3E%3D3`;
+            const response = await fetch(algoliaUrl, {
+              headers: { 'Accept': 'application/json' },
+              signal: AbortSignal.timeout(3500),
+            });
 
-          for (const hit of hits) {
+            if (!response.ok) return queryPosts;
+
+            const data = await response.json() as any;
+            const hits = data?.hits || [];
+
+            for (const hit of hits) {
+              const storyId = hit.objectID;
+              if (!storyId) continue;
+
+              const postedAt = hit.created_at_i ? new Date(hit.created_at_i * 1000) : new Date();
+              if (postedAt < oneMonthAgo) continue;
+
+              const title = hit.title || hit.story_title || '';
+              let content = hit.story_text || hit.comment_text || '';
+
+              content = content
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#x27;/g, "'")
+                .replace(/&#x2F;/g, '/')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+              const combinedText = `${title} ${content}`;
+              if (!this.passesBasicFilters(combinedText, hit.author || null, product)) continue;
+
+              queryPosts.push({
+                id: `hn-${storyId}`,
+                platform: 'HACKERNEWS',
+                externalPostId: storyId,
+                title,
+                content,
+                url: hit.url || `https://news.ycombinator.com/item?id=${storyId}`,
+                authorUsername: hit.author || 'unknown',
+                postedAt,
+                source: hit._tags?.includes('ask_hn') ? 'ask_hn' : 'global',
+                detectionMode: 'SEMANTIC'
+              });
+            }
+          } catch (error: any) {
+            logger.warn({ errorMsg: error.message, query }, '[COLLECTION] [HACKERNEWS] Algolia query error');
+          }
+          return queryPosts;
+        })());
+      }
+    }
+
+    // Strategy 2: Dedicated Ask HN query (concurrent)
+    tasks.push((async () => {
+      const askHnPosts: CollectedPost[] = [];
+      try {
+        const askHnKeyword = searchQueries[0] ?? product.name;
+        const askHnUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(askHnKeyword)}&tags=ask_hn&hitsPerPage=30`;
+        const askHnResponse = await fetch(askHnUrl, {
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(3500)
+        });
+
+        if (askHnResponse.ok) {
+          const askHnData = await askHnResponse.json() as any;
+          const askHnHits = askHnData?.hits || [];
+
+          for (const hit of askHnHits) {
             const storyId = hit.objectID;
-            if (processedIds.has(storyId)) continue;
-            
+            if (!storyId) continue;
+
             const postedAt = hit.created_at_i ? new Date(hit.created_at_i * 1000) : new Date();
             if (postedAt < oneMonthAgo) continue;
 
-            const title = hit.title || hit.story_title || '';
-            let content = hit.story_text || hit.comment_text || '';
-
+            const title = hit.title || '';
+            let content = hit.story_text || '';
             content = content
               .replace(/<[^>]*>/g, ' ')
-              .replace(/&amp;/g, '&')
-              .replace(/&lt;/g, '<')
-              .replace(/&gt;/g, '>')
-              .replace(/&quot;/g, '"')
-              .replace(/&#x27;/g, "'")
-              .replace(/&#x2F;/g, '/')
-              .replace(/\s+/g, ' ')
-              .trim();
+              .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&#x2F;/g, '/')
+              .replace(/\s+/g, ' ').trim();
 
             const combinedText = `${title} ${content}`;
             if (!this.passesBasicFilters(combinedText, hit.author || null, product)) continue;
 
-            processedIds.add(storyId);
-            posts.push({
+            askHnPosts.push({
               id: `hn-${storyId}`,
               platform: 'HACKERNEWS',
               externalPostId: storyId,
               title,
               content,
-              url: hit.url || `https://news.ycombinator.com/item?id=${storyId}`,
+              url: `https://news.ycombinator.com/item?id=${storyId}`,
               authorUsername: hit.author || 'unknown',
               postedAt,
-              source: hit._tags?.includes('ask_hn') ? 'ask_hn' : 'global',
+              source: 'ask_hn',
               detectionMode: 'SEMANTIC'
             });
           }
+        }
+      } catch (askErr: any) {
+        logger.warn({ errorMsg: askErr.message }, '[COLLECTION] [HACKERNEWS] Ask HN query failed');
+      }
+      return askHnPosts;
+    })());
 
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-        } catch (error: any) {
-          logger.warn({ errorMsg: error.message, query }, '[COLLECTION] [HACKERNEWS] Algolia query error');
+    const results = await Promise.allSettled(tasks);
+    const posts: CollectedPost[] = [];
+
+    for (const res of results) {
+      if (res.status === 'fulfilled') {
+        for (const post of res.value) {
+          if (!processedIds.has(post.externalPostId)) {
+            processedIds.add(post.externalPostId);
+            posts.push(post);
+          }
         }
       }
-    }
-
-    // Strategy 2: Dedicated Ask HN query — the richest B2B lead source on HackerNews
-    // "Ask HN: What do you use for X?" threads are highest-intent discovery posts on the platform
-    try {
-      const askHnKeyword = searchQueries[0] ?? product.name;
-      const askHnUrl = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(askHnKeyword)}&tags=ask_hn&hitsPerPage=30`;
-      const askHnResponse = await fetch(askHnUrl, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(10000)
-      });
-
-      if (askHnResponse.ok) {
-        const askHnData = await askHnResponse.json() as any;
-        const askHnHits = askHnData?.hits || [];
-
-        for (const hit of askHnHits) {
-          const storyId = hit.objectID;
-          if (processedIds.has(storyId)) continue;
-
-          const postedAt = hit.created_at_i ? new Date(hit.created_at_i * 1000) : new Date();
-          if (postedAt < oneMonthAgo) continue;
-
-          const title = hit.title || '';
-          let content = hit.story_text || '';
-          content = content
-            .replace(/<[^>]*>/g, ' ')
-            .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&#x2F;/g, '/')
-            .replace(/\s+/g, ' ').trim();
-
-          processedIds.add(storyId);
-          posts.push({
-            id: `hn-${storyId}`,
-            platform: 'HACKERNEWS',
-            externalPostId: storyId,
-            title,
-            content,
-            url: `https://news.ycombinator.com/item?id=${storyId}`,
-            authorUsername: hit.author || 'unknown',
-            postedAt,
-            source: 'ask_hn',
-            detectionMode: 'SEMANTIC'
-          });
-        }
-      }
-    } catch (askErr: any) {
-      logger.warn({ errorMsg: askErr.message }, '[COLLECTION] [HACKERNEWS] Ask HN query failed');
     }
 
     return posts;
