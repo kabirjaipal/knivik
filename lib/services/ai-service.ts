@@ -108,7 +108,6 @@ export const generateProductStrategy = async (
       competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [],
       subreddits: validSubreddits,
       twitterHandles: validTwitterHandles,
-      linkedinSearchFlags: Array.isArray(parsed.linkedinSearchFlags) ? parsed.linkedinSearchFlags : [],
       productHuntCommunities: Array.isArray(parsed.productHuntCommunities) ? parsed.productHuntCommunities : [],
       searchQueries: validSearchQueries
     };
@@ -121,7 +120,6 @@ export const generateProductStrategy = async (
       competitors: [], 
       subreddits: [], 
       twitterHandles: [], 
-      linkedinSearchFlags: [], 
       productHuntCommunities: [],
       searchQueries: []
     };

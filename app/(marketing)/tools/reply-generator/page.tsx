@@ -6,7 +6,7 @@ import { ReplyGeneratorClient } from "./reply-generator-client";
 export const metadata = MetadataService.constructPageMetadata({
   title: "Free AI Outreach Reply Generator | High-Converting DMs",
   description:
-    "Generate highly personalized, high-converting outreach replies and social DMs for Reddit, HackerNews, X (Twitter), and LinkedIn posts in seconds.",
+    "Generate highly personalized, high-converting outreach replies and social DMs for Reddit, HackerNews, and X (Twitter) posts in seconds.",
   path: "/tools/reply-generator",
   keywords: [
     "outreach message generator",

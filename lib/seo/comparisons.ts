@@ -257,7 +257,7 @@ export const comparisons: Record<string, ComparisonData> = {
       description: "Hootsuite is one of the world's most famous social media management platforms, built for scheduling posts and tracking broad brand hashtags. However, it lacks native AI intent-filtering and B2B sales pipelines, leaving users sorting through high-volume noise instead of automatically finding warm sales leads.",
       rating: 4.1,
       pricing: "Starts at $99/mo (expensive legacy tier)",
-      platforms: ["X (Twitter)", "Facebook", "Instagram", "LinkedIn", "TikTok"],
+      platforms: ["X (Twitter)", "Facebook", "Instagram", "TikTok"],
       pros: [
         "Excellent multi-channel social media post scheduling and queueing",
         "Unified inbox for customer support queries across networks",
@@ -332,10 +332,10 @@ export const comparisons: Record<string, ComparisonData> = {
       slug: "clay",
       name: "Clay",
       tagline: "AI Lead Enrichment & Data Orchestration",
-      description: "Clay is a powerful data enrichment and scraping platform that aggregates 50+ data providers. It is excellent for building custom enrichment lists and using AI agents to scrape individual LinkedIn pages or company websites. However, Clay does not offer real-time conversational social listening (monitoring Reddit, HackerNews, or X for active buyer intent), meaning you cannot capture warm leads at the exact moment they express intent.",
+      description: "Clay is a powerful data enrichment and scraping platform that aggregates 50+ data providers. It is excellent for building custom enrichment lists and using AI agents to scrape company websites or public records. However, Clay does not offer real-time conversational social listening (monitoring Reddit, HackerNews, or X for active buyer intent), meaning you cannot capture warm leads at the exact moment they express intent.",
       rating: 4.8,
       pricing: "Starts at $149/mo (credit-based)",
-      platforms: ["Static Data Sources", "LinkedIn", "Web Scraping"],
+      platforms: ["Static Data Sources", "B2B Databases", "Web Scraping"],
       pros: [
         "Combines 50+ data vendors into a single spreadsheet interface",
         "Advanced AI agents for reading websites and personalizing pitches",
@@ -355,7 +355,7 @@ export const comparisons: Record<string, ComparisonData> = {
       "Knivik offers a generous free starting tier; Clay's entry price is high and consumption-based."
     ],
     features: defaultFeatures("Clay", false, false, true),
-    verdict: "Clay is the gold standard for data enrichment if you already have a list of companies or LinkedIn profiles and want to find emails or personalized angles. However, if you want to discover warm sales leads in real-time when people are actively asking for tool recommendations or complaining about competitors on Reddit, HackerNews, or X, Knivik is the specialized AI lead finder you need.",
+    verdict: "Clay is the gold standard for data enrichment if you already have a list of companies or prospect names and want to find emails or personalized angles. However, if you want to discover warm sales leads in real-time when people are actively asking for tool recommendations or complaining about competitors on Reddit, HackerNews, or X, Knivik is the specialized AI lead finder you need.",
     faq: [
       {
         question: "Can Clay monitor Reddit and HackerNews for real-time buyer intent?",

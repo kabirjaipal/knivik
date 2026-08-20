@@ -58,9 +58,6 @@ export class SearchQueryService {
         twitterHandles: (Array.isArray(existingConfig.twitterHandles) && existingConfig.twitterHandles.length > 0)
           ? existingConfig.twitterHandles
           : strategy.twitterHandles,
-        linkedinSearchFlags: (Array.isArray(existingConfig.linkedinSearchFlags) && existingConfig.linkedinSearchFlags.length > 0)
-          ? existingConfig.linkedinSearchFlags
-          : strategy.linkedinSearchFlags,
         productHuntCommunities: (Array.isArray(existingConfig.productHuntCommunities) && existingConfig.productHuntCommunities.length > 0)
           ? existingConfig.productHuntCommunities
           : strategy.productHuntCommunities,

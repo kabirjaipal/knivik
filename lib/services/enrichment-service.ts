@@ -5,7 +5,6 @@ import { Platform } from '@prisma/client';
 
 export interface EnrichmentData {
   twitterUrl?: string;
-  linkedinUrl?: string;
 }
 
 /**
@@ -35,8 +34,8 @@ export const enrichLead = async (
     // 1. Discover from profile bio/about text
     const result: EnrichmentData = (await discoverProfiles(username, platform)) || {};
 
-    // 2. Discover from the post content/title itself (if any social link is missing)
-    if (!result.linkedinUrl || !result.twitterUrl) {
+    // 2. Discover from the post content/title itself (if social link is missing)
+    if (!result.twitterUrl) {
       const postText = [lead.title, lead.content].filter(Boolean).join(' ');
       extractLinksFromText(postText, result);
     }
@@ -113,32 +112,20 @@ function extractLinksFromText(text: string, enrichment: EnrichmentData): void {
 
   const ignoreList = [
     'a', 'the', 'an', 'in', 'and', 'or', 'for', 'to', 'with', 'at', 'by', 'of', 'on',
-    'dev', 'developer', 'founder', 'github', 'twitter', 'linkedin', 'site', 'website',
+    'dev', 'developer', 'founder', 'github', 'twitter', 'site', 'website',
     'blog', 'portfolio', 'link', 'links', 'resume', 'cv', 'contact', 'dm', 'email',
     'me', 'us', 'here', 'profile', 'my', 'our', 'your', 'details', 'info', 'support',
     'page', 'user', 'username', 'account', 'handle', 'social', 'media', 'active',
     'find', 'follow', 'reach', 'message', 'write', 'chat', 'connect', 'about', 'more'
   ];
 
-  // 1. LinkedIn
-  const li = text.match(/linkedin\.com\/in\/([a-z0-9\-_%]+)/i);
-  if (li && li[1]) {
-    enrichment.linkedinUrl = `https://linkedin.com/in/${li[1]}`;
-  } else {
-    // Check for "linkedin: username" or "li: username" or similar handles
-    const liHandle = text.match(/(?:linkedin|li)\s*[:@\-]?\s*([a-z0-9\-_%]+)/i);
-    if (liHandle && liHandle[1] && !ignoreList.includes(liHandle[1].toLowerCase())) {
-      enrichment.linkedinUrl = `https://linkedin.com/in/${liHandle[1]}`;
-    }
-  }
-
-  // 2. Twitter/X
+  // Twitter/X
   const tw = text.match(/(?:twitter\.com|x\.com)\/([a-z0-9_]+)/i);
   if (tw && tw[1]) {
     enrichment.twitterUrl = `https://x.com/${tw[1]}`;
   } else {
     // Check for "twitter: @handle" or "twitter: handle" or "x: @handle"
-    const twHandle = text.match(/(?:twitter|x|twt)\s*[:\-]?\s*@?([a-z0-9_]{1,15})/i);
+    const twHandle = text.match(/(?:twitter|x)\s*[:@\-]?\s*@?([a-z0-9_]+)/i);
     if (twHandle && twHandle[1] && !ignoreList.includes(twHandle[1].toLowerCase())) {
       enrichment.twitterUrl = `https://x.com/${twHandle[1]}`;
     }

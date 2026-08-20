@@ -19,7 +19,6 @@ const initialSampleLeads: LeadCardData[] = [
     status: "NEW",
     detectedBy: "COMPETITOR",
     enrichment: {
-      linkedinUrl: "https://linkedin.com/in/jack-techfounder",
       twitterUrl: "https://x.com/jack_builds"
     },
     feedback: 0,

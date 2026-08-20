@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, RotateCw, ThumbsUp, ThumbsDown, Info, Clock, Users, Lock, Copy, Check, Trash2
 } from "lucide-react"
-import { FaLinkedin, FaTwitter } from "react-icons/fa"
+import { FaTwitter } from "react-icons/fa"
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,6 @@ export type LeadStatus = 'NEW' | 'QUALIFIED' | 'SAVED' | 'CONTACTED' | 'CONVERTE
 export type DetectedBy = 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR'
 
 export interface LeadEnrichment {
-  linkedinUrl?: string
   twitterUrl?: string
 }
 
@@ -85,23 +84,13 @@ const getAccentBorder = (detectedBy: DetectedBy) => {
 // ─── Enrichment icons ────────────────────────────────────────────────────────────
 
 const EnrichmentIcons = ({ enrichment }: { enrichment?: LeadEnrichment | null }) => {
-  if (!enrichment) return null
-  const hasAny = enrichment.linkedinUrl || enrichment.twitterUrl
-  if (!hasAny) return null
+  if (!enrichment || !enrichment.twitterUrl) return null
   return (
     <span className="inline-flex items-center gap-1.5 ml-2">
-      {enrichment.linkedinUrl && (
-        <a href={enrichment.linkedinUrl} target="_blank" rel="noreferrer" title="Inferred LinkedIn Profile (Verify manually)"
-          className="text-blue-400 hover:text-blue-300 transition-all hover:scale-110 duration-150 p-0.5">
-          <FaLinkedin className="w-3.5 h-3.5" />
-        </a>
-      )}
-      {enrichment.twitterUrl && (
-        <a href={enrichment.twitterUrl} target="_blank" rel="noreferrer" title="Inferred Twitter/X Profile (Verify manually)"
-          className="text-sky-400 hover:text-sky-300 transition-all hover:scale-110 duration-150 p-0.5">
-          <FaTwitter className="w-3.5 h-3.5" />
-        </a>
-      )}
+      <a href={enrichment.twitterUrl} target="_blank" rel="noreferrer" title="Inferred Twitter/X Profile (Verify manually)"
+        className="text-sky-400 hover:text-sky-300 transition-all hover:scale-110 duration-150 p-0.5">
+        <FaTwitter className="w-3.5 h-3.5" />
+      </a>
     </span>
   )
 }

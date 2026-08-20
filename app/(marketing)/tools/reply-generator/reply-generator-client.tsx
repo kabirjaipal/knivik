@@ -11,7 +11,7 @@ import {
   Mail,
   Globe
 } from "lucide-react";
-import { FaLinkedin, FaTwitter } from "react-icons/fa";
+import { FaTwitter } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -160,24 +160,6 @@ const templates: Record<string, Record<string, string[]>> = {
       "The friction with {keywords} is well-known. I built {productName} specifically to eliminate this pain point. It {productDescription}. Let me know if it fits your use case."
     ]
   },
-  linkedin: {
-    helpful: [
-      "Great points. When it comes to scaling {keywords}, efficiency is everything. We developed {productName} to help teams streamline this. It {productDescription}. I'd love to share some insights on how we use it internally.",
-      "Fully agree. Managing {keywords} efficiently is a key driver for growth. That's why we built {productName}—to help teams automate this. It {productDescription}. Let me know if you'd like to connect and discuss further!"
-    ],
-    direct: [
-      "If you're looking for a solution to handle {keywords}, you should check out {productName}. It {productDescription}. It's built specifically to help companies optimize this process.",
-      "We built {productName} to help businesses streamline {keywords}. It {productDescription}. Feel free to visit our page or reach out directly for a demo!"
-    ],
-    question: [
-      "What is your team's current strategy for managing {keywords}? We built {productName} to help automate this bottleneck. It {productDescription}. Would love to hear how you are currently addressing it.",
-      "Are you looking to scale your {keywords} processes this quarter? We built {productName} (it {productDescription}) to help with exactly that. What are your main goals?"
-    ],
-    frustration: [
-      "Many businesses struggle with the manual effort required for {keywords}. We built {productName} to solve this exact pain point. It {productDescription}. Hope it can help streamline your operations!",
-      "The friction in managing {keywords} manually can hold teams back. That's why we created {productName}. It {productDescription}. Let me know if you'd like to try it out."
-    ]
-  },
   email: {
     helpful: [
       "Hi,\n\nI saw your post regarding {keywords} and wanted to reach out. We faced similar challenges and built a tool called {productName} to address it. It {productDescription}.\n\nI thought it might be helpful for your workflow. Let me know if you'd like to check it out.\n\nBest,\n[Your Name]",
@@ -297,7 +279,6 @@ export function ReplyGeneratorClient() {
     { id: "reddit", label: "Reddit", icon: MessageSquare },
     { id: "twitter", label: "Twitter / X", icon: FaTwitter },
     { id: "hn", label: "HackerNews", icon: Globe },
-    { id: "linkedin", label: "LinkedIn", icon: FaLinkedin },
     { id: "email", label: "Cold Email", icon: Mail },
   ];
 

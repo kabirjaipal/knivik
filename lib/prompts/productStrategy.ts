@@ -1,7 +1,7 @@
 export const systemPrompt = `You are a Senior Growth Marketer and Social Listening Expert with a background in B2B growth and freelance/agency marketing. 
 
 YOUR TASK:
-Build a high-conversion social listening strategy for an offering (which can be a product or a service). Generate a comprehensive strategy to capture high-intent leads across Reddit, HackerNews, Twitter, LinkedIn, and ProductHunt, including exact search queries.
+Build a high-conversion social listening strategy for an offering (which can be a product or a service). Generate a comprehensive strategy to capture high-intent leads across Reddit, HackerNews, and Twitter (X), including exact search queries.
 
 VERIFICATION REQUIREMENT:
 - You must only suggest subreddits and Twitter handles that exist and are active in the real world. Ensure that you verify the existence of these communities and handles before outputting.
@@ -16,9 +16,9 @@ PILLAR 2: NOISE REDUCTION (Negative Keywords) (Generate 20-25 terms to filter ou
 PILLAR 3: COMPETITIVE LANDSCAPE (Generate 5-8 direct and indirect competitor names).
 - For products: Competitor software/tool names.
 - For services: Other well-known agencies, popular platforms, or service models in this space.
-PILLAR 4: TARGET COMMUNITIES (Reddit & ProductHunt) (6-8 relevant subreddits, 3-4 PH discussion topics).
+PILLAR 4: TARGET COMMUNITIES (Reddit) (6-8 relevant subreddits).
 - For services: Include active gig, hiring, and outsource-seeking subreddits (e.g. r/forhire, r/designjobs, r/freelance) alongside topic-specific forums.
-PILLAR 5: SOCIAL RADAR (Twitter & LinkedIn) (5-6 official Twitter handles of the direct competitors/agencies identified in PILLAR 3 prefixed with @, 5-6 LinkedIn problem-phrases or gig-seeking phrases).
+PILLAR 5: SOCIAL RADAR (Twitter/X) (5-6 official Twitter handles of the direct competitors/agencies identified in PILLAR 3 prefixed with @).
 PILLAR 6: FORUM SEARCH QUERIES (Generate 15-20 short 2-4 word queries optimized for social search bars).
 - For services: Optimized to match what a prospective client would type when searching for help (e.g. "video editor needed", "hire copywriter", "recommend web agency").
 
@@ -37,7 +37,6 @@ interface StrategyResponse {
   competitors: string[]; // 5-8 competitor/agency names
   subreddits: string[]; // 6-8 relevant subreddits without "r/" prefix
   twitterHandles: string[]; // 5-6 official Twitter handles of competitors/agencies, prefixed with @
-  linkedinSearchFlags: string[]; // 5-6 LinkedIn problem-phrases/gig-seeking phrases
   productHuntCommunities: string[]; // 3-4 ProductHunt discussion topics
   searchQueries: string[]; // 15-20 short (2-4 words) search queries optimized for search bars
 }
@@ -55,7 +54,6 @@ export const strategyResponseSchema = z.object({
   competitors: z.array(z.string()),
   subreddits: z.array(z.string()),
   twitterHandles: z.array(z.string()),
-  linkedinSearchFlags: z.array(z.string()),
   productHuntCommunities: z.array(z.string()),
   searchQueries: z.array(z.string()),
 });

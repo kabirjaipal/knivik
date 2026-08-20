@@ -12,7 +12,7 @@ export const metadata = MetadataService.constructPageMetadata({
     "outreach message checker",
     "cold message spam score",
     "sales message warmth score",
-    "linkedin outreach improvement",
+    "cold outreach improvement",
     "email outreach audit",
     "spammy message detector",
     "reply rate optimizer",
@@ -38,7 +38,7 @@ export default function WarmthAuditorPage() {
         "Pushy calls-to-action, hype words, excessive links, and urgency-heavy phrasing can increase spam risk and reduce trust.",
     },
     {
-      question: "Can I use this for LinkedIn, email, and Reddit DMs?",
+      question: "Can I use this for social DMs and cold emails?",
       answer:
         "Yes. The scoring is channel-agnostic and works for most text outreach formats where tone and trust matter.",
     },

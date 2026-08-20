@@ -30,7 +30,7 @@ export const toolsList: ToolItem[] = [
   },
   {
     title: "AI Outreach Reply Generator",
-    description: "Generate personalized, high-converting reply templates and DMs for Reddit, X (Twitter), HackerNews, and LinkedIn posts in seconds.",
+    description: "Generate personalized, high-converting reply templates and DMs for Reddit, X (Twitter), and HackerNews posts in seconds.",
     href: "/tools/reply-generator",
     badge: "Free tool",
     icon: Sparkles,

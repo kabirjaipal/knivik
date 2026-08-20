@@ -160,7 +160,7 @@ const MOCK_POSTS: HNPost[] = [
     timeAgo: "1 day ago",
     category: "feedback",
     intent: "medium",
-    body: "We just launched our developer tool and want to reach out to engineering managers. ZoomInfo is way too expensive. LinkedIn Sales Navigator feels saturated. How are you sourcing warm leads?",
+    body: "We just launched our developer tool and want to reach out to engineering managers. ZoomInfo is way too expensive. Traditional outbound feels saturated. How are you sourcing warm leads?",
     topics: ["Lead Sourcing", "Outreach", "Cold Email"],
     educationalAdvice: "scraping relevant community threads where users actively mention problems, which converts at least 3x higher than general cold emails",
     featureMatch: "identifying buying intent keywords inside public platforms and drafting personalized replies instantly",
