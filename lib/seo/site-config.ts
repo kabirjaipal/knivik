@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "Knivik",
   description: "Knivik is an advanced AI Lead Finder and B2B social sales intelligence platform for products and services. It scans Reddit, HackerNews, and X (Twitter) in real-time to discover warm leads with genuine buying intent.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://www.knivik.xyz",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://knivik.xyz",
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
     twitter: "https://x.com/knivikai",
@@ -95,24 +95,8 @@ export const siteConfig = {
   creator: "Knivik",
 };
 
-const FALLBACK_URL = "https://www.knivik.xyz";
-
-/**
- * Retrieves the absolute base URL of the site with validation.
- * Ensures trailing slashes are removed for canonical reliability.
- */
 export function getBaseUrl(): string {
-  const rawUrl = process.env.NEXT_PUBLIC_SITE_URL || siteConfig.url;
-
-  if (!rawUrl) {
-    return FALLBACK_URL;
-  }
-
-  try {
-    return new URL(rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`).origin;
-  } catch {
-    return FALLBACK_URL;
-  }
+  return siteConfig.url;
 }
 
 /**

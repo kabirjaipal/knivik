@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   keywords: siteConfig.keywords,
   authors: siteConfig.authors,
   creator: siteConfig.creator,
-  metadataBase: new URL(PROJECT_URL || "https://www.knivik.xyz"),
+  metadataBase: new URL(siteConfig.url),
   openGraph: {
     type: "website",
     locale: "en_US",
