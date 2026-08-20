@@ -5,7 +5,6 @@ export const siteConfig = {
   ogImage: "https://knivik.xyz/og-image.png",
   links: {
     twitter: "https://x.com/knivikai",
-    github: "https://github.com/knivik",
   },
   keywords: [
     "Knivik",

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ShieldCheck } from "lucide-react";
-import { FaTwitter, FaGithub } from "react-icons/fa";
+import { FaTwitter } from "react-icons/fa";
 import { toolsList } from "@/lib/tools";
 
 const competitors = [
@@ -147,14 +147,6 @@ export function Footer() {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <FaTwitter className="h-4 w-4" />
-            </a>
-            <a
-              href="https://github.com/kabirjaipal/knivik"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <FaGithub className="h-4 w-4" />
             </a>
             <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-secondary/30 border border-border/50">
               <ShieldCheck className="h-2.5 w-2.5 text-primary/60" />

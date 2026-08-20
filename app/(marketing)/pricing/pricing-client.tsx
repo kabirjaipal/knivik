@@ -76,7 +76,7 @@ export default function PricingClient({ initialPrices = [] }: PricingClientProps
               Affordable Lead Generation Pricing
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mb-12">
-              Scale your social selling with transparent pricing plans. Find high-intent buyers on Reddit, HackerNews, X (Twitter), GitHub, and Bluesky.
+              Scale your social selling with transparent pricing plans. Find high-intent buyers on Reddit, HackerNews, X (Twitter), and Bluesky.
             </p>
 
             {/* Billing Toggle */}

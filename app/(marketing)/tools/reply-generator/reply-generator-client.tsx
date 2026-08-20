@@ -11,7 +11,7 @@ import {
   Mail,
   Globe
 } from "lucide-react";
-import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa";
+import { FaLinkedin, FaTwitter } from "react-icons/fa";
 import { SiBluesky } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -197,24 +197,6 @@ const templates: Record<string, Record<string, string[]>> = {
       "Hi,\n\nDealing with the friction of {keywords} is a common challenge. We built {productName} specifically to eliminate this headache. It {productDescription}.\n\nLet me know if you'd like to check it out.\n\nBest regards,\n[Your Name]"
     ]
   },
-  github: {
-    helpful: [
-      "I encountered a similar issue with {keywords} recently. Usually, this points to configuration limits or dependency versions. I actually built {productName} to automate this workflow—it {productDescription}. Feel free to check out the project, hope it helps!",
-      "If you're dealing with {keywords}, a solid approach is to abstract the background worker or cache queries. I developed {productName} (it {productDescription}) to solve this exact bottleneck. Let me know if you'd like to check it out!"
-    ],
-    direct: [
-      "You should check out {productName}. It does exactly what you're describing: it {productDescription}. Built specifically to streamline {keywords} for devs.",
-      "I built {productName} to address this exact issue. It {productDescription}. Great if you need to optimize your {keywords} workflow."
-    ],
-    question: [
-      "Are you handling {keywords} programmatically or via configuration file? I ask because I built {productName} to automate this workflow. It {productDescription}. What does your current setup look like?",
-      "How are you currently managing {keywords} in your codebase? If it's a bottleneck, you might want to look into {productName}. It {productDescription}. Have you run into any performance issues yet?"
-    ],
-    frustration: [
-      "Dealing with {keywords} configuration is a notorious headache. I got tired of the boilerplates, so I built {productName}. It {productDescription}. Hope it saves you some debug cycles!",
-      "I was running into the exact same frustration with {keywords}. Built {productName} to handle this automatically so I could focus on other things. It {productDescription}."
-    ]
-  },
   bluesky: {
     helpful: [
       "I saw you're working on {keywords}. I actually built {productName} to solve this exact problem. It {productDescription}. Let me know if you want to check it out!",
@@ -335,7 +317,6 @@ export function ReplyGeneratorClient() {
     { id: "twitter", label: "Twitter / X", icon: FaTwitter },
     { id: "hn", label: "HackerNews", icon: Globe },
     { id: "linkedin", label: "LinkedIn", icon: FaLinkedin },
-    { id: "github", label: "GitHub", icon: FaGithub },
     { id: "bluesky", label: "Bluesky", icon: SiBluesky },
     { id: "email", label: "Cold Email", icon: Mail },
   ];

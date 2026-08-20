@@ -103,7 +103,7 @@ export default async function CompetitorAlternativePage({ params }: PageProps) {
           </p>
           <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-muted-foreground mt-3">
             <li><strong>Starting Price Model:</strong> {competitor.pricing} (Knivik is completely free to start at $0 / forever)</li>
-            <li><strong>Community Monitoring Coverage:</strong> {competitor.platforms.join(", ")} (Knivik monitors Reddit, HackerNews, X Twitter, GitHub, and Bluesky)</li>
+            <li><strong>Community Monitoring Coverage:</strong> {competitor.platforms.join(", ")} (Knivik monitors Reddit, HackerNews, X Twitter, and Bluesky)</li>
             <li><strong>Average User Rating:</strong> {competitor.rating} / 5 stars across directory reviews</li>
           </ul>
         </section>

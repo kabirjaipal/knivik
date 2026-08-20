@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Zap, MessageSquareText, FileText, ChevronRight, RotateCw, ThumbsUp, ThumbsDown, Info, Clock, Users, Lock, Copy, Check, Trash2
 } from "lucide-react"
-import { FaLinkedin, FaTwitter, FaGithub } from "react-icons/fa"
+import { FaLinkedin, FaTwitter } from "react-icons/fa"
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,6 @@ export type DetectedBy = 'KEYWORD' | 'SEMANTIC' | 'COMPETITOR'
 export interface LeadEnrichment {
   linkedinUrl?: string
   twitterUrl?: string
-  githubUrl?: string
 }
 
 export interface LeadCardData {
@@ -87,7 +86,7 @@ const getAccentBorder = (detectedBy: DetectedBy) => {
 
 const EnrichmentIcons = ({ enrichment }: { enrichment?: LeadEnrichment | null }) => {
   if (!enrichment) return null
-  const hasAny = enrichment.linkedinUrl || enrichment.twitterUrl || enrichment.githubUrl
+  const hasAny = enrichment.linkedinUrl || enrichment.twitterUrl
   if (!hasAny) return null
   return (
     <span className="inline-flex items-center gap-1.5 ml-2">
@@ -103,11 +102,6 @@ const EnrichmentIcons = ({ enrichment }: { enrichment?: LeadEnrichment | null })
           <FaTwitter className="w-3.5 h-3.5" />
         </a>
       )}
-      {enrichment.githubUrl && (
-        <a href={enrichment.githubUrl} target="_blank" rel="noreferrer" title="Inferred GitHub Profile (Verify manually)"
-          className="text-foreground/60 hover:text-foreground transition-all hover:scale-110 duration-150 p-0.5">
-          <FaGithub className="w-3.5 h-3.5" />
-        </a>
       )}
     </span>
   )

@@ -4,7 +4,6 @@ import { db } from '../db';
 import { Platform } from '@prisma/client';
 
 export interface EnrichmentData {
-  githubUrl?: string;
   twitterUrl?: string;
   linkedinUrl?: string;
 }
@@ -37,7 +36,7 @@ export const enrichLead = async (
     const result: EnrichmentData = (await discoverProfiles(username, platform)) || {};
 
     // 2. Discover from the post content/title itself (if any social link is missing)
-    if (!result.linkedinUrl || !result.twitterUrl || !result.githubUrl) {
+    if (!result.linkedinUrl || !result.twitterUrl) {
       const postText = [lead.title, lead.content].filter(Boolean).join(' ');
       extractLinksFromText(postText, result);
     }
@@ -68,8 +67,6 @@ async function discoverProfiles(
     await enrichFromReddit(username, enrichment);
   } else if (platform === Platform.HACKERNEWS) {
     await enrichFromHackerNews(username, enrichment);
-  } else if (platform === Platform.GITHUB) {
-    await enrichFromGitHub(username, enrichment);
   } else if (platform === Platform.BLUESKY) {
     await enrichFromBluesky(username, enrichment);
   }
@@ -105,27 +102,6 @@ async function enrichFromHackerNews(username: string, enrichment: EnrichmentData
     // HN "about" field often has HTML links and handles
     const about = (data?.about || '').replace(/<[^>]*>/g, ' ').toLowerCase();
     extractLinksFromText(about, enrichment);
-  } catch {
-    // Swallow silently
-  }
-}
-
-async function enrichFromGitHub(username: string, enrichment: EnrichmentData): Promise<void> {
-  // Set GitHub URL by default
-  enrichment.githubUrl = `https://github.com/${username}`;
-  try {
-    const res = await fetch(`https://api.github.com/users/${username}`, {
-      headers: { 'User-Agent': `${config.PROJECT_NAME}/1.0.0` },
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as any;
-
-    if (data?.twitter_username) {
-      enrichment.twitterUrl = `https://x.com/${data.twitter_username}`;
-    }
-
-    const textToSearch = [data?.blog, data?.bio, data?.company].filter(Boolean).join(' ').toLowerCase();
-    extractLinksFromText(textToSearch, enrichment);
   } catch {
     // Swallow silently
   }
@@ -180,18 +156,6 @@ function extractLinksFromText(text: string, enrichment: EnrichmentData): void {
     const twHandle = text.match(/(?:twitter|x|twt)\s*[:\-]?\s*@?([a-z0-9_]{1,15})/i);
     if (twHandle && twHandle[1] && !ignoreList.includes(twHandle[1].toLowerCase())) {
       enrichment.twitterUrl = `https://x.com/${twHandle[1]}`;
-    }
-  }
-
-  // 3. GitHub
-  const gh = text.match(/github\.com\/([a-z0-9\-]+)/i);
-  if (gh && gh[1]) {
-    enrichment.githubUrl = `https://github.com/${gh[1]}`;
-  } else {
-    // Check for "github: username" or "gh: username"
-    const ghHandle = text.match(/(?:github|gh)\s*[:@\-]?\s*([a-z0-9\-]+)/i);
-    if (ghHandle && ghHandle[1] && !ignoreList.includes(ghHandle[1].toLowerCase())) {
-      enrichment.githubUrl = `https://github.com/${ghHandle[1]}`;
     }
   }
 }

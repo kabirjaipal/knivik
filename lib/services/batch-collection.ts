@@ -144,8 +144,8 @@ export class BatchCollectionService {
     const user = await db.client.user.findUnique({ where: { id: product.userId }, select: { plan: true } });
     const canUseTwitter = user ? hasCapability(user.plan as any, 'canAccessTwitter') : false;
     const platforms = canUseTwitter
-      ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER, Platform.GITHUB, Platform.BLUESKY]
-      : [Platform.REDDIT, Platform.HACKERNEWS, Platform.GITHUB, Platform.BLUESKY];
+      ? [Platform.REDDIT, Platform.HACKERNEWS, Platform.TWITTER, Platform.BLUESKY]
+      : [Platform.REDDIT, Platform.HACKERNEWS, Platform.BLUESKY];
 
     // Collect from each platform globally
     for (const platform of platforms) {
@@ -215,10 +215,6 @@ export class BatchCollectionService {
       case Platform.TWITTER:
         const twitterPosts = await this.collectFromTwitter(product, oneMonthAgo, searchQueries);
         posts.push(...twitterPosts);
-        break;
-      case Platform.GITHUB:
-        const githubPosts = await this.collectFromGitHub(product, oneMonthAgo, searchQueries);
-        posts.push(...githubPosts);
         break;
       case Platform.BLUESKY:
         const blueskyPosts = await this.collectFromBluesky(product, oneMonthAgo, searchQueries);
@@ -826,80 +822,6 @@ export class BatchCollectionService {
     return agents[Math.floor(Math.random() * agents.length)]!;
   }
 
-  /**
-   * Collect posts from GitHub Issues and Discussions using global keyword search
-   */
-  private static async collectFromGitHub(
-    product: any,
-    oneMonthAgo: Date,
-    searchQueries: string[] = []
-  ): Promise<CollectedPost[]> {
-    const posts: CollectedPost[] = [];
-
-    if (searchQueries.length === 0) {
-      logger.warn(`[COLLECTION] No search queries available for GitHub scan of "${product.name}"`);
-      return posts;
-    }
-
-    // Pick 3 random base queries (to respect unauthenticated rate limits of 10/min)
-    const priorityQueries = [...searchQueries]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, Math.min(3, searchQueries.length));
-
-    for (const query of priorityQueries) {
-      try {
-        const url = `https://api.github.com/search/issues?q=${encodeURIComponent(query + ' is:open')}&sort=created&order=desc&per_page=15`;
-        const response = await fetch(url, {
-          headers: {
-            'User-Agent': 'Knivik-Lead-Finder/1.0.0',
-            'Accept': 'application/vnd.github+json'
-          },
-          signal: AbortSignal.timeout(10000)
-        });
-
-        if (!response.ok) {
-          logger.warn({ status: response.status, query }, '[COLLECTION] [GITHUB] Search request failed');
-          continue;
-        }
-
-        const data = await response.json() as any;
-        const items = data?.items || [];
-
-        for (const item of items) {
-          const postedAt = item.created_at ? new Date(item.created_at) : new Date();
-          if (postedAt < oneMonthAgo) continue;
-
-          const title = item.title || '';
-          const content = item.body || '';
-          const author = item.user?.login || 'unknown';
-          const combinedText = `${title} ${content}`;
-
-          if (!this.passesBasicFilters(combinedText, author, product)) continue;
-
-          posts.push({
-            id: `github-${item.id}`,
-            platform: 'GITHUB',
-            externalPostId: String(item.id),
-            title,
-            content,
-            url: item.html_url,
-            authorUsername: author,
-            postedAt,
-            source: item.repository_url ? item.repository_url.replace('https://api.github.com/repos/', '') : 'global',
-            detectionMode: 'SEMANTIC'
-          });
-        }
-
-        // Space out calls to stay inside the 10/min unauthenticated rate limit
-        await new Promise(resolve => setTimeout(resolve, 6000));
-
-      } catch (error: any) {
-        logger.warn({ errorMsg: error.message, query }, '[COLLECTION] [GITHUB] Search request error');
-      }
-    }
-
-    return posts;
-  }
 
   /**
    * Collect posts from Bluesky using open AppView search API

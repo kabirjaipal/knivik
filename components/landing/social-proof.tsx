@@ -17,10 +17,6 @@ export function PlatformSupport() {
       icon: "https://news.ycombinator.com/favicon.ico" 
     },
     {
-      name: "GitHub",
-      icon: "https://www.google.com/s2/favicons?domain=github.com&sz=64",
-    },
-    {
       name: "Bluesky",
       icon: "https://www.google.com/s2/favicons?domain=bsky.app&sz=64",
     },

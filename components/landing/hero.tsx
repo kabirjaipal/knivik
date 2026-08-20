@@ -78,7 +78,7 @@ export function Hero({ user }: HeroProps) {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg lg:text-xl text-muted-foreground mb-10 leading-relaxed max-w-3xl font-medium"
           >
-            Knivik is the real-time B2B AI Social Selling tool. Simply add your product details, and our platform autonomously monitors Reddit, HackerNews, X (Twitter), GitHub, and Bluesky to uncover, filter, and score high-intent sales opportunities with instant AI replies.
+            Knivik is the real-time B2B AI Social Selling tool. Simply add your product details, and our platform autonomously monitors Reddit, HackerNews, X (Twitter), and Bluesky to uncover, filter, and score high-intent sales opportunities with instant AI replies.
           </motion.p>
           
           <motion.div 

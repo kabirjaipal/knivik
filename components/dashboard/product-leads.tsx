@@ -266,7 +266,7 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
               <Activity className="w-4 h-4 text-primary" /> Platform Origins
             </h3>
             <div className="space-y-3">
-              {(['REDDIT', 'HACKERNEWS', 'TWITTER', 'GITHUB', 'BLUESKY'] as const).map(p => {
+              {(['REDDIT', 'HACKERNEWS', 'TWITTER', 'BLUESKY'] as const).map(p => {
                 const count = leads.filter(l => l.platform === p).length
                 const pct = Math.round((count / total) * 100)
                 return (
@@ -274,17 +274,14 @@ export function ProductLeads({ productId, lastManualScanDate, refreshTrigger = 0
                     <span className="text-xs font-bold text-muted-foreground/60 w-24 truncate">
                       {p === 'HACKERNEWS'
                         ? 'HackerNews'
-                        : p === 'GITHUB'
-                          ? 'GitHub'
-                          : p === 'BLUESKY'
-                            ? 'Bluesky'
-                            : p.charAt(0) + p.slice(1).toLowerCase()}
+                        : p === 'BLUESKY'
+                          ? 'Bluesky'
+                          : p.charAt(0) + p.slice(1).toLowerCase()}
                     </span>
                     <div className="flex-1 h-1.5 bg-muted/60 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full transition-all duration-1000 ${
                         p === 'REDDIT' ? 'bg-orange-500' : 
                         p === 'HACKERNEWS' ? 'bg-amber-500' : 
-                        p === 'GITHUB' ? 'bg-neutral-500' :
                         p === 'BLUESKY' ? 'bg-sky-400' :
                         'bg-sky-500'
                       }`}

@@ -53,7 +53,7 @@ const initialSampleLeads: LeadCardData[] = [
     status: "QUALIFIED",
     detectedBy: "SEMANTIC",
     enrichment: {
-      githubUrl: "https://github.com/hackernews-dev"
+      twitterUrl: "https://x.com/hackernews_dev"
     },
     feedback: 0,
     notes: "Found on HN. Emailed technical details of our layout-agnostic parser to their engineering lead.",

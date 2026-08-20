@@ -53,12 +53,12 @@ export default function AlternativesHubPage() {
     {
       question: "How is Knivik different from static B2B databases like Apollo or Cognism?",
       answer:
-        "Databases like Apollo provide static contact emails for cold outbound. Knivik detects active, real-time demand conversations happening right now across Reddit, HackerNews, X, GitHub, and Bluesky when prospects are actively asking for solutions.",
+        "Databases like Apollo provide static contact emails for cold outbound. Knivik detects active, real-time demand conversations happening right now across Reddit, HackerNews, X, and Bluesky when prospects are actively asking for solutions.",
     },
     {
       question: "Which social platforms does Knivik monitor?",
       answer:
-        "Knivik continuously scans Reddit, HackerNews, X (Twitter), GitHub (Issues and Discussions), and Bluesky for high-intent product and service buying signals.",
+        "Knivik continuously scans Reddit, HackerNews, X (Twitter), and Bluesky for high-intent product and service buying signals.",
     },
     {
       question: "Can I try Knivik for free before switching from my current tool?",
@@ -134,7 +134,7 @@ export default function AlternativesHubPage() {
                 </tr>
                 <tr>
                   <td className="p-4 font-bold text-foreground">Multi-Channel Social Coverage</td>
-                  <td className="p-4 font-semibold text-emerald-500"><CheckCircle2 className="h-4 w-4 inline mr-1" /> Reddit, HN, X, GitHub, Bluesky</td>
+                  <td className="p-4 font-semibold text-emerald-500"><CheckCircle2 className="h-4 w-4 inline mr-1" /> Reddit, HN, X, Bluesky</td>
                   <td className="p-4 text-muted-foreground">Limited (1-2 Platforms)</td>
                   <td className="p-4 text-rose-500"><XCircle className="h-4 w-4 inline mr-1" /> No Live Social Threads</td>
                 </tr>
@@ -263,7 +263,7 @@ export default function AlternativesHubPage() {
             Ready to Catch High-Intent Leads in Real-Time?
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto mb-8 leading-relaxed">
-            Create your first monitor in 60 seconds. Start finding warm conversations across Reddit, HackerNews, Twitter, GitHub, and Bluesky.
+            Create your first monitor in 60 seconds. Start finding warm conversations across Reddit, HackerNews, Twitter, and Bluesky.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register">

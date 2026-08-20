@@ -16,7 +16,7 @@ export class SchemaService {
       "@type": "SoftwareApplication",
       "@id": `${baseUrl}/#software`,
       "name": "Knivik",
-      "description": "Knivik is an AI Lead Finder and B2B social sales intelligence platform. It autonomously monitors Reddit, HackerNews, X (Twitter), GitHub, and Bluesky in real-time to discover high-intent buying signals and suggest warm outreach replies.",
+      "description": "Knivik is an AI Lead Finder and B2B social sales intelligence platform. It autonomously monitors Reddit, HackerNews, X (Twitter), and Bluesky in real-time to discover high-intent buying signals and suggest warm outreach replies.",
       "applicationCategory": "BusinessApplication",
       "applicationSubCategory": "Sales & Marketing Intelligence",
       "operatingSystem": "Web, Cloud",
@@ -30,7 +30,6 @@ export class SchemaService {
         "logo": `${baseUrl}/favicon.svg`,
         "sameAs": [
           "https://x.com/knivikai",
-          "https://github.com/knivik",
           "https://instagram.com/knivikai"
         ]
       },
@@ -45,7 +44,6 @@ export class SchemaService {
         "Real-time Reddit buying intent monitoring",
         "HackerNews discussion and recommendation analysis",
         "X (Twitter) conversational prospecting",
-        "GitHub issues and discussions lead detection",
         "Bluesky social listening & lead generation",
         "AI-powered Warm Outreach Reply angles",
         "Semantic buying intent scoring and classification",
@@ -75,7 +73,6 @@ export class SchemaService {
       },
       "sameAs": [
         "https://x.com/knivikai",
-        "https://github.com/knivik",
         "https://instagram.com/knivikai"
       ],
       "contactPoint": [
