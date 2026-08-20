@@ -55,6 +55,8 @@ export class BatchProcessingService {
           data: {
             config: {
               ...currentConfig,
+              isScanning: true,
+              lastScanStatus: 'INITIALIZING',
               lastBackgroundScanAt: new Date().toISOString()
             }
           }
@@ -68,14 +70,26 @@ export class BatchProcessingService {
       emitScanStatus(userId, productId, true, 'COLLECTING');
       const sourceBreakdown: Record<string, number> = {};
       const posts = await BatchCollectionService.collectProductPosts(product, sourceBreakdown);
-      
+
       if (posts.length === 0) {
-        
         // Reset scanning status
         await db.client.user.update({
           where: { id: userId },
           data: { isScanning: false, lastScanStatus: 'SUCCESS' }
         });
+        try {
+          const currentConfig = (product.config as Record<string, any>) || {};
+          await db.client.product.update({
+            where: { id: productId },
+            data: {
+              config: {
+                ...currentConfig,
+                isScanning: false,
+                lastScanStatus: 'SUCCESS'
+              }
+            }
+          });
+        } catch (_) {}
         emitScanStatus(userId, productId, false, 'SUCCESS');
 
         return {
@@ -103,10 +117,12 @@ export class BatchProcessingService {
       // Step 3: Save results
       emitScanStatus(userId, productId, true, 'SAVING');
       let leadsGenerated = 0;
+      const pendingTasks: Promise<any>[] = [];
+
       for (const result of analysisResult.results) {
         if (result.leads.length > 0) {
           for (const lead of result.leads) {
-            const saved = await this.saveBestLead({ ...lead, product }, userId);
+            const saved = await this.saveBestLead({ ...lead, product }, userId, pendingTasks);
             if (saved) leadsGenerated++;
           }
         }
@@ -126,15 +142,37 @@ export class BatchProcessingService {
         });
       }
 
+      // Await all background enrichment & alert promises so serverless lifecycle doesn't freeze them
+      if (pendingTasks.length > 0) {
+        await Promise.allSettled(pendingTasks);
+      }
+
       // Reset scanning status
       await db.client.user.update({
         where: { id: userId },
         data: { isScanning: false, lastScanStatus: 'SUCCESS' }
       });
+      try {
+        const currentConfig = (product.config as Record<string, any>) || {};
+        await db.client.product.update({
+          where: { id: productId },
+          data: {
+            config: {
+              ...currentConfig,
+              isScanning: false,
+              lastScanStatus: 'SUCCESS'
+            }
+          }
+        });
+      } catch (_) {}
       emitScanStatus(userId, productId, false, 'SUCCESS');
 
       // Finalize
       const processingTime = Date.now() - startTime;
+      logger.info(
+        { productId, postsCollected: posts.length, leadsGenerated, processingTimeMs: processingTime },
+        `[SCAN] Completed scan for product "${product.name}" in ${(processingTime / 1000).toFixed(2)}s`
+      );
 
       return {
         success: true,
@@ -151,6 +189,20 @@ export class BatchProcessingService {
           where: { id: userId },
           data: { isScanning: false, lastScanStatus: 'FAILED' }
         });
+        try {
+          const currentProd = await db.client.product.findUnique({ where: { id: productId }, select: { config: true } });
+          const currentConfig = (currentProd?.config as Record<string, any>) || {};
+          await db.client.product.update({
+            where: { id: productId },
+            data: {
+              config: {
+                ...currentConfig,
+                isScanning: false,
+                lastScanStatus: 'FAILED'
+              }
+            }
+          });
+        } catch (_) {}
         emitScanStatus(userId, productId, false, 'FAILED');
       }
 
@@ -204,6 +256,7 @@ export class BatchProcessingService {
 
       // Step 3: Save the best leads
       let leadsGenerated = 0;
+      const pendingTasks: Promise<any>[] = [];
       
       for (const result of analysisResult.results) {
         if (result.leads.length > 0) {
@@ -213,7 +266,7 @@ export class BatchProcessingService {
 
           // Save each qualified lead found
           for (const lead of result.leads) {
-            const saved = await this.saveBestLead({ ...lead, product }, userId);
+            const saved = await this.saveBestLead({ ...lead, product }, userId, pendingTasks);
             if (saved) {
               leadsGenerated++;
             }
@@ -236,6 +289,10 @@ export class BatchProcessingService {
         }).catch(err => {
           logger.error({ err: err.message }, 'Failed to save processed posts to scrapeCache');
         });
+      }
+
+      if (pendingTasks.length > 0) {
+        await Promise.allSettled(pendingTasks);
       }
 
       const processingTime = Date.now() - startTime;
@@ -268,8 +325,6 @@ export class BatchProcessingService {
         }
       });
 
-
-
       return {
         success: false,
         postsCollected: 0,
@@ -283,7 +338,7 @@ export class BatchProcessingService {
   /**
    * Save the best lead for a product
    */
-  private static async saveBestLead(bestLead: any, userId: string): Promise<boolean> {
+  private static async saveBestLead(bestLead: any, userId: string, pendingTasks?: Promise<any>[]): Promise<boolean> {
     try {
       const { post, intentLevel, intentScore, reasoning } = bestLead;
 
@@ -336,16 +391,18 @@ export class BatchProcessingService {
       // Increment usage
       await incrementLeadUsage(userId);
 
-
-
-      // Integrated Pipeline: Run enrichment and alerts immediately in the same process
+      // Integrated Pipeline: Run enrichment and alerts
       if (post.authorUsername) {
-        // Run in background (don't wait for enrichment to continue scan)
-        enrichLead(newLead.id, post.authorUsername, post.platform as any).catch(() => {});
+        const enrichPromise = enrichLead(newLead.id, post.authorUsername, post.platform as any).catch(err => {
+          logger.debug({ err: err?.message }, 'Background lead enrichment skipped or failed');
+        });
+        if (pendingTasks) pendingTasks.push(enrichPromise);
       }
       
-      // Fire alert (don't wait)
-      sendLeadAlert(newLead.id).catch(() => {});
+      const alertPromise = sendLeadAlert(newLead.id).catch(err => {
+        logger.error({ err: err?.message, leadId: newLead.id }, 'Failed to send lead alert');
+      });
+      if (pendingTasks) pendingTasks.push(alertPromise);
 
       return true;
 

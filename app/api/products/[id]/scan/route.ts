@@ -66,6 +66,8 @@ export async function POST(
           ...productConfig,
           lastManualScanDate: todayStr,
           manualScansToday: scansToday,
+          isScanning: true,
+          lastScanStatus: 'INITIALIZING',
         },
       },
     });
@@ -75,14 +77,22 @@ export async function POST(
       data: { isScanning: true },
     });
 
-    // Execute scanning synchronously within serverless request lifetime
-    const scanResult = await BatchProcessingService.processProduct(productId);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Scan completed successfully',
-      result: scanResult,
+    // Execute scanning asynchronously in background using Next.js after() to prevent serverless gateway 504 timeouts
+    after(async () => {
+      try {
+        await BatchProcessingService.processProduct(productId);
+      } catch (err: any) {
+        logger.error({ err: err.message, productId }, 'Background scan failed in after()');
+      }
     });
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Scan initiated successfully',
+      },
+      { status: 202 }
+    );
   } catch (error: any) {
     logger.error({ error: error.message }, 'Scan Product error');
     return NextResponse.json({ success: false, error: error.message || 'Manual scan failed' }, { status: 500 });

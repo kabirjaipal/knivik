@@ -161,11 +161,7 @@ export default function ProductDetailPage() {
     if (isCurrentlyScanning) return;
     wasScanningRef.current = true;
     setLocalScanning(true);
-    setScanStep("SETUP");
-
-    const timer1 = setTimeout(() => setScanStep("SCRAPE"), 1000);
-    const timer2 = setTimeout(() => setScanStep("AI SCORE"), 2500);
-    const timer3 = setTimeout(() => setScanStep("ALERT & SAVE"), 4000);
+    setScanStep("INITIALIZING");
 
     try {
       const res = await fetch(`${API_URL}/products/${productId}/scan`, {
@@ -173,29 +169,13 @@ export default function ProductDetailPage() {
         headers: { "Content-Type": "application/json" },
       });
 
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Scan failed");
+        throw new Error(err.error || "Scan failed to initiate");
       }
-
-      if (wasScanningRef.current) {
-        wasScanningRef.current = false;
-        toast.success("Scan completed! Fresh leads loaded.");
-        setLocalScanning(false);
-        setScanStep("");
-        lastFetchedId.current = null;
-        fetchProduct();
-        setRefreshTrigger((prev) => prev + 1);
-      }
+      // Scan initiated in background; SSE connection will stream status steps and handle completion toast
     } catch (err: any) {
       wasScanningRef.current = false;
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
       toast.error(err.message || "Scan failed");
       setLocalScanning(false);
       setScanStep("");

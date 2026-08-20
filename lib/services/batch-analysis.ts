@@ -128,15 +128,17 @@ export const analyzeUserPostsBatch = async (
         const validLeads = [];
         
         for (const aiLead of aiResult.qualifiedLeads) {
+          const score = aiLead.intentScore || 0;
+          const isBuyNow = aiLead.intentLevel === 'BUY_NOW';
+          const meetsThreshold = score >= threshold;
+
           // Only allow BUY_NOW intent level
-          if (aiLead.intentLevel !== 'BUY_NOW') {
+          if (!isBuyNow) {
             continue;
           }
 
           // Hard-enforce score threshold based on Scan Sensitivity Threshold
-          const score = aiLead.intentScore || 0;
-          if (score < threshold) {
-            logger.debug({ postId: aiLead.postId, score, threshold }, '[ANALYSIS] BUY_NOW lead below Scan Sensitivity Threshold — dropped');
+          if (!meetsThreshold) {
             continue;
           }
 

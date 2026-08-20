@@ -18,7 +18,7 @@ export async function GET(
   const [product, dbUser] = await Promise.all([
     db.client.product.findUnique({
       where: { id: productId },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, config: true },
     }),
     db.client.user.findUnique({
       where: { id: userId },
@@ -33,21 +33,22 @@ export async function GET(
     });
   }
 
+  const productConfig = (product.config as Record<string, any>) || {};
+  const isCurrentlyScanning = productConfig.isScanning ?? dbUser?.isScanning ?? false;
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     start(controller) {
       // 1. Tell browser EventSource to auto-reconnect every 3 seconds if disconnected
       controller.enqueue(encoder.encode('retry: 3000\n\n'));
-
-      const isCurrentlyScanning = dbUser?.isScanning ?? false;
       
       // 2. If actively scanning on initial connect, send immediate progress state
       if (isCurrentlyScanning) {
         const initialPayload = `data: ${JSON.stringify({
           productId,
           isScanning: true,
-          status: 'INITIALIZING',
+          status: productConfig.lastScanStatus || 'INITIALIZING',
         })}\n\n`;
         controller.enqueue(encoder.encode(initialPayload));
       } else {
@@ -84,21 +85,30 @@ export async function GET(
         if (isClosed) return;
         try {
           // Check DB state across separate serverless lambda containers
-          const userState = await db.client.user.findUnique({
-            where: { id: userId },
-            select: { isScanning: true, lastScanStatus: true },
-          });
+          const [prodState, userState] = await Promise.all([
+            db.client.product.findUnique({
+              where: { id: productId },
+              select: { config: true },
+            }),
+            db.client.user.findUnique({
+              where: { id: userId },
+              select: { isScanning: true, lastScanStatus: true },
+            }),
+          ]);
 
-          if (userState?.isScanning) {
+          const pConfig = (prodState?.config as Record<string, any>) || {};
+          const isProdScanning = pConfig.isScanning ?? userState?.isScanning ?? false;
+
+          if (isProdScanning) {
             wasScanningState = true;
-          } else if (wasScanningState && userState && !userState.isScanning) {
+          } else if (wasScanningState && !isProdScanning) {
             // Only emit completion if a scan was actively running during this session
             wasScanningState = false;
             const finalPayload = `data: ${JSON.stringify({
               productId,
               userId,
               isScanning: false,
-              status: userState.lastScanStatus || 'SUCCESS',
+              status: pConfig.lastScanStatus || userState?.lastScanStatus || 'SUCCESS',
             })}\n\n`;
             controller.enqueue(encoder.encode(finalPayload));
           }

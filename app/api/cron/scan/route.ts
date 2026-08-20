@@ -71,20 +71,25 @@ async function handleCronScan(req: NextRequest) {
         : lastScanTime < oneDayAgo;
     });
 
-    // 5. Process up to 3 products per invocation to stay within 60s limit
+    // 5. Process up to 3 products in parallel per invocation to stay safely within 60s limit
     const batch = productsToScan.slice(0, 3);
 
-    const results = [];
-    for (const product of batch) {
+    const scanPromises = batch.map(async (product) => {
       try {
         const result = await BatchProcessingService.processProduct(product.id);
-        results.push({ productId: product.id, ...result });
+        return { productId: product.id, ...result };
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Unknown error';
         logger.error({ err: message, productId: product.id }, 'Cron product scan error');
-        results.push({ productId: product.id, success: false, error: message });
+        return { productId: product.id, success: false, error: message };
       }
-    }
+    });
+
+    const settled = await Promise.allSettled(scanPromises);
+    const results = settled.map((s, idx) => {
+      if (s.status === 'fulfilled') return s.value;
+      return { productId: batch[idx]?.id || 'unknown', success: false, error: s.reason?.message || 'Scan failed' };
+    });
 
     return NextResponse.json({
       success: true,

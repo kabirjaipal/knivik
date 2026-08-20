@@ -187,13 +187,6 @@ export class BatchCollectionService {
         const scannedMap = new Set(alreadyScanned.map(s => `${s.platform}:${s.externalPostId}`));
         const filteredPosts = uniquePosts.filter(p => !scannedMap.has(`${p.platform}:${p.externalPostId}`));
         
-        if (filteredPosts.length < uniquePosts.length) {
-          logger.info(
-            { productId: product.id, skipped: uniquePosts.length - filteredPosts.length, remaining: filteredPosts.length },
-            '[COLLECTION] Skipped already processed/cached posts'
-          );
-        }
-        
         return filteredPosts;
       } catch (err: any) {
         logger.warn({ error: err.message, productId: product.id }, '[COLLECTION] ScrapeCache lookup failed, proceeding with unique posts');
@@ -263,18 +256,31 @@ export class BatchCollectionService {
       const queryPosts: CollectedPost[] = [];
       let jsonSucceeded = false;
 
-      // 1. Primary Strategy: Free Public Reddit JSON API (3.5s fast timeout)
+      // 1. Primary Strategy: Free Public Reddit JSON API (with old.reddit fallback and compliant headers)
       try {
-        const jsonUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=month`;
-        const response = await fetch(jsonUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept': 'application/json',
-          },
-          signal: AbortSignal.timeout(3500),
-        });
+        const jsonUrls = [
+          `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=month`,
+          `https://old.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=month`
+        ];
 
-        if (response.ok) {
+        let response: Response | null = null;
+        for (const jsonUrl of jsonUrls) {
+          try {
+            const res = await fetch(jsonUrl, {
+              headers: {
+                'User-Agent': this.getRedditUserAgent(),
+                'Accept': 'application/json',
+              },
+              signal: AbortSignal.timeout(3500),
+            });
+            if (res.ok) {
+              response = res;
+              break;
+            }
+          } catch (_) {}
+        }
+
+        if (response && response.ok) {
           const data = await response.json();
           const children = data?.data?.children || [];
 
@@ -309,8 +315,8 @@ export class BatchCollectionService {
             });
           }
           jsonSucceeded = true;
-        } else if (response.status === 429 || response.status === 403) {
-          logger.debug({ status: response.status, query }, '[COLLECTION] [REDDIT] JSON hit rate limit, switching to RSS fallback immediately');
+        } else {
+          logger.debug({ query }, '[COLLECTION] [REDDIT] JSON search unready or throttled, switching to RSS fallback immediately');
         }
       } catch (jsonErr: any) {
         logger.debug(`[COLLECTION] [REDDIT] JSON search failed for "${query}", switching to RSS: ${jsonErr.message}`);
@@ -354,64 +360,73 @@ export class BatchCollectionService {
     product: ProductWithDetails
   ): Promise<CollectedPost[]> {
     const posts: CollectedPost[] = [];
-    try {
-      const url = `https://www.reddit.com/search.rss?q=${encodeURIComponent(query)}&sort=new&limit=15`;
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': this.getRandomUserAgent(),
-          'Accept': 'application/xml, application/rss+xml'
-        },
-        signal: AbortSignal.timeout(4000)
-      });
+    const rssUrls = [
+      `https://www.reddit.com/search.rss?q=${encodeURIComponent(query)}&sort=new&limit=15`,
+      `https://www.reddit.com/r/all/search.rss?q=${encodeURIComponent(query)}&sort=new&limit=15`,
+      `https://old.reddit.com/search.rss?q=${encodeURIComponent(query)}&sort=new&limit=15`
+    ];
 
-      if (!response.ok) return posts;
-
-      const xml = await response.text();
-      const cheerio = await import('cheerio');
-      const $ = cheerio.load(xml, { xmlMode: true });
-
-      $('entry').each((_, el) => {
-        const title = $(el).find('title').text() || '';
-        const link = $(el).find('link').attr('href') || '';
-        const contentHtml = $(el).find('content').text() || '';
-        const published = $(el).find('published').text();
-        const authorRaw = $(el).find('author name').text() || '';
-
-        // Must be a post/comment entry, not subreddit/community/user profile
-        if (!link.includes('/comments/')) return;
-
-        const postedAt = published ? new Date(published) : new Date();
-        if (postedAt < oneMonthAgo) return;
-
-        // Clean author name (/u/username -> username)
-        const author = authorRaw.replace(/^\/u\//, '');
-
-        // Clean HTML from content
-        const content = contentHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        const combinedText = `${title} ${content}`;
-        
-        if (!this.passesBasicFilters(combinedText, author, product)) return;
-
-        // Parse external post ID from link (e.g. comments/xyz/...)
-        const match = link.match(/\/comments\/([a-z0-9]+)\//i);
-        // Use stable content-based ID when no permalink match — prevents re-ingesting same post every scan
-        const externalPostId = match ? match[1]! : Buffer.from(`${title.slice(0, 30)}-${author}`).toString('base64').replace(/[^a-z0-9]/gi, '').slice(0, 12);
-
-        posts.push({
-          id: `reddit-${externalPostId}`,
-          platform: 'REDDIT',
-          externalPostId,
-          title,
-          content,
-          url: link || `https://reddit.com/comments/${externalPostId}`,
-          authorUsername: author,
-          postedAt,
-          source: 'global',
-          detectionMode: 'SEMANTIC'
+    for (const url of rssUrls) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': this.getRedditUserAgent(),
+            'Accept': 'application/xml, application/rss+xml, text/xml'
+          },
+          signal: AbortSignal.timeout(3500)
         });
-      });
-    } catch (err: any) {
-      logger.debug(`[COLLECTION] [REDDIT] RSS fallback failed: ${err.message}`);
+
+        if (!response.ok) continue;
+
+        const xml = await response.text();
+        const cheerio = await import('cheerio');
+        const $ = cheerio.load(xml, { xmlMode: true });
+
+        $('entry').each((_, el) => {
+          const title = $(el).find('title').text() || '';
+          const link = $(el).find('link').attr('href') || '';
+          const contentHtml = $(el).find('content').text() || '';
+          const published = $(el).find('published').text();
+          const authorRaw = $(el).find('author name').text() || '';
+
+          // Must be a post/comment entry, not subreddit/community/user profile
+          if (!link.includes('/comments/')) return;
+
+          const postedAt = published ? new Date(published) : new Date();
+          if (postedAt < oneMonthAgo) return;
+
+          // Clean author name (/u/username -> username)
+          const author = authorRaw.replace(/^\/u\//, '');
+
+          // Clean HTML from content
+          const content = contentHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          const combinedText = `${title} ${content}`;
+          
+          if (!this.passesBasicFilters(combinedText, author, product)) return;
+
+          // Parse external post ID from link (e.g. comments/xyz/...)
+          const match = link.match(/\/comments\/([a-z0-9]+)\//i);
+          // Use stable content-based ID when no permalink match — prevents re-ingesting same post every scan
+          const externalPostId = match ? match[1]! : Buffer.from(`${title.slice(0, 30)}-${author}`).toString('base64').replace(/[^a-z0-9]/gi, '').slice(0, 12);
+
+          posts.push({
+            id: `reddit-${externalPostId}`,
+            platform: 'REDDIT',
+            externalPostId,
+            title,
+            content,
+            url: link || `https://reddit.com/comments/${externalPostId}`,
+            authorUsername: author,
+            postedAt,
+            source: 'global',
+            detectionMode: 'SEMANTIC'
+          });
+        });
+
+        if (posts.length > 0) break;
+      } catch (err: any) {
+        logger.debug(`[COLLECTION] [REDDIT] RSS fallback url ${url} failed: ${err.message}`);
+      }
     }
     return posts;
   }
@@ -938,5 +953,11 @@ export class BatchCollectionService {
       'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1',
     ];
     return agents[Math.floor(Math.random() * agents.length)]!;
+  }
+
+  private static getRedditUserAgent(): string {
+    const versions = ['1.0.1', '1.1.0', '1.2.0'];
+    const v = versions[Math.floor(Math.random() * versions.length)];
+    return `web:knivik-leadfinder:${v} (by /u/knivik_scanner)`;
   }
 }
