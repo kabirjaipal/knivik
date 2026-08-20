@@ -22,6 +22,10 @@ Our frontend must look premium, modern, and highly engaging. A simple, basic MVP
 *   **Line-height & Letter-spacing:** Use `tracking-tight` for titles and `leading-relaxed` for prose to enhance legibility.
 *   **Spacing:** Maintain consistent, breathing room spacing. Use `gap-6` or `gap-8` for layouts. Avoid cramped dashboards.
 
+### Component Primitives: Shadcn First (Strict Rule)
+*   **Always use Shadcn UI primitives:** Never write raw HTML tags like `<button>`, `<input>`, `<select>`, `<dialog>` when an established Shadcn component exists (`<Button>`, `<Input>`, `<Select>`, `<Dialog>`, `<Badge>`, `<Card>`, `<Tabs>`, etc.).
+*   **Variants:** Use Shadcn variants (`variant="link"`, `variant="outline"`, `variant="ghost"`, `variant="default"`, `size="sm"`) rather than creating ad-hoc custom raw buttons.
+
 ---
 
 ## 🔮 2. Premium Design Effects

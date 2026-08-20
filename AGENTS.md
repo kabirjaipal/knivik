@@ -37,6 +37,7 @@ knivik/
 *   **Async Route Params:** In Next.js 15, route handler `params` are asynchronous: `{ params }: { params: Promise<{ id: string }> }`. Always `await params`.
 *   **Data Fetching & Mutations:** Fetch data on the server in Server Components. Use Server Actions or API Route Handlers for mutations with proper `revalidatePath` / `revalidateTag`.
 *   **Styling & Modern Aesthetics:** Use **Tailwind CSS** + **Shadcn UI** with HSL theme tokens (never hardcode arbitrary hex). Enforce modern aesthetics: dark mode (`#030712`), glassmorphism cards (`backdrop-blur-md`), micro-animations (`transition-all duration-200`), and tactile click states (`active:scale-[0.98]`).
+*   **Shadcn UI First (Strict):** Always use established Shadcn UI components (`<Button>`, `<Badge>`, `<Input>`, `<Card>`, `<Dialog>`, etc.) with proper variants (`variant="link"`, `variant="outline"`, etc.) instead of raw HTML tags (`<button>`, `<input>`).
 *   **Database Transactions:** Always use **Prisma Client** (`@/lib/db`). For multi-table operations, wrap inside `prisma.$transaction`.
 *   **TypeScript Strictness:** Strict mode enabled. No implicit `any`. Avoid non-null assertions (`!`) unless fully verified.
 

@@ -42,6 +42,7 @@ export default function ProductDetailPage() {
   const [scanStep, setScanStep] = useState<string>(user?.isScanning ? "INITIALIZING" : "")
   const isCurrentlyScanning = localScanning || !!user?.isScanning
   const lastFetchedId = useRef<string | null>(null)
+  const wasScanningRef = useRef(false)
 
   const getScanStepMessage = (step: string) => {
     switch (step) {
@@ -117,8 +118,9 @@ export default function ProductDetailPage() {
   }, [user?.id, productId, fetchProduct])
 
   // ─── Real-time scan updates via Server-Sent Events (SSE) ────────────────────
+  // Only connect when a scan is actively running to prevent endless idle polling
   useEffect(() => {
-    if (!productId) return;
+    if (!productId || !isCurrentlyScanning) return;
 
     const eventSource = new EventSource(`${API_URL}/products/${productId}/scan-stream`);
 
@@ -126,31 +128,38 @@ export default function ProductDetailPage() {
       try {
         const data = JSON.parse(event.data);
         if (data.isScanning) {
+          wasScanningRef.current = true;
           setLocalScanning(true);
           setScanStep(data.status || "INITIALIZING");
         } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.status === 'ERROR' || data.status === 'FAILED') {
           setLocalScanning(false);
           setScanStep("");
-          if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
-            toast.success("Scan completed! Fresh leads loaded.");
+          eventSource.close();
+          if (wasScanningRef.current) {
+            wasScanningRef.current = false;
+            if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
+              toast.success("Scan completed! Fresh leads loaded.");
+            }
+            lastFetchedId.current = null;
+            fetchProduct();
+            setRefreshTrigger((prev) => prev + 1);
           }
-          fetchProduct();
-          setRefreshTrigger((prev) => prev + 1);
         }
       } catch (_) {}
     };
 
     eventSource.onerror = () => {
-      // Allow graceful recovery
+      eventSource.close();
     };
 
     return () => {
       eventSource.close();
     };
-  }, [productId, fetchProduct]);
+  }, [productId, isCurrentlyScanning, fetchProduct]);
 
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return;
+    wasScanningRef.current = true;
     setLocalScanning(true);
     setScanStep("SETUP");
 
@@ -173,12 +182,17 @@ export default function ProductDetailPage() {
         throw new Error(err.error || "Scan failed");
       }
 
-      toast.success("Scan completed! Fresh leads loaded.");
-      setLocalScanning(false);
-      setScanStep("");
-      fetchProduct();
-      setRefreshTrigger((prev) => prev + 1);
+      if (wasScanningRef.current) {
+        wasScanningRef.current = false;
+        toast.success("Scan completed! Fresh leads loaded.");
+        setLocalScanning(false);
+        setScanStep("");
+        lastFetchedId.current = null;
+        fetchProduct();
+        setRefreshTrigger((prev) => prev + 1);
+      }
     } catch (err: any) {
+      wasScanningRef.current = false;
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
@@ -217,20 +231,28 @@ export default function ProductDetailPage() {
         
         {/* Top Row: Back button + Actions */}
         <div className="flex items-center justify-between gap-4">
-          <button onClick={() => router.push("/dashboard/products")}
-            className="group flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors w-fit bg-muted/30 px-2.5 py-1 rounded-md border border-border/40">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/dashboard/products")}
+            className="group flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors h-auto py-1 px-2.5 rounded-md border-border/40 bg-muted/30"
+          >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             Back
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2 shrink-0">
             {queries.length > 0 && (
-              <button onClick={() => setShowConfig(v => !v)}
-                className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg px-3 py-1.5 border ${showConfig ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/10' : 'bg-card text-foreground hover:bg-muted border-border/60 shadow-sm'}`}>
+              <Button
+                variant={showConfig ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowConfig(v => !v)}
+                className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest h-auto py-1.5 px-3 rounded-lg"
+              >
                 <Zap className="w-3.5 h-3.5" />
                 AI Config
                 {showConfig ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
+              </Button>
             )}
 
             <Button size="sm" disabled={isCurrentlyScanning || !product.isActive} onClick={handleScanNow}
@@ -290,23 +312,27 @@ export default function ProductDetailPage() {
               {product.description.length > 200 && !isDescExpanded ? (
                 <>
                   {product.description.slice(0, 200)}...{" "}
-                  <button
+                  <Button
+                    variant="link"
+                    size="sm"
                     onClick={() => setIsDescExpanded(true)}
-                    className="text-primary hover:underline font-bold focus:outline-none"
+                    className="h-auto p-0 text-xs font-bold text-primary hover:underline inline focus-visible:outline-none"
                   >
                     Read more
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
                   {product.description}{" "}
                   {product.description.length > 200 && (
-                    <button
+                    <Button
+                      variant="link"
+                      size="sm"
                       onClick={() => setIsDescExpanded(false)}
-                      className="text-primary hover:underline font-bold focus:outline-none ml-1"
+                      className="h-auto p-0 text-xs font-bold text-primary hover:underline inline focus-visible:outline-none ml-1"
                     >
                       Show less
-                    </button>
+                    </Button>
                   )}
                 </>
               )}

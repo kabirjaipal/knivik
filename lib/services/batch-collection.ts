@@ -241,14 +241,14 @@ export class BatchCollectionService {
       return [];
     }
 
-    // Build compound high-coverage query list from available search queries
+    // Build high-coverage query list from available search queries
     const distinctQueries = [...new Set(searchQueries)].sort(() => 0.5 - Math.random());
     const compoundQueries: string[] = [];
     
     for (let i = 0; i < distinctQueries.length && compoundQueries.length < 3; i += 2) {
       if (i + 1 < distinctQueries.length) {
-        // Group pairs using OR to get double the query coverage per request
-        compoundQueries.push(`(${distinctQueries[i]}) OR (${distinctQueries[i + 1]})`);
+        // Group pairs using OR without parentheses for Reddit search engine compatibility
+        compoundQueries.push(`${distinctQueries[i]} OR ${distinctQueries[i + 1]}`);
       } else {
         compoundQueries.push(distinctQueries[i]!);
       }
@@ -268,12 +268,8 @@ export class BatchCollectionService {
         const jsonUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&sort=new&limit=25&t=month`;
         const response = await fetch(jsonUrl, {
           headers: {
-            'User-Agent': this.getRandomUserAgent(),
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
           },
           signal: AbortSignal.timeout(3500),
         });
@@ -910,16 +906,23 @@ export class BatchCollectionService {
       finalQueries.push(...unused.sort(() => Math.random() - 0.5).slice(0, 2));
     }
 
-    for (const query of finalQueries) {
-      // Fallback to Yahoo search only
-      const queryPosts = await this.fetchFromYahoo(query, oneMonthAgo);
+    const twitterTasks = finalQueries.map(async (query, idx) => {
+      if (idx > 0) {
+        await new Promise(resolve => setTimeout(resolve, idx * 120));
+      }
+      try {
+        const queryPosts = await this.fetchFromYahoo(query, oneMonthAgo);
+        return queryPosts.filter(p => this.passesBasicFilters(p.content, p.authorUsername, product));
+      } catch (_) {
+        return [];
+      }
+    });
 
-      // Filter query posts
-      const filtered = queryPosts.filter(p => this.passesBasicFilters(p.content, p.authorUsername, product));
-      posts.push(...filtered);
-
-      // Short delay between query sweeps
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    const results = await Promise.allSettled(twitterTasks);
+    for (const res of results) {
+      if (res.status === 'fulfilled') {
+        posts.push(...res.value);
+      }
     }
 
     return posts;

@@ -128,28 +128,37 @@ export default function DashboardPage() {
     fetchAll();
   }, [user, authLoading, fetchAll]);
 
+  const isScanning = !!user?.isScanning;
+  const wasScanningRef = useRef(false);
+
   // ─── Real-time Lead Updates via Server-Sent Events (SSE) ──────────────────
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !isScanning) return;
     const eventSource = new EventSource(`${API_URL}/users/scan-stream`);
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (!data.isScanning && (data.status === 'SUCCESS' || data.status === 'COMPLETED')) {
-          fetchAll();
+        if (data.isScanning) {
+          wasScanningRef.current = true;
+        } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
+          eventSource.close();
+          if (wasScanningRef.current) {
+            wasScanningRef.current = false;
+            fetchAll();
+          }
         }
       } catch (_) {}
     };
 
     eventSource.onerror = () => {
-      // Graceful reconnect
+      eventSource.close();
     };
 
     return () => {
       eventSource.close();
     };
-  }, [user?.id, fetchAll]);
+  }, [user?.id, isScanning, fetchAll]);
 
   // ─── Lead actions ─────────────────────────────────────────────────────────
 

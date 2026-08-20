@@ -91,28 +91,37 @@ export default function ProductsPage() {
     fetchProducts()
   }, [user, authLoading, fetchProducts])
 
+  const isScanning = !!user?.isScanning;
+  const wasScanningRef = useRef(false);
+
   // ─── Real-time Product & Lead count updates via SSE ───────────────────────
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !isScanning) return;
     const eventSource = new EventSource(`${API_URL}/users/scan-stream`);
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (!data.isScanning && (data.status === 'SUCCESS' || data.status === 'COMPLETED')) {
-          fetchProducts();
+        if (data.isScanning) {
+          wasScanningRef.current = true;
+        } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
+          eventSource.close();
+          if (wasScanningRef.current) {
+            wasScanningRef.current = false;
+            fetchProducts();
+          }
         }
       } catch (_) {}
     };
 
     eventSource.onerror = () => {
-      // Graceful reconnect
+      eventSource.close();
     };
 
     return () => {
       eventSource.close();
     };
-  }, [user?.id, fetchProducts]);
+  }, [user?.id, isScanning, fetchProducts]);
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault()

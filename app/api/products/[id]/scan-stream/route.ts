@@ -78,6 +78,8 @@ export async function GET(
 
       // 3. Heartbeat + Database Sync Polling (for multi-container serverless support)
       let isClosed = false;
+      let wasScanningState = isCurrentlyScanning;
+
       const interval = setInterval(async () => {
         if (isClosed) return;
         try {
@@ -87,9 +89,11 @@ export async function GET(
             select: { isScanning: true, lastScanStatus: true },
           });
 
-          if (userState && !userState.isScanning) {
-            isClosed = true;
-            clearInterval(interval);
+          if (userState?.isScanning) {
+            wasScanningState = true;
+          } else if (wasScanningState && userState && !userState.isScanning) {
+            // Only emit completion if a scan was actively running during this session
+            wasScanningState = false;
             const finalPayload = `data: ${JSON.stringify({
               productId,
               userId,
@@ -97,17 +101,13 @@ export async function GET(
               status: userState.lastScanStatus || 'SUCCESS',
             })}\n\n`;
             controller.enqueue(encoder.encode(finalPayload));
-            setTimeout(() => {
-              try { controller.close(); } catch (_) {}
-            }, 1000);
-            return;
           }
 
           controller.enqueue(encoder.encode(`: ping\n\n`));
         } catch (_) {
           // Keep stream alive
         }
-      }, 2500);
+      }, 5000);
 
       const cleanup = () => {
         isClosed = true;
