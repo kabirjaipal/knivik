@@ -18,6 +18,7 @@ export const PLANS = {
     features: [
       "Track 1 Product or Service",
       "50 leads per month",
+      "5 Cortex AI queries / day",
       "Reddit & HackerNews",
       "Automated scans every 24 hours",
       "1 manual force scan per day",
@@ -32,6 +33,7 @@ export const PLANS = {
       products: 1,
       leadsPerMonth: 50,
       manualScansPerDay: 1,
+      agentQueriesPerDay: 5,
     },
     capabilities: {
       canAccessTwitter: false,
@@ -39,16 +41,18 @@ export const PLANS = {
       canAccessEnrichment: false,
       canAccessCustomPersonas: false,
       canAccessAdvancedAI: false,
+      canAccessUnlimitedAgent: false,
       priorityProcessing: false,
     }
   },
-  PRO: {
+  PRO: { 
     name: "Pro",
     description: "Everything you need to scale your lead generation. Get 2 months free with annual billing!",
     popular: true,
     features: [
       "Track up to 5 Products or Services",
       "1,000 High-Intent leads / mo",
+      "50 Cortex AI queries / day (10x Free)",
       "Reddit, HackerNews & Twitter (X)",
       "Automated scans every 2 hours (24/7 background)",
       "10 Manual Force Scans / day per offering",
@@ -63,6 +67,7 @@ export const PLANS = {
       products: 5,
       leadsPerMonth: 1000,
       manualScansPerDay: 10,
+      agentQueriesPerDay: 50,
     },
     monthly: { 
       productId: process.env.NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || process.env.DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID || "prod_monthly",
@@ -76,6 +81,7 @@ export const PLANS = {
       canAccessEnrichment: true,
       canAccessCustomPersonas: true,
       canAccessAdvancedAI: true,
+      canAccessUnlimitedAgent: false,
       priorityProcessing: true,
     }
   },

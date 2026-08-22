@@ -59,8 +59,9 @@ export function Sidebar({ className }: SidebarProps) {
   const isAtAdmin = pathname.startsWith('/admin')
 
   const userLinks: NavLink[] = useMemo(() => {
-    const links = [
+    const links: NavLink[] = [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/cortex", label: "Cortex AI", icon: Sparkles, accent: true },
       { href: "/dashboard/products", label: "Products & Services", icon: Radar },
       { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
       { href: "/dashboard/billing", label: "Billing", icon: CreditCard },

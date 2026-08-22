@@ -116,6 +116,70 @@ export class BatchCollectionService {
   }
 
   /**
+   * Public Ad-Hoc Discovery Scraper: Reuses Knivik's robust Reddit, HN, and Twitter scraping engines for real-time queries
+   */
+  public static async discoverLivePosts(params: {
+    topic: string;
+    platform?: 'REDDIT' | 'HACKERNEWS' | 'TWITTER' | 'ALL';
+    limit?: number;
+  }): Promise<CollectedPost[]> {
+    const { topic, platform = 'ALL', limit = 10 } = params;
+    const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const platformsToQuery = platform === 'ALL' ? ['REDDIT', 'HACKERNEWS', 'TWITTER'] : [platform];
+    const mockProduct: ProductWithDetails = {
+      id: 'live_discovery',
+      userId: 'ad_hoc',
+      name: topic,
+      description: topic,
+      websiteUrl: null,
+      isActive: true,
+      config: { platforms: platformsToQuery },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const tasks: Promise<CollectedPost[]>[] = [];
+
+    if (platform === 'REDDIT' || platform === 'ALL') {
+      tasks.push(
+        this.collectFromReddit(mockProduct, oneMonthAgo, [topic]).catch((e) => {
+          logger.warn({ error: e?.message || e }, '[DISCOVERY] Reddit scrape failed');
+          return [];
+        })
+      );
+    }
+
+    if (platform === 'HACKERNEWS' || platform === 'ALL') {
+      tasks.push(
+        this.collectFromHackerNews(mockProduct, oneMonthAgo, [topic]).catch((e) => {
+          logger.warn({ error: e?.message || e }, '[DISCOVERY] HN scrape failed');
+          return [];
+        })
+      );
+    }
+
+    if (platform === 'TWITTER' || platform === 'ALL') {
+      tasks.push(
+        this.collectFromTwitter(mockProduct, oneMonthAgo, [topic]).catch((e) => {
+          logger.warn({ error: e?.message || e }, '[DISCOVERY] Twitter scrape failed');
+          return [];
+        })
+      );
+    }
+
+    const settledResults = await Promise.allSettled(tasks);
+    const results: CollectedPost[] = [];
+
+    for (const res of settledResults) {
+      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+        results.push(...res.value);
+      }
+    }
+
+    return results.slice(0, limit);
+  }
+
+  /**
    * Collect posts for a single product across all its sources
    */
   public static async collectProductPosts(

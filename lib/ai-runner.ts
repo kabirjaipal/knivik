@@ -18,7 +18,7 @@ const groq = createGroq({
 });
 
 // Resolve model ID strictly from database (systemConfig & llmModel)
-async function resolveModelId(modelInput: string): Promise<string> {
+export async function resolveModelId(modelInput: string): Promise<string> {
   const configKeyMap: Record<string, string> = {
     [MODELS.LITE]: 'aiModelLite',
     [MODELS.VERSATILE]: 'aiModelVersatile',
