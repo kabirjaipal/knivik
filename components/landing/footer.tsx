@@ -25,7 +25,7 @@ export function Footer() {
       <div className="container mx-auto px-6">
         {/* Multi-Column Upper Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             <Link href="/" className="flex items-center gap-2 group w-fit">
               <Logo size={20} />
               <span className="font-black tracking-tighter text-lg text-foreground">
@@ -36,6 +36,17 @@ export function Footer() {
               AI-powered social lead generation. Catch high-intent conversations
               in real-time.
             </p>
+            <div className="pt-1">
+              <Link
+                href="/cortex"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/25 text-primary text-xs font-bold hover:bg-primary/15 transition-colors"
+              >
+                <span>⚡ Cortex AI Copilot</span>
+                <span className="text-[9px] uppercase tracking-wider bg-primary text-primary-foreground px-1 py-0.2 rounded font-black">
+                  New
+                </span>
+              </Link>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2.5">

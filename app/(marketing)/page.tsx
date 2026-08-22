@@ -5,6 +5,7 @@ import { Hero } from "@/components/landing/hero"
 import { PlatformSupport } from "@/components/landing/social-proof"
 import { Workflow } from "@/components/landing/workflow"
 import { ProductPreview } from "@/components/landing/product-preview"
+import { AgentSpotlight } from "@/components/landing/agent-spotlight"
 import { Benefits } from "@/components/landing/benefits"
 import { Integrations } from "@/components/landing/integrations"
 import { FAQ } from "@/components/landing/faq"
@@ -44,7 +45,8 @@ export default async function LandingPage() {
       availability: "https://schema.org/InStock"
     },
     features: [
-      "Real-time Reddit lead finding",
+      "Cortex AI Autonomous Social Prospecting Copilot",
+      "Real-time Reddit lead finding & intent scoring",
       "HackerNews buyer intent tracking",
       "X (Twitter) conversational prospecting",
       "AI-powered Warm Outreach Suggestion",
@@ -66,6 +68,7 @@ export default async function LandingPage() {
         <PlatformSupport />
         <Workflow />
         <ProductPreview />
+        <AgentSpotlight />
         <Benefits />
         <Integrations />
         <FAQ />

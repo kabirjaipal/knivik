@@ -60,47 +60,52 @@ export function AnnouncementBanner() {
                 className="bg-primary/15 text-primary border-primary/25 font-black uppercase text-[10px] tracking-wider py-0 px-2 h-5 gap-1"
               >
                 <Sparkles className="h-2.5 w-2.5 fill-primary" />
-                Launch Special
+                New Release
               </Badge>
 
-              <span>
-                Get <span className="font-bold text-foreground">20% off</span> Knivik Pro with
+              <span className="font-bold text-foreground">
+                Cortex AI 2.0:
               </span>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    onClick={handleCopyCode}
-                    className="h-6 px-2 font-mono font-bold text-xs text-primary border-border/80 hover:border-primary/50 hover:bg-background active:scale-95 transition-all shadow-2xs gap-1 rounded-md"
-                  >
-                    <span>{promoCode}</span>
-                    {copied ? (
-                      <Check className="h-3 w-3 text-success animate-in zoom-in" />
-                    ) : (
-                      <Copy className="h-3 w-3 text-muted-foreground hover:text-primary transition-colors" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs">
-                  {copied ? "Copied!" : "Click to copy code"}
-                </TooltipContent>
-              </Tooltip>
-
-              <span className="text-muted-foreground/50 hidden sm:inline">•</span>
+              <span>Autonomous live social prospecting & instant outreach drafting.</span>
 
               <Button
                 asChild
                 variant="link"
                 size="xs"
-                className="h-auto p-0 font-bold text-xs sm:text-[13px] text-primary hover:text-primary/80 transition-colors group"
+                className="h-auto p-0 font-bold text-xs sm:text-[13px] text-primary hover:text-primary/80 transition-colors group ml-1"
               >
-                <Link href={`/pricing?promo=${promoCode}`} className="flex items-center gap-1">
-                  <span>Claim discount</span>
+                <Link href="/cortex" className="flex items-center gap-1">
+                  <span>Explore Cortex AI</span>
                   <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </Button>
+
+              <span className="text-muted-foreground/50 hidden md:inline">•</span>
+
+              <div className="hidden md:flex items-center gap-1.5 text-muted-foreground">
+                <span>Use code</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={handleCopyCode}
+                      className="h-5 px-1.5 font-mono font-bold text-[11px] text-primary border-border/80 hover:border-primary/50 hover:bg-background active:scale-95 transition-all shadow-2xs gap-1 rounded-md cursor-pointer"
+                    >
+                      <span>{promoCode}</span>
+                      {copied ? (
+                        <Check className="h-2.5 w-2.5 text-emerald-500 animate-in zoom-in" />
+                      ) : (
+                        <Copy className="h-2.5 w-2.5 text-muted-foreground hover:text-primary transition-colors" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    {copied ? "Copied!" : "Click to copy 20% discount code"}
+                  </TooltipContent>
+                </Tooltip>
+                <span>for 20% off</span>
+              </div>
             </div>
 
             <Tooltip>

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Menu, X, ArrowRight } from "lucide-react"
+import { Menu, X, ArrowRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -49,9 +49,9 @@ export function Navbar({ user }: { user: any }) {
   }, [pathname])
 
   const navLinks = [
+    { label: "Cortex AI", href: "/cortex", highlight: true },
     { label: "How it works", href: "/#how-it-works" },
     { label: "Product", href: "/#benefits" },
-    { label: "Integrations", href: "/#integrations" },
     { label: "Pricing", href: "/pricing" },
     { label: "Tools", href: "/tools" },
     { label: "Blog", href: "/blog" },
@@ -84,18 +84,26 @@ export function Navbar({ user }: { user: any }) {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-10">
+        <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => {
             const active = isLinkActive(link.href)
             return (
               <Link 
                 key={link.label} 
                 href={link.href} 
-                className={`text-sm font-bold transition-all duration-300 relative group ${
+                className={`text-sm font-bold transition-all duration-300 relative group flex items-center gap-1.5 ${
                   active ? "text-primary" : "text-muted-foreground hover:text-primary"
-                }`}
+                } ${link.highlight ? "text-primary/95 hover:text-primary font-black" : ""}`}
               >
-                {link.label}
+                {link.highlight && (
+                  <Sparkles className="h-3.5 w-3.5 fill-primary text-primary animate-pulse" />
+                )}
+                <span>{link.label}</span>
+                {link.highlight && (
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-primary/15 text-primary border border-primary/25 rounded-md px-1.5 py-0.2">
+                    New
+                  </span>
+                )}
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-primary transition-all duration-300 ${
                   active ? "w-full" : "w-0 group-hover:w-full"
                 }`} />

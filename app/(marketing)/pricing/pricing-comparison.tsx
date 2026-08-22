@@ -43,8 +43,18 @@ const getComparisonFeatures = () => [
     ],
   },
   {
-    category: "AI Intelligence",
+    category: "AI Intelligence & Copilot",
     features: [
+      { 
+        name: "Cortex AI Copilot Queries", 
+        free: `${PLANS.FREE.limits.agentQueriesPerDay} / day`, 
+        pro: `${PLANS.PRO.limits.agentQueriesPerDay} / day (10x Free)` 
+      },
+      { 
+        name: "Live Social Discovery (On-Demand)", 
+        free: "Reddit & HackerNews", 
+        pro: "Reddit, HackerNews & Twitter" 
+      },
       { name: "Basic Intent Detection", free: true, pro: true },
       { 
         name: "Analytics Dashboard", 
@@ -52,9 +62,9 @@ const getComparisonFeatures = () => [
         pro: "Advanced ROI & Intent"
       },
       { 
-        name: "Advanced Intent Scoring", 
-        free: PLANS.FREE.capabilities.canAccessAdvancedAI, 
-        pro: PLANS.PRO.capabilities.canAccessAdvancedAI 
+        name: "Advanced Intent Scoring (0-100)", 
+        free: true, 
+        pro: true 
       },
       { 
         name: "Custom AI Personas", 

@@ -5,6 +5,7 @@ import {
   Quote, 
   Rss,
   Sparkles,
+  Bot,
   LucideIcon
 } from "lucide-react";
 
@@ -19,6 +20,15 @@ export interface ToolItem {
 }
 
 export const toolsList: ToolItem[] = [
+  {
+    title: "Cortex AI Social Prospecting Copilot",
+    description: "Autonomous AI growth agent that hunts live Reddit, HackerNews, and Twitter discussions on demand, scores intent, and drafts high-converting replies.",
+    href: "/cortex",
+    badge: "Flagship AI",
+    icon: Bot,
+    color: "text-primary bg-primary/10 border-primary/20",
+    buttonText: "Launch Cortex Copilot",
+  },
   {
     title: "Social Search Operator Builder",
     description: "Generate advanced search query combinations for Reddit, X (Twitter), and HackerNews in seconds to find exact buyer matches without noise.",

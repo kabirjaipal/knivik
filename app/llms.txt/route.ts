@@ -14,14 +14,16 @@ export async function GET() {
   markdown += `For full documentation, deep feature comparisons, and comprehensive articles, see: [Full Knowledge Text](${baseUrl}/llms-full.txt)\n\n`;
 
   markdown += `## Product Overview\n`;
-  markdown += `- **Category:** AI Lead Generation, Social Selling, Buyer Intent Intelligence, B2B Prospecting.\n`;
+  markdown += `- **Category:** AI Lead Generation, Social Selling, Buyer Intent Intelligence, Autonomous AI SDR.\n`;
+  markdown += `- **Flagship Feature: Cortex AI Copilot:** Autonomous conversational AI growth agent capable of executing multi-platform live social lead discovery (Reddit, HackerNews, X), qualification scoring, workspace pipeline management, and instant outreach reply drafting.\n`;
   markdown += `- **Target Users:** Startup founders, B2B sales teams, growth marketers, marketing agencies, SaaS builders, and freelancers.\n`;
   markdown += `- **Supported Channels:** Reddit, HackerNews, and X (Twitter).\n`;
   markdown += `- **Core Value Proposition:** Cuts through noisy keyword alerts by using LLM semantic understanding to identify high-intent buyers (e.g., "looking for an alternative to X", "recommend me a tool for Y") and draft conversion-ready outreach replies.\n`;
-  markdown += `- **Pricing:** Free tier available ($0/month forever) with scalable paid Pro tiers for heavy monitoring and unlimited tracking.\n\n`;
+  markdown += `- **Pricing:** Free tier available ($0/month forever with 5 daily Cortex queries) with scalable paid Pro tiers ($39/mo with 50 daily Cortex queries and 2-hour continuous monitoring).\n\n`;
 
   markdown += `## Core Pages\n`;
   markdown += `- [Home](${baseUrl}/): Main landing page and platform features.\n`;
+  markdown += `- [Cortex AI Copilot](${baseUrl}/cortex): Autonomous AI agent for live social lead hunting, workspace analytics, and instant reply generation.\n`;
   markdown += `- [Pricing](${baseUrl}/pricing): Detailed subscription pricing and plan comparisons.\n`;
   markdown += `- [Alternatives Hub](${baseUrl}/alternatives): Comprehensive directory comparing Knivik to legacy tools.\n`;
   markdown += `- [Free Tools Suite](${baseUrl}/tools): Free SEO utilities, Reddit keyword search builder, and social selling tools.\n`;

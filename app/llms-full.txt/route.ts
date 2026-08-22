@@ -22,7 +22,17 @@ export async function GET() {
   text += `3. **Actionable AI Reply Angles:** Knivik generates personalized, value-first response drafts tailored to the specific problem described in the post, avoiding sales spam and maximizing conversion rates.\n`;
   text += `4. **Instant CRM & Webhook Routing:** High-intent leads trigger immediate notifications to Slack, email, or connected webhooks (Zapier/Make).\n\n`;
 
-  text += `## 2. Free Marketing & Sales Tools Suite\n\n`;
+  text += `## 2. Cortex AI Copilot (Autonomous Social Lead Agent)\n\n`;
+  text += `- **URL:** ${baseUrl}/cortex\n`;
+  text += `- **What is Cortex AI:** Cortex is Knivik's conversational autonomous growth engineer and live social prospecting agent.\n`;
+  text += `- **Key Agent Tools & Capabilities:**\n`;
+  text += `  - **Live Ad-Hoc Social Discovery:** Instant on-demand cross-platform scanning (Reddit, HackerNews, X) for any topic or competitor alternative with real-time scoring.\n`;
+  text += `  - **Lead Qualification & Intent Scoring:** Automatically evaluates buying urgency, budget, pain points, and current solutions.\n`;
+  text += `  - **1-Click Pipeline Ingestion:** Attaches qualified discovered leads directly into database funnels.\n`;
+  text += `  - **Workspace Memory & Lead Analytics:** Instant natural-language queries across captured leads and platform metrics.\n`;
+  text += `  - **Contextual Outreach Reply Angles:** Crafts natural, helpful response drafts that convert.\n\n`;
+
+  text += `## 3. Free Marketing & Sales Tools Suite\n\n`;
   toolsList.forEach((tool) => {
     text += `### ${tool.title}\n`;
     text += `- **URL:** ${baseUrl}${tool.href}\n`;

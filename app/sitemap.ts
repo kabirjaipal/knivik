@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
+    "/cortex",
     "/pricing",
     "/alternatives",
     "/tools",
@@ -24,8 +25,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((route) => ({
     url: resolveUrl(route),
     lastModified: new Date().toISOString().split("T")[0],
-    changeFrequency: (route === "" || route === "/blog" ? "daily" : "weekly") as "daily" | "weekly",
-    priority: route === "" ? 1.0 : route === "/alternatives" || route === "/tools" || route === "/blog" || route === "/pricing" ? 0.9 : 0.8,
+    changeFrequency: (route === "" || route === "/cortex" || route === "/blog" ? "daily" : "weekly") as "daily" | "weekly",
+    priority: route === "" ? 1.0 : route === "/cortex" ? 0.95 : route === "/alternatives" || route === "/tools" || route === "/blog" || route === "/pricing" ? 0.9 : 0.8,
   }));
 
   // Dynamically resolve comparison page routes for search-engine indexing
