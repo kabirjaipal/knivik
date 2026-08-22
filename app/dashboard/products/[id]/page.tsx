@@ -122,34 +122,35 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!productId || !isCurrentlyScanning) return;
 
+    let hasReceivedActiveScan = false;
     const eventSource = new EventSource(`${API_URL}/products/${productId}/scan-stream`);
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         if (data.isScanning) {
+          hasReceivedActiveScan = true;
           wasScanningRef.current = true;
           setLocalScanning(true);
           setScanStep(data.status || "INITIALIZING");
-        } else if (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.status === 'ERROR' || data.status === 'FAILED') {
+        } else if (hasReceivedActiveScan && (data.status === 'SUCCESS' || data.status === 'COMPLETED' || data.status === 'ERROR' || data.status === 'FAILED')) {
+          hasReceivedActiveScan = false;
+          wasScanningRef.current = false;
           setLocalScanning(false);
           setScanStep("");
           eventSource.close();
-          if (wasScanningRef.current) {
-            wasScanningRef.current = false;
-            if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
-              toast.success("Scan completed! Fresh leads loaded.");
-            }
-            lastFetchedId.current = null;
-            fetchProduct();
-            setRefreshTrigger((prev) => prev + 1);
+          if (data.status === 'SUCCESS' || data.status === 'COMPLETED') {
+            toast.success("Scan completed! Fresh leads loaded.");
           }
+          lastFetchedId.current = null;
+          fetchProduct();
+          setRefreshTrigger((prev) => prev + 1);
         }
       } catch (_) {}
     };
 
     eventSource.onerror = () => {
-      eventSource.close();
+      // Keep local scan animation alive during transient SSE network retries
     };
 
     return () => {
@@ -159,7 +160,6 @@ export default function ProductDetailPage() {
 
   const handleScanNow = async () => {
     if (isCurrentlyScanning) return;
-    wasScanningRef.current = true;
     setLocalScanning(true);
     setScanStep("INITIALIZING");
 
@@ -173,6 +173,7 @@ export default function ProductDetailPage() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Scan failed to initiate");
       }
+      wasScanningRef.current = true;
       // Scan initiated in background; SSE connection will stream status steps and handle completion toast
     } catch (err: any) {
       wasScanningRef.current = false;

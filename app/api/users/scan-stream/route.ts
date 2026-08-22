@@ -17,7 +17,9 @@ export async function GET(req: NextRequest) {
   });
 
   const isCurrentlyScanning = Boolean(dbUser?.isScanning);
-  const initialStatus = dbUser?.lastScanStatus || (isCurrentlyScanning ? 'INITIALIZING' : 'IDLE');
+  const initialStatus = isCurrentlyScanning
+    ? (dbUser?.lastScanStatus || 'INITIALIZING')
+    : 'IDLE';
 
   return createScanEventStream({
     req,

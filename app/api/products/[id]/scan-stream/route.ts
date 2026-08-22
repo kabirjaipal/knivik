@@ -35,7 +35,9 @@ export async function GET(
 
   const productConfig = (product.config as Record<string, any>) || {};
   const isCurrentlyScanning = Boolean(productConfig.isScanning ?? dbUser?.isScanning ?? false);
-  const initialStatus = productConfig.lastScanStatus || (isCurrentlyScanning ? 'INITIALIZING' : 'IDLE');
+  const initialStatus = isCurrentlyScanning
+    ? (productConfig.lastScanStatus || 'INITIALIZING')
+    : 'IDLE';
 
   return createScanEventStream({
     req,
