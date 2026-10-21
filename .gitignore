@@ -16,6 +16,7 @@
 
 # Environment variables
 .env
+.env*
 .env*.local
 .env.development
 .env.test
@@ -74,5 +75,7 @@ Thumbs.db
 *.sublime-workspace
 *.sublime-project
 *.sw?
-*~
-.env*
+
+# AI Agent & IDE configs (personal dev tooling)
+.agents/
+skills-lock.json

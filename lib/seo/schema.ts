@@ -62,7 +62,7 @@ export class SchemaService {
       "@type": "Organization",
       "@id": `${baseUrl}/#organization`,
       "name": "Knivik",
-      "alternateName": ["Knivik AI", "knvik", "Knivik Lead Finder", "knivik.xyz"],
+      "alternateName": ["Knivik AI", "knvik", "Knivik Lead Finder"],
       "url": baseUrl,
       "logo": {
         "@type": "ImageObject",
@@ -95,7 +95,7 @@ export class SchemaService {
       "@type": "WebSite",
       "@id": `${baseUrl}/#website`,
       "name": "Knivik",
-      "alternateName": ["Knivik AI", "knvik", "Knivik Lead Finder", "knivik.xyz"],
+      "alternateName": ["Knivik AI", "knvik", "Knivik Lead Finder"],
       "url": baseUrl,
       "description": "Advanced AI Lead Finder and B2B social sales intelligence platform for products and services.",
       "publisher": {

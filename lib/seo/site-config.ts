@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Knivik",
   description: "Knivik is an advanced AI Lead Finder and B2B social sales intelligence platform for products and services. It scans Reddit, HackerNews, and X (Twitter) in real-time to discover warm leads with genuine buying intent.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://knivik.xyz",
-  ogImage: "https://knivik.xyz/og-image.png",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/og-image.png`,
   links: {
     twitter: "https://x.com/knivikai",
   },
@@ -21,7 +21,7 @@ export const siteConfig = {
     "AI growth engineer agent",
     "Knivik",
     "Knivik AI",
-    "knivik.xyz",
+    "knivik",
     "knvik",
     "knivik lead finder",
     "knivik b2b lead generation",
@@ -101,7 +101,7 @@ export const siteConfig = {
   authors: [
     {
       name: "Knivik Team",
-      url: "https://knivik.xyz",
+      url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
     },
   ],
   creator: "Knivik",

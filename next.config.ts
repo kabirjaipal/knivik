@@ -6,6 +6,7 @@ import type { NextConfig } from "next";
  */
 const nextConfig: NextConfig = {
   // 1. Core Runtime Settings
+  output: "standalone", // Docker: produces a minimal self-contained server
   reactStrictMode: true,
   poweredByHeader: false, // Security: Minimize fingerprinting
   compress: true,        // Performance: Enable Gzip compression

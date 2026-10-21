@@ -1,0 +1,112 @@
+# ==============================================================================
+# Knivik — Docker Compose
+# ==============================================================================
+# Usage:
+#   docker compose up -d          Start everything (app + db)
+#   docker compose up -d db       Start only PostgreSQL
+#   docker compose down           Stop containers
+#   docker compose down -v        Stop and delete volumes (wipes DB data)
+# ==============================================================================
+
+services:
+  # ── PostgreSQL Database ───────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: knivik_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: knivik
+      POSTGRES_USER: knivik
+      POSTGRES_PASSWORD: knivik_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U knivik -d knivik"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Knivik App ────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # NEXT_PUBLIC_* vars must be baked in at BUILD time (they become part of client JS)
+      # Change these if you're deploying to a real domain instead of localhost
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
+    container_name: knivik_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # ── Core ──────────────────────────────────────────────────────────────
+      NODE_ENV: production
+      PORT: 3000
+
+      # ── URLs ──────────────────────────────────────────────────────────────
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: /api
+      FRONTEND_URL: http://localhost:3000
+
+      # ── Database ──────────────────────────────────────────────────────────
+      # Points to the 'db' service defined above
+      DATABASE_URL: postgresql://knivik:knivik_password@db:5432/knivik?schema=public
+
+      # ── Auth ──────────────────────────────────────────────────────────────
+      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BCRYPT_ROUNDS: 12
+
+      # ── AI / LLM ──────────────────────────────────────────────────────────
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_BASE_URL: https://api.groq.com/openai/v1
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
+
+      # ── Email ─────────────────────────────────────────────────────────────
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@localhost}
+
+      # ── OAuth (optional) ──────────────────────────────────────────────────
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: http://localhost:3000/api/auth/callback/google
+
+      # ── Payments (optional) ───────────────────────────────────────────────
+      DODO_PAYMENTS_API_KEY: ${DODO_PAYMENTS_API_KEY:-}
+      DODO_PAYMENTS_WEBHOOK_KEY: ${DODO_PAYMENTS_WEBHOOK_KEY:-}
+      DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID: ${DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID:-}
+      DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID: ${DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID:-}
+      NEXT_PUBLIC_DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID: ${DODO_PAYMENTS_PRO_MONTHLY_PRODUCT_ID:-}
+      NEXT_PUBLIC_DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID: ${DODO_PAYMENTS_PRO_YEARLY_PRODUCT_ID:-}
+
+      # ── Analytics (optional) ──────────────────────────────────────────────
+      NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
+      NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-}
+
+      # ── Scraper & Cron ────────────────────────────────────────────────────
+      CRON_SECRET: ${CRON_SECRET}
+      SCRAPER_INTERVAL_MS: 7200000
+      ENABLE_QUEUE: "true"
+      SCRAPER_CONCURRENCY: 5
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 120
+      TRUST_PROXY: "true"
+
+      # ── Logging ───────────────────────────────────────────────────────────
+      LOG_LEVEL: info
+      LOG_PRETTY: "false"
+
+volumes:
+  postgres_data:
+    driver: local

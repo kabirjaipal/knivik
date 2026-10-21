@@ -23,7 +23,7 @@ const configSchema = z.object({
   DB_POOL_IDLE_TIMEOUT_MS: z.coerce.number().default(30000),
   DB_POOL_CONNECTION_TIMEOUT_MS: z.coerce.number().default(5000),
   // Email settings (Resend API)
-  SMTP_FROM: z.string().default(process.env.SMTP_FROM || 'no-reply@knivik.xyz'),
+  SMTP_FROM: z.string().default(process.env.SMTP_FROM || 'no-reply@localhost'),
   RESEND_API_KEY: z.string().optional().default(process.env.RESEND_API_KEY || ''),
   // OAuth
   GOOGLE_CLIENT_ID: z.string().optional().default(process.env.GOOGLE_CLIENT_ID || ''),

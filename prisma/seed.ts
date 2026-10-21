@@ -45,10 +45,14 @@ async function main() {
   console.log('👥 Creating owner user...');
 
   // Owner user with Better Auth Account using Better Auth API
+  // Change these credentials before seeding your own instance.
+  const ownerEmail = process.env.SEED_OWNER_EMAIL || 'admin@example.com';
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD || 'ChangeMe123!';
+
   await auth.api.signUpEmail({
     body: {
-      email: 'owner@knivik.xyz',
-      password: 'KniOw2032!',
+      email: ownerEmail,
+      password: ownerPassword,
       name: 'owner',
       username: 'owner',
     },
@@ -56,7 +60,7 @@ async function main() {
 
   // Update roles and metadata to match seed expectations
   await prisma.user.update({
-    where: { email: 'owner@knivik.xyz' },
+    where: { email: ownerEmail },
     data: {
       role: 'admin',
       plan: 'PRO',
@@ -136,9 +140,10 @@ async function main() {
   console.log('🤖 LLM Models: 4 models registered');
   console.log('⚙️ System Configs: 4 settings registered');
 
-  console.log('\n Login Credentials (Password: KniOw2032!):');
-  console.log('1. Owner: owner@knivik.xyz');
+  console.log('\n Login Credentials:');
+  console.log(`1. Owner: ${ownerEmail} / ${ownerPassword}`);
   console.log('--------------------------------------------');
+  console.log('⚠️  Remember to change SEED_OWNER_EMAIL and SEED_OWNER_PASSWORD env vars before seeding.');
 
   console.log('\n🚀 Ready to test awesome engines with IP protection!');
 }
